@@ -1,0 +1,50 @@
+version: {build}-{branch}
+
+branches:
+  except:
+  - gh-pages
+
+configuration: 
+- Release
+- RelWithDebInfo
+- Debug
+
+clone_folder: c:\projects\zealous-octo-b
+
+init:
+- env
+- set POCO_INSTALL_PREFIX=%PROGRAMFILES%\Poco
+- set PATH=C:\MinGW\bin;%PATH%;%POCO_INSTALL_PREFIX%\bin
+# - set PATH=%PATH%;%ProgramFiles(x86)%\Windows Kits\10\bin\x86 # to be used if using MinGW
+
+environment:
+  matrix:
+  - GENERATOR: Visual Studio 11 2012 Win64
+  - GENERATOR: Visual Studio 11 2012
+  - GENERATOR: Visual Studio 12 2013 Win64
+  - GENERATOR: Visual Studio 12 2013
+  - GENERATOR: Visual Studio 14 2015 Win64
+  - GENERATOR: Visual Studio 14 2015
+#  - GENERATOR: MinGW Makefiles  # poco is not compiling with this yet... (1.6.0)
+
+install:
+- if "%GENERATOR%"=="MinGW Makefiles" ( set SH_COMMAND=gulash.exe ) else ( set SH_COMMAND=sh.exe )
+- if "%GENERATOR%"=="MinGW Makefiles" ( move "%PROGRAMFILES%\Git\usr\bin\sh.exe" "%PROGRAMFILES%\Git\usr\bin\%SH_COMMAND%" )
+- call %APPVEYOR_BUILD_FOLDER%\CI\appveyor\install_dependencies.bat # install poco
+
+before_build:
+- cd %APPVEYOR_BUILD_FOLDER%
+- mkdir build
+- cd build
+- cmake --help
+- cmake -G"%GENERATOR%" .. -DPoco_DIR="%POCO_INSTALL_PREFIX%\lib\cmake\Poco"
+
+build_script:
+- cmake --build . --config %CONFIGURATION%
+
+test_script:
+# - echo %PATH%
+- ctest -v --build-config %CONFIGURATION%
+
+# on_finish:
+# - ps: '# $blockRdp = $true; iex ((new-object net.webclient).DownloadString(''https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1''))'
