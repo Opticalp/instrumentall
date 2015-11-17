@@ -1,5 +1,5 @@
 /**
- * @file	MainApplication.cpp
+ * @file	src/MainApplication.cpp
  * @date	nov. 2015
  * @author	PhRG - opticalp.fr
  *

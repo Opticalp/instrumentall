@@ -1,5 +1,5 @@
 /**
- * @file	MainApplication.h
+ * @file	src/MainApplication.h
  * @date	nov. 2015
  * @author	PhRG - opticalp.fr
  *
@@ -138,7 +138,7 @@ protected:
     void printProperties(const std::string& base);
 
 private:
-    bool _helpRequested;
+    bool _helpRequested; ///< flag to stop processing if help is requested
 };
 
 #endif /* SRC_MAINAPPLICATION_H_ */
