@@ -47,6 +47,8 @@ MainApplication::MainApplication(): _helpRequested(false)
 {
     // Application::instance().addSubsystem(new MySubsystem); //template
 
+    // deps.append(new MyDependency); //template
+
 }
 
 void MainApplication::initialize(Application& self)

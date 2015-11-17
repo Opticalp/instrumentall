@@ -33,6 +33,7 @@
 #include "Poco/Util/Application.h"
 #include "Poco/Util/OptionSet.h"
 
+#include "Dependency.h"
 
 /**
  * MainApplication
@@ -139,6 +140,7 @@ protected:
 
 private:
     bool _helpRequested; ///< flag to stop processing if help is requested
+    std::vector<Dependency*> deps; ///< dependencies descriptors
 };
 
 #endif /* SRC_MAINAPPLICATION_H_ */
