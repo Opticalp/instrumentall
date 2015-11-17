@@ -53,9 +53,16 @@ public:
      * Default constructor
      *
      *  - Add new subsystems
-     *  - TODO: list dependencies
+     *  - create dependency list
      */
     MainApplication();
+
+    /**
+     * Default destructor
+     *
+     * Empty dependency list
+     */
+    virtual ~MainApplication();
 
 protected:
     /**
@@ -118,13 +125,6 @@ protected:
      * TODO: dynamic semantic version using cmake, git and CI
      */
     std::string version();
-
-    /**
-     * Get POCO (external dependency) version
-     *
-     * TODO: get it out of this class
-     */
-    std::string pocoVersion();
 
     /**
      * The application's main logic.

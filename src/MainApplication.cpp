@@ -34,9 +34,7 @@
 #include "Poco/Util/AbstractConfiguration.h"
 #include "Poco/NumberFormatter.h"
 
-#ifdef POCO_VERSION_H
-#include "Poco/Version.h"
-#endif
+#include "DepPoco.h"
 
 #include "MainApplication.h"
 
@@ -47,8 +45,17 @@ MainApplication::MainApplication(): _helpRequested(false)
 {
     // Application::instance().addSubsystem(new MySubsystem); //template
 
-    // deps.append(new MyDependency); //template
+    // deps.push_back(new MyDependency); //template
+    deps.push_back(new DepPoco);
+}
 
+MainApplication::~MainApplication()
+{
+    for (std::vector<Dependency*>::iterator it = deps.begin(), ite = deps.end();
+            it != ite; it++)
+    {
+        delete (*it);
+    }
 }
 
 void MainApplication::initialize(Application& self)
@@ -122,54 +129,32 @@ void MainApplication::displayHelp()
 
 std::string MainApplication::about()
 {
-    return std::string("Instrumentall version ") + version() + " - instrumentation application\n"
+    std::string strAbout("Instrumentall " + version() + " - Wide-purpose instrumentation software\n"
         "Copyright (c) 2013-2015, Opticalp.fr and contributors\n"
-        "MIT License, see http://www.opensource.org/licenses/MIT\n\n"
-        "Proudly using: \n"
-        " - "
-        "Poco libraries ("
-        + pocoVersion()
-        + ") http://pocoproject.org, SPDX-License-Identifier: BSL-1.0 license" ;
+        "MIT License, see http://www.opensource.org/licenses/MIT\n");
+
+    // dependencies
+    if (deps.size())
+    {
+        strAbout += "Instrumentall is using: \n";
+
+        for (std::vector<Dependency*>::iterator it = deps.begin(), ite = deps.end();
+                it != ite; it++)
+        {
+            strAbout += "-- " + (*it)->name() + " -- \n" + (*it)->description() + "\n";
+            strAbout += (*it)->URL() + "\n";
+            strAbout += (*it)->license() + "\n";
+            strAbout += "Build time version: " + (*it)->buildTimeVersion() + "\n";
+            strAbout += "Present version: " + (*it)->runTimeVersion();
+        }
+    }
+
+    return strAbout;
 }
 
 std::string MainApplication::version()
 {
     return "1.0.0-dev";
-}
-
-std::string MainApplication::pocoVersion()
-{
-    std::string pocoV;
-    int patch = (POCO_VERSION >> 8) & 0xFF;
-    int minor = (POCO_VERSION >> 16) & 0xFF;
-    int major = (POCO_VERSION >> 24) & 0xFF;
-
-    pocoV = Poco::NumberFormatter::format(major) + "."
-          + Poco::NumberFormatter::format(minor) + "."
-          + Poco::NumberFormatter::format(patch) ;
-
-    switch (POCO_VERSION & 0xF0)
-    {
-    case 0xA0:
-        pocoV = pocoV + "(alpha" + Poco::NumberFormatter::format(POCO_VERSION & 0x0F) + ")";
-        break;
-    case 0xB0:
-        pocoV = pocoV + "(beta" + Poco::NumberFormatter::format(POCO_VERSION & 0x0F) + ")";
-        break;
-    case 0xD0:
-        pocoV = pocoV + "(dev" + Poco::NumberFormatter::format(POCO_VERSION & 0x0F) + ")";
-        break;
-    case 0x00:
-        if ((POCO_VERSION & 0x0F) == 0 )
-            pocoV = pocoV + "(stable)";
-        // else: unknown
-        break;
-    default:
-        // unknown
-        break;
-    }
-
-    return pocoV;
 }
 
 int MainApplication::main(const std::vector<std::string>& args)
