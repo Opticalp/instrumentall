@@ -77,8 +77,8 @@ std::string DepPoco::runTimeVersion()
 #if ( POCO_VERSION >= 0x01030602 )
     return parseVersion(Poco::Environment::libraryVersion());
 #else
-	return "Poco build time version < 1.3.6p2. "
-           "Unable to get the runtime version..."
+    return "Poco build time version < 1.3.6p2. "
+           "Unable to get the runtime version..."; 
 #endif
 }
 
