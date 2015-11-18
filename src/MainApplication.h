@@ -1,5 +1,5 @@
 /**
- * @file	MainApplication.h
+ * @file	src/MainApplication.h
  * @date	nov. 2015
  * @author	PhRG - opticalp.fr
  *
@@ -33,6 +33,7 @@
 #include "Poco/Util/Application.h"
 #include "Poco/Util/OptionSet.h"
 
+#include "Dependency.h"
 
 /**
  * MainApplication
@@ -52,9 +53,16 @@ public:
      * Default constructor
      *
      *  - Add new subsystems
-     *  - TODO: list dependencies
+     *  - create dependency list
      */
     MainApplication();
+
+    /**
+     * Default destructor
+     *
+     * Empty dependency list
+     */
+    virtual ~MainApplication();
 
 protected:
     /**
@@ -119,13 +127,6 @@ protected:
     std::string version();
 
     /**
-     * Get POCO (external dependency) version
-     *
-     * TODO: get it out of this class
-     */
-    std::string pocoVersion();
-
-    /**
      * The application's main logic.
      *
      * Unprocessed command line arguments are passed in args.
@@ -138,7 +139,8 @@ protected:
     void printProperties(const std::string& base);
 
 private:
-    bool _helpRequested;
+    bool _helpRequested; ///< flag to stop processing if help is requested
+    std::vector<Dependency*> deps; ///< dependencies descriptors
 };
 
 #endif /* SRC_MAINAPPLICATION_H_ */
