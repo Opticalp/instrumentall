@@ -32,7 +32,9 @@
 #include "Poco/Version.h"
 #endif
 
+#if ( POCO_VERSION >= 0x01030602 )
 #include "Poco/Environment.h"
+#endif
 #include "Poco/NumberFormatter.h"
 
 #include "DepPoco.h"
@@ -71,7 +73,13 @@ std::string DepPoco::buildTimeVersion()
 
 std::string DepPoco::runTimeVersion()
 {
+// Poco::Environment::libraryVersion introduced in 1.3.6p2
+#if ( POCO_VERSION >= 0x01030602 )
     return parseVersion(Poco::Environment::libraryVersion());
+#else
+	return "Poco build time version < 1.3.6p2. "
+           "Unable to get the runtime version..."
+#endif
 }
 
 std::string DepPoco::parseVersion(Poco::UInt32 ver)
