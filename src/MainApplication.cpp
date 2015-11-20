@@ -136,12 +136,12 @@ std::string MainApplication::about()
     // dependencies
     if (deps.size())
     {
-        strAbout += "Instrumentall is using: \n";
+        strAbout += "Instrumentall is using: ";
 
         for (std::vector<Dependency*>::iterator it = deps.begin(), ite = deps.end();
                 it != ite; it++)
         {
-            strAbout += "-- " + (*it)->name() + " -- \n" + (*it)->description() + "\n";
+            strAbout += "\n-- " + (*it)->name() + " -- \n" + (*it)->description() + "\n";
             strAbout += (*it)->URL() + "\n";
             strAbout += (*it)->license() + "\n";
             strAbout += "Build time version: " + (*it)->buildTimeVersion() + "\n";
