@@ -137,6 +137,10 @@ std::string MainApplication::about()
         "Copyright (c) 2013-2015, Opticalp.fr and contributors\n"
         "MIT License, see http://www.opensource.org/licenses/MIT\n");
 
+    strAbout += "Generated using CMake " + std::string(CMAKE_VERSION)
+            + " with " + std::string(COMPILER) + " C++ compiler. \n";
+    // TODO: add compiler version info?
+
     // dependencies
     if (deps.size())
     {

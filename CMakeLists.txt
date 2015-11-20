@@ -40,6 +40,8 @@ add_executable (
   instrumentall
   ${source_files}
   )
+  
+add_definitions ( -DCMAKE_VERSION="${CMAKE_VERSION}" -DCOMPILER="${CMAKE_CXX_COMPILER_ID}" )
 
 ## configure dependencies
 
