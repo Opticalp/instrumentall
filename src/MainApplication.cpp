@@ -35,6 +35,7 @@
 #include "Poco/NumberFormatter.h"
 
 #include "DepPoco.h"
+#include "DepPython.h"
 
 #include "MainApplication.h"
 
@@ -47,6 +48,9 @@ MainApplication::MainApplication(): _helpRequested(false)
 
     // deps.push_back(new MyDependency); //template
     deps.push_back(new DepPoco);
+#ifdef HAVE_PYTHON27
+    deps.push_back(new DepPython);
+#endif
 }
 
 MainApplication::~MainApplication()
