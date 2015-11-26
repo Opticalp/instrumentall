@@ -58,22 +58,7 @@ endif ( )
 target_link_libraries( instrumentall  Poco::Foundation Poco::Util )
 
 # find python
-# If you'd like to specify the installation of Python to use, you should
-# modify the following cache variables:
-#   PYTHON_LIBRARY             - path to the python library
-#   PYTHON_INCLUDE_DIR         - path to where Python.h is found
-find_package ( PythonLibs 2.7 EXACT )
-
-if ( NOT PYTHONLIBS_FOUND ) 
-    message ( WARNING "Python 2.7 not found" )
-else ( NOT PYTHONLIBS_FOUND ) 
-    add_definitions ( -DHAVE_PYTHON27 )
-    message ( STATUS "Python libraries are: ${PYTHON_LIBRARIES}" )
-    message ( STATUS "Python include path is: ${PYTHON_INCLUDE_DIRS}" )
-    message ( STATUS "Python full version is: ${PYTHONLIBS_VERSION_STRING}" )
-    include_directories ( ${PYTHON_INCLUDE_DIRS} )
-    target_link_libraries ( instrumentall ${PYTHON_LIBRARIES} )
-endif ( NOT PYTHONLIBS_FOUND ) 
+include ( ${PROJECT_SOURCE_DIR}/cmake/python.cmake )
 
 ## configure tests
 enable_testing ()
