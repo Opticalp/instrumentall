@@ -37,6 +37,8 @@
 #include "DepPoco.h"
 #include "DepPython.h"
 
+#include "PythonManager.h"
+
 #include "MainApplication.h"
 
 using Poco::Util::Application;
@@ -48,8 +50,10 @@ MainApplication::MainApplication(): _helpRequested(false)
 
     // deps.push_back(new MyDependency); //template
     deps.push_back(new DepPoco);
+
 #ifdef HAVE_PYTHON27
     deps.push_back(new DepPython);
+    Application::instance().addSubsystem(new PythonManager);
 #endif
 }
 
@@ -183,6 +187,24 @@ int MainApplication::main(const std::vector<std::string>& args)
     printProperties("");
 
     logger().information(about());
+
+    // TODO: clean here above what should be displayed or not
+
+    // launch the main logic in any of the active subsystems
+    try
+    {
+#ifdef HAVE_PYTHON27
+        PythonManager& myPy = getSubsystem<PythonManager>();
+        if (myPy.requestFullControl())
+        {
+            return myPy.main(*this);
+        }
+#endif
+    }
+    catch (Poco::NotFoundException& e)
+    {
+        poco_error(logger(),e.displayText());
+    }
 
     return Application::EXIT_OK;
 }
