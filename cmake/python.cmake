@@ -32,4 +32,31 @@ else ( NOT PYTHONLIBS_FOUND )
     file (MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/embed)
     file (MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/scripts)
     
+    # python tests
+    file (
+        GLOB_RECURSE
+        pyTestScripts
+        "${PROJECT_SOURCE_DIR}/testsuite/python/*.py"
+        )
+        
+    foreach ( pyTestScript ${pyTestScripts} )
+        get_filename_component ( shortPyScriptNoExt "${pyTestScript}" NAME_WE )
+        
+        if ( UNIX )
+            add_test (
+                NAME                ${shortPyScriptNoExt}
+                COMMAND             $<TARGET_FILE:instrumentall> --execute=${pyTestScript}
+                )
+        else ( UNIX )
+            add_test (
+                NAME                ${shortPyScriptNoExt}
+                COMMAND             $<TARGET_FILE:instrumentall> /execute=${pyTestScript}
+                )
+        endif ( UNIX )
+        
+        get_filename_component ( shortPyScript "${pyTestScript}" NAME )
+        message ( STATUS "Python test ${shortPyScript} added. " )
+        
+    endforeach ( pyTestScript )  
+    
 endif ( NOT PYTHONLIBS_FOUND ) 

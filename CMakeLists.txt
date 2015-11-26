@@ -57,15 +57,30 @@ endif ( )
 
 target_link_libraries( instrumentall  Poco::Foundation Poco::Util )
 
-# find python
-include ( ${PROJECT_SOURCE_DIR}/cmake/python.cmake )
-
 ## configure tests
 enable_testing ()
 
+# find python
+include ( ${PROJECT_SOURCE_DIR}/cmake/python.cmake )
+
 # raw tests __without__ test framework
 # test that the final binary is executable
-add_test (
-    NAME instruExec
-    COMMAND $<TARGET_FILE:instrumentall>
-    )
+if (UNIX)
+    add_test (
+        NAME instruExec
+        COMMAND $<TARGET_FILE:instrumentall>
+        )
+    add_test (
+        NAME instruHelp
+        COMMAND $<TARGET_FILE:instrumentall> --help
+        )
+else (UNIX)
+    add_test (
+        NAME instruExec
+        COMMAND $<TARGET_FILE:instrumentall>
+        )
+    add_test (
+        NAME instruHelp
+        COMMAND $<TARGET_FILE:instrumentall> /help
+        )
+endif (UNIX)
