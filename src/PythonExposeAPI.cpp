@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 #ifdef HAVE_PYTHON27
 
-#include "Python.h"
+#include "PythonAPI.h"
 
 #include "PythonRedirection.h"
 #include "PythonMainAppExport.h"

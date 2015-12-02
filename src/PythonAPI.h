@@ -1,9 +1,10 @@
 /**
- * @file	src/PythonMainAppExport.h
+ * @file	src/PythonAPI.h
  * @date	dec. 2015
  * @author	PhRG - opticalp.fr
  * 
- * @brief Python exposition of methods of MainApplication class
+ * Fix a #pragma including python27_d.lib in Python.h (in pyconfig.h exactly)
+ * when in debug mode.
  */
 
 /*
@@ -29,46 +30,44 @@ THE SOFTWARE.
 */
 
 
-#ifndef SRC_PYTHONMAINAPPEXPORT_H_
-#define SRC_PYTHONMAINAPPEXPORT_H_
+#ifndef SRC_PYTHONAPI_H_
+#define SRC_PYTHONAPI_H_
 
 #ifdef HAVE_PYTHON27
 
-#include "PythonAPI.h"
 
-/**
- * @brief Python wrapper to retrieve the "about" information
- *
- * Call MainApplication::about() method
- *
- */
-extern "C" PyObject*
-pythonMainAppAbout(PyObject *self, PyObject *args);
+// inspired from boost python wrapper.
+#ifdef _DEBUG
+#  ifdef _MSC_VER
+    // VC8.0 will complain if system headers are #included both with
+    // and without _DEBUG defined, so we have to #include all the
+    // system headers used by pyconfig.h right here.
+#   include <stddef.h>
+#   include <stdarg.h>
+#   include <stdio.h>
+#   include <stdlib.h>
+#   include <assert.h>
+#   include <errno.h>
+#   include <ctype.h>
+#   include <wchar.h>
+#   include <basetsd.h>
+#   include <io.h>
+#   include <limits.h>
+#   include <float.h>
+#   include <string.h>
+#   include <math.h>
+#   include <time.h>
+#  endif
+#  undef _DEBUG // Don't let Python force the debug library just because we're debugging.
+#  define DEBUG_UNDEF_BY_PYTHONAPI_H
+#endif
 
-static PyMethodDef pyMethodMainAppAbout =
-{
-    "about",
-    pythonMainAppAbout,
-    METH_NOARGS,
-    "Retrieve general verbose information about the current application"
-};
+#include "Python.h"
 
-/**
- * @brief Python wrapper to retrieve the version information
- *
- * Call MainApplication::version() method
- *
- */
-extern "C" PyObject*
-pythonMainAppVersion(PyObject *self, PyObject *args);
+#ifdef DEBUG_UNDEF_BY_PYTHONAPI_H
+#  define _DEBUG
+#endif
 
-static PyMethodDef pyMethodMainAppVersion =
-{
-    "version",
-    pythonMainAppVersion,
-    METH_NOARGS,
-    "Retrieve version information of the current application"
-};
 
 #endif /* HAVE_PYTHON27 */
-#endif /* SRC_PYTHONMAINAPPEXPORT_H_ */
+#endif /* SRC_PYTHONAPI_H_ */

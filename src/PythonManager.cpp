@@ -28,7 +28,7 @@
 
 #ifdef HAVE_PYTHON27
 
-#include "Python.h"
+#include "PythonAPI.h"
 
 #include "Poco/String.h" // trim
 #include "Poco/File.h"

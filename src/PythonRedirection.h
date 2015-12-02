@@ -33,7 +33,7 @@
 
 #ifdef HAVE_PYTHON27
 
-#include "Python.h"
+#include "PythonAPI.h"
 
 typedef void (*forwardingFctPtr) (const char *);
 
