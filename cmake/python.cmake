@@ -8,10 +8,13 @@
 # modify the following cache variables:
 #   PYTHON_LIBRARY             - path to the python library
 #   PYTHON_INCLUDE_DIR         - path to where Python.h is found
-find_package ( PythonLibs 2.7 EXACT )
+find_package ( PythonLibs 2.7 )
 
 if ( NOT PYTHONLIBS_FOUND ) 
     message ( WARNING "Python 2.7 not found" )
+# require cmake >= 2.8.8 to use PYTHONLIBS_VERSION_STRING
+elseif ( NOT PYTHONLIBS_VERSION_STRING MATCHES "^2\\.7\\." )
+	message ( WARNING "Python version 2.7 not found. Found: ${PYTHONLIBS_VERSION_STRING}. ")
 else ( NOT PYTHONLIBS_FOUND ) 
     add_definitions ( -DHAVE_PYTHON27 )
     message ( STATUS "Python libraries are: ${PYTHON_LIBRARIES}" )

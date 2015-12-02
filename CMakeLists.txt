@@ -8,7 +8,7 @@
 #  - look for Poco dependencies
 #  - link to those dependencies
 
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8.8)
 project ( Instrumentall )
 
 # set search path for project specific cmake modules
