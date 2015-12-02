@@ -9,7 +9,7 @@ configuration:
 #- RelWithDebInfo
 - Debug
 
-clone_folder: c:\projects\zealous-octo-b
+clone_folder: c:\projects\instrumentall
 
 init:
 - env
