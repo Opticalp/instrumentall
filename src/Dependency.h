@@ -40,6 +40,7 @@ class Dependency
 {
 public:
     Dependency() { }
+    virtual ~Dependency() { }
 
     virtual std::string name()=0;
     virtual std::string description()=0;
