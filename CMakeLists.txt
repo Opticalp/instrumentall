@@ -41,7 +41,7 @@ add_executable (
   ${source_files}
   )
   
-add_definitions ( -DCMAKE_VERSION="${CMAKE_VERSION}" -DCOMPILER="${CMAKE_CXX_COMPILER_ID}" )
+add_definitions ( -DCMAKE_VERSION="${CMAKE_VERSION}" -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER_ID}" )
 
 ## configure dependencies
 

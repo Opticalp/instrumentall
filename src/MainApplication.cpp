@@ -142,7 +142,7 @@ std::string MainApplication::about()
         "MIT License, see http://www.opensource.org/licenses/MIT\n");
 
     strAbout += "Generated using CMake " + std::string(CMAKE_VERSION)
-            + " with " + std::string(COMPILER) + " C++ compiler"
+            + " with " + std::string(CMAKE_CXX_COMPILER) + " C++ compiler"
 #ifdef __VERSION__
             " " + std::string(__VERSION__) +
 #endif
