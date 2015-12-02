@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include "Python.h"
 
 #include "PythonRedirection.h"
+#include "PythonMainAppExport.h"
 #include "PythonManager.h"
 
 /**
@@ -43,8 +44,9 @@ THE SOFTWARE.
  */
 static PyMethodDef EmbMethods[] =
 {
-//    // misc
-//    pyMethodConfManagerSave,
+    // misc
+    pyMethodMainAppAbout,
+    pyMethodMainAppVersion,
 
     // sentinel
     {NULL, NULL, 0, NULL}

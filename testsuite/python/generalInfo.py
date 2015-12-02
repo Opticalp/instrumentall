@@ -33,6 +33,9 @@ def myMain():
     
     print "Basic Python scripting test. "
     
+    print about()
+    print "instrumentall version: " + version()
+    
     
     
 # main body    
