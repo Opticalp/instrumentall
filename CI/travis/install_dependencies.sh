@@ -28,7 +28,7 @@ then
     wget -V
     echo "as soon as wget is 1.13, we should disable certificate checking"
 
-    if [ "TRAVIS_OS_NAME" == "linux" ]
+    if [ "$TRAVIS_OS_NAME" == "linux" ]
     then 
         echo "Linux: getting directly recent CMake binaries..."
         wget --no-check-certificate "https://www.cmake.org/files/v${CMAKE_VERSION_MAJOR_MINOR}/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
@@ -44,13 +44,12 @@ then
         cmake -DCMAKE_INSTALL_PREFIX=~ .
         make -j2
         make install
+        cd ..
     fi
     export PATH="~\bin:${PATH}"
     # check that the version in PATH is the right one
     which cmake
     cmake --version
-
-    cd ..
 
     # get last poco via github
     echo "getting the last poco release from github"
