@@ -31,11 +31,10 @@ then
     if [ "$TRAVIS_OS_NAME" == "linux" ]
     then 
         echo "Linux: getting directly recent CMake binaries..."
+        cd
         wget --no-check-certificate "https://www.cmake.org/files/v${CMAKE_VERSION_MAJOR_MINOR}/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
-        tar -xzvf cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
-        mkdir bin
-        mv cmake-${CMAKE_VERSION}-Linux-x86_64/* bin/
-        rmdir cmake-${CMAKE_VERSION}-Linux-x86_64
+        tar -xzvf cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz --strip 1 --exclude="*/doc/*" --exclude="*/man/*"
+        cd $CURRENT_DIR
     else
         echo "Not Linux. CMake needs to be built from sources. "
         wget --no-check-certificate "https://www.cmake.org/files/v${CMAKE_VERSION_MAJOR_MINOR}/cmake-${CMAKE_VERSION}.tar.gz"
@@ -46,7 +45,7 @@ then
         make install
         cd ..
     fi
-    export PATH="~\bin:${PATH}"
+    export PATH="~/bin:${PATH}"
     # check that the version in PATH is the right one
     which cmake
     cmake --version
