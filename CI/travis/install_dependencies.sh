@@ -21,8 +21,8 @@ if [ $BUILD_POCO == true ]
 then
     echo "BUILD_POCO option active"
 
-    echo "updating cmake to 3.0.0 (3.0.0 required for poco build) "
-    CMAKE_VERSION_MAJOR_MINOR="3.0"
+    echo "updating cmake to 3.1.0 (3.0.0 required for poco build) "
+    CMAKE_VERSION_MAJOR_MINOR="3.1"
     CMAKE_VERSION_PATCH="0"
     CMAKE_VERSION="${CMAKE_VERSION_MAJOR_MINOR}.${CMAKE_VERSION_PATCH}"
     wget -V
