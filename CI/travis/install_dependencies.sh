@@ -17,7 +17,7 @@ CURRENT_DIR=$(pwd)
 # echo "current dir is $CURRENT_DIR"
 
 # test if poco has to be built
-if [ $BUILD_POCO == true ]
+if [ $BUILD_POCO == true ] || [ "$TRAVIS_OS_NAME" == "linux" ]
 then
     echo "BUILD_POCO option active"
 
@@ -49,7 +49,10 @@ then
     # check that the version in PATH is the right one
     which cmake
     cmake --version
+fi
 
+if [ $BUILD_POCO == true ]
+then
     # get last poco via github
     echo "getting the last poco release from github"
     mkdir dependencies
