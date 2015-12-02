@@ -26,6 +26,8 @@
  THE SOFTWARE.
  */
 
+#ifdef HAVE_PYTHON27
+
 #include "PythonManager.h"
 #include "PythonRedirection.h"
 
@@ -53,3 +55,5 @@ extern "C" PyObject* stderr_write(PyObject *self, PyObject *args)
 
     return Py_BuildValue("");
 }
+
+#endif /* HAVE_PYTHON27 */

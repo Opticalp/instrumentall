@@ -31,6 +31,8 @@
 #ifndef SRC_PYTHONREDIRECTION_H_
 #define SRC_PYTHONREDIRECTION_H_
 
+#ifdef HAVE_PYTHON27
+
 #include "Python.h"
 
 typedef void (*forwardingFctPtr) (const char *);
@@ -47,5 +49,6 @@ static PyMethodDef stderr_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+#endif /* HAVE_PYTHON27 */
 
 #endif /* SRC_PYTHONREDIRECTION_H_ */
