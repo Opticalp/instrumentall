@@ -64,6 +64,18 @@ public:
      */
     virtual ~MainApplication();
 
+    /**
+     * Get general information about instrumentall
+     */
+    std::string about();
+
+    /**
+     * Get current instrumentall version
+     *
+     * TODO: dynamic semantic version using cmake, git and CI
+     */
+    std::string version();
+
 protected:
     /**
      * Initializes the application and all registered subsystems.
@@ -113,18 +125,6 @@ protected:
     void displayHelp();
 
     // void displayAbout();
-
-    /**
-     * Get general information about instrumentall
-     */
-    std::string about();
-
-    /**
-     * Get current instrumentall version
-     *
-     * TODO: dynamic semantic version using cmake, git and CI
-     */
-    std::string version();
 
     /**
      * The application's main logic.
