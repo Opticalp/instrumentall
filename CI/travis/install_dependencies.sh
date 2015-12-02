@@ -27,12 +27,24 @@ then
     CMAKE_VERSION="${CMAKE_VERSION_MAJOR_MINOR}.${CMAKE_VERSION_PATCH}"
     wget -V
     echo "as soon as wget is 1.13, we should disable certificate checking"
-    wget --no-check-certificate "https://www.cmake.org/files/v${CMAKE_VERSION_MAJOR_MINOR}/cmake-${CMAKE_VERSION}.tar.gz"
-    tar xzf "cmake-${CMAKE_VERSION}.tar.gz"
-    cd "cmake-${CMAKE_VERSION}"
-    cmake -DCMAKE_INSTALL_PREFIX=~ .
-    make -j2
-    make install
+
+    if [ "TRAVIS_OS_NAME" == "linux" ]
+    then 
+        echo "Linux: getting directly recent CMake binaries..."
+        wget --no-check-certificate "https://www.cmake.org/files/v${CMAKE_VERSION_MAJOR_MINOR}/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
+        tar -xzvf cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz
+        mkdir bin
+        mv cmake-${CMAKE_VERSION}-Linux-x86_64/* bin/
+        rmdir cmake-${CMAKE_VERSION}-Linux-x86_64
+    else
+        echo "Not Linux. CMake needs to be built from sources. "
+        wget --no-check-certificate "https://www.cmake.org/files/v${CMAKE_VERSION_MAJOR_MINOR}/cmake-${CMAKE_VERSION}.tar.gz"
+        tar xzf "cmake-${CMAKE_VERSION}.tar.gz"
+        cd "cmake-${CMAKE_VERSION}"
+        cmake -DCMAKE_INSTALL_PREFIX=~ .
+        make -j2
+        make install
+    fi
     export PATH="~\bin:${PATH}"
     # check that the version in PATH is the right one
     which cmake
