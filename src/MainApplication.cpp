@@ -35,6 +35,9 @@
 #include "Poco/NumberFormatter.h"
 
 #include "DepPoco.h"
+#include "DepPython.h"
+
+#include "PythonManager.h"
 
 #include "MainApplication.h"
 
@@ -47,6 +50,11 @@ MainApplication::MainApplication(): _helpRequested(false)
 
     // deps.push_back(new MyDependency); //template
     deps.push_back(new DepPoco);
+
+#ifdef HAVE_PYTHON27
+    deps.push_back(new DepPython);
+    Application::instance().addSubsystem(new PythonManager);
+#endif
 }
 
 MainApplication::~MainApplication()
@@ -133,15 +141,23 @@ std::string MainApplication::about()
         "Copyright (c) 2013-2015, Opticalp.fr and contributors\n"
         "MIT License, see http://www.opensource.org/licenses/MIT\n");
 
+    strAbout += "Generated using CMake " + std::string(CMAKE_VERSION)
+            + " with " + std::string(CMAKE_CXX_COMPILER) + " C++ compiler"
+#ifdef __VERSION__
+            " " + std::string(__VERSION__) +
+#endif
+            ". \n";
+    // TODO: add various compiler version info?
+
     // dependencies
     if (deps.size())
     {
-        strAbout += "Instrumentall is using: \n";
+        strAbout += "Instrumentall is using: ";
 
         for (std::vector<Dependency*>::iterator it = deps.begin(), ite = deps.end();
                 it != ite; it++)
         {
-            strAbout += "-- " + (*it)->name() + " -- \n" + (*it)->description() + "\n";
+            strAbout += "\n-- " + (*it)->name() + " -- \n" + (*it)->description() + "\n";
             strAbout += (*it)->URL() + "\n";
             strAbout += (*it)->license() + "\n";
             strAbout += "Build time version: " + (*it)->buildTimeVersion() + "\n";
@@ -171,6 +187,24 @@ int MainApplication::main(const std::vector<std::string>& args)
     printProperties("");
 
     logger().information(about());
+
+    // TODO: clean here above what should be displayed or not
+
+    // launch the main logic in any of the active subsystems
+    try
+    {
+#ifdef HAVE_PYTHON27
+        PythonManager& myPy = getSubsystem<PythonManager>();
+        if (myPy.requestFullControl())
+        {
+            return myPy.main(*this);
+        }
+#endif
+    }
+    catch (Poco::NotFoundException& e)
+    {
+        poco_error(logger(),e.displayText());
+    }
 
     return Application::EXIT_OK;
 }

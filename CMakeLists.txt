@@ -8,7 +8,7 @@
 #  - look for Poco dependencies
 #  - link to those dependencies
 
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8.8)
 project ( Instrumentall )
 
 # set search path for project specific cmake modules
@@ -21,29 +21,6 @@ set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${PROJECT_BINARY_DIR}/bin" )
 set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_BINARY_DIR}/bin" )
 set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${PROJECT_BINARY_DIR}/bin" )
 set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/bin" )
-
-# find POCO
-find_package( Poco 1.3.6 COMPONENTS Foundation Util REQUIRED )
-
-if ( NOT Poco_FOUND )
-    message ( WARNING "Poco not found")
-else ( NOT Poco_FOUND )
-    message ( STATUS "found Poco version: ${Poco_VERSION}" )
-    message ( STATUS "libraries are: ${Poco_LIBRARIES}" ) 
-endif ( NOT Poco_FOUND )
-    
-if ( NOT PocoFoundation_FOUND )
-    message ( WARNING "Poco foundation not found" )
-endif ( NOT PocoFoundation_FOUND )
-
-if ( NOT PocoUtil_FOUND )
-    message ( WARNING "Poco util not found" ) 
-endif ( NOT PocoUtil_FOUND )
-
-if ( Poco_VERSION VERSION_GREATER "1.4.0" )
-	add_definitions ( -DPOCO_VERSION_H )
-endif ( )
-
 
 ## configure executable 
 
@@ -63,15 +40,47 @@ add_executable (
   instrumentall
   ${source_files}
   )
+  
+add_definitions ( -DCMAKE_VERSION="${CMAKE_VERSION}" -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER_ID}" )
+
+## configure dependencies
+
+# find POCO
+find_package( Poco 1.3.6 COMPONENTS Foundation Util REQUIRED )
+
+message ( STATUS "found Poco version: ${Poco_VERSION}" )
+message ( STATUS "libraries are: ${Poco_LIBRARIES}" ) 
+    
+if ( Poco_VERSION VERSION_GREATER "1.4.0" )
+	add_definitions ( -DPOCO_VERSION_H )
+endif ( )
 
 target_link_libraries( instrumentall  Poco::Foundation Poco::Util )
 
 ## configure tests
 enable_testing ()
 
+# find python
+include ( ${PROJECT_SOURCE_DIR}/cmake/python.cmake )
+
 # raw tests __without__ test framework
 # test that the final binary is executable
-add_test (
-    NAME instruExec
-    COMMAND $<TARGET_FILE:instrumentall>
-    )
+if (UNIX)
+    add_test (
+        NAME instruExec
+        COMMAND $<TARGET_FILE:instrumentall>
+        )
+    add_test (
+        NAME instruHelp
+        COMMAND $<TARGET_FILE:instrumentall> --help
+        )
+else (UNIX)
+    add_test (
+        NAME instruExec
+        COMMAND $<TARGET_FILE:instrumentall>
+        )
+    add_test (
+        NAME instruHelp
+        COMMAND $<TARGET_FILE:instrumentall> /help
+        )
+endif (UNIX)
