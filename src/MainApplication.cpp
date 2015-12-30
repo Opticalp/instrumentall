@@ -38,6 +38,7 @@
 #include "DepPython.h"
 
 #include "PythonManager.h"
+#include "ModuleManager.h"
 
 #include "MainApplication.h"
 
@@ -55,6 +56,8 @@ MainApplication::MainApplication(): _helpRequested(false)
     deps.push_back(new DepPython);
     Application::instance().addSubsystem(new PythonManager);
 #endif
+
+    Application::instance().addSubsystem(new ModuleManager);
 }
 
 MainApplication::~MainApplication()
