@@ -29,11 +29,16 @@
 #ifndef SRC_MODULEMANAGER_H_
 #define SRC_MODULEMANAGER_H_
 
+#include "ModuleFactory.h"
+#include "Module.h"
+
 #include "Poco/Util/Subsystem.h"
 #include "Poco/Util/Application.h"
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
 #include "Poco/Logger.h"
+
+#include <vector>
 
 /**
  * ModuleManager
@@ -87,9 +92,10 @@ private:
     Poco::Logger* _pLogger;
 
     /// module factory list
+    std::vector<ModuleFactory*> _factories;
 
     /// module list
-
+    std::vector<Module*> _modules;
 };
 
 //
