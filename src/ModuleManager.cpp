@@ -28,11 +28,9 @@
 
 #include "ModuleManager.h"
 
-ModuleManager::ModuleManager()
+ModuleManager::ModuleManager():
+	VerboseEntity(name())
 {
-    // tmp logger
-    _pLogger = &Poco::Logger::get("ModuleManagerStartup");
-
     // TODO:
     //  - create root factories
 }

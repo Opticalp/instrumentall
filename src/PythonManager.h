@@ -31,11 +31,12 @@
 
 #ifdef HAVE_PYTHON27
 
+#include "VerboseEntity.h"
+
 #include "Poco/Util/Subsystem.h"
 #include "Poco/Util/Application.h"
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
-#include "Poco/Logger.h"
 
 /**
  * PythonManager
@@ -47,7 +48,7 @@
  * Child class of Poco::Util::Subsystem to
  * handle command line options (initscript, iconsole, execute).
  */
-class PythonManager: public Poco::Util::Subsystem
+class PythonManager: public Poco::Util::Subsystem, VerboseEntity
 {
 public:
     PythonManager();
@@ -112,12 +113,6 @@ public:
     void errorMessage(std::string errorMsg);
 
 protected:
-    /// set the local logger
-    void setLogger(Poco::Logger& logger);
-
-    /// Get the local logger
-    Poco::Logger& logger();
-
     /**
      * Run the given scriptFile as a python script.
      *
@@ -201,9 +196,6 @@ protected:
 
 
 private:
-    /// local logger
-    Poco::Logger* _pLogger;
-
     /// python variable tracking structure
     struct _varItem
     {
@@ -221,20 +213,6 @@ private:
 inline const char * PythonManager::name() const
 {
     return "PythonManager";
-}
-
-inline void PythonManager::setLogger(Poco::Logger& logger)
-{
-    _pLogger = &logger;
-
-    poco_information(this->logger(),
-        "The " + std::string(name()) + " logger is now available");
-}
-
-inline Poco::Logger& PythonManager::logger()
-{
-    poco_check_ptr (_pLogger);
-    return *_pLogger;
 }
 
 #endif /* HAVE_PYTHON27 */

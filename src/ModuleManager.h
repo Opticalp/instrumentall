@@ -29,6 +29,8 @@
 #ifndef SRC_MODULEMANAGER_H_
 #define SRC_MODULEMANAGER_H_
 
+#include "VerboseEntity.h"
+
 #include "ModuleFactory.h"
 #include "Module.h"
 
@@ -46,7 +48,7 @@
  * Manage the modules, including module factories
  * Instantiate the module factories
  */
-class ModuleManager: public Poco::Util::Subsystem
+class ModuleManager: public Poco::Util::Subsystem, public VerboseEntity
 {
 public:
 	ModuleManager();
@@ -82,15 +84,6 @@ public:
     void defineOptions(Poco::Util::OptionSet & options);
 
 private:
-    /// set the local logger
-    void setLogger(Poco::Logger& logger);
-
-    /// Get the local logger
-    Poco::Logger& logger();
-
-    /// local logger
-    Poco::Logger* _pLogger;
-
     /// module factory list
     std::vector<ModuleFactory*> _factories;
 
@@ -104,20 +97,6 @@ private:
 inline const char * ModuleManager::name() const
 {
     return "ModuleManager";
-}
-
-inline void ModuleManager::setLogger(Poco::Logger& logger)
-{
-    _pLogger = &logger;
-
-    poco_information(this->logger(),
-        "The " + std::string(name()) + " logger is now available");
-}
-
-inline Poco::Logger& ModuleManager::logger()
-{
-    poco_check_ptr (_pLogger);
-    return *_pLogger;
 }
 
 #endif /* SRC_MODULEMANAGER_H_ */
