@@ -29,7 +29,7 @@
 #ifndef SRC_MODULE_H_
 #define SRC_MODULE_H_
 
-#include <string>
+#include "VerboseEntity.h"
 
 /**
  * Module
@@ -42,9 +42,16 @@
  *  - a computing cell: image processing, signal processing,
  *  ...
  */
-class Module
+class Module: public VerboseEntity
 {
 public:
+	/**
+	 * Constructor
+	 *
+	 * The implementation should at least do the following:
+	 *  - generate a name that will be returned by internalName()
+	 *  - set the logger
+	 */
 	Module();
 	virtual ~Module();
 

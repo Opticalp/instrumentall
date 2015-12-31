@@ -29,9 +29,8 @@
 #ifndef SRC_MODULEFACTORY_H_
 #define SRC_MODULEFACTORY_H_
 
+#include "VerboseEntity.h"
 #include "Module.h"
-
-#include <string>
 
 /**
  * ModuleFactory
@@ -39,9 +38,16 @@
  * Base class for any module factory. A module factory is a class
  * which instantiation is able to create modules on demand.
  */
-class ModuleFactory
+class ModuleFactory: public VerboseEntity
 {
 public:
+	/**
+	 * Constructor
+	 *
+	 * The implementation should:
+	 *  - generate a name if it is not static
+	 *  - set the logger
+	 */
 	ModuleFactory();
 	virtual ~ModuleFactory();
 
