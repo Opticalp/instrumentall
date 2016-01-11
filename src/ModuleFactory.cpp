@@ -27,15 +27,74 @@
  */
 
 #include "ModuleFactory.h"
+#include "ModuleFactoryBranch.h"
 
-ModuleFactory::ModuleFactory()
+#include <typeinfo>
+POCO_IMPLEMENT_EXCEPTION( ModuleFactoryException, Poco::Exception, "ModuleFactory error")
+
+void ModuleFactory::deleteChildFactory(std::string property)
 {
-	// TODO Auto-generated constructor stub
+    if (isLeaf())
+        throw ModuleFactoryException("deleteChildFactory",
+                "No child: this factory is a leaf");
 
+    std::string selector(validateSelector(property));
+
+    for (std::vector<ModuleFactoryBranch*>::iterator it=_children.begin(),ite=_children.end();
+            it!=ite;
+            it++)
+    {
+        if (selector.compare((*it)->getSelector())==0)
+        {
+            delete (*it);
+            _children.erase(it);
+            return;
+        }
+    }
+
+    throw ModuleFactoryException("deleteChildFactory",
+            "Child not found");
 }
 
-ModuleFactory::~ModuleFactory()
+void ModuleFactory::deleteChildFactories()
 {
-	// TODO Auto-generated destructor stub
+    if (isLeaf())
+        return;
+
+    for (std::vector<ModuleFactoryBranch*>::iterator it=_children.begin(),ite=_children.end();
+            it!=ite;
+            it++)
+    {
+        delete (*it);
+    }
+
+    _children.clear();
 }
 
+Module* ModuleFactory::create(std::string customName)
+{
+    for (std::vector<ModuleFactoryBranch*>::iterator it=_children.begin(), ite=_children.end();
+            it != ite ;
+            it++)
+    {
+        if ((*it)->countRemain())
+            return (*it)->create();
+    }
+
+    throw ModuleFactoryException("create()",
+            "countRemain() is null! ");
+}
+
+size_t ModuleFactory::countRemain()
+{
+    size_t count=0;
+
+    for (std::vector<ModuleFactoryBranch*>::iterator it=_children.begin(), ite=_children.end();
+            it != ite ;
+            it++)
+    {
+        count += (*it)->countRemain();
+    }
+
+    return count;
+}
