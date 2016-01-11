@@ -31,6 +31,8 @@
 
 #include "VerboseEntity.h"
 
+class ModuleFactory;
+
 /**
  * Module
  *
@@ -52,7 +54,7 @@ public:
 	 *  - generate a name that will be returned by internalName()
 	 *  - set the logger
 	 */
-	Module();
+	Module(ModuleFactory* parent);
 	virtual ~Module();
 
 	/**
@@ -85,6 +87,15 @@ public:
 	 * @return full description of the module: functionalities, usage
 	 */
 	virtual const char * description() const = 0;
+
+protected:
+	/**
+	 * Parent module factory
+	 *
+	 * - to be notified when the module is deleted
+	 * - to get the factory parameters (selectors, evtl parameters)
+	 */
+	ModuleFactory* mParent;
 };
 
 #endif /* SRC_MODULE_H_ */

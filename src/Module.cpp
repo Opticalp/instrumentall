@@ -27,15 +27,23 @@
  */
 
 #include "Module.h"
+#include "ModuleFactory.h"
 
-Module::Module()
+
+Module::Module(ModuleFactory* parent):
+    mParent(parent)
 {
-	// TODO Auto-generated constructor stub
+    // TODO:
+    //  - generate a name that will be returned by internalName()
+    //  - set the logger
+
 
 }
 
 Module::~Module()
 {
-	// TODO Auto-generated destructor stub
+	// TODO:
+    // - notify module factory
+    // - notify module manager
 }
 
