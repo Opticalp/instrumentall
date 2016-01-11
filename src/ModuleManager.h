@@ -70,8 +70,12 @@ public:
     void initialize(Poco::Util::Application& app);
     // void reinitialize(Application & app); // not needed. By default: uninit, then init.
     /**
-     * Clean module list.
-     * Delete factories.
+     * Reset factories.
+     *
+     * - reset factories discovery
+     * - clear child factories
+     *
+     * @note reseting the factories removes their child modules
      */
     void uninitialize();
     ///@}
@@ -82,6 +86,13 @@ public:
      * Allow command line arguments support.
      */
     void defineOptions(Poco::Util::OptionSet & options);
+
+    /**
+     * Remove a Module from the list
+     *
+     * This function has to be called by any Module by deletion.
+     */
+    void removeModule(Module* pModule);
 
 private:
     /// module factory list

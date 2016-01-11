@@ -28,7 +28,7 @@
 
 #include "Module.h"
 #include "ModuleFactory.h"
-
+#include "ModuleManager.h"
 
 Module::Module(ModuleFactory* parent):
     mParent(parent)
@@ -44,6 +44,8 @@ Module::~Module()
 {
 	// TODO:
     // - notify module factory
-    // - notify module manager
+
+    // notify module manager
+    Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
 }
 

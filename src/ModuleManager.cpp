@@ -53,10 +53,12 @@ void ModuleManager::initialize(Poco::Util::Application& app)
 void ModuleManager::uninitialize()
 {
 	// TODO:
-	//  - clear modules
-	//  - reset factories:
+	//  - reset factories (last in, first reset):
 	//     * reset factories discovery
 	//     * clear child factories
+    //
+    // n.b.: reseting the factories will remove
+    // their child modules
 }
 
 void ModuleManager::defineOptions(Poco::Util::OptionSet& options)
@@ -65,5 +67,19 @@ void ModuleManager::defineOptions(Poco::Util::OptionSet& options)
 	//  - option to load some xml generator file
 	//  - option to enable/disable dummies factory
 	//  - ... ?
+}
+
+void ModuleManager::removeModule(Module* pModule)
+{
+    for (std::vector<Module*>::iterator it=_modules.begin(),ite=_modules.end();
+            it!=ite;
+            it++)
+    {
+        if (pModule == *it)
+        {
+            _modules.erase(it);
+            return;
+        }
+    }
 }
 
