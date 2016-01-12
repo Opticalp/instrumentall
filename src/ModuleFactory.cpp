@@ -89,6 +89,8 @@ void ModuleFactory::deleteChildFactories()
 
 Module* ModuleFactory::create(std::string customName)
 {
+    if (!isLeaf())
+    {
         for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end();
                 it != ite ;
                 it++)
@@ -97,8 +99,20 @@ Module* ModuleFactory::create(std::string customName)
                 return (*it)->create();
         }
 
-    throw ModuleFactoryException("create()",
-            "countRemain() is null! ");
+        throw ModuleFactoryException("create()",
+                "countRemain() is null! ");
+    }
+    else if (countRemain())
+    {
+        Module* module(newChildModule(customName));
+        childModules.push_back(module);
+        return module;
+    }
+    else
+    {
+        throw ModuleFactoryException("create()",
+                "countRemain() is null! ");
+    }
 }
 
 size_t ModuleFactory::countRemain()
@@ -113,4 +127,36 @@ size_t ModuleFactory::countRemain()
     }
 
     return count;
+}
+
+void ModuleFactory::removeChildModule(Module* module)
+{
+    if (!isLeaf())
+        throw ModuleFactoryException("removeChildModule",
+                "No child module: this factory is not a leaf");
+
+    for (std::vector<Module*>::iterator it=childModules.begin(),ite=childModules.end();
+            it!=ite;
+            it++)
+    {
+        if ((*it)==module)
+        {
+            childModules.erase(it);
+            return;
+        }
+    }
+
+    throw ModuleFactoryException("removeChildFactory",
+            "Child not found");
+}
+
+void ModuleFactory::deleteChildModules()
+{
+    if (!isLeaf())
+        return;
+
+    for (std::vector<Module*>::reverse_iterator it=childModules.rbegin(),ite=childModules.rend();
+            it!=ite;
+            it++)
+        delete *it;
 }

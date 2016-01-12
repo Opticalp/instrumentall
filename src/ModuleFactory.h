@@ -170,13 +170,23 @@ public:
 	/**
 	 * Create a module
 	 *
-	 * Create either the very specified module if the select() chain
-	 * was complete, or create the next default module, using the
-	 * select() default values if the select() chain was not complete.
+	 * If this factory is not a leaf, call the create() method of the
+	 * next child factory having a countRemain() not returning zero.
+	 *
+	 * If this factory is a leaf, call newChildModule() and add it
+	 * to the module list.
+	 * The leaf factories derived from this class
+	 * have to implement newChildModule().
+	 *
 	 * @param customName custom name to be given to the module.
 	 * If this string is empty, the module internal name shall be used.
 	 */
-	virtual Module* create(std::string customName="");
+	Module* create(std::string customName="");
+
+    /**
+     * Remove the given child module from the local list
+     */
+    void removeChildModule(Module* module);
 
 	/**
 	 * Count how many times create() can be called
@@ -216,6 +226,13 @@ protected:
     void deleteChildFactories();
 
     /**
+     * Delete all the child modules
+     *
+     * Shall be called in the derived class destructor.
+     */
+    void deleteChildModules();
+
+    /**
      * Validate the selector to get an absolute value
      *
      * Should insure that the selector is unique for a given factory
@@ -223,6 +240,22 @@ protected:
     virtual std::string validateSelector(std::string selector)
     {
         return selector;
+    }
+
+    /**
+     * Create a new module given its custom name
+     *
+     * This function is called by create() if the factory is a leaf factory
+     *
+     * @see isLeaf()
+     *
+     * @param customName custom name to be given to the module.
+     * If this string is empty, the module internal name shall be used.
+     */
+    virtual Module* newChildModule(std::string customName)
+    {
+        throw ModuleFactoryException("select()",
+                "This factory is not able to create a new child module. ");
     }
 
     /**
@@ -235,6 +268,13 @@ protected:
      */
     std::vector<ModuleFactoryBranch*> childFactories;
 
+    /**
+     * Direct child modules
+     *
+     * - Only newChildModule() should create new modules. This function
+     * is called by create(). create() adds the new module into the list.
+     */
+    std::vector<Module*> childModules;
 };
 
 #endif /* SRC_MODULEFACTORY_H_ */

@@ -55,7 +55,7 @@ public:
 	 *  - set the logger
 	 */
 	Module(ModuleFactory* parent);
-	virtual ~Module();
+	virtual ~Module() { mParent->removeChildModule(this); }
 
 	/**
 	 * Custom name of the module
