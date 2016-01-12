@@ -102,14 +102,16 @@ public:
 	/**
 	 * Refine factory settings
 	 *
-	 * @note This method does not need to be implemented in inherited
-	 * leaf factories according to the default behavior.
+	 *  - check if a child factory already corresponds to the
+	 *  given selector
+	 *     - create a new child factory using newChildFactory()
+	 *     if no existing factory was found. The newly created
+	 *     factory is inserted into the child factory list
+	 *     - or return the existing child factory
+	 *
+	 * @see newChildFactory()
 	 */
-    virtual ModuleFactoryBranch& select(std::string property)
-    {
-        throw ModuleFactoryException("select()",
-                "This factory is probably a leaf. ");
-    }
+    ModuleFactoryBranch& select(std::string selector);
 
     /**
      * Describe the role of select()
@@ -163,7 +165,7 @@ public:
      * Inverse as select()
      * @param property selector, as used in select()
      */
-    virtual void deleteChildFactory(std::string property);
+    void deleteChildFactory(std::string selector);
 
 	/**
 	 * Create a module
@@ -179,16 +181,37 @@ public:
 	/**
 	 * Count how many times create() can be called
 	 *
-	 * The return value is valid for the current factory.
-	 * I.e. no further select() is called.
+	 * The default implementation calls the countRemain() of
+	 * all the child factories and add it all.
 	 */
     virtual size_t countRemain();
 
 protected:
     /**
+     * Create a new child factory
+     *
+     * This method is to be called by select(). It should not
+     * be directly accessed.
+     *
+     * This method shall verify if the selector is valid
+     * for child factory creation, or leave this task to
+     * validateSelector().
+     *
+     * It has to insert the newly created child factory into
+     * the child factories list.
+     */
+    virtual ModuleFactoryBranch* newChildFactory(std::string selector)
+    {
+        throw ModuleFactoryException("select()",
+                "This factory is probably a leaf. ");
+    }
+
+    /**
      * Delete all the child factories
      *
-     * Shall be call at the end of the derived class destructor.
+     * Shall be called in the derived class destructor.
+     * @note constructors are called base first, derived last,
+     * destructors are called in the reverse order.
      */
     void deleteChildFactories();
 
@@ -202,7 +225,16 @@ protected:
         return selector;
     }
 
-    std::vector<ModuleFactoryBranch*> _children; // direct child factories
+    /**
+     * Direct child factories
+     *
+     *  - Only newChildFactory() should create new factories. This function
+     *  is called by select(). select() adds the new factory into this list.
+     *  - Only deleteChildFactories() and deleteChildFactory() should
+     *  erase factories from that list.
+     */
+    std::vector<ModuleFactoryBranch*> childFactories;
+
 };
 
 #endif /* SRC_MODULEFACTORY_H_ */
