@@ -28,11 +28,13 @@
 
 #include "ModuleManager.h"
 
+#include "DemoRootFactory.h"
+
 ModuleManager::ModuleManager():
 	VerboseEntity(name())
 {
-    // TODO:
-    //  - create root factories
+    // add root factories
+    _factories.push_back(new DemoRootFactory);
 }
 
 ModuleManager::~ModuleManager()
