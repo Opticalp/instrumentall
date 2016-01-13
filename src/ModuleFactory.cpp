@@ -63,7 +63,6 @@ void ModuleFactory::deleteChildFactory(std::string property)
         if (validated.compare((*it)->getSelector())==0)
         {
             delete (*it);
-            childFactories.erase(it);
             return;
         }
     }
@@ -72,23 +71,41 @@ void ModuleFactory::deleteChildFactory(std::string property)
             "Child factory not found");
 }
 
-void ModuleFactory::deleteChildFactories()
+void ModuleFactory::removeChildFactory(ModuleFactoryBranch* factory)
 {
-    if (isLeaf())
-        return;
-
     for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(),ite=childFactories.end();
             it!=ite;
             it++)
     {
-        delete (*it);
+        if (factory == (*it))
+        {
+            childFactories.erase(it);
+            return;
+        }
     }
 
-    childFactories.clear();
+    poco_error(logger(), "removeChildFactory: "
+            "Child factory not found");
+}
+
+void ModuleFactory::deleteChildFactories()
+{
+    if (isLeaf())
+    {
+        poco_debug(logger(), "deleteChildFactories: factory is a leaf. "
+                "Nothing to delete.");
+        return;
+    }
+
+    for (std::vector<ModuleFactoryBranch*>::reverse_iterator it=childFactories.rbegin(),ite=childFactories.rend();
+            it!=ite;
+            it++)
+        delete (*it);
 }
 
 Module* ModuleFactory::create(std::string customName)
 {
+    // TODO: notify the module manager that a module was created?
     if (!isLeaf())
     {
         for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end();
@@ -132,8 +149,11 @@ size_t ModuleFactory::countRemain()
 void ModuleFactory::removeChildModule(Module* module)
 {
     if (!isLeaf())
-        throw ModuleFactoryException("removeChildModule",
+    {
+        poco_error(logger(),"removeChildModule: "
                 "No child module: this factory is not a leaf");
+        return;
+    }
 
     for (std::vector<Module*>::iterator it=childModules.begin(),ite=childModules.end();
             it!=ite;
@@ -146,14 +166,18 @@ void ModuleFactory::removeChildModule(Module* module)
         }
     }
 
-    throw ModuleFactoryException("removeChildFactory",
+    poco_error(logger(),"removeChildFactory: "
             "Child not found");
 }
 
 void ModuleFactory::deleteChildModules()
 {
     if (!isLeaf())
+    {
+        poco_debug(logger(), "deleteChildModules: factory is not a leaf. "
+                "Nothing to delete.");
         return;
+    }
 
     for (std::vector<Module*>::reverse_iterator it=childModules.rbegin(),ite=childModules.rend();
             it!=ite;

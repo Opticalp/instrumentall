@@ -167,6 +167,14 @@ public:
      */
     void deleteChildFactory(std::string selector);
 
+    /**
+     * Remove the given child factory from the local list
+     *
+     * Do not throw exception on error, since this method
+     * should be called by a destructor
+     */
+    void removeChildFactory(ModuleFactoryBranch* factory);
+
 	/**
 	 * Create a module
 	 *
@@ -185,6 +193,9 @@ public:
 
     /**
      * Remove the given child module from the local list
+     *
+     * Do not throw exception on error, since this method
+     * should be called by a destructor
      */
     void removeChildModule(Module* module);
 

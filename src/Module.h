@@ -55,7 +55,18 @@ public:
 	 *  - set the logger
 	 */
 	Module(ModuleFactory* parent);
+
+	/**
+	 * Destructor
+	 *
+	 * Notify any entity that could store a pointer on this.
+	 *  - parent factory
+	 *  - module manager
+	 *  - dispatcher
+	 */
 	virtual ~Module() { mParent->removeChildModule(this); }
+    // TODO module manager and dispatcher notification
+
 
 	/**
 	 * Custom name of the module
