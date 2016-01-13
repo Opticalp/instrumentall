@@ -39,26 +39,36 @@ ModuleManager::~ModuleManager()
 {
     uninitialize();
 
-    // TODO:
-    //  - delete root factories
+    for (std::vector<ModuleFactory*>::reverse_iterator it=_factories.rbegin(), ite=_factories.rend();
+            it != ite; it++)
+    {
+        delete *it;
+        // it is then removed from the list because removeRootFactory()
+        // is called by the ModuleFactory::~ModuleFactory() if it is a root.
+    }
 }
 
 void ModuleManager::initialize(Poco::Util::Application& app)
 {
-	// TODO:
-	//  - set logger name
-	//  - run factories discovery (?)
+    setLogger(name());
+
+    for (std::vector<ModuleFactory*>::iterator it=_factories.begin(), ite=_factories.end();
+            it != ite; it++)
+    {
+        (*it)->moduleDiscover();
+    }
 }
 
 void ModuleManager::uninitialize()
 {
-	// TODO:
-	//  - reset factories (last in, first reset):
-	//     * reset factories discovery
-	//     * clear child factories
-    //
-    // n.b.: reseting the factories will remove
-    // their child modules
+    for (std::vector<ModuleFactory*>::reverse_iterator it=_factories.rbegin(), ite=_factories.rend();
+            it != ite; it++)
+    {
+        if ((*it)->isLeaf())
+            (*it)->deleteChildModules();
+        else
+            (*it)->deleteChildFactories();
+    }
 }
 
 void ModuleManager::defineOptions(Poco::Util::OptionSet& options)
@@ -67,6 +77,11 @@ void ModuleManager::defineOptions(Poco::Util::OptionSet& options)
 	//  - option to load some xml generator file
 	//  - option to enable/disable dummies factory
 	//  - ... ?
+}
+
+void ModuleManager::addModule(Module* pModule)
+{
+    _modules.push_back(pModule);
 }
 
 void ModuleManager::removeModule(Module* pModule)
@@ -81,5 +96,24 @@ void ModuleManager::removeModule(Module* pModule)
             return;
         }
     }
+
+    poco_error(logger(), "removeModule(): "
+            "the module was not found");
 }
 
+void ModuleManager::removeRootFactory(ModuleFactory* pFactory)
+{
+    for (std::vector<ModuleFactory*>::iterator it=_factories.begin(),ite=_factories.end();
+            it!=ite;
+            it++)
+    {
+        if (pFactory == *it)
+        {
+            _factories.erase(it);
+            return;
+        }
+    }
+
+    poco_error(logger(), "removeRootFactory(): "
+            "the factory was not found");
+}

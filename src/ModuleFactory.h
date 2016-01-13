@@ -58,18 +58,16 @@ public:
 	 *  - generate a name if it is not static
 	 *  - set the logger
 	 */
-	ModuleFactory();
+	ModuleFactory() { }
 
     /**
      * Standard destructor
      *
-     * The destructor of the derived classes should explicitly call deleteChildren().
+     * The destructor of the derived classes should explicitly call deleteChildFactories()
+     * and deletechildModules() (when relevant).
      * It is not called here to let the developer decide what order to respect.
      *
      * @note base class destructor is called (last) after derived class destructor
-     *
-     * @todo if the device factory is a leaf (check isLeaf() ), then it should
-     * be necessary to delete created Module references.
      */
 	virtual ~ModuleFactory();
 
@@ -207,6 +205,22 @@ public:
 	 */
     virtual size_t countRemain();
 
+    /**
+     * Delete all the child factories
+     *
+     * Shall be called in the derived class destructor.
+     * @note constructors are called base first, derived last,
+     * destructors are called in the reverse order.
+     */
+    void deleteChildFactories();
+
+    /**
+     * Delete all the child modules
+     *
+     * Shall be called in the derived class destructor.
+     */
+    void deleteChildModules();
+
 protected:
     /**
      * Create a new child factory
@@ -226,22 +240,6 @@ protected:
         throw ModuleFactoryException("select()",
                 "This factory is probably a leaf. ");
     }
-
-    /**
-     * Delete all the child factories
-     *
-     * Shall be called in the derived class destructor.
-     * @note constructors are called base first, derived last,
-     * destructors are called in the reverse order.
-     */
-    void deleteChildFactories();
-
-    /**
-     * Delete all the child modules
-     *
-     * Shall be called in the derived class destructor.
-     */
-    void deleteChildModules();
 
     /**
      * Validate the selector to get an absolute value

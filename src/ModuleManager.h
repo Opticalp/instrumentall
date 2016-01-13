@@ -88,11 +88,25 @@ public:
     void defineOptions(Poco::Util::OptionSet & options);
 
     /**
+     * Add a Module to the list
+     *
+     * This function is called by the @ref Module constructor
+     */
+    void addModule(Module* pModule);
+
+    /**
      * Remove a Module from the list
      *
-     * This function has to be called by any Module by deletion.
+     * This function is called by the @ref Module destructor.
      */
     void removeModule(Module* pModule);
+
+    /**
+     * Remove a root factory from the list
+     *
+     * This function is called by the @ref ModuleFactory destructor.
+     */
+    void removeRootFactory(ModuleFactory* pFactory);
 
 private:
     /// module factory list

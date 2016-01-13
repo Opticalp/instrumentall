@@ -41,7 +41,16 @@ class ModuleFactoryBranch: public ModuleFactory
 public:
     ModuleFactoryBranch(ModuleFactory* parent, std::string selector):
         mParent(parent), mSelector(selector) { }
-    virtual ~ModuleFactoryBranch();
+
+    /**
+     * Destructor
+     *
+     * Notify the parent that it has to be removed from the list
+     */
+    virtual ~ModuleFactoryBranch()
+    {
+        mParent->removeChildFactory(this);
+    }
 
     /**
      * A branch factory is not a root

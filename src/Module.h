@@ -33,6 +33,8 @@
 
 class ModuleFactory;
 
+POCO_DECLARE_EXCEPTION( , ModuleException, Poco::Exception)
+
 /**
  * Module
  *
@@ -53,6 +55,9 @@ public:
 	 * The implementation should at least do the following:
 	 *  - generate a name that will be returned by internalName()
 	 *  - set the logger
+	 *  - call setCustomName(customName) after the internalName is set
+	 * @throw ModuleException forwarded from setCustomName if customName
+	 * is already in use.
 	 */
 	Module(ModuleFactory* parent);
 
@@ -64,17 +69,15 @@ public:
 	 *  - module manager
 	 *  - dispatcher
 	 */
-	virtual ~Module() { mParent->removeChildModule(this); }
-    // TODO module manager and dispatcher notification
-
+	virtual ~Module();
 
 	/**
 	 * Custom name of the module
 	 *
 	 * @return Name defined by the user at creation time
-	 * @note no duplicates should be allowed
+	 * @see setCustomName()
 	 */
-	virtual std::string name() const = 0;
+	std::string name() { return mName; }
 
 	/**
 	 * Internal name of the module
@@ -83,16 +86,16 @@ public:
 	 * since no duplicates are allowed.
 	 * @return Name computed by the module itself regarding internal
 	 * considerations
-	 * @note no duplicates should be allowed
+	 * @see setInternalName()
 	 */
-	virtual std::string internalName() const = 0;
+	std::string internalName() { return mInternalName; }
 
 	/**
 	 * Description of the module
 	 *
 	 * This description does not include dynamic content bound to
 	 * parameters (factory parameters or module parameters).
-	 * It should be static in the herited clases,
+	 * It should be static in the derived classes,
 	 * so it can be queried by the factory
 	 * before module creation.
 	 * @return full description of the module: functionalities, usage
@@ -100,6 +103,24 @@ public:
 	virtual const char * description() const = 0;
 
 protected:
+    /**
+     * Set the internal name of the module
+     *
+     * This method has to be called by the constructor
+     * before setCustomName()
+     * @throw ModuleException If internalName is already in use
+     */
+    void setInternalName(std::string internalName);
+
+	/**
+	 * Set the custom name of the module
+	 *
+	 * This method has to be called by the constructor.
+	 * If customName is empty, use internalName().
+	 * @throw ModuleException If customName is already in use
+	 */
+	void setCustomName(std::string customName);
+
 	/**
 	 * Parent module factory
 	 *
@@ -107,6 +128,9 @@ protected:
 	 * - to get the factory parameters (selectors, evtl parameters)
 	 */
 	ModuleFactory* mParent;
+
+	std::string mInternalName; ///< internal name of the module
+	std::string mName; ///< custom name of the module
 };
 
 #endif /* SRC_MODULE_H_ */

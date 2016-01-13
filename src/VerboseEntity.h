@@ -39,7 +39,7 @@
 class VerboseEntity
 {
 public:
-	/**
+    /**
 	 * Temporary constructor
 	 *
 	 * The logger is first set to startup.<name>
@@ -50,9 +50,9 @@ public:
 	 * @param name name of the entity. Should be unique,
 	 * ascii-friendly and should not contain spaces.
 	 */
-	VerboseEntity(const char* name)
+	VerboseEntity(std::string name)
 	{
-		setLogger("startup." + std::string(name));
+		setLogger("startup." + name);
 	}
 
 	/**
@@ -74,7 +74,8 @@ public:
      * Should not be used in implementations.
      * Use VerboseEntity(Poco::Logger& logger) instead
      */
-	VerboseEntity() { }
+	VerboseEntity():
+	    pLogger(&Poco::Logger::get("zombieVerboseEntity")) {  }
 
 	/**
 	 * Default destructor

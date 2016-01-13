@@ -26,11 +26,18 @@
  THE SOFTWARE.
  */
 
+#include "ModuleManager.h"
 #include "ModuleFactory.h"
 #include "ModuleFactoryBranch.h"
 
 #include <typeinfo>
 POCO_IMPLEMENT_EXCEPTION( ModuleFactoryException, Poco::Exception, "ModuleFactory error")
+
+ModuleFactory::~ModuleFactory()
+{
+    if (isRoot())
+        Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeRootFactory(this);
+}
 
 ModuleFactoryBranch& ModuleFactory::select(std::string selector)
 {
@@ -45,7 +52,7 @@ ModuleFactoryBranch& ModuleFactory::select(std::string selector)
     // child factory not found, create one.
     ModuleFactoryBranch* factory(newChildFactory(validated));
     childFactories.push_back(factory);
-    return factory;
+    return *factory;
 }
 
 void ModuleFactory::deleteChildFactory(std::string property)

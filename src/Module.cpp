@@ -30,22 +30,55 @@
 #include "ModuleFactory.h"
 #include "ModuleManager.h"
 
+#include <typeinfo>
+POCO_IMPLEMENT_EXCEPTION( ModuleException, Poco::Exception, "Module error")
+
 Module::Module(ModuleFactory* parent):
-    mParent(parent)
+      mParent(parent)
 {
-    // TODO:
-    //  - generate a name that will be returned by internalName()
-    //  - set the logger
-
-
+    Poco::Util::Application::instance().getSubsystem<ModuleManager>().addModule(this);
 }
 
 Module::~Module()
 {
 	// TODO:
-    // - notify module factory
+    // - notify dispatcher
+
+    // notify parent factory
+    mParent->removeChildModule(this);
 
     // notify module manager
     Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
+}
+
+void Module::setInternalName(std::string internalName)
+{
+    // TODO:
+    //  - check unicity
+
+//    if internalName is unique
+        mInternalName = internalName;
+//    else
+//        throw ModuleException("setInternalName",
+//            "the name: " + internalName + " is already in use");
+}
+
+void Module::setCustomName(std::string customName)
+{
+    // TODO:
+    //  - check unicity
+
+    std::string name;
+
+    if (customName.empty())
+        name = internalName();
+    else
+        name = customName;
+
+//    if name is unique
+        mName = name;
+//    else
+//        throw ModuleException("setCustomName",
+//            "the name: " + name + " is already in use");
 }
 
