@@ -58,7 +58,7 @@ public:
 	 *  - generate a name if it is not static
 	 *  - set the logger
 	 */
-	ModuleFactory() { }
+	ModuleFactory();
 
     /**
      * Standard destructor

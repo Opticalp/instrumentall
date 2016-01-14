@@ -33,28 +33,31 @@
 ModuleManager::ModuleManager():
 	VerboseEntity(name())
 {
-    // add root factories
-    _factories.push_back(new DemoRootFactory);
+    // Add root factories
+    // They are added automatically to the list via their constructor
+    new DemoRootFactory;
 }
 
 ModuleManager::~ModuleManager()
 {
     uninitialize();
 
-    for (std::vector<ModuleFactory*>::reverse_iterator it=_factories.rbegin(), ite=_factories.rend();
+    for (std::vector<ModuleFactory*>::reverse_iterator it=rootFactories.rbegin(), ite=rootFactories.rend();
             it != ite; it++)
     {
         delete *it;
         // it is then removed from the list because removeRootFactory()
         // is called by the ModuleFactory::~ModuleFactory() if it is a root.
     }
+
+    // allFactories should clean itself nicely
 }
 
 void ModuleManager::initialize(Poco::Util::Application& app)
 {
     setLogger(name());
 
-    for (std::vector<ModuleFactory*>::iterator it=_factories.begin(), ite=_factories.end();
+    for (std::vector<ModuleFactory*>::iterator it=rootFactories.begin(), ite=rootFactories.end();
             it != ite; it++)
     {
         (*it)->moduleDiscover();
@@ -63,7 +66,7 @@ void ModuleManager::initialize(Poco::Util::Application& app)
 
 void ModuleManager::uninitialize()
 {
-    for (std::vector<ModuleFactory*>::reverse_iterator it=_factories.rbegin(), ite=_factories.rend();
+    for (std::vector<ModuleFactory*>::reverse_iterator it=rootFactories.rbegin(), ite=rootFactories.rend();
             it != ite; it++)
     {
         if ((*it)->isLeaf())
@@ -103,19 +106,66 @@ void ModuleManager::removeModule(Module* pModule)
             "the module was not found");
 }
 
-void ModuleManager::removeRootFactory(ModuleFactory* pFactory)
+void ModuleManager::addFactory(ModuleFactory* pFactory)
 {
-    for (std::vector<ModuleFactory*>::iterator it=_factories.begin(),ite=_factories.end();
-            it!=ite;
-            it++)
+    if (pFactory->isRoot())
+        rootFactories.push_back(pFactory);
+
+    ModuleFactory** ppFactory = new (ModuleFactory*)(pFactory);
+    allFactories.push_back(SharedPtr<ModuleFactory*>(ppFactory));
+}
+
+void ModuleManager::removeFactory(ModuleFactory* pFactory)
+{
+    if (pFactory->isRoot())
     {
-        if (pFactory == *it)
+        bool notFound = true;
+
+        for (std::vector<ModuleFactory*>::iterator it=rootFactories.begin(),ite=rootFactories.end();
+                it!=ite;
+                it++)
         {
-            _factories.erase(it);
+            if (pFactory == *it)
+            {
+                rootFactories.erase(it);
+                notFound = false;
+                poco_debug(logger(), "factory " + pFactory->name() + " erased from rootFactories. ");
+                break;
+            }
+        }
+
+        if (notFound)
+            poco_error(logger(), "removeFactory(): "
+                "the factory was not found as a root factory "
+                "although isRoot() is set");
+    }
+
+    // find pFactory in allFactories
+    for (std::vector<SharedPtr<ModuleFactory*>>::iterator it=allFactories.begin(), ite=allFactories.end();
+            it!=ite; it++)
+    {
+        if (pFactory==**it)
+        {
+            **it = &emptyFactory; // replace the pointed factory by something throwing exceptions
+            allFactories.erase(it);
+            poco_debug(logger(), "factory erased " + pFactory->name() + " from allFactories. ");
             return;
         }
     }
 
-    poco_error(logger(), "removeRootFactory(): "
-            "the factory was not found");
+    poco_error(logger(), "removeFactory(): "
+        "the factory was not found");
+}
+
+SharedPtr<ModuleFactory*> ModuleManager::getFactory(ModuleFactory* pFactory)
+{
+    for (std::vector<SharedPtr<ModuleFactory*>>::iterator it=allFactories.begin(), ite=allFactories.end();
+            it!=ite; it++)
+    {
+        if (pFactory==**it)
+            return *it;
+    }
+
+    throw ModuleFactoryException("getFactory", "factory not found: "
+            "Should have been deleted during the query");
 }

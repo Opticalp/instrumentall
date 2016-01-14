@@ -35,8 +35,12 @@ POCO_IMPLEMENT_EXCEPTION( ModuleFactoryException, Poco::Exception, "ModuleFactor
 
 ModuleFactory::~ModuleFactory()
 {
-    if (isRoot())
-        Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeRootFactory(this);
+    Poco::Util::Application::instance().getSubsystem<ModuleManager>().addFactory(this);
+}
+
+ModuleFactory::~ModuleFactory()
+{
+    Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeFactory(this);
 }
 
 ModuleFactoryBranch& ModuleFactory::select(std::string selector)

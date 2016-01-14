@@ -32,6 +32,7 @@
 #include "VerboseEntity.h"
 
 #include "ModuleFactory.h"
+#include "EmptyModuleFactory.h"
 #include "Module.h"
 
 #include "Poco/Util/Subsystem.h"
@@ -39,8 +40,9 @@
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
 #include "Poco/Logger.h"
+#include "Poco/SharedPtr.h"
 
-#include <vector>
+using Poco::SharedPtr;
 
 /**
  * ModuleManager
@@ -102,18 +104,49 @@ public:
     void removeModule(Module* pModule);
 
     /**
-     * Remove a root factory from the list
+     * Add a factory to the list
      *
-     * This function is called by the @ref ModuleFactory destructor.
+     * This function is called by the @ref ModuleFactory constructor.
      */
-    void removeRootFactory(ModuleFactory* pFactory);
+    void addFactory(ModuleFactory* pFactory);
+
+    /**
+     * Remove a factory from the list
+     *
+     * This function is called by the @ref ModuleFactory destructor
+     */
+    void removeFactory(ModuleFactory* pFactory);
+
+    /**
+     * Get a shared pointer on a factory
+     */
+    SharedPtr<ModuleFactory*> getFactory(ModuleFactory* pFactory);
 
 private:
-    /// module factory list
-    std::vector<ModuleFactory*> _factories;
+    /// Root module factory list
+    std::vector<ModuleFactory*> rootFactories;
+
+    /**
+     * All module factory list
+     *
+     * When a Factory is exported to the "outside", a shared pointer
+     * on its pointer is exported. Then, if the factory is deleted,
+     * the shared pointer will point on NULL, and the entry is removed
+     * from this list.
+     *
+     * Any outside user of those shared pointer should consider testing
+     * first if the pointer is NULL.
+     */
+    std::vector<SharedPtr<ModuleFactory*>> allFactories;
 
     /// module list
     std::vector<Module*> _modules;
+
+    /**
+     * To be used to replace an expired factory to throw errors
+     * when its pointer is used.
+     */
+    EmptyModuleFactory emptyFactory;
 };
 
 //
