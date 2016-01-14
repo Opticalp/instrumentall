@@ -34,8 +34,8 @@ ModuleManager::ModuleManager():
 	VerboseEntity(name())
 {
     // Add root factories
-    // They are added automatically to the list via their constructor
-    new DemoRootFactory;
+    // Their constructor explicitly calls ModuleFactory(false)
+    addFactory(new DemoRootFactory);
 }
 
 ModuleManager::~ModuleManager()
@@ -46,8 +46,6 @@ ModuleManager::~ModuleManager()
             it != ite; it++)
     {
         delete *it;
-        // it is then removed from the list because removeRootFactory()
-        // is called by the ModuleFactory::~ModuleFactory() if it is a root.
     }
 
     // allFactories should clean itself nicely
@@ -111,8 +109,7 @@ void ModuleManager::addFactory(ModuleFactory* pFactory)
     if (pFactory->isRoot())
         rootFactories.push_back(pFactory);
 
-    ModuleFactory** ppFactory = new (ModuleFactory*)(pFactory);
-    allFactories.push_back(SharedPtr<ModuleFactory*>(ppFactory));
+    allFactories.push_back(SharedPtr<ModuleFactory*>(new (ModuleFactory*)(pFactory)));
 }
 
 void ModuleManager::removeFactory(ModuleFactory* pFactory)
@@ -141,7 +138,7 @@ void ModuleManager::removeFactory(ModuleFactory* pFactory)
     }
 
     // find pFactory in allFactories
-    for (std::vector<SharedPtr<ModuleFactory*>>::iterator it=allFactories.begin(), ite=allFactories.end();
+    for (std::vector< SharedPtr<ModuleFactory*> >::iterator it=allFactories.begin(), ite=allFactories.end();
             it!=ite; it++)
     {
         if (pFactory==**it)
@@ -157,9 +154,37 @@ void ModuleManager::removeFactory(ModuleFactory* pFactory)
         "the factory was not found");
 }
 
+std::vector<std::string> ModuleManager::getRootFactories()
+{
+    std::vector<std::string> list;
+
+    for (std::vector<ModuleFactory*>::iterator it=rootFactories.begin(),ite=rootFactories.end();
+            it!=ite;
+            it++)
+        list.push_back((*it)->name());
+
+    return list;
+}
+
+SharedPtr<ModuleFactory*> ModuleManager::getRootFactory(std::string name)
+{
+    for (std::vector<ModuleFactory*>::iterator it=rootFactories.begin(),ite=rootFactories.end();
+            it!=ite;
+            it++)
+    {
+        if (name.compare((*it)->name()) == 0)
+        {
+            return getFactory(*it);
+        }
+    }
+
+    throw ModuleFactoryException("getRootFactory",
+            "factory " + name + " not found among the root factories. ");
+}
+
 SharedPtr<ModuleFactory*> ModuleManager::getFactory(ModuleFactory* pFactory)
 {
-    for (std::vector<SharedPtr<ModuleFactory*>>::iterator it=allFactories.begin(), ite=allFactories.end();
+    for (std::vector< SharedPtr<ModuleFactory*> >::iterator it=allFactories.begin(), ite=allFactories.end();
             it!=ite; it++)
     {
         if (pFactory==**it)

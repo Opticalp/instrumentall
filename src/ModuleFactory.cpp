@@ -33,14 +33,16 @@
 #include <typeinfo>
 POCO_IMPLEMENT_EXCEPTION( ModuleFactoryException, Poco::Exception, "ModuleFactory error")
 
-ModuleFactory::~ModuleFactory()
+ModuleFactory::ModuleFactory()
 {
-    Poco::Util::Application::instance().getSubsystem<ModuleManager>().addFactory(this);
+    if (!isRoot())
+        Poco::Util::Application::instance().getSubsystem<ModuleManager>().addFactory(this);
 }
 
 ModuleFactory::~ModuleFactory()
 {
-    Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeFactory(this);
+    if (!isRoot())
+        Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeFactory(this);
 }
 
 ModuleFactoryBranch& ModuleFactory::select(std::string selector)

@@ -50,7 +50,7 @@ using Poco::SharedPtr;
  * Manage the modules, including module factories
  * Instantiate the module factories
  */
-class ModuleManager: public Poco::Util::Subsystem, public VerboseEntity
+class ModuleManager: public Poco::Util::Subsystem, VerboseEntity
 {
 public:
 	ModuleManager();
@@ -76,7 +76,7 @@ public:
      *
      * - reset factories discovery
      * - clear child factories
-     *
+     *0x0
      * @note reseting the factories removes their child modules
      */
     void uninitialize();
@@ -118,6 +118,16 @@ public:
     void removeFactory(ModuleFactory* pFactory);
 
     /**
+     * Get the list of root factories names
+     */
+    std::vector<std::string> getRootFactories();
+
+    /**
+     * Get a root factory, given its name
+     */
+    SharedPtr<ModuleFactory*> getRootFactory(std::string name);
+
+    /**
      * Get a shared pointer on a factory
      */
     SharedPtr<ModuleFactory*> getFactory(ModuleFactory* pFactory);
@@ -137,7 +147,7 @@ private:
      * Any outside user of those shared pointer should consider testing
      * first if the pointer is NULL.
      */
-    std::vector<SharedPtr<ModuleFactory*>> allFactories;
+    std::vector< SharedPtr<ModuleFactory*> > allFactories;
 
     /// module list
     std::vector<Module*> _modules;
@@ -145,6 +155,8 @@ private:
     /**
      * To be used to replace an expired factory to throw errors
      * when its pointer is used.
+     *
+     * This is the only factory that do not stand in allFactories
      */
     EmptyModuleFactory emptyFactory;
 };

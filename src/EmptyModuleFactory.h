@@ -44,8 +44,7 @@
 class EmptyModuleFactory: public ModuleFactory
 {
 public:
-    EmptyModuleFactory();
-    virtual ~EmptyModuleFactory();
+    EmptyModuleFactory() { }
 
     const char * name() const { return "empty factory"; }
     const char * description() const { return "replaces an expired factory. "; }
