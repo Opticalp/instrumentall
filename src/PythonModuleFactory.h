@@ -87,8 +87,33 @@ static PyMemberDef pyModFactMembers[] =
 extern "C" int pyModFactInit(ModFactMembers* self, PyObject *args, PyObject *kwds);
 
 
+/// ModuleFactory::selectDescription python wrapper
+extern "C" PyObject* pyModFactSelectDescription(ModFactMembers *self);
+
+static PyMethodDef pyMethodModFactSelectDescription =
+{
+    "selectDescription",
+    (PyCFunction)pyModFactSelectDescription,
+    METH_NOARGS,
+    "select() usage help"
+};
+
+/// ModuleFactory::selectDescription python wrapper
+extern "C" PyObject* pyModFactSelectValueList(ModFactMembers *self);
+
+static PyMethodDef pyMethodModFactSelectValueList =
+{
+    "selectValueList",
+    (PyCFunction)pyModFactSelectValueList,
+    METH_NOARGS,
+    "List select() possible values. "
+    "An empty string means that the choice is open"
+};
+
 /// exported methods
 static PyMethodDef pyModFactMethods[] = {
+        pyMethodModFactSelectDescription,
+        pyMethodModFactSelectValueList,
         {NULL} // sentinel
 };
 

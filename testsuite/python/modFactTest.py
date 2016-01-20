@@ -44,11 +44,11 @@ def myMain():
     print "Factory name: " + fac.name
     print "Factory description: " + fac.description
     
-#    ## select
-#    print fac.selectDescription()
-#    print "Possible selectors: "
-#    for val in fac.selectValueList():
-#        print " - " + val + " >> " + fac.select(val).name
+    ## select
+    print fac.selectDescription()
+    print "Possible selectors: "
+    for val in fac.selectValueList():
+        print " - " + val #+ " >> " + fac.select(val).name
 #        print "   " + fac.select(val).description
     
 # main body    

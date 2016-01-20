@@ -108,4 +108,54 @@ extern "C" int pyModFactInit(ModFactMembers* self, PyObject *args, PyObject *kwd
     return 0;
 }
 
+PyObject* pyModFactSelectDescription(ModFactMembers* self)
+{
+    try
+    {
+        return PyString_FromString((**self->moduleFactory)->selectDescription());
+    }
+    catch (ModuleFactoryException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+}
+
+PyObject* pyModFactSelectValueList(ModFactMembers* self)
+{
+    std::vector<std::string> strValues;
+
+    try
+    {
+        strValues = (**self->moduleFactory)->selectValueList();
+    }
+    catch (ModuleFactoryException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    // construct the list to return
+    PyObject* pyValues = PyList_New(0);
+
+    for (std::vector<std::string>::iterator it=strValues.begin(), ite=strValues.end();
+            it != ite; it++ )
+    {
+        // create the dict entry
+        if (0 > PyList_Append(
+                pyValues,
+                PyString_FromString(it->c_str())))
+        {
+            // appending the item failed
+            PyErr_SetString(PyExc_RuntimeError,
+                    "Not able to build the return list");
+            return NULL;
+        }
+    }
+
+    return pyValues;
+}
+
 #endif /* HAVE_PYTHON27 */
