@@ -40,6 +40,7 @@ THE SOFTWARE.
 #include "PythonManager.h"
 
 #include "PythonModuleFactory.h"
+#include "PythonModule.h"
 
 /**
  * array to bind to-be-exposed methods (C to Python wrappers)
@@ -106,8 +107,8 @@ void PythonManager::exposeAPI()
     Py_INCREF(&PythonModuleFactory);
     PyModule_AddObject(m, "Factory", (PyObject *)&PythonModuleFactory);
 
-//    Py_INCREF(&pythonModule);
-//    PyModule_AddObject(m, "Module", (PyObject *)&PythonModule);
+    Py_INCREF(&PythonModule);
+    PyModule_AddObject(m, "Module", (PyObject *)&PythonModule);
 }
 
 
