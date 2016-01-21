@@ -86,6 +86,16 @@ static PyMemberDef pyModFactMembers[] =
  */
 extern "C" int pyModFactInit(ModFactMembers* self, PyObject *args, PyObject *kwds);
 
+/// ModuleFactory::select python wrapper
+extern "C" PyObject* pyModFactSelect(ModFactMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModFactSelect =
+{
+    "select",
+    (PyCFunction)pyModFactSelect,
+    METH_VARARGS,
+    "Refine factory settings to return a new factory"
+};
 
 /// ModuleFactory::selectDescription python wrapper
 extern "C" PyObject* pyModFactSelectDescription(ModFactMembers *self);
@@ -112,6 +122,7 @@ static PyMethodDef pyMethodModFactSelectValueList =
 
 /// exported methods
 static PyMethodDef pyModFactMethods[] = {
+        pyMethodModFactSelect,
         pyMethodModFactSelectDescription,
         pyMethodModFactSelectValueList,
         {NULL} // sentinel

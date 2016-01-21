@@ -108,6 +108,59 @@ extern "C" int pyModFactInit(ModFactMembers* self, PyObject *args, PyObject *kwd
     return 0;
 }
 
+PyObject* pyModFactSelect(ModFactMembers* self, PyObject* args)
+{
+    char *charParamName;
+
+    if (!PyArg_ParseTuple(args, "s:getParameter", &charParamName))
+        return NULL;
+
+    std::string paramName = charParamName;
+    Poco::SharedPtr<ModuleFactory*> childFact;
+
+    try
+    {
+        childFact = Poco::Util::Application::instance()
+                      .getSubsystem<ModuleManager>()
+                      .getFactory(
+                              reinterpret_cast<ModuleFactory*>(
+                                      &(**self->moduleFactory)->select(paramName)) );
+    }
+    catch (ModuleFactoryException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    // construct the new python factory
+
+    // alloc
+    if (PyType_Ready(&PythonModuleFactory) < 0)
+        return NULL;
+
+    ModFactMembers* pyChildFact =
+            (ModFactMembers*)(
+                    pyModFactAlloc((PyTypeObject*)&PythonModuleFactory, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // retrieve name and description
+    tmp = pyChildFact->name;
+    pyChildFact->name = PyString_FromString((*childFact)->name());
+    Py_XDECREF(tmp);
+
+    tmp = pyChildFact->description;
+    pyChildFact->description = PyString_FromString((*childFact)->description());
+    Py_XDECREF(tmp);
+
+    // set ModuleFactory reference
+    *(pyChildFact->moduleFactory) = childFact;
+
+    return (PyObject*)(pyChildFact);
+}
+
 PyObject* pyModFactSelectDescription(ModFactMembers* self)
 {
     try

@@ -48,8 +48,8 @@ def myMain():
     print fac.selectDescription()
     print "Possible selectors: "
     for val in fac.selectValueList():
-        print " - " + val #+ " >> " + fac.select(val).name
-#        print "   " + fac.select(val).description
+        print " - " + val + " >> " + fac.select(val).name
+        print "   " + fac.select(val).description
     
 # main body    
 import sys
