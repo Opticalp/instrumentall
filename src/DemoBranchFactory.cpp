@@ -33,7 +33,5 @@ THE SOFTWARE.
 
 ModuleFactoryBranch* DemoBranchFactory::newChildFactory(std::string selector)
 {
-    ModuleFactoryBranch* factory = new DemoLeafFactory(this, selector);
-    childFactories.push_back(factory);
-    return factory;
+    return new DemoLeafFactory(this, selector);
 }

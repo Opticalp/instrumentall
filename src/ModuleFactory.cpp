@@ -33,7 +33,8 @@
 #include <typeinfo>
 POCO_IMPLEMENT_EXCEPTION( ModuleFactoryException, Poco::Exception, "ModuleFactory error")
 
-ModuleFactory::ModuleFactory()
+ModuleFactory::ModuleFactory(bool root):
+    bRoot(root)
 {
     if (!isRoot())
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().addFactory(this);

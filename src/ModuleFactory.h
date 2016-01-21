@@ -58,7 +58,7 @@ public:
 	 *  - generate a name if it is not static
 	 *  - set the logger
 	 */
-	ModuleFactory();
+	ModuleFactory(bool root=true);
 
     /**
      * Standard destructor
@@ -155,7 +155,7 @@ public:
      * ModuleFactoryBranch* should be possible (without using a safer
      * dynamic_cast, then).
      */
-    virtual bool isRoot() { return true; }
+    bool isRoot() { return bRoot; }
 
     /**
      * Delete the child factory given by the selector
@@ -223,17 +223,15 @@ public:
 
 protected:
     /**
-     * Create a new child factory
+     * Create a new child factory from ModuleFactoryBranch
      *
      * This method is to be called by select(). It should not
      * be directly accessed.
      *
-     * This method shall verify if the selector is valid
-     * for child factory creation, or leave this task to
-     * validateSelector().
+     * The selector validity is checked in select().
      *
-     * It has to insert the newly created child factory into
-     * the child factories list.
+     * select() inserts the newly created child factory into
+     * the child factories list. It shall not be done in the implementation.
      */
     virtual ModuleFactoryBranch* newChildFactory(std::string selector)
     {
@@ -284,6 +282,9 @@ protected:
      * is called by create(). create() adds the new module into the list.
      */
     std::vector<Module*> childModules;
+
+private:
+    bool bRoot; ///< flag to check if this module factory is a root factory
 };
 
 #endif /* SRC_MODULEFACTORY_H_ */

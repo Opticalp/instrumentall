@@ -40,6 +40,7 @@ class ModuleFactoryBranch: public ModuleFactory
 {
 public:
     ModuleFactoryBranch(ModuleFactory* parent, std::string selector):
+        ModuleFactory(false),
         mParent(parent), mSelector(selector) { }
 
     /**
@@ -51,13 +52,6 @@ public:
     {
         mParent->removeChildFactory(this);
     }
-
-    /**
-     * A branch factory is not a root
-     *
-     * @see ModuleFactory::isRoot
-     */
-    bool isRoot() { return false; }
 
     /**
      * Retrieve the select() value of the parent
