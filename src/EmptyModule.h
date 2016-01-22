@@ -1,5 +1,5 @@
 /**
- * @file	src/DemoLeafFactory.h
+ * @file	EmptyModule.h
  * @date	jan. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -26,40 +26,34 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOLEAFFACTORY_H_
-#define SRC_DEMOLEAFFACTORY_H_
+#ifndef SRC_EMPTYMODULE_H_
+#define SRC_EMPTYMODULE_H_
 
-#include "ModuleFactoryBranch.h"
+#include "Module.h"
 
 /**
- * DemoLeafFactory
+ * EmptyModule
  *
- * Very simple module factory to demonstrate ModuleFactory usage
- * in the case of a leaf factory (that generates Modules)
+ * This module should just throw exception.
+ * It has to be used in place of a previous module
+ * when this one expired.
  *
- * Child of DemoBranchFactory, itself child of DemoRootFactory
+ * @see ModuleManager::allModules
+ * @see ModuleManager::removeModule
  */
-class DemoLeafFactory: public ModuleFactoryBranch
+class EmptyModule: public Module
 {
 public:
-    DemoLeafFactory(ModuleFactory* parent, std::string selector):
-        ModuleFactoryBranch(parent, selector) { setLogger(name()); }
-    virtual ~DemoLeafFactory() { }
-
-    const char * name() const { return "DemoLeafFactory"; }
-    const char * description() const
+    EmptyModule(): Module(NULL)
     {
-        return "Example code for a leaf module factory. "
-                "Please use select(\"leaf\") to access its only child. ";
+        setInternalName("emptyModule");
+        setCustomName("");
     }
 
-    bool isLeaf() { return true; }
+    virtual ~EmptyModule() { }
 
-    size_t countRemain() { return 1; }
-
-private:
-    Module* newChildModule(std::string customName);
-
+    const char * description() const
+        { return "Replaces an expired module"; }
 };
 
-#endif /* SRC_DEMOLEAFFACTORY_H_ */
+#endif /* SRC_EMPTYMODULE_H_ */

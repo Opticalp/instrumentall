@@ -84,24 +84,39 @@ void ModuleManager::defineOptions(Poco::Util::OptionSet& options)
 
 void ModuleManager::addModule(Module* pModule)
 {
-    _modules.push_back(pModule);
+    allModules.push_back(SharedPtr<Module*>(new (Module*)(pModule)));
 }
 
 void ModuleManager::removeModule(Module* pModule)
 {
-    for (std::vector<Module*>::iterator it=_modules.begin(),ite=_modules.end();
+    for (std::vector< SharedPtr<Module*> >::iterator it=allModules.begin(),ite=allModules.end();
             it!=ite;
             it++)
     {
-        if (pModule == *it)
+        if (pModule == **it)
         {
-            _modules.erase(it);
+            **it = &emptyModule; // replace the pointed factory by something throwing exceptions
+            allModules.erase(it);
+            poco_debug(logger(), pModule->name() + " module erased from allModules. ");
             return;
         }
     }
 
     poco_error(logger(), "removeModule(): "
             "the module was not found");
+}
+
+SharedPtr<Module*> ModuleManager::getModule(Module* pModule)
+{
+    for (std::vector< SharedPtr<Module*> >::iterator it=allModules.begin(), ite=allModules.end();
+            it!=ite; it++)
+    {
+        if (pModule==**it)
+            return *it;
+    }
+
+    throw ModuleException("getModule", "module not found: "
+            "Should have been deleted during the query");
 }
 
 void ModuleManager::addFactory(ModuleFactory* pFactory)

@@ -51,6 +51,14 @@ def myMain():
         print " - " + val + " >> " + fac.select(val).name
         print "   " + fac.select(val).description
     
+    # create leaf factory
+    fac.select("branch").select("leaf")
+    
+    if (fac.countRemain()>0):
+        print "Creating module from " + fac.name    
+        mod = fac.create()
+        print "  module " + mod.name + " created: " + mod.description
+    
 # main body    
 import sys
 import os

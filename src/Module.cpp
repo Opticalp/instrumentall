@@ -36,7 +36,9 @@ POCO_IMPLEMENT_EXCEPTION( ModuleException, Poco::Exception, "Module error")
 Module::Module(ModuleFactory* parent):
       mParent(parent)
 {
-    Poco::Util::Application::instance().getSubsystem<ModuleManager>().addModule(this);
+    // if not EmptyModule, add this to module manager
+    if (parent)
+        Poco::Util::Application::instance().getSubsystem<ModuleManager>().addModule(this);
 }
 
 Module::~Module()
@@ -45,10 +47,13 @@ Module::~Module()
     // - notify dispatcher
 
     // notify parent factory
-    mParent->removeChildModule(this);
+    if (mParent)
+    {
+        mParent->removeChildModule(this);
 
-    // notify module manager
-    Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
+        // notify module manager
+        Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
+    }
 }
 
 void Module::setInternalName(std::string internalName)

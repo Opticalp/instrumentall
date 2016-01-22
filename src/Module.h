@@ -102,6 +102,13 @@ public:
 	 */
 	virtual const char * description() const = 0;
 
+	/**
+	 * Get parent ModuleFactory
+	 *
+	 * e.g. to get factory parameters
+	 */
+	ModuleFactory* parent() { return mParent; }
+
 protected:
     /**
      * Set the internal name of the module
@@ -121,6 +128,7 @@ protected:
 	 */
 	void setCustomName(std::string customName);
 
+private:
 	/**
 	 * Parent module factory
 	 *

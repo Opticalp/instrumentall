@@ -120,11 +120,38 @@ static PyMethodDef pyMethodModFactSelectValueList =
     "An empty string means that the choice is open"
 };
 
+/// ModuleFactory::countRemain python wrapper
+extern "C" PyObject* pyModFactCountRemain(ModFactMembers *self);
+
+static PyMethodDef pyMethodModFactCountRemain =
+{
+    "countRemain",
+    (PyCFunction)pyModFactCountRemain,
+    METH_NOARGS,
+    "Count how many times create() can be called. "
+};
+
+/// ModuleFactory::create python wrapper
+extern "C" PyObject* pyModFactCreate(ModFactMembers *self);
+
+static PyMethodDef pyMethodModFactCreate =
+{
+    "create",
+    (PyCFunction)pyModFactCreate,
+    METH_NOARGS,
+    "Create a new Module. "
+};
+
 /// exported methods
 static PyMethodDef pyModFactMethods[] = {
+
         pyMethodModFactSelect,
         pyMethodModFactSelectDescription,
         pyMethodModFactSelectValueList,
+
+        pyMethodModFactCountRemain,
+        pyMethodModFactCreate,
+
         {NULL} // sentinel
 };
 

@@ -34,6 +34,7 @@
 #include "ModuleFactory.h"
 #include "EmptyModuleFactory.h"
 #include "Module.h"
+#include "EmptyModule.h"
 
 #include "Poco/Util/Subsystem.h"
 #include "Poco/Util/Application.h"
@@ -104,6 +105,11 @@ public:
     void removeModule(Module* pModule);
 
     /**
+     * Get a shared pointer on a module
+     */
+    SharedPtr<Module*> getModule(Module* pModule);
+
+    /**
      * Add a factory to the list
      *
      * This function is called by the @ref ModuleFactory constructor.
@@ -141,16 +147,10 @@ private:
      *
      * When a Factory is exported to the "outside", a shared pointer
      * on its pointer is exported. Then, if the factory is deleted,
-     * the shared pointer will point on NULL, and the entry is removed
-     * from this list.
-     *
-     * Any outside user of those shared pointer should consider testing
-     * first if the pointer is NULL.
+     * the shared pointer will point on EmptyModuleFactory emptyFactory,
+     * and the entry is removed from this list.
      */
     std::vector< SharedPtr<ModuleFactory*> > allFactories;
-
-    /// module list
-    std::vector<Module*> _modules;
 
     /**
      * To be used to replace an expired factory to throw errors
@@ -159,6 +159,25 @@ private:
      * This is the only factory that do not stand in allFactories
      */
     EmptyModuleFactory emptyFactory;
+
+    /**
+     * All module list
+     *
+     * When a Module is exported to the "outside", a shared pointer
+     * on its pointer is exported. Then, if the module is deleted,
+     * the shared pointer will point to EmptyModule emptyModule,
+     * and the entry is removed from this list.
+     */
+    std::vector< SharedPtr<Module*> > allModules;
+
+    /**
+     * To be used to replace an expired module to throw errors
+     * when its pointer is used.
+     *
+     * This module is not added to allModules
+     * @see addModule()
+     */
+    EmptyModule emptyModule;
 };
 
 //

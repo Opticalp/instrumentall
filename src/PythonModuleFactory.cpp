@@ -30,6 +30,7 @@ THE SOFTWARE.
 
 #include "ModuleManager.h"
 #include "PythonModuleFactory.h"
+#include "PythonModule.h"
 
 extern "C" void pyModFactDealloc(ModFactMembers* self)
 {
@@ -209,6 +210,79 @@ PyObject* pyModFactSelectValueList(ModFactMembers* self)
     }
 
     return pyValues;
+}
+
+PyObject* pyModFactCountRemain(ModFactMembers* self)
+{
+    size_t cnt;
+
+    try
+    {
+        cnt = (**self->moduleFactory)->countRemain();
+    }
+    catch (ModuleFactoryException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    return PyInt_FromSize_t(cnt);
+}
+
+PyObject* pyModFactCreate(ModFactMembers* self)
+{
+    Poco::SharedPtr<Module*> module;
+
+    try
+    {
+        module = Poco::Util::Application::instance()
+                      .getSubsystem<ModuleManager>()
+                      .getModule( (**self->moduleFactory)->create() );
+    }
+    catch (ModuleFactoryException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+    catch (ModuleException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    // construct the new python module
+
+    // alloc
+    if (PyType_Ready(&PythonModule) < 0)
+        return NULL;
+
+    ModMembers* pyMod =
+            (ModMembers*)(
+                    pyModNew((PyTypeObject*)&PythonModule, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // retrieve name and description
+    tmp = pyMod->name;
+    pyMod->name = PyString_FromString((*module)->name().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = pyMod->internalName;
+    pyMod->internalName = PyString_FromString((*module)->internalName().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = pyMod->description;
+    pyMod->description = PyString_FromString((*module)->description());
+    Py_XDECREF(tmp);
+
+    // set ModuleFactory reference
+    *(pyMod->module) = module;
+
+    return (PyObject*)(pyMod);
 }
 
 #endif /* HAVE_PYTHON27 */

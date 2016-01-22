@@ -90,8 +90,8 @@ void PythonManager::exposeAPI()
     if (PyType_Ready(&PythonModuleFactory) < 0)
         return;
 
-//    if (PyType_Ready(&PythonModule) < 0)
-//        return;
+    if (PyType_Ready(&PythonModule) < 0)
+        return;
 
     PyObject* m;
 
