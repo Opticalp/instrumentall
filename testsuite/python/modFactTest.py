@@ -58,6 +58,7 @@ def myMain():
         print "Creating module from " + fac.name + " without arg" 
         mod = fac.create()
         print "  module " + mod.name + " created: " + mod.description
+        print mod.name + " parent is: " + mod.parent().name
 
     if (fac.countRemain()>0):
         print "Creating module from " + fac.name + ' with arg: "modjo"' 

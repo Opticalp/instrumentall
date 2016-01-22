@@ -94,8 +94,21 @@ static PyMemberDef pyModMembers[] =
  */
 extern "C" int pyModInit(ModMembers* self, PyObject *args, PyObject *kwds);
 
+/// ModuleFactory::countRemain python wrapper
+extern "C" PyObject* pyModParent(ModMembers *self);
+
+static PyMethodDef pyMethodModParent =
+{
+    "parent",
+    (PyCFunction)pyModParent,
+    METH_NOARGS,
+    "Retrieve the parent factory"
+};
+
 /// exported methods
 static PyMethodDef pyModMethods[] = {
+        pyMethodModParent,
+
         {NULL} // sentinel
 };
 

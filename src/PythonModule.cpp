@@ -29,6 +29,8 @@ THE SOFTWARE.
 #ifdef HAVE_PYTHON27
 
 #include "Module.h"
+#include "ModuleManager.h"
+#include "PythonModuleFactory.h"
 #include "PythonModule.h"
 
 extern "C" void pyModDealloc(ModMembers* self)
@@ -82,6 +84,55 @@ extern "C" int pyModInit(ModMembers* self, PyObject *args, PyObject *kwds)
 {
     PyErr_SetString(PyExc_NotImplementedError, "__init__ is not implemented");
     return -1;
+}
+
+PyObject* pyModParent(ModMembers* self)
+{
+    Poco::SharedPtr<ModuleFactory*> factory;
+
+    try
+    {
+        factory = Poco::Util::Application::instance()
+                          .getSubsystem<ModuleManager>()
+                          .getFactory( (**self->module)->parent() );
+    }
+    catch (ModuleFactoryException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+    catch (ModuleException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    // alloc
+    if (PyType_Ready(&PythonModuleFactory) < 0)
+        return NULL;
+
+    ModFactMembers* pyParent =
+            (ModFactMembers*)(
+                    pyModFactAlloc((PyTypeObject*)&PythonModuleFactory, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // retrieve name and description
+    tmp = pyParent->name;
+    pyParent->name = PyString_FromString((*factory)->name());
+    Py_XDECREF(tmp);
+
+    tmp = pyParent->description;
+    pyParent->description = PyString_FromString((*factory)->description());
+    Py_XDECREF(tmp);
+
+    // set ModuleFactory reference
+    *(pyParent->moduleFactory) = factory;
+
+    return (PyObject*)(pyParent);
 }
 
 #endif /* HAVE_PYTHON27 */
