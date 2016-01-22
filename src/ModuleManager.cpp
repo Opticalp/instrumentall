@@ -141,7 +141,7 @@ void ModuleManager::removeFactory(ModuleFactory* pFactory)
             {
                 rootFactories.erase(it);
                 notFound = false;
-                poco_debug(logger(), "factory " + pFactory->name() + " erased from rootFactories. ");
+                poco_debug(logger(), "factory " + std::string(pFactory->name()) + " erased from rootFactories. ");
                 break;
             }
         }
@@ -160,7 +160,7 @@ void ModuleManager::removeFactory(ModuleFactory* pFactory)
         {
             **it = &emptyFactory; // replace the pointed factory by something throwing exceptions
             allFactories.erase(it);
-            poco_debug(logger(), "factory erased " + pFactory->name() + " from allFactories. ");
+            poco_debug(logger(), "factory erased " + std::string(pFactory->name()) + " from allFactories. ");
             return;
         }
     }
