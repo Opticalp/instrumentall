@@ -87,3 +87,11 @@ void Module::setCustomName(std::string customName)
 //            "the name: " + name + " is already in use");
 }
 
+ModuleFactory* Module::parent()
+{
+    if (mParent)
+        return mParent;
+    else
+        throw ModuleException("parent",
+                "This module has no valid parent factory");
+}

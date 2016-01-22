@@ -107,7 +107,7 @@ public:
 	 *
 	 * e.g. to get factory parameters
 	 */
-	ModuleFactory* parent() { return mParent; }
+	ModuleFactory* parent();
 
 protected:
     /**
