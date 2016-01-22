@@ -127,7 +127,7 @@ Module* ModuleFactory::create(std::string customName)
                 it++)
         {
             if ((*it)->countRemain())
-                return (*it)->create();
+                return (*it)->create(customName);
         }
 
         throw ModuleFactoryException("create()",

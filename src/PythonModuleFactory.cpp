@@ -230,15 +230,24 @@ PyObject* pyModFactCountRemain(ModFactMembers* self)
     return PyInt_FromSize_t(cnt);
 }
 
-PyObject* pyModFactCreate(ModFactMembers* self)
+PyObject* pyModFactCreate(ModFactMembers* self, PyObject *args)
 {
+    char empty[] = "";
+    char *charParamName = empty;
+    std::string paramName;
+
+    if (!PyArg_ParseTuple(args, "|s:create", &charParamName))
+        return NULL;
+
+    paramName = charParamName;
+
     Poco::SharedPtr<Module*> module;
 
     try
     {
         module = Poco::Util::Application::instance()
                       .getSubsystem<ModuleManager>()
-                      .getModule( (**self->moduleFactory)->create() );
+                      .getModule( (**self->moduleFactory)->create(paramName) );
     }
     catch (ModuleFactoryException& e)
     {

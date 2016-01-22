@@ -132,13 +132,13 @@ static PyMethodDef pyMethodModFactCountRemain =
 };
 
 /// ModuleFactory::create python wrapper
-extern "C" PyObject* pyModFactCreate(ModFactMembers *self);
+extern "C" PyObject* pyModFactCreate(ModFactMembers *self, PyObject *args);
 
 static PyMethodDef pyMethodModFactCreate =
 {
     "create",
     (PyCFunction)pyModFactCreate,
-    METH_NOARGS,
+    METH_VARARGS,
     "Create a new Module. "
 };
 
