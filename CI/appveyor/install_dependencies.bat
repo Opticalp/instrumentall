@@ -6,7 +6,6 @@ REM @license MIT
 REM Install dependencies:
 REM  - build POCO from latest git release. 
 
-
 set CURRENT_DIR=%CD%
 REM echo "current dir is %CURRENT_DIR%"
 
@@ -46,3 +45,10 @@ REM echo "Poco install done. "
 
 REM %PATH% has to be modified to take into account poco .dlls
 cd %CURRENT_DIR%
+
+REM fix python configuration for 2.7.11
+if "%ARCH%"=="Win64" (
+  set PYTHONHOME=C:\Python27-x64
+) else (
+  set PYTHONHOME=C:\Python27
+)

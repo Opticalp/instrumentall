@@ -76,6 +76,18 @@ public:
      */
     std::string version();
 
+    /**
+     * Application name
+     */
+    const char* name() const
+        { return "instrumentall"; }
+
+    /**
+     * Application description
+     */
+    const char* description() const
+        { return "Wide-purpose instrumentation software. "; }
+
 protected:
     /**
      * Initializes the application and all registered subsystems.

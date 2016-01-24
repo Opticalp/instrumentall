@@ -134,13 +134,15 @@ void MainApplication::displayHelp()
     helpFormatter.setCommand(commandName());
     helpFormatter.setUsage("[options]");
     helpFormatter.setHeader(
-        "Hello version " + version() + " - test application");
+        std::string(name()) + " " + version()
+        + " - " + std::string(description()) + "\n" );
     helpFormatter.format(std::cout);
 }
 
 std::string MainApplication::about()
 {
-    std::string strAbout("Instrumentall " + version() + " - Wide-purpose instrumentation software\n"
+    std::string strAbout( std::string(name()) + " " + version()
+            + " - " + std::string(description()) + "\n"
         "Copyright (c) 2013-2015, Opticalp.fr and contributors\n"
         "MIT License, see http://www.opensource.org/licenses/MIT\n");
 
@@ -155,7 +157,7 @@ std::string MainApplication::about()
     // dependencies
     if (deps.size())
     {
-        strAbout += "Instrumentall is using: ";
+        strAbout += std::string(name()) + " is using: ";
 
         for (std::vector<Dependency*>::iterator it = deps.begin(), ite = deps.end();
                 it != ite; it++)

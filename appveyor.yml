@@ -19,17 +19,21 @@ init:
 
 environment:
   matrix:
-  - GENERATOR: Visual Studio 11 2012 Win64
   - GENERATOR: Visual Studio 11 2012
-#  - GENERATOR: Visual Studio 12 2013 Win64
+    ARCH: Win64
+  - GENERATOR: Visual Studio 11 2012
 #  - GENERATOR: Visual Studio 12 2013
-  - GENERATOR: Visual Studio 14 2015 Win64
+#    ARCH: Win64
+#  - GENERATOR: Visual Studio 12 2013
+  - GENERATOR: Visual Studio 14 2015
+    ARCH: Win64
   - GENERATOR: Visual Studio 14 2015
 #  - GENERATOR: MinGW Makefiles  # poco is not compiling with this yet... (1.6.0)
 
 install:
 - if "%GENERATOR%"=="MinGW Makefiles" ( set SH_COMMAND=gulash.exe ) else ( set SH_COMMAND=sh.exe )
 - if "%GENERATOR%"=="MinGW Makefiles" ( move "%PROGRAMFILES%\Git\usr\bin\sh.exe" "%PROGRAMFILES%\Git\usr\bin\%SH_COMMAND%" )
+- if NOT [%ARCH%] == [] ( set GENERATOR=%GENERATOR% %ARCH%)
 - call %APPVEYOR_BUILD_FOLDER%\CI\appveyor\install_dependencies.bat # install poco
 
 before_build:
