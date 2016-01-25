@@ -40,6 +40,7 @@
 #include "PythonManager.h"
 #include "ModuleManager.h"
 
+#include "version.h"
 #include "MainApplication.h"
 
 using Poco::Util::Application;
@@ -154,6 +155,11 @@ std::string MainApplication::about()
             ". \n";
     // TODO: add various compiler version info?
 
+    strAbout += "Build time (UTC): " + std::string(BUILD_DATE) + "\n";
+    std::string gitBranch(GIT_BRANCH);
+    if (!gitBranch.empty())
+        strAbout += "Git branch: " + gitBranch + "\n";
+
     // dependencies
     if (deps.size())
     {
@@ -175,7 +181,7 @@ std::string MainApplication::about()
 
 std::string MainApplication::version()
 {
-    return "1.0.0-dev";
+    return std::string(VERSION);
 }
 
 int MainApplication::main(const std::vector<std::string>& args)
