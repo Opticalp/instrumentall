@@ -57,6 +57,18 @@ endif ( )
 
 target_link_libraries( instrumentall  Poco::Foundation Poco::Util )
 
+## generate build info
+
+ADD_CUSTOM_TARGET(
+    version
+    ${CMAKE_COMMAND} -D SRC=${CMAKE_SOURCE_DIR}/versionBuild/version.h.in
+                     -D DST=${CMAKE_BINARY_DIR}/version/version.h
+                     -D VERSION_FILE=${CMAKE_SOURCE_DIR}/VERSION
+                     -P ${CMAKE_SOURCE_DIR}/versionBuild/version.cmake
+)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/version)
+ADD_DEPENDENCIES(instrumentall version)
+
 ## configure tests
 enable_testing ()
 
