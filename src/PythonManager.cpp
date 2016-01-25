@@ -52,10 +52,10 @@
 
 using Poco::Util::Application;
 
-PythonManager::PythonManager()
+PythonManager::PythonManager():
+	VerboseEntity(name())
 {
-    // tmp logger
-    _pLogger = &Poco::Logger::get("PythonManagerStartup");
+	// nothing to do yet
 }
 
 PythonManager::~PythonManager()

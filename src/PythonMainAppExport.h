@@ -70,5 +70,27 @@ static PyMethodDef pyMethodMainAppVersion =
     "Retrieve version information of the current application"
 };
 
+
+// ----------------------------------------------------------------
+//     Module Factory
+// ----------------------------------------------------------------
+
+/**
+ * @brief Python wrapper to retrieve the list of root factories
+ *
+ * Call ModuleManager::getRootFactories() method
+ *
+ */
+extern "C" PyObject*
+pythonModFactGetRootFact(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodModFactGetRootFact =
+{
+    "getRootFactories",
+    pythonModFactGetRootFact,
+    METH_NOARGS,
+    "Retrieve the list of root factories"
+};
+
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_PYTHONMAINAPPEXPORT_H_ */

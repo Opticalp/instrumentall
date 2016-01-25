@@ -29,6 +29,7 @@ THE SOFTWARE.
 #ifdef HAVE_PYTHON27
 
 #include "MainApplication.h"
+#include "ModuleManager.h"
 #include "PythonMainAppExport.h"
 
 extern "C" PyObject*
@@ -54,6 +55,36 @@ pythonMainAppVersion(PyObject *self, PyObject *args)
             .version();
 
     return PyString_FromString(retVal.c_str());
+}
+
+extern "C" PyObject*
+pythonModFactGetRootFact(PyObject *self, PyObject *args)
+{
+    std::vector<std::string> strFactories;
+
+    strFactories = Poco::Util::Application::instance()
+                .getSubsystem<ModuleManager>()
+                .getRootFactories();
+
+    // construct the list to return
+    PyObject* pyFactories = PyList_New(0);
+
+    for (std::vector<std::string>::iterator it=strFactories.begin(), ite=strFactories.end();
+            it != ite; it++ )
+    {
+        // create the dict entry
+        if (0 > PyList_Append(
+                pyFactories,
+                PyString_FromString(it->c_str())))
+        {
+            // appending the item failed
+            PyErr_SetString(PyExc_RuntimeError,
+                    "Not able to build the return list");
+            return NULL;
+        }
+    }
+
+    return pyFactories;
 }
 
 

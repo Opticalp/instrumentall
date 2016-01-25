@@ -39,6 +39,9 @@ THE SOFTWARE.
 #include "PythonMainAppExport.h"
 #include "PythonManager.h"
 
+#include "PythonModuleFactory.h"
+#include "PythonModule.h"
+
 /**
  * array to bind to-be-exposed methods (C to Python wrappers)
  */
@@ -47,6 +50,9 @@ static PyMethodDef EmbMethods[] =
     // misc
     pyMethodMainAppAbout,
     pyMethodMainAppVersion,
+
+    // module factory
+    pyMethodModFactGetRootFact,
 
     // sentinel
     {NULL, NULL, 0, NULL}
@@ -81,8 +87,11 @@ void PythonManager::exposeAPI()
                     const_cast<const char *>(appDir.toString().c_str())));
 
 //    // module types initialization
-//    if (PyType_Ready(&pythonModuleType) < 0)
-//        return;
+    if (PyType_Ready(&PythonModuleFactory) < 0)
+        return;
+
+    if (PyType_Ready(&PythonModule) < 0)
+        return;
 
     PyObject* m;
 
@@ -95,8 +104,11 @@ void PythonManager::exposeAPI()
         throw e;
     }
 
-//    Py_INCREF(&pythonModuleType);
-//    PyModule_AddObject(m, "Module", (PyObject *)&pythonModuleType);
+    Py_INCREF(&PythonModuleFactory);
+    PyModule_AddObject(m, "Factory", (PyObject *)&PythonModuleFactory);
+
+    Py_INCREF(&PythonModule);
+    PyModule_AddObject(m, "Module", (PyObject *)&PythonModule);
 }
 
 
