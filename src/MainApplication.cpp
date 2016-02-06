@@ -38,6 +38,7 @@
 #include "DepPython.h"
 
 #include "PythonManager.h"
+#include "Dispatcher.h"
 #include "ModuleManager.h"
 
 #include "version.h"
@@ -53,12 +54,14 @@ MainApplication::MainApplication(): _helpRequested(false)
     // deps.push_back(new MyDependency); //template
     deps.push_back(new DepPoco);
 
+    Application::instance().addSubsystem(new ModuleManager);
+    Application::instance().addSubsystem(new Dispatcher);
+
+    // NOTE: interface subsystem to be inserted last
 #ifdef HAVE_PYTHON27
     deps.push_back(new DepPython);
     Application::instance().addSubsystem(new PythonManager);
 #endif
-
-    Application::instance().addSubsystem(new ModuleManager);
 }
 
 MainApplication::~MainApplication()
