@@ -70,7 +70,7 @@ public:
      */
     ModuleFactory* parent() { return mParent; }
 
-protected:
+private:
     std::string mSelector;
     ModuleFactory* mParent;
 };
