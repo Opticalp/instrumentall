@@ -30,6 +30,7 @@
 #define SRC_MODULE_H_
 
 #include "VerboseEntity.h"
+#include "Port.h"
 
 class ModuleFactory;
 
@@ -128,6 +129,41 @@ protected:
 	 */
 	void setCustomName(std::string customName);
 
+	/**
+	 * Set the inPorts list size
+	 */
+	void setInPortCount(size_t cnt) { inPorts.resize(cnt, NULL); }
+	/**
+	 * Add input data port
+	 *
+	 * @param name name of the port
+	 * @param description description of the port
+	 * @param dataType type of port data
+	 * @param index index of the port in the inPorts list. It allows
+	 * to use enums to access the ports.
+	 */
+	void addInPort(
+	        std::string name, std::string description,
+	        Port::dataTypeEnum dataType,
+	        size_t index );
+
+    /**
+     * Set the outPorts list size
+     */
+    void setOutPortCount(size_t cnt) { outPorts.resize(cnt, NULL); }
+    /**
+     * Add output data port
+     *
+     * @param name name of the port
+     * @param description description of the port
+     * @param dataType type of port data
+     * @param index index of the port in the outPorts list. It allows
+     * to use enums to access the ports.
+     */
+    void addOutPort(
+            std::string name, std::string description,
+            Port::dataTypeEnum dataType,
+            size_t index );
 private:
 	/**
 	 * Parent module factory
@@ -139,6 +175,9 @@ private:
 
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
+
+	std::vector<Port*> inPorts; ///< list of input data ports
+	std::vector<Port*> outPorts; ///< list of output data ports
 };
 
 #endif /* SRC_MODULE_H_ */

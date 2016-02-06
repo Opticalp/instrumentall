@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoLeafFactory.cpp
- * @date	jan. 2016
+ * @file	src/DemoModuleA.h
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,17 +26,44 @@
  THE SOFTWARE.
  */
 
-#include "DemoLeafFactory.h"
-#include "DemoModule.h"
-#include "DemoModuleA.h"
+#ifndef SRC_DEMOMODULEA_H_
+#define SRC_DEMOMODULEA_H_
 
-Module* DemoLeafFactory::newChildModule(std::string customName)
+#include "Module.h"
+
+/**
+ * DemoModuleA
+ *
+ * Very simple demo module, but implementing some ports
+ */
+class DemoModuleA: public Module
 {
-    if (getSelector().compare("leaf")==0)
-        return new DemoModule(this, customName);
+public:
+    DemoModuleA(ModuleFactory* parent, std::string customName);
+    virtual ~DemoModuleA();
 
-    if (getSelector().compare("leafA")==0)
-        return new DemoModuleA(this, customName);
+    const char * description() const
+    {
+        return "Very basic demo Module exhibiting some ports. ";
+    }
 
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
-}
+private:
+    static size_t refCount; ///< reference counter to generate a unique internal name
+
+    /// Indexes of the input ports
+    enum inPorts
+    {
+        inPortA,
+        inPortB,
+        inPortCnt
+    };
+
+    /// Indexes of the output ports
+    enum outPorts
+    {
+        outPortA,
+        outPortCnt
+    };
+};
+
+#endif /* SRC_DEMOMODULEA_H_ */

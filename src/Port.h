@@ -29,7 +29,7 @@
 #ifndef SRC_PORT_H_
 #define SRC_PORT_H_
 
-#include "Module.h"
+class Module;
 
 /**
  * Port
@@ -55,10 +55,11 @@ public:
     Port(Module* parent,
             std::string name,
             std::string description,
-            dataTypeEnum datatype):
+            dataTypeEnum datatype,
+            size_t index):
                 pParent(parent),
                 mName(name), mDescription(description),
-                mType(datatype) { }
+                mType(datatype), mIndex(index) { }
     /// Destructor
     virtual ~Port() { }
 
@@ -72,12 +73,15 @@ public:
     dataTypeEnum dataType() { return mType; }
     /// get port data type as a character string
     std::string dataTypeStr();
+    /// get the index in the port list
+    size_t index();
 
 private:
     Module* pParent; ///< parent module reference
     std::string mName; ///< port name
     std::string mDescription; ///< port description
     dataTypeEnum mType; ///< port data type
+    size_t mIndex; ///< index in the module port list
 };
 
 

@@ -61,6 +61,7 @@ public:
     {
         std::vector<std::string> list;
         list.push_back("leaf");
+        list.push_back("leafA");
         return list;
     }
 
@@ -69,12 +70,7 @@ public:
 private:
     ModuleFactoryBranch* newChildFactory(std::string selector);
 
-    std::string validateSelector(std::string selector)
-    {
-        if (selector.compare("leaf"))
-            throw ModuleFactoryException("Unrecognized selector: " + selector);
-        return selector;
-    }
+    std::string validateSelector(std::string selector);
 };
 
 #endif /* SRC_DEMOBRANCHFACTORY_H_ */

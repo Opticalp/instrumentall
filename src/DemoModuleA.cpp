@@ -1,7 +1,12 @@
 /**
- * @file	src/DemoLeafFactory.cpp
- * @date	jan. 2016
+ * detailed description
+ * 
+ * @file	DemoModuleA.cpp
+ * @brief	brief description
+ * @date	6 févr. 2016
  * @author	PhRG - opticalp.fr
+ *
+ * $Id$
  */
 
 /*
@@ -26,17 +31,33 @@
  THE SOFTWARE.
  */
 
-#include "DemoLeafFactory.h"
-#include "DemoModule.h"
 #include "DemoModuleA.h"
+#include "Poco/NumberFormatter.h"
 
-Module* DemoLeafFactory::newChildModule(std::string customName)
+size_t DemoModuleA::refCount = 0;
+
+DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
+                Module(parent)
 {
-    if (getSelector().compare("leaf")==0)
-        return new DemoModule(this, customName);
+    VerboseEntity("module.DemoModuleA");
+    poco_debug(logger(),"Creating a new demo module A");
 
-    if (getSelector().compare("leafA")==0)
-        return new DemoModuleA(this, customName);
+    setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount++));
+    setCustomName(customName);
+    setLogger("module" + name());
 
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
+    // ports
+    setInPortCount(inPortCnt);
+    setOutPortCount(outPortCnt);
+
+    addInPort("inPortA", "demo port that transmits nothing", Port::typeInteger, inPortA);
+    addInPort("inPortB", "demo port that transmits nothing", Port::typeFloat, inPortB);
+
+    addOutPort("outPortA", "demo port that transmits nothing", Port::typeInteger, outPortA);
 }
+
+DemoModuleA::~DemoModuleA()
+{
+    // TODO Auto-generated destructor stub
+}
+
