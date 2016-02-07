@@ -100,7 +100,7 @@ void ModuleManager::removeModule(Module* pModule)
         {
             **it = &emptyModule; // replace the pointed factory by something throwing exceptions
             allModules.erase(it);
-            poco_debug(logger(), pModule->name() + " module erased from allModules. ");
+            poco_debug(logger(), pModule->name() + " module erased from ModuleManager::allModules. ");
             modulesLock.unlock();
             return;
         }
@@ -128,6 +128,19 @@ SharedPtr<Module*> ModuleManager::getModule(Module* pModule)
     throw ModuleException("getModule", "module not found: "
             "Should have been deleted during the query");
 }
+
+std::vector< SharedPtr<Module*> > ModuleManager::getModules()
+{
+    // use a temp list to be thread safe
+    std::vector< SharedPtr<Module*> > list;
+
+    modulesLock.readLock();
+    list = allModules;
+    modulesLock.unlock();
+
+    return list;
+}
+
 
 void ModuleManager::addFactory(ModuleFactory* pFactory)
 {

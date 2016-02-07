@@ -30,11 +30,22 @@
 #define SRC_DISPATCHER_H_
 
 #include "Poco/Util/Subsystem.h"
+#include "Poco/RWLock.h"
+#include "Poco/SharedPtr.h"
+
+#include <vector>
+
+using Poco::RWLock;
+using Poco::SharedPtr;
+
+class InPort;
+class OutPort;
+class Module;
 
 /**
  * Dispatcher
  *
- * Manage the bindings between modules.
+ * Manage the interactions between modules.
  * Every interaction between @ref Module should pass by the dispatcher.
  */
 class Dispatcher: public Poco::Util::Subsystem
@@ -53,21 +64,58 @@ public:
      /// @name un/re/initialization methods
      ///@{
      /**
+      * Initialize the ports lists
       *
+      * interrogate the ModuleManager about the active modules,
+      * and populate allInPorts and allOutPorts
+      *
+      * @note The ModuleManager has to be initialized before the Dispatcher.
       */
      void initialize(Poco::Util::Application& app);
+
      // void reinitialize(Application & app); // not needed. By default: uninit, then init.
+
      /**
-      * Reset workflow.
+      * Reset the ports lists
       *
+      * Set the empty ports for each port. It will reset all the connections.
       */
      void uninitialize();
      ///@}
 
-private:
-     // flow bindings (from source port to multiple target ports)
+     /**
+      * Add the ports of a new Module
+      *
+      * append the new ports (input and output) to their respective lists:
+      * allInPorts and allOutPorts
+      */
+     void addModule(SharedPtr<Module*> module);
 
-     // counter flow bindings (from target port to source port)
+     /**
+      * Remove the ports of the given Module
+      *
+      * from the allInPorts list and from the allOutPorts list
+      */
+     void removeModule(SharedPtr<Module*> module);
+
+     /**
+      * Get the shared pointer corresponding to the given input port
+      */
+     SharedPtr<InPort*> getInPort(InPort* port);
+
+     /**
+      * Get the shared pointer corresponding to the given output port
+      */
+     SharedPtr<OutPort*> getOutPort(OutPort* port);
+
+private:
+     /// input ports to be used as targets for output ports
+     std::vector< SharedPtr<InPort*> > allInPorts;
+     RWLock inPortsLock; ///< lock for the transactions on allInPorts
+
+     /// output ports to be used as sources for input ports
+     std::vector< SharedPtr<OutPort*> > allOutPorts;
+     RWLock outPortsLock; ///< lock for the transactiosn on allOutPorts
 };
 
 #endif /* SRC_DISPATCHER_H_ */

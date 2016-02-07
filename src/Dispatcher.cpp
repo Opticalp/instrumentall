@@ -28,6 +28,12 @@
 
 #include "Dispatcher.h"
 
+#include "ModuleManager.h"
+#include "Module.h"
+
+#include "InPort.h"
+#include "OutPort.h"
+
 Dispatcher::Dispatcher()
 {
     // TODO Auto-generated constructor stub
@@ -41,8 +47,89 @@ Dispatcher::~Dispatcher()
 
 void Dispatcher::initialize(Poco::Util::Application& app)
 {
+    std::vector< SharedPtr<Module*> > modules;
+    modules = Poco::Util::Application::instance().getSubsystem<ModuleManager>().getModules();
+
+    for (std::vector< SharedPtr<Module*> >::iterator it=modules.begin(), ite=modules.end();
+            it!=ite; it++)
+        addModule(*it);
 }
 
 void Dispatcher::uninitialize()
 {
+    // remove all ports.
+}
+
+
+void Dispatcher::addModule(SharedPtr<Module*> module)
+{
+    // TODO
+
+    // lock module
+    // retrieve inPorts
+    // retrieve outPorts
+
+    inPortsLock.writeLock();
+    outPortsLock.writeLock();
+    // unlock module
+
+    // write ports
+
+    inPortsLock.unlock();
+    outPortsLock.unlock();
+}
+
+void Dispatcher::removeModule(SharedPtr<Module*> module)
+{
+    // TODO
+
+    // lock module
+    // retrieve inPorts
+    // retrieve outPorts
+
+    inPortsLock.writeLock();
+    outPortsLock.writeLock();
+    // unlock module
+
+    // write ports
+
+    inPortsLock.unlock();
+    outPortsLock.unlock();
+
+}
+
+SharedPtr<InPort*> Dispatcher::getInPort(InPort* port)
+{
+    inPortsLock.readLock();
+    for (std::vector< SharedPtr<InPort*> >::iterator it=allInPorts.begin(), ite=allInPorts.end();
+            it!=ite; it++)
+    {
+        if (port==**it)
+        {
+            inPortsLock.unlock();
+            return *it;
+        }
+    }
+
+    inPortsLock.unlock();
+    throw ModuleException("getInPort", "port not found: "
+            "Should have been deleted during the query");
+}
+
+SharedPtr<OutPort*> Dispatcher::getOutPort(OutPort* port)
+{
+    outPortsLock.readLock();
+    for (std::vector< SharedPtr<OutPort*> >::iterator it=allOutPorts.begin(), ite=allOutPorts.end();
+            it!=ite; it++)
+    {
+        if (port==**it)
+        {
+            outPortsLock.unlock();
+            return *it;
+        }
+    }
+
+    outPortsLock.unlock();
+    throw ModuleException("getOutPort", "port not found: "
+            "Should have been deleted during the query");
 }

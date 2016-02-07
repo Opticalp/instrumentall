@@ -111,6 +111,13 @@ public:
     SharedPtr<Module*> getModule(Module* pModule);
 
     /**
+     * Get all the modules
+     *
+     * @return a copy of allModules
+     */
+     std::vector< SharedPtr<Module*> > getModules();
+
+    /**
      * Add a factory to the list
      *
      * This function is called by the @ref ModuleFactory constructor.
@@ -138,6 +145,11 @@ public:
      * Get a shared pointer on a factory
      */
     SharedPtr<ModuleFactory*> getFactory(ModuleFactory* pFactory);
+
+    /**
+     * Return the address of the empty module
+     */
+    Module* getEmptyModule() { return &emptyModule; }
 
 private:
     /**

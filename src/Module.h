@@ -30,8 +30,11 @@
 #define SRC_MODULE_H_
 
 #include "VerboseEntity.h"
+
 #include "Port.h"
 
+class InPort;
+class OutPort;
 class ModuleFactory;
 
 POCO_DECLARE_EXCEPTION( , ModuleException, Poco::Exception)
@@ -176,8 +179,8 @@ private:
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
 
-	std::vector<Port*> inPorts; ///< list of input data ports
-	std::vector<Port*> outPorts; ///< list of output data ports
+	std::vector<InPort*> inPorts; ///< list of input data ports
+	std::vector<OutPort*> outPorts; ///< list of output data ports
 };
 
 #endif /* SRC_MODULE_H_ */

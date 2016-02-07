@@ -30,6 +30,9 @@
 #include "ModuleFactory.h"
 #include "ModuleManager.h"
 
+#include "InPort.h"
+#include "OutPort.h"
+
 #include "Poco/NumberFormatter.h"
 
 #include <typeinfo>
@@ -56,6 +59,15 @@ Module::~Module()
         // notify module manager
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
     }
+
+    // delete ports
+    for (std::vector<InPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
+            it!=ite; it++)
+        delete *it;
+
+    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
+            it!=ite; it++)
+        delete *it;
 }
 
 void Module::setInternalName(std::string internalName)
@@ -102,7 +114,7 @@ void Module::addInPort(std::string name, std::string description,
         Port::dataTypeEnum dataType, size_t index)
 {
     if (index>=0 && index<inPorts.size())
-        inPorts[index] = new Port(this, name, description, dataType, index);
+        inPorts[index] = new InPort(this, name, description, dataType, index);
     else
         poco_bugcheck_msg(("addInPort: wrong index "
                 + Poco::NumberFormatter::format(index)).c_str());
@@ -112,7 +124,7 @@ void Module::addOutPort(std::string name, std::string description,
         Port::dataTypeEnum dataType, size_t index)
 {
     if (index>=0 && index<outPorts.size())
-        outPorts[index] = new Port(this, name, description, dataType, index);
+        outPorts[index] = new OutPort(this, name, description, dataType, index);
     else
         poco_bugcheck_msg(("addOutPort: wrong index "
                 + Poco::NumberFormatter::format(index)).c_str());

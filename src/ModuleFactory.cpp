@@ -119,7 +119,7 @@ void ModuleFactory::deleteChildFactories()
 
 Module* ModuleFactory::create(std::string customName)
 {
-    // TODO: notify the module manager that a module was created?
+    // TODO: notify the Dispatcher that a module was created? (if loaded)
     if (!isLeaf())
     {
         for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end();
