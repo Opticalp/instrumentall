@@ -61,11 +61,11 @@ def myMain():
         print ( " - module " + port.parent().name +  
             ", port " + port.name + 
             ": " + port.description )
-#        targets = port.getTargetPorts()
-#        print "targets: " 
-#        for target in targets:    
-#            print ( target.name + ", from module: " +
-#                target.parent().name
+        targets = port.getTargetPorts()
+        print "targets: " 
+        for target in targets:    
+            print ( target.name + ", from module: " +
+                target.parent().name )
     
     print "End of script modPortTest.py"
     

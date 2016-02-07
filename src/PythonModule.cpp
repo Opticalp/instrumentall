@@ -111,7 +111,11 @@ PyObject* pyModParent(ModMembers* self)
 
     // alloc
     if (PyType_Ready(&PythonModuleFactory) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the ModuleFactory Type");
         return NULL;
+    }
 
     ModFactMembers* pyParent =
             (ModFactMembers*)(
@@ -153,7 +157,7 @@ PyObject* pyModInPorts(ModMembers* self)
     // prepare InPort python type
     if (PyType_Ready(&PythonInPort) < 0)
     {
-        PyErr_SetString(PyExc_RuntimeError,
+        PyErr_SetString(PyExc_ImportError,
                 "Not able to create the InPort Type");
         return NULL;
     }
@@ -224,7 +228,7 @@ PyObject* pyModOutPorts(ModMembers* self)
     // prepare OutPort python type
     if (PyType_Ready(&PythonOutPort) < 0)
     {
-        PyErr_SetString(PyExc_RuntimeError,
+        PyErr_SetString(PyExc_ImportError,
                 "Not able to create the OutPort Type");
         return NULL;
     }

@@ -98,7 +98,11 @@ PyObject* pyInPortParent(InPortMembers* self)
 
     // alloc
     if (PyType_Ready(&PythonModule) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the Module Type");
         return NULL;
+    }
 
     ModMembers* pyParent =
             (ModMembers*)(
@@ -149,7 +153,7 @@ PyObject* pyInPortGetSourcePort(InPortMembers* self)
     // prepare OutPort python type
     if (PyType_Ready(&PythonOutPort) < 0)
     {
-        PyErr_SetString(PyExc_RuntimeError,
+        PyErr_SetString(PyExc_ImportError,
                 "Not able to create the OutPort Type");
         return NULL;
     }

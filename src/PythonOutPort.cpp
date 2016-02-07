@@ -98,7 +98,11 @@ PyObject* pyOutPortParent(OutPortMembers* self)
 
     // alloc
     if (PyType_Ready(&PythonModule) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the Module Type");
         return NULL;
+    }
 
     ModMembers* pyParent =
             (ModMembers*)(
@@ -124,6 +128,66 @@ PyObject* pyOutPortParent(OutPortMembers* self)
     *(pyParent->module) = module;
 
     return (PyObject*)(pyParent);
+}
+
+#include "Dispatcher.h"
+#include "InPort.h"
+#include "PythonInPort.h"
+
+PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
+{
+    std::vector< Poco::SharedPtr<InPort*> > targets;
+
+    targets = (**self->outPort)->getTargetPorts();
+
+    // prepare python list
+    PyObject* pyPorts = PyList_New(0);
+
+    // prepare InPort python type
+    if (PyType_Ready(&PythonInPort) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the InPort Type");
+        return NULL;
+    }
+
+
+    for ( std::vector< Poco::SharedPtr<InPort*> >::iterator it = targets.begin(),
+            ite = targets.end(); it != ite; it++ )
+    {
+        // create the python object
+        InPortMembers* pyPort =
+            (InPortMembers*)(pyInPortNew((PyTypeObject*)&PythonInPort, NULL, NULL) );
+
+        PyObject* tmp=NULL;
+
+        // init
+        // retrieve name and description
+        tmp = pyPort->name;
+        pyPort->name = PyString_FromString((**it)->name().c_str());
+        Py_XDECREF(tmp);
+
+        tmp = pyPort->description;
+        pyPort->description = PyString_FromString((**it)->description().c_str());
+        Py_XDECREF(tmp);
+
+        // set ModuleFactory reference
+        *(pyPort->inPort) = *it;
+
+        // create the dict entry
+        if (0 > PyList_Append(
+                pyPorts,
+                (PyObject*) pyPort))
+        {
+            // appending the item failed
+            PyErr_SetString(PyExc_RuntimeError,
+                    "Not able to build the return list");
+            return NULL;
+        }
+
+    }
+
+    return pyPorts;
 }
 
 #endif /* HAVE_PYTHON27 */

@@ -97,22 +97,22 @@ static PyMethodDef pyMethodOutPortParent =
     "Retrieve the parent module"
 };
 
-///// python wrapper to get the source port of the current input port
-//extern "C" PyObject* pyOutPortSource(OutPortMembers *self);
-//
-//static PyMethodDef pyMethodOutPortGetTargetPorts =
-//{
-//    "getTargetPorts",
-//    (PyCFunction)pyOutPortGetTargetPorts,
-//    METH_NOARGS,
-//    "Retrieve the target ports"
-//};
+/// python wrapper to get the target ports of the current output port
+extern "C" PyObject* pyOutPortGetTargetPorts(OutPortMembers *self);
+
+static PyMethodDef pyMethodOutPortGetTargetPorts =
+{
+    "getTargetPorts",
+    (PyCFunction)pyOutPortGetTargetPorts,
+    METH_NOARGS,
+    "Retrieve the target ports"
+};
 
 /// exported methods
 static PyMethodDef pyOutPortMethods[] = {
         pyMethodOutPortParent,
 
-//        pyMethodOutPortGetTargetPorts,
+        pyMethodOutPortGetTargetPorts,
 
         {NULL} // sentinel
 };
