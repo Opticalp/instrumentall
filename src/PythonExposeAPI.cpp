@@ -42,7 +42,7 @@ THE SOFTWARE.
 #include "PythonModuleFactory.h"
 #include "PythonModule.h"
 #include "PythonInPort.h"
-//#include "PythonOutPort.h"
+#include "PythonOutPort.h"
 
 /**
  * array to bind to-be-exposed methods (C to Python wrappers)
@@ -98,8 +98,8 @@ void PythonManager::exposeAPI()
     if (PyType_Ready(&PythonInPort) < 0)
         return;
 
-//    if (PyType_Ready(&PythonOutPort) < 0)
-//        return;
+    if (PyType_Ready(&PythonOutPort) < 0)
+        return;
 
     PyObject* m;
 
@@ -121,8 +121,8 @@ void PythonManager::exposeAPI()
     Py_INCREF(&PythonInPort);
     PyModule_AddObject(m, "InPort", (PyObject *)&PythonInPort);
 
-//    Py_INCREF(&PythonOutPort);
-//    PyModule_AddObject(m, "OutPort", (PyObject *)&PythonOutPort);
+    Py_INCREF(&PythonOutPort);
+    PyModule_AddObject(m, "OutPort", (PyObject *)&PythonOutPort);
 }
 
 

@@ -1,8 +1,8 @@
 /**
- * Definition of the Module python class
+ * Definition of the OutPort python class
  * 
- * @file	src/PythonModule.h
- * @date	jan. 2016
+ * @file	src/PythonOutPort.h
+ * @date	feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -29,8 +29,8 @@ THE SOFTWARE.
 */
 
 
-#ifndef SRC_PYTHONMODULE_H_
-#define SRC_PYTHONMODULE_H_
+#ifndef SRC_PYTHONOUTPORT_H_
+#define SRC_PYTHONOUTPORT_H_
 
 #ifdef HAVE_PYTHON27
 
@@ -39,45 +39,37 @@ THE SOFTWARE.
 
 #include "Poco/SharedPtr.h"
 
-#include "Module.h"
+#include "OutPort.h"
 
 // -----------------------------------------------------------------------
 // Variables
 // -----------------------------------------------------------------------
 
-/// member variables for the python Module class
+/// member variables for the python OutPort class
 typedef struct
 {
     PyObject_HEAD ///< a refcount and a pointer to a type object (convenience python/C API macro)
     PyObject* name;  ///< name attribute
-    PyObject* internalName;  ///< internalName attribute
     PyObject* description;  ///< description attribute
-    Poco::SharedPtr<Module*>* module; ///< pointer to the C++ internal Module object
-} ModMembers;
+    Poco::SharedPtr<OutPort*>* outPort; ///< pointer to the C++ internal OutPort object
+} OutPortMembers;
 
-/// Description of the ModMembers structure
-static PyMemberDef pyModMembers[] =
+/// Description of the OutPortMembers structure
+static PyMemberDef pyOutPortMembers[] =
 {
     {
         const_cast<char *>("name"),
         T_OBJECT_EX,
-        offsetof(ModMembers, name),
+        offsetof(OutPortMembers, name),
         READONLY,
-        const_cast<char *>("Module name")
-    },
-    {
-        const_cast<char *>("internalName"),
-        T_OBJECT_EX,
-        offsetof(ModMembers, internalName),
-        READONLY,
-        const_cast<char *>("Module internal name")
+        const_cast<char *>("Output Port name")
     },
     {
         const_cast<char *>("description"),
         T_OBJECT_EX,
-        offsetof(ModMembers, description),
+        offsetof(OutPortMembers, description),
         READONLY,
-        const_cast<char *>("Module description")
+        const_cast<char *>("Output Port description")
     },
     { NULL } // Sentinel
 };
@@ -89,50 +81,38 @@ static PyMemberDef pyModMembers[] =
 /**
  * Initializer
  *
- * not implemented yet. Could be called with the name of the module (internal
- * or custom)
+ * The python version of this initializer has to be called with the
+ * name of the factory as argument.
  */
-extern "C" int pyModInit(ModMembers* self, PyObject *args, PyObject *kwds);
+extern "C" int pyOutPortInit(OutPortMembers* self, PyObject *args, PyObject *kwds);
 
-/// Module::parent() python wrapper
-extern "C" PyObject* pyModParent(ModMembers *self);
+/// OutPort::parent python wrapper
+extern "C" PyObject* pyOutPortParent(OutPortMembers *self);
 
-static PyMethodDef pyMethodModParent =
+static PyMethodDef pyMethodOutPortParent =
 {
     "parent",
-    (PyCFunction)pyModParent,
+    (PyCFunction)pyOutPortParent,
     METH_NOARGS,
-    "Retrieve the parent factory"
+    "Retrieve the parent module"
 };
 
-/// Module::getInPorts() python wrapper
-extern "C" PyObject* pyModInPorts(ModMembers *self);
-
-static PyMethodDef pyMethodModInPorts =
-{
-    "inPorts",
-    (PyCFunction)pyModInPorts,
-    METH_NOARGS,
-    "Retrieve the input ports"
-};
-
-/// Module::getOutPorts() python wrapper
-extern "C" PyObject* pyModOutPorts(ModMembers *self);
-
-static PyMethodDef pyMethodModOutPorts =
-{
-    "outPorts",
-    (PyCFunction)pyModOutPorts,
-    METH_NOARGS,
-    "Retrieve the output ports"
-};
+///// python wrapper to get the source port of the current input port
+//extern "C" PyObject* pyOutPortSource(OutPortMembers *self);
+//
+//static PyMethodDef pyMethodOutPortGetTargetPorts =
+//{
+//    "getTargetPorts",
+//    (PyCFunction)pyOutPortGetTargetPorts,
+//    METH_NOARGS,
+//    "Retrieve the target ports"
+//};
 
 /// exported methods
-static PyMethodDef pyModMethods[] = {
-        pyMethodModParent,
+static PyMethodDef pyOutPortMethods[] = {
+        pyMethodOutPortParent,
 
-        pyMethodModInPorts,
-        pyMethodModOutPorts,
+//        pyMethodOutPortGetTargetPorts,
 
         {NULL} // sentinel
 };
@@ -144,25 +124,25 @@ static PyMethodDef pyModMethods[] = {
 /**
  * Deallocator
  */
-extern "C" void pyModDealloc(ModMembers* self);
+extern "C" void pyOutPortDealloc(OutPortMembers* self);
 
 /**
  * Allocator
  *
- * Initialize "name", "internalName" and "description" to empty strings instead of
+ * Initialize "name" and "description" to empty strings instead of
  * NULL because they are python objects.
  */
-extern "C" PyObject* pyModNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
+extern "C" PyObject* pyOutPortNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
 
 
 /// Definition of the PyTypeObject
-static PyTypeObject PythonModule = {             // SPECIFIC
+static PyTypeObject PythonOutPort = {                  // SPECIFIC
     PyObject_HEAD_INIT(NULL)
     0,                          /*ob_size*/
-    "instru.Module",            /*tp_name*/             // SPECIFIC
-    sizeof(ModMembers),         /*tp_basicsize*/  // SPECIFIC
+    "instru.OutPort",            /*tp_name*/           // SPECIFIC
+    sizeof(OutPortMembers),      /*tp_basicsize*/      // SPECIFIC
     0,                          /*tp_itemsize*/
-    (destructor)pyModDealloc,   /*tp_dealloc*/        // SPECIFIC
+    (destructor)pyOutPortDealloc,/*tp_dealloc*/        // SPECIFIC
     0,                          /*tp_print*/
     0,                          /*tp_getattr*/
     0,                          /*tp_setattr*/
@@ -179,27 +159,27 @@ static PyTypeObject PythonModule = {             // SPECIFIC
     0,                          /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT |
         Py_TPFLAGS_BASETYPE,    /*tp_flags*/
-    "Module entity like "
-    "hardware device interface, "
-    "processing unit, ...",     /* tp_doc */        // SPECIFIC
+    "Output port entity to "
+    "send data to another "
+    "module port (target) ",    /* tp_doc */          // SPECIFIC
     0,                          /* tp_traverse */
     0,                          /* tp_clear */
     0,                          /* tp_richcompare */
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-    pyModMethods,               /* tp_methods */    // SPECIFIC
-    pyModMembers,               /* tp_members */    // SPECIFIC
+    pyOutPortMethods,            /* tp_methods */    // SPECIFIC
+    pyOutPortMembers,            /* tp_members */    // SPECIFIC
     0,                          /* tp_getset */
     0,                          /* tp_base */       // SPECIFIC
     0,                          /* tp_dict */
     0,                          /* tp_descr_get */
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
-    (initproc)pyModInit,        /* tp_init */       // SPECIFIC
+    (initproc)pyOutPortInit,        /* tp_init */       // SPECIFIC
     0,                          /* tp_alloc */
-    pyModNew,                   /* tp_new */        // SPECIFIC
+    pyOutPortNew,                /* tp_new */        // SPECIFIC
 };
 
 #endif /* HAVE_PYTHON27 */
-#endif /* SRC_PYTHONMODULE_H_ */
+#endif /* SRC_PYTHONOUTPORT_H_ */

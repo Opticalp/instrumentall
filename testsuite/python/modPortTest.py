@@ -48,6 +48,21 @@ def myMain():
         print ( " - module " + port.parent().name +  
             ", port " + port.name + 
             ": " + port.description )
+#        source = port.getSourcePort()
+#        print ( "port source: " +
+#            source.name + " from module: " +
+#            source.parent().name
+    
+    print "Query output ports"
+    for port in mod1.outPorts():
+        print ( " - module " + port.parent().name +  
+            ", port " + port.name + 
+            ": " + port.description )
+#        targets = port.getTargetPorts()
+#        print "targets: " 
+#        for target in targets:    
+#            print ( target.name + ", from module: " +
+#                target.parent().name
     
     print "End of script modPortTest.py"
     
