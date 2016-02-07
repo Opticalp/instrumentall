@@ -97,22 +97,22 @@ static PyMethodDef pyMethodInPortParent =
     "Retrieve the parent module"
 };
 
-///// python wrapper to get the source port of the current input port
-//extern "C" PyObject* pyInPortSource(InPortMembers *self);
-//
-//static PyMethodDef pyMethodInPortSource =
-//{
-//    "source",
-//    (PyCFunction)pyInPortSource,
-//    METH_NOARGS,
-//    "Retrieve the source port"
-//};
+/// python wrapper to get the source port of the current input port
+extern "C" PyObject* pyInPortGetSourcePort(InPortMembers *self);
+
+static PyMethodDef pyMethodInPortGetSourcePort =
+{
+    "getSourcePort",
+    (PyCFunction)pyInPortGetSourcePort,
+    METH_NOARGS,
+    "Retrieve the source port"
+};
 
 /// exported methods
 static PyMethodDef pyInPortMethods[] = {
         pyMethodInPortParent,
 
-//        pyMethodInPortSource,
+        pyMethodInPortGetSourcePort,
 
         {NULL} // sentinel
 };

@@ -48,10 +48,13 @@ def myMain():
         print ( " - module " + port.parent().name +  
             ", port " + port.name + 
             ": " + port.description )
-#        source = port.getSourcePort()
-#        print ( "port source: " +
-#            source.name + " from module: " +
-#            source.parent().name
+        try:
+            source = port.getSourcePort()
+            print ( "port source: " +
+                source.name + " from module: " +
+                source.parent().name )
+        except ReferenceError:
+            print " This port has no source"
     
     print "Query output ports"
     for port in mod1.outPorts():
