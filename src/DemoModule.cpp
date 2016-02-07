@@ -43,4 +43,6 @@ DemoModule::DemoModule(ModuleFactory* parent, std::string customName):
     setLogger("module" + name());
 
     refCount++;
+
+    notifyCreation();
 }

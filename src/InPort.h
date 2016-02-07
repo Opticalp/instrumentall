@@ -56,6 +56,11 @@ public:
             size_t index);
 
     /**
+     * Special constructor for the empty InPort
+     */
+    InPort(OutPort* emptySourcePort);
+
+    /**
      * Destructor
      *
      * Do not need to call releaseSourcePort.

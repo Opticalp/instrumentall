@@ -54,6 +54,8 @@ DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
     addInPort("inPortB", "demo port that transmits nothing", Port::typeFloat, inPortB);
 
     addOutPort("outPortA", "demo port that transmits nothing", Port::typeInteger, outPortA);
+
+    notifyCreation();
 }
 
 DemoModuleA::~DemoModuleA()

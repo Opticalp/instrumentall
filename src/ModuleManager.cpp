@@ -88,6 +88,7 @@ void ModuleManager::addModule(Module* pModule)
     SharedPtr<Module*> pMod(new (Module*)(pModule));
     modulesLock.writeLock();
     allModules.push_back(pMod);
+    poco_debug(logger(),"module " + pModule->name() + " added in the module manager");
     Poco::Util::Application::instance().getSubsystem<Dispatcher>().addModule(pMod);
     modulesLock.unlock();
 }

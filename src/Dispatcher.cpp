@@ -40,11 +40,10 @@ POCO_IMPLEMENT_EXCEPTION( DispatcherException, Poco::Exception, "Dispatcher erro
 Dispatcher::Dispatcher():
     VerboseEntity(name()),
     initialized(false),
-    emptyInPort(NULL, "emptyIn", "replace an expired port", Port::typeUndefined, 0),
-    emptyOutPort(NULL, "emptyOut", "replace an expired port", Port::typeUndefined, 0)
+    emptyOutPort(),
+    emptyInPort(&emptyOutPort)
 {
-    // nothing to do?
-
+    // nothing else to do
 }
 
 Dispatcher::~Dispatcher()
@@ -120,6 +119,8 @@ void Dispatcher::addModule(SharedPtr<Module*> module)
 
     inPortsLock.unlock();
     outPortsLock.unlock();
+
+    poco_debug(logger(),"module " + module->name() + " added in the dispatcher");
 }
 
 void Dispatcher::removeModule(SharedPtr<Module*> module)
@@ -224,6 +225,8 @@ void Dispatcher::removeInPort(InPort* port)
 
 void Dispatcher::addInPort(InPort* port)
 {
+    poco_debug(logger(),"adding port " + port->name()
+            + " from module " + port->parent()->name());
     allInPorts.push_back(SharedPtr<InPort*>(new (InPort*)(port)));
 }
 
@@ -264,5 +267,7 @@ void Dispatcher::removeOutPort(OutPort* port)
 
 void Dispatcher::addOutPort(OutPort* port)
 {
+    poco_debug(logger(),"adding port " + port->name()
+            + " from module " + port->parent()->name());
     allOutPorts.push_back(SharedPtr<OutPort*>(new (OutPort*)(port)));
 }

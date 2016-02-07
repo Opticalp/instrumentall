@@ -44,7 +44,7 @@ extern "C" void pyModFactDealloc(ModFactMembers* self)
     self->ob_type->tp_free((PyObject*) self); // free the object’s memory
 }
 
-extern "C" PyObject* pyModFactAlloc(PyTypeObject* type, PyObject* args, PyObject* kwds)
+extern "C" PyObject* pyModFactNew(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
     ModFactMembers* self;
 
@@ -142,7 +142,7 @@ PyObject* pyModFactSelect(ModFactMembers* self, PyObject* args)
 
     ModFactMembers* pyChildFact =
             (ModFactMembers*)(
-                    pyModFactAlloc((PyTypeObject*)&PythonModuleFactory, NULL, NULL) );
+                    pyModFactNew((PyTypeObject*)&PythonModuleFactory, NULL, NULL) );
 
     PyObject* tmp=NULL;
 

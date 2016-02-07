@@ -1,8 +1,8 @@
 /**
- * Definition of the Factory python class
+ * Definition of the InPort python class
  * 
- * @file	src/PythonModuleFactory.h
- * @date	jan. 2016
+ * @file	src/PythonInPort.h
+ * @date	feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -29,8 +29,8 @@ THE SOFTWARE.
 */
 
 
-#ifndef SRC_PYTHONMODULEFACTORY_H_
-#define SRC_PYTHONMODULEFACTORY_H_
+#ifndef SRC_PYTHONINPORT_H_
+#define SRC_PYTHONINPORT_H_
 
 #ifdef HAVE_PYTHON27
 
@@ -39,37 +39,37 @@ THE SOFTWARE.
 
 #include "Poco/SharedPtr.h"
 
-#include "ModuleFactory.h"
+#include "InPort.h"
 
 // -----------------------------------------------------------------------
 // Variables
 // -----------------------------------------------------------------------
 
-/// member variables for the python Factory class
+/// member variables for the python InPort class
 typedef struct
 {
     PyObject_HEAD ///< a refcount and a pointer to a type object (convenience python/C API macro)
     PyObject* name;  ///< name attribute
     PyObject* description;  ///< description attribute
-    Poco::SharedPtr<ModuleFactory*>* moduleFactory; ///< pointer to the C++ internal ModuleFactory object
-} ModFactMembers;
+    Poco::SharedPtr<InPort*>* inPort; ///< pointer to the C++ internal InPort object
+} InPortMembers;
 
-/// Description of the ModuleFactoryMembers structure
-static PyMemberDef pyModFactMembers[] =
+/// Description of the InPortMembers structure
+static PyMemberDef pyInPortMembers[] =
 {
     {
         const_cast<char *>("name"),
         T_OBJECT_EX,
-        offsetof(ModFactMembers, name),
+        offsetof(InPortMembers, name),
         READONLY,
-        const_cast<char *>("Module factory name")
+        const_cast<char *>("Input Port name")
     },
     {
         const_cast<char *>("description"),
         T_OBJECT_EX,
-        offsetof(ModFactMembers, description),
+        offsetof(InPortMembers, description),
         READONLY,
-        const_cast<char *>("Module factory description")
+        const_cast<char *>("Input Port description")
     },
     { NULL } // Sentinel
 };
@@ -84,73 +84,35 @@ static PyMemberDef pyModFactMembers[] =
  * The python version of this initializer has to be called with the
  * name of the factory as argument.
  */
-extern "C" int pyModFactInit(ModFactMembers* self, PyObject *args, PyObject *kwds);
+extern "C" int pyInPortInit(InPortMembers* self, PyObject *args, PyObject *kwds);
 
-/// ModuleFactory::select python wrapper
-extern "C" PyObject* pyModFactSelect(ModFactMembers *self, PyObject *args);
+/// InPort::parent python wrapper
+extern "C" PyObject* pyInPortParent(InPortMembers *self);
 
-static PyMethodDef pyMethodModFactSelect =
+static PyMethodDef pyMethodInPortParent =
 {
-    "select",
-    (PyCFunction)pyModFactSelect,
-    METH_VARARGS,
-    "Refine factory settings to return a new factory"
-};
-
-/// ModuleFactory::selectDescription python wrapper
-extern "C" PyObject* pyModFactSelectDescription(ModFactMembers *self);
-
-static PyMethodDef pyMethodModFactSelectDescription =
-{
-    "selectDescription",
-    (PyCFunction)pyModFactSelectDescription,
+    "parent",
+    (PyCFunction)pyInPortParent,
     METH_NOARGS,
-    "select() usage help"
+    "Retrieve the parent module"
 };
 
-/// ModuleFactory::selectDescription python wrapper
-extern "C" PyObject* pyModFactSelectValueList(ModFactMembers *self);
-
-static PyMethodDef pyMethodModFactSelectValueList =
-{
-    "selectValueList",
-    (PyCFunction)pyModFactSelectValueList,
-    METH_NOARGS,
-    "List select() possible values. "
-    "An empty string means that the choice is open"
-};
-
-/// ModuleFactory::countRemain python wrapper
-extern "C" PyObject* pyModFactCountRemain(ModFactMembers *self);
-
-static PyMethodDef pyMethodModFactCountRemain =
-{
-    "countRemain",
-    (PyCFunction)pyModFactCountRemain,
-    METH_NOARGS,
-    "Count how many times create() can be called. "
-};
-
-/// ModuleFactory::create python wrapper
-extern "C" PyObject* pyModFactCreate(ModFactMembers *self, PyObject *args);
-
-static PyMethodDef pyMethodModFactCreate =
-{
-    "create",
-    (PyCFunction)pyModFactCreate,
-    METH_VARARGS,
-    "Create a new Module. "
-};
+///// python wrapper to get the source port of the current input port
+//extern "C" PyObject* pyInPortSource(InPortMembers *self);
+//
+//static PyMethodDef pyMethodInPortSource =
+//{
+//    "source",
+//    (PyCFunction)pyInPortSource,
+//    METH_NOARGS,
+//    "Retrieve the source port"
+//};
 
 /// exported methods
-static PyMethodDef pyModFactMethods[] = {
+static PyMethodDef pyInPortMethods[] = {
+        pyMethodInPortParent,
 
-        pyMethodModFactSelect,
-        pyMethodModFactSelectDescription,
-        pyMethodModFactSelectValueList,
-
-        pyMethodModFactCountRemain,
-        pyMethodModFactCreate,
+//        pyMethodInPortSource,
 
         {NULL} // sentinel
 };
@@ -162,7 +124,7 @@ static PyMethodDef pyModFactMethods[] = {
 /**
  * Deallocator
  */
-extern "C" void pyModFactDealloc(ModFactMembers* self);
+extern "C" void pyInPortDealloc(InPortMembers* self);
 
 /**
  * Allocator
@@ -170,17 +132,17 @@ extern "C" void pyModFactDealloc(ModFactMembers* self);
  * Initialize "name" and "description" to empty strings instead of
  * NULL because they are python objects.
  */
-extern "C" PyObject* pyModFactNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
+extern "C" PyObject* pyInPortNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
 
 
 /// Definition of the PyTypeObject
-static PyTypeObject PythonModuleFactory = {             // SPECIFIC
+static PyTypeObject PythonInPort = {                  // SPECIFIC
     PyObject_HEAD_INIT(NULL)
     0,                          /*ob_size*/
-    "instru.Factory",           /*tp_name*/             // SPECIFIC
-    sizeof(ModFactMembers),     /*tp_basicsize*/  // SPECIFIC
+    "instru.InPort",            /*tp_name*/           // SPECIFIC
+    sizeof(InPortMembers),      /*tp_basicsize*/      // SPECIFIC
     0,                          /*tp_itemsize*/
-    (destructor)pyModFactDealloc, /*tp_dealloc*/        // SPECIFIC
+    (destructor)pyInPortDealloc,/*tp_dealloc*/        // SPECIFIC
     0,                          /*tp_print*/
     0,                          /*tp_getattr*/
     0,                          /*tp_setattr*/
@@ -197,26 +159,27 @@ static PyTypeObject PythonModuleFactory = {             // SPECIFIC
     0,                          /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT |
         Py_TPFLAGS_BASETYPE,    /*tp_flags*/
-    "Module factory to create modules",   /* tp_doc */     // SPECIFIC
+    "Input port entity to "
+    "receive data from another "
+    "module port (source) ",    /* tp_doc */          // SPECIFIC
     0,                          /* tp_traverse */
     0,                          /* tp_clear */
     0,                          /* tp_richcompare */
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-    pyModFactMethods,        /* tp_methods */    // SPECIFIC
-    pyModFactMembers,        /* tp_members */    // SPECIFIC
+    pyInPortMethods,            /* tp_methods */    // SPECIFIC
+    pyInPortMembers,            /* tp_members */    // SPECIFIC
     0,                          /* tp_getset */
     0,                          /* tp_base */       // SPECIFIC
     0,                          /* tp_dict */
     0,                          /* tp_descr_get */
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
-    (initproc)pyModFactInit, /* tp_init */       // SPECIFIC
+    (initproc)pyInPortInit,        /* tp_init */       // SPECIFIC
     0,                          /* tp_alloc */
-    pyModFactNew,          /* tp_new */        // SPECIFIC
+    pyInPortNew,                /* tp_new */        // SPECIFIC
 };
 
-
 #endif /* HAVE_PYTHON27 */
-#endif /* SRC_PYTHONMODULEFACTORY_H_ */
+#endif /* SRC_PYTHONINPORT_H_ */

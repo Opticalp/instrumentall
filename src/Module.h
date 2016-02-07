@@ -57,13 +57,17 @@ public:
 	 * Constructor
 	 *
 	 * The implementation should at least do the following:
+	 *  - explicitly call this constructor
 	 *  - generate a name that will be returned by internalName()
 	 *  - set the logger
-	 *  - call setCustomName(customName) after the internalName is set
+	 *  - call @ref setCustomName after the internalName is set
+	 *  - call @ref notifyCreation to let the module being registered
+	 *  in the managers
 	 * @throw ModuleException forwarded from setCustomName if customName
 	 * is already in use.
 	 */
-	Module(ModuleFactory* parent);
+	Module(ModuleFactory* parent):
+	      mParent(parent) { }
 
 	/**
 	 * Destructor
@@ -147,6 +151,16 @@ protected:
 	 * @throw ModuleException If customName is already in use
 	 */
 	void setCustomName(std::string customName);
+
+
+	/**
+	 * Notify the managers about the module creation
+	 *
+	 * Has to be called at the end of the constructors implementation
+	 * in order to be registered in the ModuleManager and
+	 * in the Dispatcher
+	 */
+	void notifyCreation();
 
 	/**
 	 * Set the inPorts list size

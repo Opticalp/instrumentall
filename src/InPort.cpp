@@ -43,6 +43,16 @@ InPort::InPort(Module* parent,
 
 }
 
+InPort::InPort(OutPort* emptySourcePort):
+        Port(Poco::Util::Application::instance()
+                    .getSubsystem<ModuleManager>()
+                    .getEmptyModule(),
+                "emptyIn", "replace an expired port",
+                Port::typeUndefined, 0)
+{
+    mSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
+}
+
 void InPort::setSourcePort(SharedPtr<OutPort*> port)
 {
     (*mSourcePort)->removeTargetPort(this);
@@ -61,3 +71,4 @@ SharedPtr<OutPort*> InPort::getSourcePort()
 {
     return mSourcePort;
 }
+

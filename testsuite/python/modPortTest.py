@@ -31,25 +31,25 @@
 def myMain():
     """Main function. Run the tests. """
     
-    print "Test the basic features of the module factories. "
+    print "Test the basic features of the module ports. "
     
-    print " --- retrieve demo root factory "
     fac = Factory("DemoRootFactory")
-    print "Factory name: " + fac.name
-    print "Factory description: " + fac.description
-    
-    ## select
-    print fac.selectDescription()
-    print "Possible selectors: "
-    for val in fac.selectValueList():
-        print " - " + val + " >> " + fac.select(val).name
-        print "   " + fac.select(val).description
+    print "Retrieved factory: " + fac.name
     
     print "Create module from leafA factory"
     mod1 = fac.select("branch").select("leafA").create("mod1")
+    print "module " + mod1.name + " created. "
     
     # test ports
+    print "Query input ports"
+    inPorts = mod1.inPorts()
     
+    for port in inPorts:
+        print ( " - module " + port.parent().name +  
+            ", port " + port.name + 
+            ": " + port.description )
+    
+    print "End of script modPortTest.py"
     
 # main body    
 import sys

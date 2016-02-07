@@ -28,6 +28,9 @@
 
 #include "OutPort.h"
 
+#include "ModuleManager.h"
+#include "Dispatcher.h"
+
 OutPort::OutPort(Module* parent,
         std::string name,
         std::string description,
@@ -51,20 +54,21 @@ std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
 
 void OutPort::addTargetPort(InPort* port)
 {
-    // TODO
-    // get shared ptr from the dispatcher
-    // add it here
+    SharedPtr<InPort*> sharedPort =
+            Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .getInPort(port);
 
     lock.writeLock();
-    // targetPorts.push_back( <shared ptr> );
+    targetPorts.push_back(sharedPort);
     lock.unlock();
 }
 
 void OutPort::removeTargetPort(InPort* port)
 {
     lock.writeLock();
-    for (std::vector< SharedPtr<InPort*> >::iterator it=targetPorts.begin(), ite=targetPorts.end();
-            it != ite; it++ )
+    for (std::vector< SharedPtr<InPort*> >::iterator it=targetPorts.begin(),
+            ite=targetPorts.end(); it != ite; it++ )
     {
         if (**it==port)
         {
@@ -73,6 +77,15 @@ void OutPort::removeTargetPort(InPort* port)
             return;
         }
     }
-
     lock.unlock();
+}
+
+OutPort::OutPort():
+        Port(Poco::Util::Application::instance()
+                    .getSubsystem<ModuleManager>()
+                    .getEmptyModule(),
+                "emptyOut", "replace an expired port",
+                Port::typeUndefined, 0)
+{
+    // nothing to do
 }

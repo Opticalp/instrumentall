@@ -54,6 +54,12 @@ public:
             std::string description,
             dataTypeEnum datatype,
             size_t index);
+
+    /**
+     * Special constructor for the empty OutPort
+     */
+    OutPort();
+
     virtual ~OutPort() { }
 
     /// retrieve the target ports

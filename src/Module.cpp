@@ -38,11 +38,10 @@
 #include <typeinfo>
 POCO_IMPLEMENT_EXCEPTION( ModuleException, Poco::Exception, "Module error")
 
-Module::Module(ModuleFactory* parent):
-      mParent(parent)
+void Module::notifyCreation()
 {
     // if not EmptyModule, add this to module manager
-    if (parent)
+    if (mParent)
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().addModule(this);
 }
 

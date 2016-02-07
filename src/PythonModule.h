@@ -89,12 +89,12 @@ static PyMemberDef pyModMembers[] =
 /**
  * Initializer
  *
- * The python version of this initializer has to be called with the
- * name of the factory as argument.
+ * not implemented yet. Could be called with the name of the module (internal
+ * or custom)
  */
 extern "C" int pyModInit(ModMembers* self, PyObject *args, PyObject *kwds);
 
-/// ModuleFactory::countRemain python wrapper
+/// Module::parent() python wrapper
 extern "C" PyObject* pyModParent(ModMembers *self);
 
 static PyMethodDef pyMethodModParent =
@@ -105,9 +105,34 @@ static PyMethodDef pyMethodModParent =
     "Retrieve the parent factory"
 };
 
+/// Module::getInPorts() python wrapper
+extern "C" PyObject* pyModInPorts(ModMembers *self);
+
+static PyMethodDef pyMethodModInPorts =
+{
+    "inPorts",
+    (PyCFunction)pyModInPorts,
+    METH_NOARGS,
+    "Retrieve the input ports"
+};
+
+///// Module::getOutPorts() python wrapper
+//extern "C" PyObject* pyModOutPorts(ModMembers *self);
+//
+//static PyMethodDef pyMethodModOutPorts =
+//{
+//    "outPorts",
+//    (PyCFunction)pyModOutPorts,
+//    METH_NOARGS,
+//    "Retrieve the output ports"
+//};
+
 /// exported methods
 static PyMethodDef pyModMethods[] = {
         pyMethodModParent,
+
+        pyMethodModInPorts,
+//        pyMethodModOutPorts,
 
         {NULL} // sentinel
 };
