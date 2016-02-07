@@ -29,6 +29,8 @@
 #ifndef SRC_PORT_H_
 #define SRC_PORT_H_
 
+#include <string>
+
 class Module;
 
 /**
@@ -45,6 +47,7 @@ public:
      */
     enum dataTypeEnum
     {
+        typeUndefined, /// to be used in empty ports
         typeInteger,
         typeFloat,
         typeString,
@@ -89,6 +92,8 @@ inline std::string Port::dataTypeStr()
 {
     switch (mType)
     {
+    case typeUndefined:
+        return "undefined";
     case typeInteger:
         return "integer";
     case typeFloat:
