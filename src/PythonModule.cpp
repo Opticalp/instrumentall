@@ -122,7 +122,7 @@ PyObject* pyModParent(ModMembers* self)
     // init
     // retrieve name and description
     tmp = pyParent->name;
-    pyParent->name = PyString_FromString((*factory)->name());
+    pyParent->name = PyString_FromString((*factory)->name().c_str());
     Py_XDECREF(tmp);
 
     tmp = pyParent->description;

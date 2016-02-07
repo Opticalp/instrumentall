@@ -33,16 +33,10 @@
 Module* DemoLeafFactory::newChildModule(std::string customName)
 {
     if (getSelector().compare("leaf")==0)
-    {
-        poco_debug(logger(),"create demo module");
         return new DemoModule(this, customName);
-    }
 
     if (getSelector().compare("leafA")==0)
-    {
-        poco_debug(logger(),"create demo module A");
         return new DemoModuleA(this, customName);
-    }
 
     throw ModuleFactoryException("newChildModule","Impossible selector value");
 }

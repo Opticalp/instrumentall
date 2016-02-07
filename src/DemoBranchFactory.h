@@ -42,19 +42,21 @@ class DemoBranchFactory: public ModuleFactoryBranch
 {
 public:
     DemoBranchFactory(ModuleFactory* parent, std::string selector):
-        ModuleFactoryBranch(parent, selector) { setLogger(name()); }
+        ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
     virtual ~DemoBranchFactory() { }
 
-    const char * name() const { return "DemoBranchFactory"; }
+    std::string name() { return "DemoBranchFactory"; }
     const char * description() const
     {
         return "Example code for a branch module factory. "
-                "Please use select(\"leaf\") to access its only child. ";
+                "Please use selectValueList() to check "
+                "the authorized selectors. ";
     }
 
     const char* selectDescription()
     {
-        return "Demo select(). Please, use \"leaf\" as selector. ";
+        return "Demo select() with multiple selector choice. "
+                "See selectValueList()";
     }
 
     std::vector<std::string> selectValueList()
@@ -64,8 +66,6 @@ public:
         list.push_back("leafA");
         return list;
     }
-
-    bool isLeaf() { return false; }
 
 private:
     ModuleFactoryBranch* newChildFactory(std::string selector);

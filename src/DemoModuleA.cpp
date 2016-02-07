@@ -57,9 +57,3 @@ DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
 
     notifyCreation();
 }
-
-DemoModuleA::~DemoModuleA()
-{
-    // TODO Auto-generated destructor stub
-}
-

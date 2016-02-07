@@ -149,7 +149,7 @@ PyObject* pyModFactSelect(ModFactMembers* self, PyObject* args)
     // init
     // retrieve name and description
     tmp = pyChildFact->name;
-    pyChildFact->name = PyString_FromString((*childFact)->name());
+    pyChildFact->name = PyString_FromString((*childFact)->name().c_str());
     Py_XDECREF(tmp);
 
     tmp = pyChildFact->description;

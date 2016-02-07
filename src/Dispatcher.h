@@ -113,6 +113,16 @@ public:
       */
      SharedPtr<OutPort*> getOutPort(OutPort* port);
 
+//     /**
+//      * Return the address of the empty inPort
+//      */
+//     InPort* getEmptyInPort() { return &emptyInPort; }
+
+     /**
+      * Return the address of the empty outPort
+      */
+     OutPort* getEmptyOutPort() { return &emptyOutPort; }
+
 private:
      /**
       * Remove a port from the allInPorts list

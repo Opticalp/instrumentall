@@ -96,7 +96,6 @@ private:
     void releaseSourcePort();
 
     SharedPtr<OutPort*> mSourcePort;
-    RWLock lock;
 
     friend Dispatcher;
 };

@@ -29,6 +29,7 @@
 #include "InPort.h"
 
 #include "ModuleManager.h"
+#include "Dispatcher.h"
 #include "OutPort.h"
 
 InPort::InPort(Module* parent,
@@ -38,9 +39,10 @@ InPort::InPort(Module* parent,
         size_t index):
     Port(parent, name, description, datatype, index)
 {
-    // TODO
-    // mSourcePort = <emptyPort>
-
+    mSourcePort = SharedPtr<OutPort*>(
+            new (OutPort*)( Poco::Util::Application::instance()
+                                    .getSubsystem<Dispatcher>()
+                                    .getEmptyOutPort()       ) );
 }
 
 InPort::InPort(OutPort* emptySourcePort):
@@ -63,8 +65,10 @@ void InPort::setSourcePort(SharedPtr<OutPort*> port)
 void InPort::releaseSourcePort()
 {
     (*mSourcePort)->removeTargetPort(this);
-    // TODO
-    // mSourcePort = <emptyPort>
+    mSourcePort = SharedPtr<OutPort*>(
+            new (OutPort*)( Poco::Util::Application::instance()
+                                    .getSubsystem<Dispatcher>()
+                                    .getEmptyOutPort()       ) );
 }
 
 SharedPtr<OutPort*> InPort::getSourcePort()

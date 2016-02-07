@@ -39,8 +39,8 @@
 class ModuleFactoryBranch: public ModuleFactory
 {
 public:
-    ModuleFactoryBranch(ModuleFactory* parent, std::string selector):
-        ModuleFactory(false),
+    ModuleFactoryBranch(ModuleFactory* parent, std::string selector, bool leaf=true):
+        ModuleFactory(leaf, false),
         mParent(parent), mSelector(selector) { }
 
     /**

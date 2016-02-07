@@ -61,9 +61,11 @@ def myMain():
         print mod.name + " parent is: " + mod.parent().name
 
     if (fac.countRemain()>0):
-        print "Creating module from " + fac.name + ' with arg: "modjo"' 
-        mod = fac.create("modjo")
+        print "Creating module from " + fac.name + ' with arg: "mojo"' 
+        mod = fac.create("mojo")
         print "  module " + mod.name + " created. "
+    
+    print "End of script modFactTest.py"
     
 # main body    
 import sys

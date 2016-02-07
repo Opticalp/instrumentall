@@ -42,10 +42,12 @@
 class DemoRootFactory: public ModuleFactory
 {
 public:
-    DemoRootFactory() { setLogger(name()); }
+    DemoRootFactory(): ModuleFactory(false) // is not a leaf, is root.
+        { setLogger(name()); }
+
     virtual ~DemoRootFactory() { }
 
-    const char * name() const { return "DemoRootFactory"; }
+    std::string name() { return "DemoRootFactory"; }
     const char * description() const
     {
         return "Example code for a root module factory. "
@@ -63,8 +65,6 @@ public:
         list.push_back("branch");
         return list;
     }
-
-    bool isLeaf() { return false; }
 
 private:
     ModuleFactoryBranch* newChildFactory(std::string selector);

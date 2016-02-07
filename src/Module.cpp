@@ -47,9 +47,6 @@ void Module::notifyCreation()
 
 Module::~Module()
 {
-	// TODO:
-    // - notify dispatcher
-
     // notify parent factory
     if (mParent)
     {

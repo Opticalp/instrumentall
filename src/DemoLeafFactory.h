@@ -46,14 +46,12 @@ public:
         ModuleFactoryBranch(parent, selector) { setLogger(name()); }
     virtual ~DemoLeafFactory() { }
 
-    const char * name() const { return "DemoLeafFactory"; }
+    std::string name() { return std::string("Demo" + getSelector() + "Factory"); }
     const char * description() const
     {
         return "Example code for a leaf module factory. "
-                "Please use select(\"leaf\") to access its only child. ";
+                "Please use create() to create a module. ";
     }
-
-    bool isLeaf() { return true; }
 
     size_t countRemain() { return 1; }
 

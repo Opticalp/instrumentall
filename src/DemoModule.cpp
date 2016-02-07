@@ -38,11 +38,9 @@ DemoModule::DemoModule(ModuleFactory* parent, std::string customName):
     VerboseEntity("module.DemoModule");
     poco_debug(logger(),"Creating a new demo module");
 
-    setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));
+    setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount++));
     setCustomName(customName);
     setLogger("module" + name());
-
-    refCount++;
 
     notifyCreation();
 }

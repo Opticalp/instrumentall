@@ -40,7 +40,7 @@ class DemoModuleA: public Module
 {
 public:
     DemoModuleA(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleA();
+    virtual ~DemoModuleA() { }
 
     const char * description() const
     {

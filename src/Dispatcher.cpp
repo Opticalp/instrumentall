@@ -75,12 +75,15 @@ void Dispatcher::uninitialize()
 {
     initialized = false;
 
+    poco_debug(logger(), "Dispatcher un-initialization.");
+
     inPortsLock.writeLock();
     outPortsLock.writeLock();
 
     for (std::vector< SharedPtr<InPort*> >::reverse_iterator it = allInPorts.rbegin(),
             ite = allInPorts.rend(); it != ite ; it++)
         removeInPort(**it);
+
     for (std::vector< SharedPtr<OutPort*> >::reverse_iterator it = allOutPorts.rbegin(),
             ite = allOutPorts.rend(); it != ite ; it++)
         removeOutPort(**it);
@@ -125,6 +128,8 @@ void Dispatcher::addModule(SharedPtr<Module*> module)
 
 void Dispatcher::removeModule(SharedPtr<Module*> module)
 {
+    poco_information(logger(),"removing module " + (*module)->name());
+
     if (!initialized)
     {
         poco_debug(logger(),
