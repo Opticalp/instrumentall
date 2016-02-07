@@ -27,6 +27,7 @@
  */
 
 #include "ModuleManager.h"
+#include "Dispatcher.h"
 
 #include "DemoRootFactory.h"
 
@@ -40,7 +41,7 @@ ModuleManager::ModuleManager():
 
 ModuleManager::~ModuleManager()
 {
-    uninitialize();
+    uninitialize(); // should be already called by the system.
 
     for (std::vector<ModuleFactory*>::reverse_iterator it=rootFactories.rbegin(), ite=rootFactories.rend();
             it != ite; it++)
@@ -84,8 +85,10 @@ void ModuleManager::defineOptions(Poco::Util::OptionSet& options)
 
 void ModuleManager::addModule(Module* pModule)
 {
+    SharedPtr<Module*> pMod(new (Module*)(pModule));
     modulesLock.writeLock();
-    allModules.push_back(SharedPtr<Module*>(new (Module*)(pModule)));
+    allModules.push_back(pMod);
+    Poco::Util::Application::instance().getSubsystem<Dispatcher>().addModule(pMod);
     modulesLock.unlock();
 }
 
@@ -98,6 +101,8 @@ void ModuleManager::removeModule(Module* pModule)
     {
         if (pModule == **it)
         {
+            Poco::Util::Application::instance().getSubsystem<Dispatcher>().removeModule(*it);
+            // remove module
             **it = &emptyModule; // replace the pointed factory by something throwing exceptions
             allModules.erase(it);
             poco_debug(logger(), pModule->name() + " module erased from ModuleManager::allModules. ");

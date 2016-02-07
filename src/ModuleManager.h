@@ -95,6 +95,8 @@ public:
      * Add a Module to the list
      *
      * This function is called by the @ref Module constructor
+     *
+     * Notify the @ref Dispatcher subsystem that a module is created
      */
     void addModule(Module* pModule);
 
@@ -102,6 +104,8 @@ public:
      * Remove a Module from the list
      *
      * This function is called by the @ref Module destructor.
+     *
+     * Notify the @ref Dispatcher subsystem that a module is deleted
      */
     void removeModule(Module* pModule);
 

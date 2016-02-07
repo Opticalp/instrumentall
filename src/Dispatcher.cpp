@@ -34,46 +34,89 @@
 #include "InPort.h"
 #include "OutPort.h"
 
-Dispatcher::Dispatcher()
+#include <typeinfo>
+POCO_IMPLEMENT_EXCEPTION( DispatcherException, Poco::Exception, "Dispatcher error")
+
+Dispatcher::Dispatcher():
+    VerboseEntity(name()),
+    initialized(false),
+    emptyInPort(NULL, "emptyIn", "replace an expired port", Port::typeUndefined, 0),
+    emptyOutPort(NULL, "emptyOut", "replace an expired port", Port::typeUndefined, 0)
 {
-    // TODO Auto-generated constructor stub
+    // nothing to do?
 
 }
 
 Dispatcher::~Dispatcher()
 {
-    // TODO Auto-generated destructor stub
+    if (initialized)
+        uninitialize();
 }
 
 void Dispatcher::initialize(Poco::Util::Application& app)
 {
+    if (initialized)
+    {
+        poco_error(logger(),"The dispatcher is already initialized, "
+                "please uninitialize first");
+    }
+
     std::vector< SharedPtr<Module*> > modules;
     modules = Poco::Util::Application::instance().getSubsystem<ModuleManager>().getModules();
+
+    initialized = true;
 
     for (std::vector< SharedPtr<Module*> >::iterator it=modules.begin(), ite=modules.end();
             it!=ite; it++)
         addModule(*it);
+
 }
 
 void Dispatcher::uninitialize()
 {
-    // remove all ports.
+    initialized = false;
+
+    inPortsLock.writeLock();
+    outPortsLock.writeLock();
+
+    for (std::vector< SharedPtr<InPort*> >::reverse_iterator it = allInPorts.rbegin(),
+            ite = allInPorts.rend(); it != ite ; it++)
+        removeInPort(**it);
+    for (std::vector< SharedPtr<OutPort*> >::reverse_iterator it = allOutPorts.rbegin(),
+            ite = allOutPorts.rend(); it != ite ; it++)
+        removeOutPort(**it);
+
+    inPortsLock.unlock();
+    outPortsLock.unlock();
 }
 
 
 void Dispatcher::addModule(SharedPtr<Module*> module)
 {
-    // TODO
+    if (!initialized)
+    {
+        poco_debug(logger(),
+                "module insertion in the dispatcher: not initialized");
+        return;
+    }
 
-    // lock module
-    // retrieve inPorts
-    // retrieve outPorts
+    // n.b. the module is "locked" in the way that it cannot change
+    // its connections, as long as the connection changes come from the
+    // dispatcher, and the dispatcher has a write lock on the inPorts
+    // and the outPorts.
 
     inPortsLock.writeLock();
     outPortsLock.writeLock();
-    // unlock module
 
-    // write ports
+    std::vector<InPort*> inPorts((*module)->getInPorts());
+    std::vector<OutPort*> outPorts((*module)->getOutPorts());
+
+    for (std::vector<InPort*>::iterator it = inPorts.begin(),
+            ite = inPorts.end() ; it != ite ; it++)
+        addInPort(*it);
+    for (std::vector<OutPort*>::iterator it = outPorts.begin(),
+            ite = outPorts.end() ; it != ite ; it++)
+        addOutPort(*it);
 
     inPortsLock.unlock();
     outPortsLock.unlock();
@@ -81,25 +124,37 @@ void Dispatcher::addModule(SharedPtr<Module*> module)
 
 void Dispatcher::removeModule(SharedPtr<Module*> module)
 {
-    // TODO
-
-    // lock module
-    // retrieve inPorts
-    // retrieve outPorts
+    if (!initialized)
+    {
+        poco_debug(logger(),
+                "module removal from the dispatcher: not initialized");
+        return;
+    }
 
     inPortsLock.writeLock();
     outPortsLock.writeLock();
-    // unlock module
 
-    // write ports
+    std::vector<InPort*> inPorts((*module)->getInPorts());
+    std::vector<OutPort*> outPorts((*module)->getOutPorts());
+
+    // remove the input ports first in order to break the connections
+    for (std::vector<InPort*>::reverse_iterator it = inPorts.rbegin(),
+            ite = inPorts.rend() ; it != ite ; it++)
+        removeInPort(*it);
+    for (std::vector<OutPort*>::reverse_iterator it = outPorts.rbegin(),
+            ite = outPorts.rend() ; it != ite ; it++)
+        removeOutPort(*it);
 
     inPortsLock.unlock();
     outPortsLock.unlock();
-
 }
 
 SharedPtr<InPort*> Dispatcher::getInPort(InPort* port)
 {
+    if (!initialized)
+        throw DispatcherException("getInPort",
+                "The dispatcher is not initialized");
+
     inPortsLock.readLock();
     for (std::vector< SharedPtr<InPort*> >::iterator it=allInPorts.begin(), ite=allInPorts.end();
             it!=ite; it++)
@@ -118,6 +173,10 @@ SharedPtr<InPort*> Dispatcher::getInPort(InPort* port)
 
 SharedPtr<OutPort*> Dispatcher::getOutPort(OutPort* port)
 {
+    if (!initialized)
+        throw DispatcherException("getInPort",
+                "The dispatcher is not initialized");
+
     outPortsLock.readLock();
     for (std::vector< SharedPtr<OutPort*> >::iterator it=allOutPorts.begin(), ite=allOutPorts.end();
             it!=ite; it++)
@@ -132,4 +191,78 @@ SharedPtr<OutPort*> Dispatcher::getOutPort(OutPort* port)
     outPortsLock.unlock();
     throw ModuleException("getOutPort", "port not found: "
             "Should have been deleted during the query");
+}
+
+void Dispatcher::removeInPort(InPort* port)
+{
+    // using a reverse iterator to improve performance when called
+    // from the uninitializer
+    for (std::vector< SharedPtr<InPort*> >::reverse_iterator it = allInPorts.rbegin(),
+            ite = allInPorts.rend(); it!=ite; it++)
+    {
+        if (port == **it)
+        {
+            (**it)->releaseSourcePort(); // break the connection
+
+            poco_debug(logger(),"Dispatcher: removing input port "
+                    + port->name() + " (module "
+                    + port->parent()->name() + ")" );
+
+            **it = &emptyInPort; // replace the pointed factory by something throwing exceptions
+            allInPorts.erase((it+1).base());
+            poco_debug(logger(),
+                    port->name() + " input port from module "
+                    + port->parent()->name() + " is erased "
+                            "from Dispatcher::allInPorts. ");
+            return;
+        }
+    }
+
+    poco_error(logger(), "removeInPort(): "
+            "the port was not found");
+}
+
+void Dispatcher::addInPort(InPort* port)
+{
+    allInPorts.push_back(SharedPtr<InPort*>(new (InPort*)(port)));
+}
+
+void Dispatcher::removeOutPort(OutPort* port)
+{
+    // using a reverse iterator to improve performance when called
+    // from the uninitializer
+    for (std::vector< SharedPtr<OutPort*> >::reverse_iterator it = allOutPorts.rbegin(),
+            ite = allOutPorts.rend(); it!=ite; it++)
+    {
+        if (port == **it)
+        {
+            // release connections (find targets and act on targets)
+            // nb: this is a simple precaution, since all the connections
+            // should already be broken by the deletion of the inPorts.
+            std::vector< SharedPtr<InPort*> > sources(port->getTargetPorts());
+            for (std::vector< SharedPtr<InPort*> >::iterator srcIt = sources.begin(),
+                    srcIte = sources.end() ; srcIt != srcIte ; srcIt++)
+                (**srcIt)->releaseSourcePort();
+
+            poco_debug(logger(),"Dispatcher: removing output port "
+                    + port->name() + " (module "
+                    + port->parent()->name() + ")" );
+
+            **it = &emptyOutPort; // replace the pointed factory by something throwing exceptions
+            allOutPorts.erase((it+1).base());
+            poco_debug(logger(),
+                    port->name() + " output port from module "
+                    + port->parent()->name() + " is erased "
+                            "from Dispatcher::allInPorts. ");
+            return;
+        }
+    }
+
+    poco_error(logger(), "removeOutPort(): "
+            "the port was not found");
+}
+
+void Dispatcher::addOutPort(OutPort* port)
+{
+    allOutPorts.push_back(SharedPtr<OutPort*>(new (OutPort*)(port)));
 }

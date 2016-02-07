@@ -31,14 +31,13 @@
 
 #include "Port.h"
 
-#include "Dispatcher.h"
-
 #include "Poco/RWLock.h"
 #include "Poco/SharedPtr.h"
 
 using Poco::RWLock;
 using Poco::SharedPtr;
 
+class Dispatcher;
 class OutPort;
 
 /**
@@ -55,10 +54,21 @@ public:
             std::string description,
             dataTypeEnum datatype,
             size_t index);
-    virtual ~InPort();
+
+    /**
+     * Destructor
+     *
+     * Do not need to call releaseSourcePort.
+     * Indeed, this destructor is called when the parent module
+     * is deleted. On Module deletion, the ModuleManager::removeModule
+     * is called, then the Dispatcher::removeModule is called,
+     * then this input port is deleted from Dispatcher::allInPorts
+     * after this releaseSourcePort has been called.
+     */
+    virtual ~InPort() { }
 
     /// Retrieve the source port
-    SharedPtr<OutPort*> getSourcePort() { return mSourcePort; }
+    SharedPtr<OutPort*> getSourcePort();
 
 private:
     /**
@@ -83,7 +93,7 @@ private:
     SharedPtr<OutPort*> mSourcePort;
     RWLock lock;
 
-    friend class Dispatcher;
+    friend Dispatcher;
 };
 
 #endif /* SRC_INPORT_H_ */

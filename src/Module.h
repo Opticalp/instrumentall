@@ -113,6 +113,22 @@ public:
 	 */
 	ModuleFactory* parent();
 
+	/**
+	 * Get input ports
+	 *
+	 * The dispatcher should be requested to get shared pointer
+	 * on the port items
+	 * @return a copy of the input ports list
+	 */
+	std::vector<InPort*> getInPorts() { return inPorts; }
+
+	/**
+	 * Get output ports
+	 *
+	 * @see getInPorts
+	 */
+	std::vector<OutPort*> getOutPorts() { return outPorts; }
+
 protected:
     /**
      * Set the internal name of the module

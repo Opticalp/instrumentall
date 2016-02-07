@@ -37,6 +37,7 @@
 
 using Poco::RWLock;
 using Poco::SharedPtr;
+
 class InPort;
 
 /**
@@ -53,10 +54,10 @@ public:
             std::string description,
             dataTypeEnum datatype,
             size_t index);
-    virtual ~OutPort();
+    virtual ~OutPort() { }
 
     /// retrieve the target ports
-    std::vector< SharedPtr<OutPort*> > getTargetPorts();
+    std::vector< SharedPtr<InPort*> > getTargetPorts();
 
 private:
     /**
@@ -80,7 +81,7 @@ private:
     std::vector< SharedPtr<InPort*> > targetPorts;
     RWLock lock; ///< lock for targetPorts operations
 
-    friend class InPort;
+    friend InPort;
 };
 
 #endif /* SRC_OUTPORT_H_ */

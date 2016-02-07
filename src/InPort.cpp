@@ -43,11 +43,6 @@ InPort::InPort(Module* parent,
 
 }
 
-InPort::~InPort()
-{
-    (*mSourcePort)->removeTargetPort(this);
-}
-
 void InPort::setSourcePort(SharedPtr<OutPort*> port)
 {
     (*mSourcePort)->removeTargetPort(this);
@@ -60,4 +55,9 @@ void InPort::releaseSourcePort()
     (*mSourcePort)->removeTargetPort(this);
     // TODO
     // mSourcePort = <emptyPort>
+}
+
+SharedPtr<OutPort*> InPort::getSourcePort()
+{
+    return mSourcePort;
 }

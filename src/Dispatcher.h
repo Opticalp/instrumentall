@@ -29,6 +29,11 @@
 #ifndef SRC_DISPATCHER_H_
 #define SRC_DISPATCHER_H_
 
+#include "VerboseEntity.h"
+
+#include "InPort.h"
+#include "OutPort.h"
+
 #include "Poco/Util/Subsystem.h"
 #include "Poco/RWLock.h"
 #include "Poco/SharedPtr.h"
@@ -38,9 +43,9 @@
 using Poco::RWLock;
 using Poco::SharedPtr;
 
-class InPort;
-class OutPort;
 class Module;
+
+POCO_DECLARE_EXCEPTION( , DispatcherException, Poco::Exception)
 
 /**
  * Dispatcher
@@ -48,7 +53,7 @@ class Module;
  * Manage the interactions between modules.
  * Every interaction between @ref Module should pass by the dispatcher.
  */
-class Dispatcher: public Poco::Util::Subsystem
+class Dispatcher: public Poco::Util::Subsystem, VerboseEntity
 {
 public:
     Dispatcher();
@@ -109,6 +114,42 @@ public:
      SharedPtr<OutPort*> getOutPort(OutPort* port);
 
 private:
+     /**
+      * Remove a port from the allInPorts list
+      *
+      * inPortsLock has to be locked from outside this function.
+      *
+      * Typical use is to delete many ports (see @ref uninitialize
+      * or @ref removeModule ). It means that the lock is acquired,
+      * then removeInPort (this function) is called multiple times,
+      * or possibly removeOutPort also, and then the lock is released.
+      *
+      * No exception raising.
+      */
+     void removeInPort(InPort* port);
+
+     /**
+      * Add a port to the allInPorts list
+      *
+      * inPortsLock has to be locked from outside this function.
+      * @see removeInPort discussion
+      */
+     void addInPort(InPort* port);
+
+     /**
+      * Remove a port from the allInPorts list
+      *
+      * @see removeInPort
+      */
+     void removeOutPort(OutPort* port);
+
+     /**
+      * Add a port to the allOutPorts list
+      *
+      * @see addOutPort
+      */
+     void addOutPort(OutPort* port);
+
      /// input ports to be used as targets for output ports
      std::vector< SharedPtr<InPort*> > allInPorts;
      RWLock inPortsLock; ///< lock for the transactions on allInPorts
@@ -116,6 +157,14 @@ private:
      /// output ports to be used as sources for input ports
      std::vector< SharedPtr<OutPort*> > allOutPorts;
      RWLock outPortsLock; ///< lock for the transactiosn on allOutPorts
+
+     /// Flag to decide if addModule adds a newly created module or not
+     bool initialized;
+
+     /// empty input port to be used when an input port is deleted
+     InPort emptyInPort;
+     /// empty output port to be used when an output port is deleted
+     OutPort emptyOutPort;
 };
 
 #endif /* SRC_DISPATCHER_H_ */

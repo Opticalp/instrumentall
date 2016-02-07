@@ -35,24 +35,18 @@ OutPort::OutPort(Module* parent,
         size_t index):
     Port(parent, name, description, datatype, index)
 {
-    // TODO Auto-generated constructor stub
-
+    // nothing to do
 }
 
-OutPort::~OutPort()
+std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
 {
-    // TODO Auto-generated destructor stub
-}
-
-std::vector<SharedPtr<OutPort*> > OutPort::getTargetPorts()
-{
-    // TODO
+    std::vector<SharedPtr<InPort*> > list;
 
     lock.readLock();
-    // create a copy
+    list = targetPorts;
     lock.unlock();
-    // return the copy
-    return std::vector<SharedPtr<OutPort*> >();
+
+    return list;
 }
 
 void OutPort::addTargetPort(InPort* port)
