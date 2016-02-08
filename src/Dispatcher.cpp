@@ -123,7 +123,7 @@ void Dispatcher::addModule(SharedPtr<Module*> module)
     inPortsLock.unlock();
     outPortsLock.unlock();
 
-    poco_debug(logger(),"module " + module->name() + " added in the dispatcher");
+    poco_debug(logger(),"module " + (*module)->name() + " added in the dispatcher");
 }
 
 void Dispatcher::removeModule(SharedPtr<Module*> module)
