@@ -40,8 +40,11 @@ def myMain():
     mod1 = fac.select("branch").select("leafA").create("mod1")
     print "module " + mod1.name + " created. "
     
+    mod2 = fac.select("branch").select("leafB").create("mod2")
+    print "module " + mod2.name + " created. "
+    
     # test ports
-    print "Query input ports"
+    print "Query mod1 input ports"
     inPorts = mod1.inPorts()
     
     for port in inPorts:
@@ -56,7 +59,7 @@ def myMain():
         except ReferenceError:
             print " This port has no source"
     
-    print "Query output ports"
+    print "Query mod1 output ports"
     for port in mod1.outPorts():
         print ( " - module " + port.parent().name +  
             ", port " + port.name + 

@@ -64,6 +64,7 @@ public:
         std::vector<std::string> list;
         list.push_back("leaf");
         list.push_back("leafA");
+        list.push_back("leafB");
         return list;
     }
 

@@ -1,5 +1,5 @@
 /**
- * @file	src/DemoModuleA.cpp
+ * @file	src/DemoModuleB.cpp
  * @date	feb. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -26,28 +26,23 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleA.h"
+#include "DemoModuleB.h"
 #include "Poco/NumberFormatter.h"
 
-size_t DemoModuleA::refCount = 0;
+size_t DemoModuleB::refCount = 0;
 
-DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
+DemoModuleB::DemoModuleB(ModuleFactory* parent, std::string customName):
                 Module(parent)
 {
-    VerboseEntity("module.DemoModuleA");
-    poco_debug(logger(),"Creating a new demo module A");
+    VerboseEntity("module.DemoModuleB");
+    poco_debug(logger(),"Creating a new demo module B");
 
-    setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount++));
+    setInternalName("DemoModuleB" + Poco::NumberFormatter::format(refCount++));
     setCustomName(customName);
     setLogger("module" + name());
 
     // ports
-    setInPortCount(inPortCnt);
     setOutPortCount(outPortCnt);
-
-    addInPort("inPortA", "demo port that transmits nothing", Port::typeInteger, inPortA);
-    addInPort("inPortB", "demo port that transmits nothing", Port::typeFloat, inPortB);
-
     addOutPort("outPortA", "demo port that transmits nothing", Port::typeInteger, outPortA);
 
     notifyCreation();
