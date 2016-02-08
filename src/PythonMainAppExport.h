@@ -72,7 +72,7 @@ static PyMethodDef pyMethodMainAppVersion =
 
 
 // ----------------------------------------------------------------
-//     Module Factory
+//     Module Manager
 // ----------------------------------------------------------------
 
 /**
@@ -82,12 +82,12 @@ static PyMethodDef pyMethodMainAppVersion =
  *
  */
 extern "C" PyObject*
-pythonModFactGetRootFact(PyObject *self, PyObject *args);
+pythonModManGetRootFact(PyObject *self, PyObject *args);
 
-static PyMethodDef pyMethodModFactGetRootFact =
+static PyMethodDef pyMethodModManGetRootFact =
 {
     "getRootFactories",
-    pythonModFactGetRootFact,
+    pythonModManGetRootFact,
     METH_NOARGS,
     "Retrieve the list of root factories"
 };

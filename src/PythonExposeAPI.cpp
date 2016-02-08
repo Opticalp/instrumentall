@@ -53,8 +53,8 @@ static PyMethodDef EmbMethods[] =
     pyMethodMainAppAbout,
     pyMethodMainAppVersion,
 
-    // module factory
-    pyMethodModFactGetRootFact,
+    // module manager
+    pyMethodModManGetRootFact,
 
     // sentinel
     {NULL, NULL, 0, NULL}

@@ -58,7 +58,7 @@ pythonMainAppVersion(PyObject *self, PyObject *args)
 }
 
 extern "C" PyObject*
-pythonModFactGetRootFact(PyObject *self, PyObject *args)
+pythonModManGetRootFact(PyObject *self, PyObject *args)
 {
     std::vector<std::string> strFactories;
 
