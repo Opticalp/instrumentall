@@ -43,9 +43,15 @@ def myMain():
     mod2 = fac.select("branch").select("leafB").create("mod2")
     print "module " + mod2.name + " created. "
     
-    # test ports
     print "Query mod1 input ports"
     inPorts = mod1.inPorts()
+    
+    inPortA = inPorts[0]
+    outPortA = mod2.outPorts()[0]
+    
+    bind(inPortA, outPortA)
+    unbind(inPortA)
+    bind(outPortA, inPortA)
     
     for port in inPorts:
         print ( " - module " + port.parent().name +  
@@ -59,8 +65,8 @@ def myMain():
         except ReferenceError:
             print " This port has no source"
     
-    print "Query mod1 output ports"
-    for port in mod1.outPorts():
+    print "Query mod2 output ports"
+    for port in mod2.outPorts():
         print ( " - module " + port.parent().name +  
             ", port " + port.name + 
             ": " + port.description )
@@ -69,7 +75,32 @@ def myMain():
         for target in targets:    
             print ( target.name + ", from module: " +
                 target.parent().name )
+            
+    unbind(inPortA)
     
+    for port in inPorts:
+        print ( " - module " + port.parent().name +  
+            ", port " + port.name + 
+            ": " + port.description )
+        try:
+            source = port.getSourcePort()
+            print ( "port source: " +
+                source.name + " from module: " +
+                source.parent().name )
+        except ReferenceError:
+            print " This port has no source"
+    
+    print "Query mod2 output ports"
+    for port in mod2.outPorts():
+        print ( " - module " + port.parent().name +  
+            ", port " + port.name + 
+            ": " + port.description )
+        targets = port.getTargetPorts()
+        print "targets: " 
+        for target in targets:    
+            print ( target.name + ", from module: " +
+                target.parent().name )
+
     print "End of script modPortTest.py"
     
 # main body    

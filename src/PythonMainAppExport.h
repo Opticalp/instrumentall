@@ -92,5 +92,45 @@ static PyMethodDef pyMethodModManGetRootFact =
     "Retrieve the list of root factories"
 };
 
+// ----------------------------------------------------------------
+//     Dispatcher
+// ----------------------------------------------------------------
+
+/**
+ * @brief Python wrapper to bind ports
+ *
+ * Call Dispatcher::bind(portA, portB) method
+ *
+ */
+extern "C" PyObject*
+pythonDispatchBind(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDispatchBind =
+{
+    "bind",
+    pythonDispatchBind,
+    METH_VARARGS,
+    "bind(portA, portB): Bind a data output source port portA "
+    "to a data input target port portB"
+};
+
+/**
+ * @brief Python wrapper to unbind ports
+ *
+ * Call Dispatcher::unbind(inPortA) method
+ *
+ */
+extern "C" PyObject*
+pythonDispatchUnbind(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDispatchUnbind =
+{
+    "unbind",
+    pythonDispatchUnbind,
+    METH_VARARGS,
+    "unbind(inPortA): unbind a data input target port inPortA "
+    "from its source"
+};
+
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_PYTHONMAINAPPEXPORT_H_ */

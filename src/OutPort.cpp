@@ -54,14 +54,22 @@ std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
 
 void OutPort::addTargetPort(InPort* port)
 {
-    SharedPtr<InPort*> sharedPort =
+    lock.writeLock();
+
+    try
+    {
+        SharedPtr<InPort*> sharedPort =
             Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()
                         .getInPort(port);
-
-    lock.writeLock();
-    targetPorts.push_back(sharedPort);
-    lock.unlock();
+        targetPorts.push_back(sharedPort);
+        lock.unlock();
+    }
+    catch (DispatcherException& e)
+    {
+        lock.unlock();
+        e.rethrow();
+    }
 }
 
 void OutPort::removeTargetPort(InPort* port)

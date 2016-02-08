@@ -123,6 +123,24 @@ public:
       */
      OutPort* getEmptyOutPort() { return &emptyOutPort; }
 
+     /**
+      * Create a connection between two ports
+      *
+      * @throw DispatcherException that is forwarded
+      * from @ref getInPort. It is issued if the port is deleted
+      * during the binding.
+      * @note If the target port expired during the binding,
+      * no exception is thrown, but the binding is not made.
+      */
+     void bind (SharedPtr<OutPort*> source, SharedPtr<InPort*> target);
+
+     /**
+      * Remove a connection between two ports
+      *
+      * No exception is thrown
+      */
+     void unbind(SharedPtr<InPort*> target);
+
 private:
      /**
       * Remove a port from the allInPorts list

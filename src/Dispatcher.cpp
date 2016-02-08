@@ -276,3 +276,13 @@ void Dispatcher::addOutPort(OutPort* port)
             + " from module " + port->parent()->name());
     allOutPorts.push_back(SharedPtr<OutPort*>(new (OutPort*)(port)));
 }
+
+void Dispatcher::bind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
+{
+    (*target)->setSourcePort(source);
+}
+
+void Dispatcher::unbind(SharedPtr<InPort*> target)
+{
+    (*target)->releaseSourcePort();
+}

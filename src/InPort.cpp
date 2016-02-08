@@ -59,7 +59,18 @@ void InPort::setSourcePort(SharedPtr<OutPort*> port)
 {
     (*mSourcePort)->removeTargetPort(this);
     mSourcePort = port;
-    (*mSourcePort)->addTargetPort(this);
+    try
+    {
+        (*mSourcePort)->addTargetPort(this);
+    }
+    catch (DispatcherException& e)
+    {
+        mSourcePort = SharedPtr<OutPort*>(
+                new (OutPort*)( Poco::Util::Application::instance()
+                                        .getSubsystem<Dispatcher>()
+                                        .getEmptyOutPort()       ) );
+        e.rethrow();
+    }
 }
 
 void InPort::releaseSourcePort()

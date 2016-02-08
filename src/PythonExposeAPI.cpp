@@ -56,6 +56,10 @@ static PyMethodDef EmbMethods[] =
     // module manager
     pyMethodModManGetRootFact,
 
+    // dispatcher
+    pyMethodDispatchBind,
+    pyMethodDispatchUnbind,
+
     // sentinel
     {NULL, NULL, 0, NULL}
 };
