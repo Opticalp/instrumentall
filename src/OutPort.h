@@ -87,7 +87,7 @@ private:
     std::vector< SharedPtr<InPort*> > targetPorts;
     RWLock lock; ///< lock for targetPorts operations
 
-    friend InPort;
+    friend class InPort;
 };
 
 #endif /* SRC_OUTPORT_H_ */

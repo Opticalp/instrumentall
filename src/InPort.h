@@ -97,7 +97,7 @@ private:
 
     SharedPtr<OutPort*> mSourcePort;
 
-    friend Dispatcher;
+    friend class Dispatcher;
 };
 
 #endif /* SRC_INPORT_H_ */
