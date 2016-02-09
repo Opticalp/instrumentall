@@ -31,6 +31,10 @@
 
 #include "VerboseEntity.h"
 
+#include "Port.h"
+
+class InPort;
+class OutPort;
 class ModuleFactory;
 
 POCO_DECLARE_EXCEPTION( , ModuleException, Poco::Exception)
@@ -53,13 +57,17 @@ public:
 	 * Constructor
 	 *
 	 * The implementation should at least do the following:
+	 *  - explicitly call this constructor
 	 *  - generate a name that will be returned by internalName()
 	 *  - set the logger
-	 *  - call setCustomName(customName) after the internalName is set
+	 *  - call @ref setCustomName after the internalName is set
+	 *  - call @ref notifyCreation to let the module being registered
+	 *  in the managers
 	 * @throw ModuleException forwarded from setCustomName if customName
 	 * is already in use.
 	 */
-	Module(ModuleFactory* parent);
+	Module(ModuleFactory* parent):
+	      mParent(parent) { }
 
 	/**
 	 * Destructor
@@ -109,6 +117,22 @@ public:
 	 */
 	ModuleFactory* parent();
 
+	/**
+	 * Get input ports
+	 *
+	 * The dispatcher should be requested to get shared pointer
+	 * on the port items
+	 * @return a copy of the input ports list
+	 */
+	std::vector<InPort*> getInPorts() { return inPorts; }
+
+	/**
+	 * Get output ports
+	 *
+	 * @see getInPorts
+	 */
+	std::vector<OutPort*> getOutPorts() { return outPorts; }
+
 protected:
     /**
      * Set the internal name of the module
@@ -128,6 +152,51 @@ protected:
 	 */
 	void setCustomName(std::string customName);
 
+
+	/**
+	 * Notify the managers about the module creation
+	 *
+	 * Has to be called at the end of the constructors implementation
+	 * in order to be registered in the ModuleManager and
+	 * in the Dispatcher
+	 */
+	void notifyCreation();
+
+	/**
+	 * Set the inPorts list size
+	 */
+	void setInPortCount(size_t cnt) { inPorts.resize(cnt, NULL); }
+	/**
+	 * Add input data port
+	 *
+	 * @param name name of the port
+	 * @param description description of the port
+	 * @param dataType type of port data
+	 * @param index index of the port in the inPorts list. It allows
+	 * to use enums to access the ports.
+	 */
+	void addInPort(
+	        std::string name, std::string description,
+	        Port::dataTypeEnum dataType,
+	        size_t index );
+
+    /**
+     * Set the outPorts list size
+     */
+    void setOutPortCount(size_t cnt) { outPorts.resize(cnt, NULL); }
+    /**
+     * Add output data port
+     *
+     * @param name name of the port
+     * @param description description of the port
+     * @param dataType type of port data
+     * @param index index of the port in the outPorts list. It allows
+     * to use enums to access the ports.
+     */
+    void addOutPort(
+            std::string name, std::string description,
+            Port::dataTypeEnum dataType,
+            size_t index );
 private:
 	/**
 	 * Parent module factory
@@ -139,6 +208,9 @@ private:
 
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
+
+	std::vector<InPort*> inPorts; ///< list of input data ports
+	std::vector<OutPort*> outPorts; ///< list of output data ports
 };
 
 #endif /* SRC_MODULE_H_ */

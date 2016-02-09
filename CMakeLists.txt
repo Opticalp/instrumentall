@@ -45,6 +45,13 @@ add_definitions ( -DCMAKE_VERSION="${CMAKE_VERSION}" -DCMAKE_CXX_COMPILER="${CMA
 
 ## configure dependencies
 
+find_package ( Threads REQUIRED )
+
+target_link_libraries(
+    instrumentall      
+    ${CMAKE_THREAD_LIBS_INIT}
+    )    
+
 # find POCO
 find_package( Poco 1.3.6 COMPONENTS Foundation Util REQUIRED )
 

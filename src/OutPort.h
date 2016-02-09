@@ -1,6 +1,6 @@
 /**
- * @file	src/ModuleFactoryBranch.h
- * @date	jan. 2016
+ * @file	src/OutPort.h
+ * @date	feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,53 +26,68 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULEFACTORYBRANCH_H_
-#define SRC_MODULEFACTORYBRANCH_H_
+#ifndef SRC_OUTPORT_H_
+#define SRC_OUTPORT_H_
 
-#include "ModuleFactory.h"
+#include "Port.h"
+
+#include "Poco/RWLock.h"
+#include "Poco/SharedPtr.h"
+#include <vector>
+
+using Poco::RWLock;
+using Poco::SharedPtr;
+
+class InPort;
 
 /**
- * ModuleFactoryBranch
+ * OutPort
  *
- * Base class for module factories obtained via selection using select()
+ * Data output module port.
+ * Contain links to the target ports
  */
-class ModuleFactoryBranch: public ModuleFactory
+class OutPort: public Port
 {
 public:
-    ModuleFactoryBranch(ModuleFactory* parent, std::string selector, bool leaf=true):
-        ModuleFactory(leaf, false),
-        mParent(parent), mSelector(selector) { }
+    OutPort(Module* parent,
+            std::string name,
+            std::string description,
+            dataTypeEnum datatype,
+            size_t index);
 
     /**
-     * Destructor
-     *
-     * Notify the parent that it has to be removed from the list
+     * Special constructor for the empty OutPort
      */
-    virtual ~ModuleFactoryBranch()
-    {
-        mParent->removeChildFactory(this);
-    }
+    OutPort();
 
-    /**
-     * Retrieve the select() value of the parent
-     *
-     * that drove to the present module factory
-     */
-    std::string getSelector() { return mSelector; }
+    virtual ~OutPort() { }
 
-    /**
-     * Get parent factory.
-     *
-     * if parent().isRoot() is false, then this cast is made possible:
-     *
-     *     reinterpret_cast<DeviceFactoryBranch*>(parent())
-     *
-     */
-    ModuleFactory* parent() { return mParent; }
+    /// retrieve the target ports
+    std::vector< SharedPtr<InPort*> > getTargetPorts();
 
 private:
-    std::string mSelector;
-    ModuleFactory* mParent;
+    /**
+     * Add a target port
+     *
+     * This function should only be called by the target InPort.
+     *
+     * The Dispatcher is requested to get the shared pointer
+     * on the InPort.
+     */
+    void addTargetPort(InPort* port);
+
+    /**
+     * Remove a target port
+     *
+     * Should not throw an exception if the port is not present
+     * in the targetPorts
+     */
+    void removeTargetPort(InPort* port);
+
+    std::vector< SharedPtr<InPort*> > targetPorts;
+    RWLock lock; ///< lock for targetPorts operations
+
+    friend class InPort;
 };
 
-#endif /* SRC_MODULEFACTORYBRANCH_H_ */
+#endif /* SRC_OUTPORT_H_ */

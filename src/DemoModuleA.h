@@ -1,6 +1,6 @@
 /**
- * @file	src/ModuleFactoryBranch.h
- * @date	jan. 2016
+ * @file	src/DemoModuleA.h
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,53 +26,44 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULEFACTORYBRANCH_H_
-#define SRC_MODULEFACTORYBRANCH_H_
+#ifndef SRC_DEMOMODULEA_H_
+#define SRC_DEMOMODULEA_H_
 
-#include "ModuleFactory.h"
+#include "Module.h"
 
 /**
- * ModuleFactoryBranch
+ * DemoModuleA
  *
- * Base class for module factories obtained via selection using select()
+ * Very simple demo module, but implementing some ports
  */
-class ModuleFactoryBranch: public ModuleFactory
+class DemoModuleA: public Module
 {
 public:
-    ModuleFactoryBranch(ModuleFactory* parent, std::string selector, bool leaf=true):
-        ModuleFactory(leaf, false),
-        mParent(parent), mSelector(selector) { }
+    DemoModuleA(ModuleFactory* parent, std::string customName);
+    virtual ~DemoModuleA() { }
 
-    /**
-     * Destructor
-     *
-     * Notify the parent that it has to be removed from the list
-     */
-    virtual ~ModuleFactoryBranch()
+    const char * description() const
     {
-        mParent->removeChildFactory(this);
+        return "Very basic demo Module exhibiting some ports. ";
     }
 
-    /**
-     * Retrieve the select() value of the parent
-     *
-     * that drove to the present module factory
-     */
-    std::string getSelector() { return mSelector; }
-
-    /**
-     * Get parent factory.
-     *
-     * if parent().isRoot() is false, then this cast is made possible:
-     *
-     *     reinterpret_cast<DeviceFactoryBranch*>(parent())
-     *
-     */
-    ModuleFactory* parent() { return mParent; }
-
 private:
-    std::string mSelector;
-    ModuleFactory* mParent;
+    static size_t refCount; ///< reference counter to generate a unique internal name
+
+    /// Indexes of the input ports
+    enum inPorts
+    {
+        inPortA,
+        inPortB,
+        inPortCnt
+    };
+
+    /// Indexes of the output ports
+    enum outPorts
+    {
+        outPortA,
+        outPortCnt
+    };
 };
 
-#endif /* SRC_MODULEFACTORYBRANCH_H_ */
+#endif /* SRC_DEMOMODULEA_H_ */

@@ -27,6 +27,7 @@
  */
 
 #include "ModuleManager.h"
+#include "Dispatcher.h"
 
 #include "DemoRootFactory.h"
 
@@ -40,7 +41,7 @@ ModuleManager::ModuleManager():
 
 ModuleManager::~ModuleManager()
 {
-    uninitialize();
+    uninitialize(); // should be already called by the system.
 
     for (std::vector<ModuleFactory*>::reverse_iterator it=rootFactories.rbegin(), ite=rootFactories.rend();
             it != ite; it++)
@@ -84,47 +85,77 @@ void ModuleManager::defineOptions(Poco::Util::OptionSet& options)
 
 void ModuleManager::addModule(Module* pModule)
 {
-    allModules.push_back(SharedPtr<Module*>(new (Module*)(pModule)));
+    SharedPtr<Module*> pMod(new (Module*)(pModule));
+    modulesLock.writeLock();
+    allModules.push_back(pMod);
+    poco_debug(logger(),"module " + pModule->name() + " added in the module manager");
+    Poco::Util::Application::instance().getSubsystem<Dispatcher>().addModule(pMod);
+    modulesLock.unlock();
 }
 
 void ModuleManager::removeModule(Module* pModule)
 {
+    modulesLock.writeLock();
     for (std::vector< SharedPtr<Module*> >::iterator it=allModules.begin(),ite=allModules.end();
             it!=ite;
             it++)
     {
         if (pModule == **it)
         {
+            Poco::Util::Application::instance().getSubsystem<Dispatcher>().removeModule(*it);
+            // remove module
             **it = &emptyModule; // replace the pointed factory by something throwing exceptions
             allModules.erase(it);
-            poco_debug(logger(), pModule->name() + " module erased from allModules. ");
+            poco_debug(logger(), pModule->name() + " module erased from ModuleManager::allModules. ");
+            modulesLock.unlock();
             return;
         }
     }
 
+    modulesLock.unlock();
     poco_error(logger(), "removeModule(): "
             "the module was not found");
 }
 
 SharedPtr<Module*> ModuleManager::getModule(Module* pModule)
 {
+    modulesLock.readLock();
     for (std::vector< SharedPtr<Module*> >::iterator it=allModules.begin(), ite=allModules.end();
             it!=ite; it++)
     {
         if (pModule==**it)
+        {
+            modulesLock.unlock();
             return *it;
+        }
     }
 
+    modulesLock.unlock();
     throw ModuleException("getModule", "module not found: "
             "Should have been deleted during the query");
 }
+
+std::vector< SharedPtr<Module*> > ModuleManager::getModules()
+{
+    // use a temp list to be thread safe
+    std::vector< SharedPtr<Module*> > list;
+
+    modulesLock.readLock();
+    list = allModules;
+    modulesLock.unlock();
+
+    return list;
+}
+
 
 void ModuleManager::addFactory(ModuleFactory* pFactory)
 {
     if (pFactory->isRoot())
         rootFactories.push_back(pFactory);
 
+    factoriesLock.writeLock();
     allFactories.push_back(SharedPtr<ModuleFactory*>(new (ModuleFactory*)(pFactory)));
+    factoriesLock.unlock();
 }
 
 void ModuleManager::removeFactory(ModuleFactory* pFactory)
@@ -153,6 +184,7 @@ void ModuleManager::removeFactory(ModuleFactory* pFactory)
     }
 
     // find pFactory in allFactories
+    factoriesLock.writeLock();
     for (std::vector< SharedPtr<ModuleFactory*> >::iterator it=allFactories.begin(), ite=allFactories.end();
             it!=ite; it++)
     {
@@ -161,10 +193,12 @@ void ModuleManager::removeFactory(ModuleFactory* pFactory)
             **it = &emptyFactory; // replace the pointed factory by something throwing exceptions
             allFactories.erase(it);
             poco_debug(logger(), "factory erased " + std::string(pFactory->name()) + " from allFactories. ");
+            factoriesLock.unlock();
             return;
         }
     }
 
+    factoriesLock.unlock();
     poco_error(logger(), "removeFactory(): "
         "the factory was not found");
 }
@@ -199,13 +233,18 @@ SharedPtr<ModuleFactory*> ModuleManager::getRootFactory(std::string name)
 
 SharedPtr<ModuleFactory*> ModuleManager::getFactory(ModuleFactory* pFactory)
 {
+    factoriesLock.readLock();
     for (std::vector< SharedPtr<ModuleFactory*> >::iterator it=allFactories.begin(), ite=allFactories.end();
             it!=ite; it++)
     {
         if (pFactory==**it)
+        {
+            factoriesLock.unlock();
             return *it;
+        }
     }
 
+    factoriesLock.unlock();
     throw ModuleFactoryException("getFactory", "factory not found: "
             "Should have been deleted during the query");
 }

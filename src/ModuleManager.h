@@ -42,6 +42,7 @@
 #include "Poco/Util/OptionSet.h"
 #include "Poco/Logger.h"
 #include "Poco/SharedPtr.h"
+#include "Poco/RWLock.h"
 
 using Poco::SharedPtr;
 
@@ -94,6 +95,8 @@ public:
      * Add a Module to the list
      *
      * This function is called by the @ref Module constructor
+     *
+     * Notify the @ref Dispatcher subsystem that a module is created
      */
     void addModule(Module* pModule);
 
@@ -101,6 +104,8 @@ public:
      * Remove a Module from the list
      *
      * This function is called by the @ref Module destructor.
+     *
+     * Notify the @ref Dispatcher subsystem that a module is deleted
      */
     void removeModule(Module* pModule);
 
@@ -108,6 +113,13 @@ public:
      * Get a shared pointer on a module
      */
     SharedPtr<Module*> getModule(Module* pModule);
+
+    /**
+     * Get all the modules
+     *
+     * @return a copy of allModules
+     */
+     std::vector< SharedPtr<Module*> > getModules();
 
     /**
      * Add a factory to the list
@@ -138,8 +150,20 @@ public:
      */
     SharedPtr<ModuleFactory*> getFactory(ModuleFactory* pFactory);
 
+    /**
+     * Return the address of the empty module
+     */
+    Module* getEmptyModule() { return &emptyModule; }
+
 private:
-    /// Root module factory list
+    /**
+     * Root module factory list
+     *
+     * This list is not associated to a RWLock since the rootFactories
+     * are created once at the manager creation, and then, it is
+     * deleted at the manager destruction. Then, there should not
+     * be concurrent modification in those processes.
+     */
     std::vector<ModuleFactory*> rootFactories;
 
     /**
@@ -151,6 +175,7 @@ private:
      * and the entry is removed from this list.
      */
     std::vector< SharedPtr<ModuleFactory*> > allFactories;
+    Poco::RWLock factoriesLock;
 
     /**
      * To be used to replace an expired factory to throw errors
@@ -169,6 +194,7 @@ private:
      * and the entry is removed from this list.
      */
     std::vector< SharedPtr<Module*> > allModules;
+    Poco::RWLock modulesLock;
 
     /**
      * To be used to replace an expired module to throw errors

@@ -46,7 +46,7 @@ class EmptyModuleFactory: public ModuleFactory
 public:
     EmptyModuleFactory() { }
 
-    const char * name() const { return "empty factory"; }
+    std::string name() { return "emptyFactory"; }
     const char * description() const { return "replaces an expired factory. "; }
 
     const char* selectDescription()

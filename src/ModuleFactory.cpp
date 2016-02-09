@@ -33,8 +33,8 @@
 #include <typeinfo>
 POCO_IMPLEMENT_EXCEPTION( ModuleFactoryException, Poco::Exception, "ModuleFactory error")
 
-ModuleFactory::ModuleFactory(bool root):
-    bRoot(root)
+ModuleFactory::ModuleFactory(bool leaf, bool root):
+    bRoot(root), bLeaf(leaf)
 {
     if (!isRoot())
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().addFactory(this);
@@ -42,6 +42,11 @@ ModuleFactory::ModuleFactory(bool root):
 
 ModuleFactory::~ModuleFactory()
 {
+    if (isLeaf())
+        deleteChildModules();
+
+    deleteChildFactories();
+
     if (!isRoot())
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeFactory(this);
 }
@@ -87,13 +92,12 @@ void ModuleFactory::deleteChildFactory(std::string property)
 
 void ModuleFactory::removeChildFactory(ModuleFactoryBranch* factory)
 {
-    for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(),ite=childFactories.end();
-            it!=ite;
-            it++)
+    for (std::vector<ModuleFactoryBranch*>::reverse_iterator it = childFactories.rbegin(),
+            ite = childFactories.rend(); it != ite; it++)
     {
         if (factory == (*it))
         {
-            childFactories.erase(it);
+            childFactories.erase((it+1).base());
             return;
         }
     }
@@ -114,12 +118,15 @@ void ModuleFactory::deleteChildFactories()
     for (std::vector<ModuleFactoryBranch*>::reverse_iterator it=childFactories.rbegin(),ite=childFactories.rend();
             it!=ite;
             it++)
+    {
+        poco_information(logger(),"deleting child factory: " + std::string((*it)->name()));
         delete (*it);
+    }
 }
 
 Module* ModuleFactory::create(std::string customName)
 {
-    // TODO: notify the module manager that a module was created?
+    // TODO: notify the Dispatcher that a module was created? (if loaded)
     if (!isLeaf())
     {
         for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end();
@@ -164,7 +171,7 @@ void ModuleFactory::removeChildModule(Module* module)
 {
     if (!isLeaf())
     {
-        poco_error(logger(),"removeChildModule: "
+        poco_bugcheck_msg("removeChildModule: "
                 "No child module: this factory is not a leaf");
         return;
     }

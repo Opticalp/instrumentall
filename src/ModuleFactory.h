@@ -58,7 +58,7 @@ public:
 	 *  - generate a name if it is not static
 	 *  - set the logger
 	 */
-	ModuleFactory(bool root=true);
+	ModuleFactory(bool leaf = true, bool root = true);
 
     /**
      * Standard destructor
@@ -76,7 +76,7 @@ public:
 	 *
 	 * @note no duplicate should be allowed
 	 */
-	virtual const char * name() const = 0;
+	virtual std::string name() = 0;
 
 	/**
 	 * Description of the module factory
@@ -146,7 +146,7 @@ public:
      * If the returned value is `true` (default behavior),
      * select() should not be called.
      */
-    virtual bool isLeaf() { return true; }
+    bool isLeaf() { return bLeaf; }
 
     /**
      * Check if the current factory is the root factory
@@ -285,6 +285,7 @@ protected:
 
 private:
     bool bRoot; ///< flag to check if this module factory is a root factory
+    bool bLeaf; ///< flag to check if this module factory is a leaf factory
 };
 
 #endif /* SRC_MODULEFACTORY_H_ */

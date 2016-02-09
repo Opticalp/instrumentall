@@ -111,18 +111,22 @@ PyObject* pyModParent(ModMembers* self)
 
     // alloc
     if (PyType_Ready(&PythonModuleFactory) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the ModuleFactory Type");
         return NULL;
+    }
 
     ModFactMembers* pyParent =
             (ModFactMembers*)(
-                    pyModFactAlloc((PyTypeObject*)&PythonModuleFactory, NULL, NULL) );
+                    pyModFactNew((PyTypeObject*)&PythonModuleFactory, NULL, NULL) );
 
     PyObject* tmp=NULL;
 
     // init
     // retrieve name and description
     tmp = pyParent->name;
-    pyParent->name = PyString_FromString((*factory)->name());
+    pyParent->name = PyString_FromString((*factory)->name().c_str());
     Py_XDECREF(tmp);
 
     tmp = pyParent->description;
@@ -135,4 +139,146 @@ PyObject* pyModParent(ModMembers* self)
     return (PyObject*)(pyParent);
 }
 
+#include "Dispatcher.h"
+#include "InPort.h"
+#include "PythonInPort.h"
+
+PyObject* pyModInPorts(ModMembers* self)
+{
+    std::vector<InPort*> ports;
+    Dispatcher& dispatcher = Poco::Util::Application::instance()
+                                        .getSubsystem<Dispatcher>();
+
+    ports = (**self->module)->getInPorts();
+
+    // prepare python list
+    PyObject* pyPorts = PyList_New(0);
+
+    // prepare InPort python type
+    if (PyType_Ready(&PythonInPort) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the InPort Type");
+        return NULL;
+    }
+
+    try
+    {
+        for (std::vector<InPort*>::iterator it = ports.begin(),
+                ite = ports.end(); it != ite; it++ )
+        {
+            Poco::SharedPtr<InPort*> sharedPort;
+            sharedPort = dispatcher.getInPort(*it);
+
+            // create the python object
+            InPortMembers* pyPort =
+                (InPortMembers*)(pyInPortNew((PyTypeObject*)&PythonInPort, NULL, NULL) );
+
+            PyObject* tmp=NULL;
+
+            // init
+            // retrieve name and description
+            tmp = pyPort->name;
+            pyPort->name = PyString_FromString((*sharedPort)->name().c_str());
+            Py_XDECREF(tmp);
+
+            tmp = pyPort->description;
+            pyPort->description = PyString_FromString((*sharedPort)->description().c_str());
+            Py_XDECREF(tmp);
+
+            // set InPort reference
+            *(pyPort->inPort) = sharedPort;
+
+            // create the dict entry
+            if (0 > PyList_Append(
+                    pyPorts,
+                    (PyObject*) pyPort))
+            {
+                // appending the item failed
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Not able to build the return list");
+                return NULL;
+            }
+        }
+    }
+    catch (DispatcherException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    return pyPorts;
+}
+
+#include "OutPort.h"
+#include "PythonOutPort.h"
+
+PyObject* pyModOutPorts(ModMembers* self)
+{
+    std::vector<OutPort*> ports;
+    Dispatcher& dispatcher = Poco::Util::Application::instance()
+                                        .getSubsystem<Dispatcher>();
+
+    ports = (**self->module)->getOutPorts();
+
+    // prepare python list
+    PyObject* pyPorts = PyList_New(0);
+
+    // prepare OutPort python type
+    if (PyType_Ready(&PythonOutPort) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the OutPort Type");
+        return NULL;
+    }
+
+    try
+    {
+        for (std::vector<OutPort*>::iterator it = ports.begin(),
+                ite = ports.end(); it != ite; it++ )
+        {
+            Poco::SharedPtr<OutPort*> sharedPort;
+            sharedPort = dispatcher.getOutPort(*it);
+
+            // create the python object
+            OutPortMembers* pyPort =
+                (OutPortMembers*)(pyOutPortNew((PyTypeObject*)&PythonOutPort, NULL, NULL) );
+
+            PyObject* tmp=NULL;
+
+            // init
+            // retrieve name and description
+            tmp = pyPort->name;
+            pyPort->name = PyString_FromString((*sharedPort)->name().c_str());
+            Py_XDECREF(tmp);
+
+            tmp = pyPort->description;
+            pyPort->description = PyString_FromString((*sharedPort)->description().c_str());
+            Py_XDECREF(tmp);
+
+            // set OutPort reference
+            *(pyPort->outPort) = sharedPort;
+
+            // create the dict entry
+            if (0 > PyList_Append(
+                    pyPorts,
+                    (PyObject*) pyPort))
+            {
+                // appending the item failed
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Not able to build the return list");
+                return NULL;
+            }
+        }
+    }
+    catch (DispatcherException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    return pyPorts;
+}
 #endif /* HAVE_PYTHON27 */

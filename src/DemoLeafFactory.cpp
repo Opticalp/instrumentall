@@ -28,8 +28,19 @@
 
 #include "DemoLeafFactory.h"
 #include "DemoModule.h"
+#include "DemoModuleA.h"
+#include "DemoModuleB.h"
 
 Module* DemoLeafFactory::newChildModule(std::string customName)
 {
-    return new DemoModule(this, customName);
+    if (getSelector().compare("leaf")==0)
+        return new DemoModule(this, customName);
+
+    if (getSelector().compare("leafA")==0)
+        return new DemoModuleA(this, customName);
+
+    if (getSelector().compare("leafB")==0)
+        return new DemoModuleB(this, customName);
+
+    throw ModuleFactoryException("newChildModule","Impossible selector value");
 }

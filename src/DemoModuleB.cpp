@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoLeafFactory.h
- * @date	jan. 2016
+ * @file	src/DemoModuleB.cpp
+ * @date	feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,38 +26,24 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOLEAFFACTORY_H_
-#define SRC_DEMOLEAFFACTORY_H_
+#include "DemoModuleB.h"
+#include "Poco/NumberFormatter.h"
 
-#include "ModuleFactoryBranch.h"
+size_t DemoModuleB::refCount = 0;
 
-/**
- * DemoLeafFactory
- *
- * Very simple module factory to demonstrate ModuleFactory usage
- * in the case of a leaf factory (that generates Modules)
- *
- * Child of DemoBranchFactory, itself child of DemoRootFactory
- */
-class DemoLeafFactory: public ModuleFactoryBranch
+DemoModuleB::DemoModuleB(ModuleFactory* parent, std::string customName):
+                Module(parent)
 {
-public:
-    DemoLeafFactory(ModuleFactory* parent, std::string selector):
-        ModuleFactoryBranch(parent, selector) { setLogger(name()); }
-    virtual ~DemoLeafFactory() { }
+    VerboseEntity("module.DemoModuleB");
+    poco_debug(logger(),"Creating a new demo module B");
 
-    std::string name() { return std::string("Demo" + getSelector() + "Factory"); }
-    const char * description() const
-    {
-        return "Example code for a leaf module factory. "
-                "Please use create() to create a module. ";
-    }
+    setInternalName("DemoModuleB" + Poco::NumberFormatter::format(refCount++));
+    setCustomName(customName);
+    setLogger("module" + name());
 
-    size_t countRemain() { return 1; }
+    // ports
+    setOutPortCount(outPortCnt);
+    addOutPort("outPortA", "demo port that transmits nothing", Port::typeInteger, outPortA);
 
-private:
-    Module* newChildModule(std::string customName);
-
-};
-
-#endif /* SRC_DEMOLEAFFACTORY_H_ */
+    notifyCreation();
+}

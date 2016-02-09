@@ -41,6 +41,8 @@ THE SOFTWARE.
 
 #include "PythonModuleFactory.h"
 #include "PythonModule.h"
+#include "PythonInPort.h"
+#include "PythonOutPort.h"
 
 /**
  * array to bind to-be-exposed methods (C to Python wrappers)
@@ -51,8 +53,12 @@ static PyMethodDef EmbMethods[] =
     pyMethodMainAppAbout,
     pyMethodMainAppVersion,
 
-    // module factory
-    pyMethodModFactGetRootFact,
+    // module manager
+    pyMethodModManGetRootFact,
+
+    // dispatcher
+    pyMethodDispatchBind,
+    pyMethodDispatchUnbind,
 
     // sentinel
     {NULL, NULL, 0, NULL}
@@ -86,11 +92,17 @@ void PythonManager::exposeAPI()
             PyString_FromString(
                     const_cast<const char *>(appDir.toString().c_str())));
 
-//    // module types initialization
+    // module types initialization
     if (PyType_Ready(&PythonModuleFactory) < 0)
         return;
 
     if (PyType_Ready(&PythonModule) < 0)
+        return;
+
+    if (PyType_Ready(&PythonInPort) < 0)
+        return;
+
+    if (PyType_Ready(&PythonOutPort) < 0)
         return;
 
     PyObject* m;
@@ -109,6 +121,12 @@ void PythonManager::exposeAPI()
 
     Py_INCREF(&PythonModule);
     PyModule_AddObject(m, "Module", (PyObject *)&PythonModule);
+
+    Py_INCREF(&PythonInPort);
+    PyModule_AddObject(m, "InPort", (PyObject *)&PythonInPort);
+
+    Py_INCREF(&PythonOutPort);
+    PyModule_AddObject(m, "OutPort", (PyObject *)&PythonOutPort);
 }
 
 

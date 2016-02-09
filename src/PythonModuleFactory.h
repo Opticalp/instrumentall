@@ -170,7 +170,7 @@ extern "C" void pyModFactDealloc(ModFactMembers* self);
  * Initialize "name" and "description" to empty strings instead of
  * NULL because they are python objects.
  */
-extern "C" PyObject* pyModFactAlloc(PyTypeObject* type, PyObject* args, PyObject* kwds);
+extern "C" PyObject* pyModFactNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
 
 
 /// Definition of the PyTypeObject
@@ -214,7 +214,7 @@ static PyTypeObject PythonModuleFactory = {             // SPECIFIC
     0,                          /* tp_dictoffset */
     (initproc)pyModFactInit, /* tp_init */       // SPECIFIC
     0,                          /* tp_alloc */
-    pyModFactAlloc,          /* tp_new */        // SPECIFIC
+    pyModFactNew,          /* tp_new */        // SPECIFIC
 };
 
 
