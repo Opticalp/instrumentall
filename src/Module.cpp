@@ -38,6 +38,9 @@
 #include <typeinfo>
 POCO_IMPLEMENT_EXCEPTION( ModuleException, Poco::Exception, "Module error")
 
+std::vector<std::string> Module::names;
+Poco::RWLock Module::namesLock;
+
 void Module::notifyCreation()
 {
     // if not EmptyModule, add this to module manager
@@ -66,35 +69,58 @@ Module::~Module()
         delete *it;
 }
 
+#include "Poco/Exception.h"
+
 void Module::setInternalName(std::string internalName)
 {
-    // TODO:
-    //  - check unicity
+    namesLock.writeLock();
 
-//    if internalName is unique
+    switch (checkName(internalName))
+    {
+    case nameOk:
         mInternalName = internalName;
-//    else
-//        throw ModuleException("setInternalName",
-//            "the name: " + internalName + " is already in use");
+        names.push_back(mInternalName);
+        namesLock.unlock();
+        return;
+    case nameExists:
+        namesLock.unlock();
+        throw Poco::ExistsException("setInternalName",
+                internalName + " already in use");
+    case nameBadSyntax:
+        namesLock.unlock();
+        throw Poco::SyntaxException("setInternalName",
+                "The name should only contain alphanumeric characters "
+                "or \"-\", \"_\", \".\"");
+    }
 }
 
 void Module::setCustomName(std::string customName)
 {
-    // TODO:
-    //  - check unicity
+    if (customName.empty() || customName.compare(internalName())==0)
+    {
+        mName = internalName();
+        return;
+    }
 
-    std::string name;
+    namesLock.writeLock();
 
-    if (customName.empty())
-        name = internalName();
-    else
-        name = customName;
-
-//    if name is unique
-        mName = name;
-//    else
-//        throw ModuleException("setCustomName",
-//            "the name: " + name + " is already in use");
+    switch (checkName(customName))
+    {
+    case nameOk:
+        mName = customName;
+        names.push_back(mName);
+        namesLock.unlock();
+        return;
+    case nameExists:
+        namesLock.unlock();
+        throw Poco::ExistsException("setCustomName",
+                customName + " already in use");
+    case nameBadSyntax:
+        namesLock.unlock();
+        throw Poco::SyntaxException("setCustomName",
+                "The name should only contain alphanumeric characters "
+                "or \"-\", \"_\", \".\"");
+    }
 }
 
 ModuleFactory* Module::parent()
@@ -124,4 +150,22 @@ void Module::addOutPort(std::string name, std::string description,
     else
         poco_bugcheck_msg(("addOutPort: wrong index "
                 + Poco::NumberFormatter::format(index)).c_str());
+}
+
+#include "Poco/RegularExpression.h"
+
+Module::NameStatus Module::checkName(std::string newName)
+{
+    // check syntax
+    Poco::RegularExpression regex("^[0-9a-zA-Z\\._-]+$");
+    if (!regex.match(newName))
+        return nameBadSyntax;
+
+    // check existance
+    for (std::vector<std::string>::iterator it = names.begin(),
+            ite = names.end(); it != ite; it++)
+        if (it->compare(newName)==0)
+            return nameExists;
+
+    return nameOk;
 }

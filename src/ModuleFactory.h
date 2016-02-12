@@ -186,6 +186,9 @@ public:
 	 *
 	 * @param customName custom name to be given to the module.
 	 * If this string is empty, the module internal name shall be used.
+	 *
+     * @throw Poco::ExistsException If customName is already in use
+     * @throw Poco::SyntaxException If customName contains bad characters
 	 */
 	Module* create(std::string customName="");
 

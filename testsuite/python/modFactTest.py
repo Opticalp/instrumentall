@@ -65,6 +65,29 @@ def myMain():
         mod = fac.create("mojo")
         print "  module " + mod.name + " created. "
     
+    if (fac.countRemain()>0):
+        print "Trying to create a module from " + fac.name + ' with arg: "mojo"'
+        try:  
+            fac.create("mojo")
+        except RuntimeError:
+            print "Error caught. OK. Duplicate name. "
+        else:
+            raise RuntimeError("duplicate module name should have been detected")
+        
+    if (fac.countRemain()>0):
+        print "Creating module from " + fac.name + ' with arg: ".all-chars_"' 
+        mod = fac.create(".all-chars_")
+        print "  module " + mod.name + " created. "
+    
+    if (fac.countRemain()>0):
+        print "Trying to create a module from " + fac.name + ' with arg: "josé"'
+        try:  
+            fac.create("josé")
+        except RuntimeError:
+            print "Error caught. OK. unauthorized character. "
+        else:
+            raise RuntimeError("unauthorized character in module name should have been detected")
+        
     print "End of script modFactTest.py"
     
 # main body    
