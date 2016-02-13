@@ -36,13 +36,11 @@ def myMain():
     facList = getRootFactories()
     
     print "Available factories: "
-    for facStr in facList:
-        print " - " + facStr
+    for fac in facList:
+        print " - " + fac.name + ": " + fac.description
     
-    print " --- Factory detail "
     fac = Factory("DemoRootFactory")
-    print "Factory name: " + fac.name
-    print "Factory description: " + fac.description
+    print "Using DemoRootFactory. "
     
     ## select
     print fac.selectDescription()

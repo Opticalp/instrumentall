@@ -136,9 +136,9 @@ public:
     void removeFactory(ModuleFactory* pFactory);
 
     /**
-     * Get the list of root factories names
+     * Get the list of root factories
      */
-    std::vector<std::string> getRootFactories();
+    std::vector< SharedPtr<ModuleFactory*> > getRootFactories();
 
     /**
      * Get a root factory, given its name

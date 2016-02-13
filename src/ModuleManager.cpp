@@ -203,14 +203,14 @@ void ModuleManager::removeFactory(ModuleFactory* pFactory)
         "the factory was not found");
 }
 
-std::vector<std::string> ModuleManager::getRootFactories()
+std::vector< SharedPtr<ModuleFactory*> > ModuleManager::getRootFactories()
 {
-    std::vector<std::string> list;
+    std::vector< SharedPtr<ModuleFactory*> > list;
 
     for (std::vector<ModuleFactory*>::iterator it=rootFactories.begin(),ite=rootFactories.end();
             it!=ite;
             it++)
-        list.push_back((*it)->name());
+        list.push_back(getFactory(*it));
 
     return list;
 }
