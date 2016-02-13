@@ -98,6 +98,17 @@ def myMain():
     for module in getModules():
         print " - " + module.name + "(" + module.internalName + "): " + module.description
         
+        
+    print "Create a module using another leaf factory. "
+    fac.select("branch").select("leafA").create("mod1")
+    print "Done. Listing child modules from " + fac.name + ": "
+    for module in fac.getChildModules():
+        print " - " + module.name + "(" + module.internalName + "): " + module.description
+
+    print "Child modules from " + fac.select("branch").select("leafA").name + ": "
+    for module in fac.select("branch").select("leafA").getChildModules():
+        print " - " + module.name + "(" + module.internalName + "): " + module.description
+        
     print "End of script modFactTest.py"
     
 # main body    
