@@ -29,6 +29,8 @@
 #ifndef SRC_MODULEFACTORY_H_
 #define SRC_MODULEFACTORY_H_
 
+#include "Poco/RWLock.h"
+
 #include "VerboseEntity.h"
 #include "Module.h"
 
@@ -268,6 +270,7 @@ protected:
                 "This factory is not able to create a new child module. ");
     }
 
+private:
     /**
      * Direct child factories
      *
@@ -277,6 +280,15 @@ protected:
      *  erase factories from that list.
      */
     std::vector<ModuleFactoryBranch*> childFactories;
+    Poco::RWLock childFactLock; ///< childFactories access lock
+    /**
+     * Child factory being deleted
+     *
+     * Use for thread safe child factory deletion operation.
+     * The risk comes from the fact that a factory can be removed by
+     * another way than removeChildFactory or removeChildFactories
+     */
+    ModuleFactoryBranch* deletingChildFact;
 
     /**
      * Direct child modules
@@ -285,8 +297,15 @@ protected:
      * is called by create(). create() adds the new module into the list.
      */
     std::vector<Module*> childModules;
+    Poco::RWLock childModLock; ///< childModules access lock
+    /**
+     * Child module being deleted
+     *
+     * Use for thread safe child module deletion operation
+     * @see deletingChildFact
+     */
+    Module* deletingChildMod;
 
-private:
     bool bRoot; ///< flag to check if this module factory is a root factory
     bool bLeaf; ///< flag to check if this module factory is a leaf factory
 };

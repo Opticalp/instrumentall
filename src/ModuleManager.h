@@ -183,7 +183,7 @@ private:
      * and the entry is removed from this list.
      */
     std::vector< SharedPtr<ModuleFactory*> > allFactories;
-    Poco::RWLock factoriesLock;
+    Poco::RWLock factoriesLock; ///< allFactories access lock
 
     /**
      * To be used to replace an expired factory to throw errors
@@ -202,7 +202,7 @@ private:
      * and the entry is removed from this list.
      */
     std::vector< SharedPtr<Module*> > allModules;
-    Poco::RWLock modulesLock;
+    Poco::RWLock modulesLock; ///< allModules access lock
 
     /**
      * To be used to replace an expired module to throw errors

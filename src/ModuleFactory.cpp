@@ -34,7 +34,9 @@
 POCO_IMPLEMENT_EXCEPTION( ModuleFactoryException, Poco::Exception, "ModuleFactory error")
 
 ModuleFactory::ModuleFactory(bool leaf, bool root):
-    bRoot(root), bLeaf(leaf)
+    bRoot(root), bLeaf(leaf),
+    deletingChildFact(NULL),
+    deletingChildMod(NULL)
 {
     if (!isRoot())
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().addFactory(this);
@@ -55,15 +57,21 @@ ModuleFactoryBranch& ModuleFactory::select(std::string selector)
 {
     std::string validated(validateSelector(selector));
 
+    childFactLock.writeLock();
+
     for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end(); it != ite ; it++)
     {
         if (validated.compare((*it)->getSelector())==0)
+        {
+            childFactLock.unlock();
             return **it;
+        }
     }
 
     // child factory not found, create one.
     ModuleFactoryBranch* factory(newChildFactory(validated));
     childFactories.push_back(factory);
+    childFactLock.unlock();
     return *factory;
 }
 
@@ -75,33 +83,46 @@ void ModuleFactory::deleteChildFactory(std::string property)
 
     std::string validated(validateSelector(property));
 
+    childFactLock.writeLock();
+
     for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(),ite=childFactories.end();
             it!=ite;
             it++)
     {
         if (validated.compare((*it)->getSelector())==0)
         {
+            deletingChildFact = *it;
             delete (*it);
+            deletingChildFact = NULL;
+            childFactLock.unlock();
             return;
         }
     }
 
+    childFactLock.unlock();
     throw ModuleFactoryException("deleteChildFactory",
             "Child factory not found");
 }
 
 void ModuleFactory::removeChildFactory(ModuleFactoryBranch* factory)
 {
+    if (deletingChildFact != factory)
+        childFactLock.writeLock();
+
     for (std::vector<ModuleFactoryBranch*>::reverse_iterator it = childFactories.rbegin(),
             ite = childFactories.rend(); it != ite; it++)
     {
         if (factory == (*it))
         {
             childFactories.erase((it+1).base());
+            if (deletingChildFact != factory)
+                childFactLock.unlock();
             return;
         }
     }
 
+    if (deletingChildFact != factory)
+        childFactLock.unlock();
     poco_error(logger(), "removeChildFactory: "
             "Child factory not found");
 }
@@ -115,35 +136,45 @@ void ModuleFactory::deleteChildFactories()
         return;
     }
 
+    childFactLock.writeLock();
+
     for (std::vector<ModuleFactoryBranch*>::reverse_iterator it=childFactories.rbegin(),ite=childFactories.rend();
             it!=ite;
             it++)
     {
         poco_information(logger(),"deleting child factory: " + std::string((*it)->name()));
+        deletingChildFact = *it;
         delete (*it);
+        deletingChildFact = NULL;
     }
+
+    childFactLock.unlock();
 }
 
 Module* ModuleFactory::create(std::string customName)
 {
-    // TODO: notify the Dispatcher that a module was created? (if loaded)
     if (!isLeaf())
     {
+        childFactLock.readLock();
         for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end();
                 it != ite ;
                 it++)
         {
             if ((*it)->countRemain())
+                childFactLock.unlock();
                 return (*it)->create(customName);
         }
 
+        childFactLock.unlock();
         throw ModuleFactoryException("create()",
                 "countRemain() is null! ");
     }
     else if (countRemain())
     {
         Module* module(newChildModule(customName));
+        childFactLock.writeLock();
         childModules.push_back(module);
+        childFactLock.unlock();
         return module;
     }
     else
@@ -157,12 +188,14 @@ size_t ModuleFactory::countRemain()
 {
     size_t count=0;
 
+    childFactLock.readLock();
     for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end();
             it != ite ;
             it++)
     {
         count += (*it)->countRemain();
     }
+    childFactLock.unlock();
 
     return count;
 }
@@ -176,6 +209,8 @@ void ModuleFactory::removeChildModule(Module* module)
         return;
     }
 
+    if (deletingChildMod != module)
+        childModLock.writeLock();
     for (std::vector<Module*>::iterator it=childModules.begin(),ite=childModules.end();
             it!=ite;
             it++)
@@ -183,10 +218,14 @@ void ModuleFactory::removeChildModule(Module* module)
         if ((*it)==module)
         {
             childModules.erase(it);
+            if (deletingChildMod != module)
+                childModLock.unlock();
             return;
         }
     }
 
+    if (deletingChildMod != module)
+        childModLock.unlock();
     poco_error(logger(),"removeChildFactory: "
             "Child not found");
 }
@@ -200,8 +239,15 @@ void ModuleFactory::deleteChildModules()
         return;
     }
 
-    for (std::vector<Module*>::reverse_iterator it=childModules.rbegin(),ite=childModules.rend();
-            it!=ite;
-            it++)
+    childModLock.writeLock();
+
+    for (std::vector<Module*>::reverse_iterator it = childModules.rbegin(),
+            ite = childModules.rend(); it != ite; it++)
+    {
+        deletingChildMod = *it;
         delete *it;
+        deletingChildMod = NULL;
+    }
+
+    childModLock.unlock();
 }
