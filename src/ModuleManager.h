@@ -115,6 +115,14 @@ public:
     SharedPtr<Module*> getModule(Module* pModule);
 
     /**
+     * Get a shared pointer on a module
+     *
+     * To be used (e.g. by the dispatcher) to construct the workflow
+     * @param name is either the custom name or the internal name
+     */
+    SharedPtr<Module*> getModule(std::string modName);
+
+    /**
      * Get all the modules
      *
      * @return a copy of allModules

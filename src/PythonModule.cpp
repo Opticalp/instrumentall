@@ -82,8 +82,44 @@ extern "C" PyObject* pyModNew(PyTypeObject* type, PyObject* args, PyObject* kwds
 
 extern "C" int pyModInit(ModMembers* self, PyObject *args, PyObject *kwds)
 {
-    PyErr_SetString(PyExc_NotImplementedError, "__init__ is not implemented");
-    return -1;
+    PyObject* tmp=NULL;
+
+    char* charName;
+    if (!PyArg_ParseTuple(args, "s:__init__", &charName))
+    {
+        return -1;
+    }
+
+    std::string name(charName);
+
+    // retrieve module factory
+    try
+    {
+        *self->module =
+                Poco::Util::Application::instance().getSubsystem<ModuleManager>().getModule(name);
+    }
+    catch (ModuleFactoryException& e)
+    {
+        std::string errMsg = "Not able to initialize the module: "
+                + e.displayText();
+        PyErr_SetString(PyExc_RuntimeError, errMsg.c_str());
+        return -1;
+    }
+
+    // retrieve name and description
+    tmp = self->name;
+    self->name = PyString_FromString((**self->module)->name().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = self->internalName;
+    self->internalName = PyString_FromString((**self->module)->internalName().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = self->description;
+    self->description = PyString_FromString((**self->module)->description());
+    Py_XDECREF(tmp);
+
+    return 0;
 }
 
 PyObject* pyModParent(ModMembers* self)

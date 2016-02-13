@@ -135,6 +135,25 @@ SharedPtr<Module*> ModuleManager::getModule(Module* pModule)
             "Should have been deleted during the query");
 }
 
+SharedPtr<Module*> ModuleManager::getModule(std::string modName)
+{
+    modulesLock.readLock();
+    for (std::vector< SharedPtr<Module*> >::iterator it=allModules.begin(), ite=allModules.end();
+            it!=ite; it++)
+    {
+        if (modName.compare((**it)->name())==0
+                || modName.compare((**it)->internalName())==0)
+        {
+            modulesLock.unlock();
+            return *it;
+        }
+    }
+
+    modulesLock.unlock();
+    throw ModuleException("getModule",
+            "module " + modName + " not found");
+}
+
 std::vector< SharedPtr<Module*> > ModuleManager::getModules()
 {
     // use a temp list to be thread safe

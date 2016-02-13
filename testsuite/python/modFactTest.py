@@ -71,6 +71,14 @@ def myMain():
             print "Error caught. OK. Duplicate name. "
         else:
             raise RuntimeError("duplicate module name should have been detected")
+    
+    print 'Testing the Module constructor with "mojo"'    
+    mojo = Module("mojo")
+    print mojo.name + "(" + mojo.internalName + ") created."
+    
+    print 'Testing the Module constructor with "DemoModule2"'    
+    demo2 = Module("DemoModule2")
+    print demo2.name + "(" + demo2.internalName + ") created."
         
     if (fac.countRemain()>0):
         print "Creating module from " + fac.name + ' with arg: ".all-chars_"' 

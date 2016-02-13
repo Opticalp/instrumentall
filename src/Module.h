@@ -218,6 +218,14 @@ private:
      */
     NameStatus checkName(std::string newName);
 
+    /**
+     * Remove the internal name of the names list
+     *
+     * To be called by setCustomName in case of failing module creation
+     * process due to malformed custom name, or name already in use.
+     */
+    void freeInternalName();
+
 	/**
 	 * Parent module factory
 	 *

@@ -112,10 +112,12 @@ void Module::setCustomName(std::string customName)
         namesLock.unlock();
         return;
     case nameExists:
+        freeInternalName();
         namesLock.unlock();
         throw Poco::ExistsException("setCustomName",
                 customName + " already in use");
     case nameBadSyntax:
+        freeInternalName();
         namesLock.unlock();
         throw Poco::SyntaxException("setCustomName",
                 "The name should only contain alphanumeric characters "
@@ -168,4 +170,16 @@ Module::NameStatus Module::checkName(std::string newName)
             return nameExists;
 
     return nameOk;
+}
+
+void Module::freeInternalName()
+{
+    // verify that this is a module creation process
+    if (!name().empty())
+        return;
+
+    for (std::vector<std::string>::reverse_iterator it = names.rbegin(),
+            ite = names.rend(); it != ite; it++ )
+        if (it->compare(internalName())==0)
+            names.erase((it+1).base());
 }

@@ -37,7 +37,7 @@ DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
     VerboseEntity("module.DemoModuleA");
     poco_debug(logger(),"Creating a new demo module A");
 
-    setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount++));
+    setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
     setLogger("module" + name());
 
@@ -51,4 +51,7 @@ DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
     addOutPort("outPortA", "demo port that transmits nothing", Port::typeInteger, outPortA);
 
     notifyCreation();
+
+    // if nothing failed
+    refCount++;
 }
