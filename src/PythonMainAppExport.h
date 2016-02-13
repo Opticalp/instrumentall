@@ -92,6 +92,23 @@ static PyMethodDef pyMethodModManGetRootFact =
     "Retrieve the list of root factories"
 };
 
+/**
+ * @brief Python wrapper to retrieve the list of modules
+ *
+ * Call ModuleManager::getModules() method
+ *
+ */
+extern "C" PyObject*
+pythonModManGetModules(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodModManGetModules =
+{
+    "getModules",
+    pythonModManGetModules,
+    METH_NOARGS,
+    "Retrieve the list of modules"
+};
+
 // ----------------------------------------------------------------
 //     Dispatcher
 // ----------------------------------------------------------------

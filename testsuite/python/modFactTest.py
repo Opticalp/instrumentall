@@ -85,6 +85,10 @@ def myMain():
             print "Error caught. OK. unauthorized character. "
         else:
             raise RuntimeError("unauthorized character in module name should have been detected")
+    
+    print "List modules:"
+    for module in getModules():
+        print " - " + module.name + "(" + module.internalName + "): " + module.description
         
     print "End of script modFactTest.py"
     
