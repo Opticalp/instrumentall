@@ -251,3 +251,39 @@ void ModuleFactory::deleteChildModules()
 
     childModLock.unlock();
 }
+
+std::vector< Poco::SharedPtr<Module*> > ModuleFactory::getChildModules()
+{
+    std::vector< Poco::SharedPtr<Module*> > list;
+
+    if (!isLeaf())
+    {
+        poco_information(logger(), "getChildModules: factory is not a leaf. "
+                "Getting the child modules from the child factories.");
+
+        childFactLock.readLock();
+        for (std::vector<ModuleFactoryBranch*>::iterator it = childFactories.begin(),
+                ite = childFactories.end(); it != ite; it++)
+        {
+            std::vector< Poco::SharedPtr<Module*> > tmp = (*it)->getChildModules();
+            list.insert(list.end(), tmp.begin(), tmp.end());
+        }
+
+        childFactLock.unlock();
+    }
+    else
+    {
+        ModuleManager& modMan =
+                Poco::Util::Application::instance().getSubsystem<ModuleManager>();
+
+        childModLock.readLock();
+
+        for (std::vector<Module*>::iterator it = childModules.begin(),
+                ite = childModules.end(); it != ite; it++)
+            list.push_back(modMan.getModule(*it));
+
+        childModLock.unlock();
+    }
+
+    return list;
+}

@@ -29,6 +29,7 @@
 #ifndef SRC_MODULEFACTORY_H_
 #define SRC_MODULEFACTORY_H_
 
+#include "Poco/SharedPtr.h"
 #include "Poco/RWLock.h"
 
 #include "VerboseEntity.h"
@@ -225,6 +226,14 @@ public:
      * Shall be called in the derived class destructor.
      */
     void deleteChildModules();
+
+    /**
+     * Retrieve all the child modules
+     *
+     * If the factory is not a leaf, retrieve the child modules
+     * from the child factories
+     */
+    std::vector< Poco::SharedPtr<Module*> > getChildModules();
 
 protected:
     /**
