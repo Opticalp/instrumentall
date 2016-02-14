@@ -249,13 +249,7 @@ PyObject* pyModFactCreate(ModFactMembers* self, PyObject *args)
                       .getSubsystem<ModuleManager>()
                       .getModule( (**self->moduleFactory)->create(paramName) );
     }
-    catch (ModuleFactoryException& e)
-    {
-        PyErr_SetString(PyExc_RuntimeError,
-                e.displayText().c_str());
-        return NULL;
-    }
-    catch (ModuleException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());
@@ -292,6 +286,66 @@ PyObject* pyModFactCreate(ModFactMembers* self, PyObject *args)
     *(pyMod->module) = module;
 
     return (PyObject*)(pyMod);
+}
+
+PyObject* pyModFactGetChildModules(ModFactMembers *self)
+{
+    std::vector< SharedPtr<Module*> > modules;
+
+    modules = (**self->moduleFactory)->getChildModules();
+
+    // construct the list to return
+    PyObject* pyModules = PyList_New(0);
+
+    // prepare Module python type
+    if (PyType_Ready(&PythonModule) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the Module Type");
+        return NULL;
+    }
+
+    for (std::vector< SharedPtr<Module*> >::iterator it = modules.begin(),
+            ite = modules.end(); it != ite; it++ )
+    {
+        // create the python object
+        ModMembers* pyMod =
+            reinterpret_cast<ModMembers*>(
+                pyModNew(
+                    reinterpret_cast<PyTypeObject*>(&PythonModule), NULL, NULL) );
+
+        PyObject* tmp=NULL;
+
+        // init
+        // retrieve name and description
+        tmp = pyMod->name;
+        pyMod->name = PyString_FromString((**it)->name().c_str());
+        Py_XDECREF(tmp);
+
+        tmp = pyMod->internalName;
+        pyMod->internalName = PyString_FromString((**it)->internalName().c_str());
+        Py_XDECREF(tmp);
+
+        tmp = pyMod->description;
+        pyMod->description = PyString_FromString((**it)->description());
+        Py_XDECREF(tmp);
+
+        // set InPort reference
+        *(pyMod->module) = *it;
+
+        // create the dict entry
+        if (0 > PyList_Append(
+                pyModules,
+                reinterpret_cast<PyObject*>(pyMod)))
+        {
+            // appending the item failed
+            PyErr_SetString(PyExc_RuntimeError,
+                    "Not able to build the return list");
+            return NULL;
+        }
+    }
+
+    return pyModules;
 }
 
 #endif /* HAVE_PYTHON27 */

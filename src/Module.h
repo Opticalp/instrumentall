@@ -33,6 +33,8 @@
 
 #include "Port.h"
 
+#include "Poco/RWLock.h"
+
 class InPort;
 class OutPort;
 class ModuleFactory;
@@ -139,7 +141,8 @@ protected:
      *
      * This method has to be called by the constructor
      * before setCustomName()
-     * @throw ModuleException If internalName is already in use
+     * @throw Poco::ExistsException If internalName is already in use
+     * @throw Poco::SyntaxException If internalName contains bad characters
      */
     void setInternalName(std::string internalName);
 
@@ -148,10 +151,10 @@ protected:
 	 *
 	 * This method has to be called by the constructor.
 	 * If customName is empty, use internalName().
-	 * @throw ModuleException If customName is already in use
+     * @throw Poco::ExistsException If customName is already in use
+     * @throw Poco::SyntaxException If customName contains bad characters
 	 */
 	void setCustomName(std::string customName);
-
 
 	/**
 	 * Notify the managers about the module creation
@@ -197,7 +200,32 @@ protected:
             std::string name, std::string description,
             Port::dataTypeEnum dataType,
             size_t index );
+
 private:
+    /// enum to be returned by checkName
+    enum NameStatus
+    {
+        nameOk,
+        nameExists,
+        nameBadSyntax
+    };
+
+    /**
+     * Check if the given name is allowed
+     *
+     *  - verify that the syntax is ok
+     *  - verify that the name is not already in use
+     */
+    NameStatus checkName(std::string newName);
+
+    /**
+     * Remove the internal name of the names list
+     *
+     * To be called by setCustomName in case of failing module creation
+     * process due to malformed custom name, or name already in use.
+     */
+    void freeInternalName();
+
 	/**
 	 * Parent module factory
 	 *
@@ -211,6 +239,9 @@ private:
 
 	std::vector<InPort*> inPorts; ///< list of input data ports
 	std::vector<OutPort*> outPorts; ///< list of output data ports
+
+	static std::vector<std::string> names; ///< list of names of all modules
+	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 };
 
 #endif /* SRC_MODULE_H_ */

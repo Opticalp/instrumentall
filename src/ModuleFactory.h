@@ -29,6 +29,9 @@
 #ifndef SRC_MODULEFACTORY_H_
 #define SRC_MODULEFACTORY_H_
 
+#include "Poco/SharedPtr.h"
+#include "Poco/RWLock.h"
+
 #include "VerboseEntity.h"
 #include "Module.h"
 
@@ -186,6 +189,9 @@ public:
 	 *
 	 * @param customName custom name to be given to the module.
 	 * If this string is empty, the module internal name shall be used.
+	 *
+     * @throw Poco::ExistsException If customName is already in use
+     * @throw Poco::SyntaxException If customName contains bad characters
 	 */
 	Module* create(std::string customName="");
 
@@ -220,6 +226,14 @@ public:
      * Shall be called in the derived class destructor.
      */
     void deleteChildModules();
+
+    /**
+     * Retrieve all the child modules
+     *
+     * If the factory is not a leaf, retrieve the child modules
+     * from the child factories
+     */
+    std::vector< Poco::SharedPtr<Module*> > getChildModules();
 
 protected:
     /**
@@ -265,6 +279,7 @@ protected:
                 "This factory is not able to create a new child module. ");
     }
 
+private:
     /**
      * Direct child factories
      *
@@ -274,6 +289,15 @@ protected:
      *  erase factories from that list.
      */
     std::vector<ModuleFactoryBranch*> childFactories;
+    Poco::RWLock childFactLock; ///< childFactories access lock
+    /**
+     * Child factory being deleted
+     *
+     * Use for thread safe child factory deletion operation.
+     * The risk comes from the fact that a factory can be removed by
+     * another way than removeChildFactory or removeChildFactories
+     */
+    ModuleFactoryBranch* deletingChildFact;
 
     /**
      * Direct child modules
@@ -282,8 +306,15 @@ protected:
      * is called by create(). create() adds the new module into the list.
      */
     std::vector<Module*> childModules;
+    Poco::RWLock childModLock; ///< childModules access lock
+    /**
+     * Child module being deleted
+     *
+     * Use for thread safe child module deletion operation
+     * @see deletingChildFact
+     */
+    Module* deletingChildMod;
 
-private:
     bool bRoot; ///< flag to check if this module factory is a root factory
     bool bLeaf; ///< flag to check if this module factory is a leaf factory
 };

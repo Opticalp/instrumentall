@@ -142,6 +142,18 @@ static PyMethodDef pyMethodModFactCreate =
     "Create a new Module. "
 };
 
+/// ModuleFactory::getChildModules python wrapper
+extern "C" PyObject* pyModFactGetChildModules(ModFactMembers *self);
+
+static PyMethodDef pyMethodModFactGetChildModules =
+{
+    "getChildModules",
+    (PyCFunction)pyModFactGetChildModules,
+    METH_NOARGS,
+    "Retrieve all the child modules: self children if the factory is a leaf,"
+    "or children of child factories. "
+};
+
 /// exported methods
 static PyMethodDef pyModFactMethods[] = {
 
@@ -151,6 +163,7 @@ static PyMethodDef pyModFactMethods[] = {
 
         pyMethodModFactCountRemain,
         pyMethodModFactCreate,
+        pyMethodModFactGetChildModules,
 
         {NULL} // sentinel
 };

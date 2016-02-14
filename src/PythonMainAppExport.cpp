@@ -30,6 +30,7 @@ THE SOFTWARE.
 
 #include "MainApplication.h"
 #include "ModuleManager.h"
+
 #include "PythonMainAppExport.h"
 
 extern "C" PyObject*
@@ -57,25 +58,56 @@ pythonMainAppVersion(PyObject *self, PyObject *args)
     return PyString_FromString(retVal.c_str());
 }
 
+#include "PythonModuleFactory.h"
+
 extern "C" PyObject*
 pythonModManGetRootFact(PyObject *self, PyObject *args)
 {
-    std::vector<std::string> strFactories;
+    std::vector< SharedPtr<ModuleFactory*> > factories;
 
-    strFactories = Poco::Util::Application::instance()
+    factories = Poco::Util::Application::instance()
                 .getSubsystem<ModuleManager>()
                 .getRootFactories();
 
     // construct the list to return
     PyObject* pyFactories = PyList_New(0);
 
-    for (std::vector<std::string>::iterator it=strFactories.begin(), ite=strFactories.end();
+    // prepare ModuleFactory python type
+    if (PyType_Ready(&PythonModuleFactory) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the ModuleFactory Type");
+        return NULL;
+    }
+
+    for (std::vector< SharedPtr<ModuleFactory*> >::iterator it=factories.begin(), ite=factories.end();
             it != ite; it++ )
     {
+        // create the python object
+        ModFactMembers* pyFact =
+            reinterpret_cast<ModFactMembers*>(
+                pyModFactNew(
+                    reinterpret_cast<PyTypeObject*>(&PythonModuleFactory), NULL, NULL) );
+
+        PyObject* tmp=NULL;
+
+        // init
+        // retrieve name and description
+        tmp = pyFact->name;
+        pyFact->name = PyString_FromString((**it)->name().c_str());
+        Py_XDECREF(tmp);
+
+        tmp = pyFact->description;
+        pyFact->description = PyString_FromString((**it)->description());
+        Py_XDECREF(tmp);
+
+        // set InPort reference
+        *(pyFact->moduleFactory) = *it;
+
         // create the dict entry
         if (0 > PyList_Append(
                 pyFactories,
-                PyString_FromString(it->c_str())))
+                reinterpret_cast<PyObject*>(pyFact)))
         {
             // appending the item failed
             PyErr_SetString(PyExc_RuntimeError,
@@ -85,6 +117,71 @@ pythonModManGetRootFact(PyObject *self, PyObject *args)
     }
 
     return pyFactories;
+}
+
+#include "PythonModule.h"
+
+extern "C" PyObject*
+pythonModManGetModules(PyObject *self, PyObject *args)
+{
+    std::vector< SharedPtr<Module*> > modules;
+
+    modules = Poco::Util::Application::instance()
+                .getSubsystem<ModuleManager>()
+                .getModules();
+
+    // construct the list to return
+    PyObject* pyModules = PyList_New(0);
+
+    // prepare Module python type
+    if (PyType_Ready(&PythonModule) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the Module Type");
+        return NULL;
+    }
+
+    for (std::vector< SharedPtr<Module*> >::iterator it = modules.begin(),
+            ite = modules.end(); it != ite; it++ )
+    {
+        // create the python object
+        ModMembers* pyMod =
+            reinterpret_cast<ModMembers*>(
+                pyModNew(
+                    reinterpret_cast<PyTypeObject*>(&PythonModule), NULL, NULL) );
+
+        PyObject* tmp=NULL;
+
+        // init
+        // retrieve name and description
+        tmp = pyMod->name;
+        pyMod->name = PyString_FromString((**it)->name().c_str());
+        Py_XDECREF(tmp);
+
+        tmp = pyMod->internalName;
+        pyMod->internalName = PyString_FromString((**it)->internalName().c_str());
+        Py_XDECREF(tmp);
+
+        tmp = pyMod->description;
+        pyMod->description = PyString_FromString((**it)->description());
+        Py_XDECREF(tmp);
+
+        // set InPort reference
+        *(pyMod->module) = *it;
+
+        // create the dict entry
+        if (0 > PyList_Append(
+                pyModules,
+                reinterpret_cast<PyObject*>(pyMod)))
+        {
+            // appending the item failed
+            PyErr_SetString(PyExc_RuntimeError,
+                    "Not able to build the return list");
+            return NULL;
+        }
+    }
+
+    return pyModules;
 }
 
 #include "Dispatcher.h"

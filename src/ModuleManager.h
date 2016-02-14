@@ -115,6 +115,14 @@ public:
     SharedPtr<Module*> getModule(Module* pModule);
 
     /**
+     * Get a shared pointer on a module
+     *
+     * To be used (e.g. by the dispatcher) to construct the workflow
+     * @param name is either the custom name or the internal name
+     */
+    SharedPtr<Module*> getModule(std::string modName);
+
+    /**
      * Get all the modules
      *
      * @return a copy of allModules
@@ -136,9 +144,9 @@ public:
     void removeFactory(ModuleFactory* pFactory);
 
     /**
-     * Get the list of root factories names
+     * Get the list of root factories
      */
-    std::vector<std::string> getRootFactories();
+    std::vector< SharedPtr<ModuleFactory*> > getRootFactories();
 
     /**
      * Get a root factory, given its name
@@ -175,7 +183,7 @@ private:
      * and the entry is removed from this list.
      */
     std::vector< SharedPtr<ModuleFactory*> > allFactories;
-    Poco::RWLock factoriesLock;
+    Poco::RWLock factoriesLock; ///< allFactories access lock
 
     /**
      * To be used to replace an expired factory to throw errors
@@ -194,7 +202,7 @@ private:
      * and the entry is removed from this list.
      */
     std::vector< SharedPtr<Module*> > allModules;
-    Poco::RWLock modulesLock;
+    Poco::RWLock modulesLock; ///< allModules access lock
 
     /**
      * To be used to replace an expired module to throw errors

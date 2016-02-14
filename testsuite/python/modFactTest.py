@@ -36,13 +36,11 @@ def myMain():
     facList = getRootFactories()
     
     print "Available factories: "
-    for facStr in facList:
-        print " - " + facStr
+    for fac in facList:
+        print " - " + fac.name + ": " + fac.description
     
-    print " --- Factory detail "
     fac = Factory("DemoRootFactory")
-    print "Factory name: " + fac.name
-    print "Factory description: " + fac.description
+    print "Using DemoRootFactory. "
     
     ## select
     print fac.selectDescription()
@@ -65,6 +63,52 @@ def myMain():
         mod = fac.create("mojo")
         print "  module " + mod.name + " created. "
     
+    if (fac.countRemain()>0):
+        print "Trying to create a module from " + fac.name + ' with arg: "mojo"'
+        try:  
+            fac.create("mojo")
+        except RuntimeError:
+            print "Error caught. OK. Duplicate name. "
+        else:
+            raise RuntimeError("duplicate module name should have been detected")
+    
+    print 'Testing the Module constructor with "mojo"'    
+    mojo = Module("mojo")
+    print mojo.name + "(" + mojo.internalName + ") created."
+    
+    print 'Testing the Module constructor with "DemoModule2"'    
+    demo2 = Module("DemoModule2")
+    print demo2.name + "(" + demo2.internalName + ") created."
+        
+    if (fac.countRemain()>0):
+        print "Creating module from " + fac.name + ' with arg: ".all-chars_"' 
+        mod = fac.create(".all-chars_")
+        print "  module " + mod.name + " created. "
+    
+    if (fac.countRemain()>0):
+        print "Trying to create a module from " + fac.name + ' with arg: "josé"'
+        try:  
+            fac.create("josé")
+        except RuntimeError:
+            print "Error caught. OK. unauthorized character. "
+        else:
+            raise RuntimeError("unauthorized character in module name should have been detected")
+    
+    print "List modules:"
+    for module in getModules():
+        print " - " + module.name + "(" + module.internalName + "): " + module.description
+        
+        
+    print "Create a module using another leaf factory. "
+    fac.select("branch").select("leafA").create("mod1")
+    print "Done. Listing child modules from " + fac.name + ": "
+    for module in fac.getChildModules():
+        print " - " + module.name + "(" + module.internalName + "): " + module.description
+
+    print "Child modules from " + fac.select("branch").select("leafA").name + ": "
+    for module in fac.select("branch").select("leafA").getChildModules():
+        print " - " + module.name + "(" + module.internalName + "): " + module.description
+        
     print "End of script modFactTest.py"
     
 # main body    
