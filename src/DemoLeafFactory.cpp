@@ -30,6 +30,9 @@
 #include "DemoModule.h"
 #include "DemoModuleA.h"
 #include "DemoModuleB.h"
+#include "DemoModuleDataSeq.h"
+#include "DemoModuleSeqAccu.h"
+#include "DemoModuleSeqMax.h"
 
 Module* DemoLeafFactory::newChildModule(std::string customName)
 {
@@ -41,6 +44,15 @@ Module* DemoLeafFactory::newChildModule(std::string customName)
 
     if (getSelector().compare("leafB")==0)
         return new DemoModuleB(this, customName);
+
+    if (getSelector().compare("leafDataSeq")==0)
+        return new DemoModuleDataSeq(this, customName);
+
+    if (getSelector().compare("leafSeqAccu")==0)
+        return new DemoModuleSeqAccu(this, customName);
+
+    if (getSelector().compare("leafSeqMax")==0)
+        return new DemoModuleSeqMax(this, customName);
 
     throw ModuleFactoryException("newChildModule","Impossible selector value");
 }

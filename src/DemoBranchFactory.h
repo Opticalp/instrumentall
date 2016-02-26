@@ -65,6 +65,9 @@ public:
         list.push_back("leaf");
         list.push_back("leafA");
         list.push_back("leafB");
+        list.push_back("leafDataSeq");
+        list.push_back("leafSeqAccu");
+        list.push_back("leafSeqMax");
         return list;
     }
 

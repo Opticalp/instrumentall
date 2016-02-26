@@ -35,7 +35,6 @@ size_t DemoModule::refCount = 0;
 DemoModule::DemoModule(ModuleFactory* parent, std::string customName):
         Module(parent)
 {
-    VerboseEntity("module.DemoModule");
     poco_debug(logger(),"Creating a new demo module");
 
     setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));

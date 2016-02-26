@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.cpp
- * @date	feb. 2016
+ * @file	src/DemoModuleDataSeq.h
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,31 +26,37 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleA.h"
-#include "Poco/NumberFormatter.h"
+#ifndef SRC_DEMOMODULEDATASEQ_H_
+#define SRC_DEMOMODULEDATASEQ_H_
 
-size_t DemoModuleA::refCount = 0;
+#include "Module.h"
 
-DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
-                Module(parent)
+/**
+ * DemoModuleDataSeq
+ *
+ * Demo module to generate a data sequence at each call to run()
+ * It has no input port, but 1 output port.
+ */
+class DemoModuleDataSeq: public Module
 {
-    poco_debug(logger(),"Creating a new demo module A");
+public:
+    DemoModuleDataSeq(ModuleFactory* parent, std::string customName);
+    virtual ~DemoModuleDataSeq() { }
 
-    setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
-    setLogger("module" + name());
+    const char * description() const
+    {
+        return "Demo Module to generate a data sequence. ";
+    }
 
-    // ports
-    setInPortCount(inPortCnt);
-    setOutPortCount(outPortCnt);
+private:
+    static size_t refCount; ///< reference counter to generate a unique internal name
 
-    addInPort("inPortA", "demo port that transmits nothing", Port::typeInteger, inPortA);
-    addInPort("inPortB", "demo port that transmits nothing", Port::typeFloat, inPortB);
+    /// Indexes of the output ports
+    enum outPorts
+    {
+        outPortA,
+        outPortCnt
+    };
+};
 
-    addOutPort("outPortA", "demo port that transmits nothing", Port::typeInteger, outPortA);
-
-    notifyCreation();
-
-    // if nothing failed
-    refCount++;
-}
+#endif /* SRC_DEMOMODULEDATASEQ_H_ */

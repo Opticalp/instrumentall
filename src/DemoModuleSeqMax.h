@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.cpp
- * @date	feb. 2016
+ * @file	src/DemoModuleSeqMax.h
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,31 +26,43 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleA.h"
-#include "Poco/NumberFormatter.h"
+#ifndef SRC_DEMOMODULESEQMAX_H_
+#define SRC_DEMOMODULESEQMAX_H_
 
-size_t DemoModuleA::refCount = 0;
+#include "Module.h"
 
-DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
-                Module(parent)
+/**
+ * DemoModuleSeqMax
+ *
+ * Simple demo module to retrieve the maximum of a data sequence.
+ */
+class DemoModuleSeqMax: public Module
 {
-    poco_debug(logger(),"Creating a new demo module A");
+public:
+    DemoModuleSeqMax(ModuleFactory* parent, std::string customName);
+    virtual ~DemoModuleSeqMax() { }
 
-    setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
-    setLogger("module" + name());
+    const char * description() const
+    {
+        return "Demo Module to retrieve the max of a data sequence. ";
+    }
 
-    // ports
-    setInPortCount(inPortCnt);
-    setOutPortCount(outPortCnt);
+private:
+    static size_t refCount; ///< reference counter to generate a unique internal name
 
-    addInPort("inPortA", "demo port that transmits nothing", Port::typeInteger, inPortA);
-    addInPort("inPortB", "demo port that transmits nothing", Port::typeFloat, inPortB);
+    /// Indexes of the input ports
+    enum inPorts
+    {
+        inPortA,
+        inPortCnt
+    };
 
-    addOutPort("outPortA", "demo port that transmits nothing", Port::typeInteger, outPortA);
+    /// Indexes of the output ports
+    enum outPorts
+    {
+        outPortA,
+        outPortCnt
+    };
+};
 
-    notifyCreation();
-
-    // if nothing failed
-    refCount++;
-}
+#endif /* SRC_DEMOMODULESEQMAX_H_ */

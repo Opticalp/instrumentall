@@ -33,6 +33,7 @@
 
 #include "Port.h"
 
+#include "Poco/Task.h"
 #include "Poco/RWLock.h"
 
 class InPort;
@@ -51,8 +52,11 @@ POCO_DECLARE_EXCEPTION( , ModuleException, Poco::Exception)
  *  actuators or sensors
  *  - a computing cell: image processing, signal processing,
  *  ...
+ *
+ *  Inherit from Poco::Task to have the Poco::Runnable features
+ *  and to be able to control progress and task cancellation.
  */
-class Module: public VerboseEntity
+class Module: public VerboseEntity, public Poco::Task
 {
 public:
 	/**
@@ -65,11 +69,15 @@ public:
 	 *  - call @ref setCustomName after the internalName is set
 	 *  - call @ref notifyCreation to let the module being registered
 	 *  in the managers
+	 *
+	 * @param parent Parent module factory
+	 * @param name Name to be used as task name
+	 *
 	 * @throw ModuleException forwarded from setCustomName if customName
 	 * is already in use.
 	 */
-	Module(ModuleFactory* parent):
-	      mParent(parent) { }
+	Module(ModuleFactory* parent, std::string name = ""):
+	      mParent(parent), Poco::Task(name), VerboseEntity("module") { }
 
 	/**
 	 * Destructor
@@ -134,6 +142,11 @@ public:
 	 * @see getInPorts
 	 */
 	std::vector<OutPort*> getOutPorts() { return outPorts; }
+
+	/**
+	 * Implementation of Poco::Task::runTask()
+	 */
+	virtual void runTask() { }
 
 protected:
     /**

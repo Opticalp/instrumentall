@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.cpp
- * @date	feb. 2016
+ * @file	src/DemoModuleSeqMax.cpp
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,15 +26,15 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleA.h"
+#include "DemoModuleSeqMax.h"
 #include "Poco/NumberFormatter.h"
 
-size_t DemoModuleA::refCount = 0;
+size_t DemoModuleSeqMax::refCount = 0;
 
-DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
-                Module(parent)
+DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName):
+    Module(parent, customName)
 {
-    poco_debug(logger(),"Creating a new demo module A");
+    poco_debug(logger(),"Creating a new DemoModuleSeqMax");
 
     setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
@@ -44,10 +44,9 @@ DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
     setInPortCount(inPortCnt);
     setOutPortCount(outPortCnt);
 
-    addInPort("inPortA", "demo port that transmits nothing", Port::typeInteger, inPortA);
-    addInPort("inPortB", "demo port that transmits nothing", Port::typeFloat, inPortB);
+    addInPort("inPortA", "data sequence", Port::typeInteger, inPortA);
 
-    addOutPort("outPortA", "demo port that transmits nothing", Port::typeInteger, outPortA);
+    addOutPort("outPortA", "max of data sequence", Port::typeInteger, outPortA);
 
     notifyCreation();
 

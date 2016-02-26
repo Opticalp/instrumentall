@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.cpp
- * @date	feb. 2016
+ * @file	src/DemoModuleDataSeq.cpp
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,31 +26,28 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleA.h"
+#include "DemoModuleDataSeq.h"
 #include "Poco/NumberFormatter.h"
 
-size_t DemoModuleA::refCount = 0;
+size_t DemoModuleDataSeq::refCount = 0;
 
-DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
-                Module(parent)
+DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customName):
+    Module(parent, customName)
 {
-    poco_debug(logger(),"Creating a new demo module A");
+    poco_debug(logger(),"Creating a new DemoModuleDataSeq");
 
-    setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
+    setInternalName("DemoModuleDataSeq" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
     setLogger("module" + name());
 
     // ports
-    setInPortCount(inPortCnt);
     setOutPortCount(outPortCnt);
-
-    addInPort("inPortA", "demo port that transmits nothing", Port::typeInteger, inPortA);
-    addInPort("inPortB", "demo port that transmits nothing", Port::typeFloat, inPortB);
-
-    addOutPort("outPortA", "demo port that transmits nothing", Port::typeInteger, outPortA);
+    addOutPort("outPortA", "generated data sequence",
+            Port::typeInteger, outPortA);
 
     notifyCreation();
 
     // if nothing failed
     refCount++;
 }
+
