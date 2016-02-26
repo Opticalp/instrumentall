@@ -34,7 +34,6 @@
 #include "Poco/RWLock.h"
 #include "Poco/SharedPtr.h"
 
-using Poco::RWLock;
 using Poco::SharedPtr;
 
 class Dispatcher;

@@ -40,6 +40,9 @@ class InPort;
 class OutPort;
 class ModuleFactory;
 
+/// Time lapse in milliseconds between 2 tries in multithread lock case
+#define TIME_LAPSE 10
+
 POCO_DECLARE_EXCEPTION( , ModuleException, Poco::Exception)
 
 /**
@@ -71,10 +74,10 @@ public:
 	 *  in the managers
 	 *
 	 * @param parent Parent module factory
-	 * @param name Name to be used as task name
+	 * @param name Name to be used as task name. E.g. use the custom name
 	 *
-	 * @throw ModuleException forwarded from setCustomName if customName
-	 * is already in use.
+	 * @throw ModuleException forwarded from setCustomName or setInternalName
+	 * if customName or internalName is already in use.
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
 	      mParent(parent), Poco::Task(name), VerboseEntity("module") { }
