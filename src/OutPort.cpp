@@ -45,16 +45,16 @@ std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
 {
     std::vector<SharedPtr<InPort*> > list;
 
-    lock.readLock();
+    targetPortsLock.readLock();
     list = targetPorts;
-    lock.unlock();
+    targetPortsLock.unlock();
 
     return list;
 }
 
 void OutPort::addTargetPort(InPort* port)
 {
-    lock.writeLock();
+    targetPortsLock.writeLock();
 
     try
     {
@@ -63,29 +63,29 @@ void OutPort::addTargetPort(InPort* port)
                         .getSubsystem<Dispatcher>()
                         .getInPort(port);
         targetPorts.push_back(sharedPort);
-        lock.unlock();
+        targetPortsLock.unlock();
     }
     catch (DispatcherException& e)
     {
-        lock.unlock();
+        targetPortsLock.unlock();
         e.rethrow();
     }
 }
 
 void OutPort::removeTargetPort(InPort* port)
 {
-    lock.writeLock();
+    targetPortsLock.writeLock();
     for (std::vector< SharedPtr<InPort*> >::iterator it=targetPorts.begin(),
             ite=targetPorts.end(); it != ite; it++ )
     {
         if (**it==port)
         {
             targetPorts.erase(it);
-            lock.unlock();
+            targetPortsLock.unlock();
             return;
         }
     }
-    lock.unlock();
+    targetPortsLock.unlock();
 }
 
 OutPort::OutPort():

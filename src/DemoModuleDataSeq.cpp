@@ -51,3 +51,72 @@ DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customNa
     refCount++;
 }
 
+void DemoModuleDataSeq::runTask()
+{
+    // try to acquire the mutex
+    while (!mainMutex.tryLock(TIME_LAPSE))
+    {
+        poco_debug(logger(),
+                "DemoModuleDataSeq::runTask(): failed to acquire the mutex");
+
+        if (isCancelled())
+            return;
+    }
+
+    // --- process ---
+
+    // try to acquire the output data lock
+    while (!getOutPorts()[outPortA]->tryStartDataSequence())
+    {
+        poco_debug(logger(),
+                "DemoModuleDataSeq::runTask(): "
+                "failed to acquire the output data lock "
+                "for the start sequence");
+
+        if (sleep(TIME_LAPSE))
+        {
+            mainMutex.unlock();
+            return;
+        }
+    }
+
+    // data
+    for (int index=0; index<3; index++)
+    {
+        int *pData;
+
+        // try to acquire the output data lock
+        while (!getOutPorts()[outPortA]->tryData(pData))
+        {
+            poco_debug(logger(),
+                    "DemoModuleDataSeq::runTask(): "
+                    "failed to acquire the output data lock");
+
+            if (sleep(TIME_LAPSE))
+            {
+                mainMutex.unlock();
+                return;
+            }
+        }
+
+        *pData = index;
+        getOutPorts()[outPortA]->notifyReady();
+    }
+
+    // try to acquire the output data lock
+    while (!getOutPorts()[outPortA]->tryEndDataSequence())
+    {
+        poco_debug(logger(),
+                "DemoModuleDataSeq::runTask(): "
+                "failed to acquire the output data lock "
+                "for the start sequence");
+
+        if (sleep(TIME_LAPSE))
+        {
+            mainMutex.unlock();
+            return;
+        }
+    }
+
+    mainMutex.unlock();
+}

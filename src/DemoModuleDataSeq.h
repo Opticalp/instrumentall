@@ -29,6 +29,8 @@
 #ifndef SRC_DEMOMODULEDATASEQ_H_
 #define SRC_DEMOMODULEDATASEQ_H_
 
+#include "Poco/Mutex.h"
+
 #include "Module.h"
 
 /**
@@ -48,6 +50,13 @@ public:
         return "Demo Module to generate a data sequence. ";
     }
 
+    /**
+     * Main logic
+     *
+     * Generate an integer data sequence {0;1;2;3}
+     */
+    void runTask();
+
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name
 
@@ -57,6 +66,8 @@ private:
         outPortA,
         outPortCnt
     };
+
+    Poco::Mutex mainMutex; ///< runTask() mutex.
 };
 
 #endif /* SRC_DEMOMODULEDATASEQ_H_ */

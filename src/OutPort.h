@@ -62,8 +62,42 @@ public:
 
     virtual ~OutPort() { }
 
-    /// retrieve the target ports
+    /**
+     * Retrieve the target ports
+     */
     std::vector< SharedPtr<InPort*> > getTargetPorts();
+
+    /**
+     * Try to retrieve a pointer on the data to be written
+     *
+     * @return false if the lock cannot be acquired
+     */
+    template<typename T> bool tryData(T*& data);
+
+    /**
+     * Try to set a data sequence start.
+     *
+     *  - try to acquire the lock on the data
+     *  - write a data sequence start
+     *  - release the lock and notifies the dispatcher
+     */
+    bool tryStartDataSequence();
+
+    /**
+     * Try to set a data sequence end.
+     *
+     *  - try to acquire the lock on the data
+     *  - write a data sequence end
+     *  - release the lock and notifies the dispatcher
+     */
+    bool tryEndDataSequence();
+
+    /**
+     * Notify the dispatcher that the new data is ready
+     *
+     * And release the lock acquired with tryData
+     */
+    void notifyReady();
 
 private:
     /**
@@ -85,7 +119,7 @@ private:
     void removeTargetPort(InPort* port);
 
     std::vector< SharedPtr<InPort*> > targetPorts;
-    RWLock lock; ///< lock for targetPorts operations
+    RWLock targetPortsLock; ///< lock for targetPorts operations
 
     friend class InPort;
 };
