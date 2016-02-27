@@ -65,7 +65,6 @@ void DemoModuleDataSeq::runTask()
 
     // --- process ---
 
-    // try to acquire the output data lock
     while (!getOutPorts()[outPortA]->tryStartDataSequence())
     {
         poco_debug(logger(),
@@ -79,6 +78,15 @@ void DemoModuleDataSeq::runTask()
             return;
         }
     }
+
+    setProgress(0.2);
+
+    if (isCancelled())
+    {
+        mainMutex.unlock();
+        return;
+    }
+
 
     // data
     for (int index=0; index<3; index++)
@@ -101,9 +109,16 @@ void DemoModuleDataSeq::runTask()
 
         *pData = index;
         getOutPorts()[outPortA]->notifyReady();
+
+        setProgress((index + 2) * 0.2);
+
+        if (isCancelled())
+        {
+            mainMutex.unlock();
+            return;
+        }
     }
 
-    // try to acquire the output data lock
     while (!getOutPorts()[outPortA]->tryEndDataSequence())
     {
         poco_debug(logger(),
