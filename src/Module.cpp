@@ -135,7 +135,7 @@ ModuleFactory* Module::parent()
 }
 
 void Module::addInPort(std::string name, std::string description,
-        Port::dataTypeEnum dataType, size_t index)
+        DataItem::DataTypeEnum dataType, size_t index)
 {
     if (index>=0 && index<inPorts.size())
         inPorts[index] = new InPort(this, name, description, dataType, index);
@@ -145,7 +145,7 @@ void Module::addInPort(std::string name, std::string description,
 }
 
 void Module::addOutPort(std::string name, std::string description,
-        Port::dataTypeEnum dataType, size_t index)
+        DataItem::DataTypeEnum dataType, size_t index)
 {
     if (index>=0 && index<outPorts.size())
         outPorts[index] = new OutPort(this, name, description, dataType, index);

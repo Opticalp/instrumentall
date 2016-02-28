@@ -1,5 +1,5 @@
 /**
- * @file	src/DemoModuleSeqAccu.cpp
+ * @file	src/DataAttribute.cpp
  * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -26,30 +26,52 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleSeqAccu.h"
-#include "Poco/NumberFormatter.h"
+#include "DataAttribute.h"
 
-size_t DemoModuleSeqAccu::refCount = 0;
 
-DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customName):
-    Module(parent, customName)
+size_t nextToBeUsedIndex = 0;
+
+DataAttribute DataAttribute::newDataAttribute()
 {
-    poco_debug(logger(),"Creating a new DemoModuleSeqAccu");
+    DataAttribute tmp;
+    lock.lock();
+    tmp.indexes.insert(nextToBeUsedIndex++);
+    lock.unlock();
 
-    setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
-    setLogger("module" + name());
+    return tmp;
+}
 
-    // ports
-    setInPortCount(inPortCnt);
-    setOutPortCount(outPortCnt);
+DataAttribute::~DataAttribute()
+{
+    // nothing to do
+}
 
-    addInPort("inPortA", "data sequence", DataItem::typeInteger, inPortA);
+DataAttribute::DataAttribute(DataAttribute& other)
+{
+    indexes = other.indexes;
+    startSequences = other.startSequences;
+    endSequences = other.endSequences;
+}
 
-    addOutPort("outPortA", "sum of data sequence", DataItem::typeInteger, outPortA);
+DataAttribute& DataAttribute::operator =(DataAttribute& other)
+{
+    DataAttribute tmp(other);
+    swap(tmp);
+    return *this;
+}
 
-    notifyCreation();
+DataAttribute& DataAttribute::operator +=(DataAttribute& rhs)
+{
+    indexes.insert(rhs.indexes.begin(), rhs.indexes.end());
+    startSequences.insert(rhs.startSequences.begin(), rhs.startSequences.end());
+    endSequences.insert(rhs.endSequences.begin(), rhs.endSequences.end());
 
-    // if nothing failed
-    refCount++;
+    return *this; // return the result by reference
+}
+
+void DataAttribute::swap(DataAttribute& other)
+{
+    indexes.swap(other.indexes);
+    startSequences.swap(other.startSequences);
+    endSequences.swap(other.endSequences);
 }

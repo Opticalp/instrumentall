@@ -35,7 +35,7 @@
 InPort::InPort(Module* parent,
         std::string name,
         std::string description,
-        dataTypeEnum datatype,
+        DataItem::DataTypeEnum datatype,
         size_t index):
     Port(parent, name, description, datatype, index)
 {
@@ -50,7 +50,7 @@ InPort::InPort(OutPort* emptySourcePort):
                     .getSubsystem<ModuleManager>()
                     .getEmptyModule(),
                 "emptyIn", "replace an expired port",
-                Port::typeUndefined, 0)
+                DataItem::typeUndefined, 0)
 {
     mSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
 }

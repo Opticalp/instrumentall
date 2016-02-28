@@ -30,16 +30,43 @@
 
 #include "ModuleManager.h"
 #include "Dispatcher.h"
+#include "DataManager.h"
 
 OutPort::OutPort(Module* parent,
         std::string name,
         std::string description,
-        dataTypeEnum datatype,
+        DataItem::DataTypeEnum datatype,
         size_t index):
-    Port(parent, name, description, datatype, index)
+    Port(parent, name, description, datatype, index),
+    data(dataType)
 {
-    // nothing to do
+    // notify the DataManager of the creation
+    Poco::Util::Application::instance()
+                            .getSubsystem<DataManager>()
+                            .addOutPort(this);
 }
+
+OutPort::~OutPort()
+{
+    // notify the DataManager of the deletion
+    try
+    {
+        Poco::Util::Application::instance()
+                            .getSubsystem<DataManager>()
+                            .removeOutPort(this);
+    }
+    catch (Poco::NotFoundException&)
+    {
+        if (parent() != Poco::Util::Application::instance()
+                    .getSubsystem<ModuleManager>()
+                    .getEmptyModule())
+        {
+            poco_bugcheck_msg("the dataManager was unregistered "
+                "before all Modules were deleted...");
+        }
+    }
+}
+
 
 std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
 {
@@ -93,7 +120,21 @@ OutPort::OutPort():
                     .getSubsystem<ModuleManager>()
                     .getEmptyModule(),
                 "emptyOut", "replace an expired port",
-                Port::typeUndefined, 0)
+                DataItem::typeUndefined, 0)
 {
     // nothing to do
 }
+
+template<typename T>
+bool OutPort::tryData(T*& pData)
+{
+    return data.tryGetDataToWrite<T>(pData);
+}
+
+void OutPort::notifyReady(DataAttribute attribute)
+{
+    // TODO: lock, unlock
+    // dispatcher.notifyOutPortDataReady(this, attribute);
+}
+
+

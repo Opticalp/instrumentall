@@ -44,9 +44,9 @@ DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName
     setInPortCount(inPortCnt);
     setOutPortCount(outPortCnt);
 
-    addInPort("inPortA", "data sequence", Port::typeInteger, inPortA);
+    addInPort("inPortA", "data sequence", DataItem::typeInteger, inPortA);
 
-    addOutPort("outPortA", "max of data sequence", Port::typeInteger, outPortA);
+    addOutPort("outPortA", "max of data sequence", DataItem::typeInteger, outPortA);
 
     notifyCreation();
 

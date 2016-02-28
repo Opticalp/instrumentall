@@ -40,6 +40,7 @@
 #include "PythonManager.h"
 #include "Dispatcher.h"
 #include "ModuleManager.h"
+#include "DataManager.h"
 
 #include "version.h"
 #include "MainApplication.h"
@@ -56,6 +57,7 @@ MainApplication::MainApplication(): _helpRequested(false)
 
     Application::instance().addSubsystem(new ModuleManager);
     Application::instance().addSubsystem(new Dispatcher);
+    Application::instance().addSubsystem(new DataManager);
 
     // NOTE: interface subsystem to be inserted last
 #ifdef HAVE_PYTHON27

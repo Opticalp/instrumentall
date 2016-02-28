@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleB.cpp
- * @date	feb. 2016
+ * @file	src/DataItem.cpp
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,26 +26,16 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleB.h"
-#include "Poco/NumberFormatter.h"
+#include "DataItem.h"
 
-size_t DemoModuleB::refCount = 0;
-
-DemoModuleB::DemoModuleB(ModuleFactory* parent, std::string customName):
-                Module(parent)
+DataItem::DataItem()
 {
-    poco_debug(logger(),"Creating a new demo module B");
+    // TODO Auto-generated constructor stub
 
-    setInternalName("DemoModuleB" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
-    setLogger("module" + name());
-
-    // ports
-    setOutPortCount(outPortCnt);
-    addOutPort("outPortA", "demo port that transmits nothing", DataItem::typeInteger, outPortA);
-
-    notifyCreation();
-
-    // if nothing failed
-    refCount++;
 }
+
+DataItem::~DataItem()
+{
+    // TODO Auto-generated destructor stub
+}
+

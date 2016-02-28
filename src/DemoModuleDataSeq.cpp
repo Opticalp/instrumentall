@@ -43,13 +43,15 @@ DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customNa
     // ports
     setOutPortCount(outPortCnt);
     addOutPort("outPortA", "generated data sequence",
-            Port::typeInteger, outPortA);
+            DataItem::typeInteger, outPortA);
 
     notifyCreation();
 
     // if nothing failed
     refCount++;
 }
+
+#define MAX_INDEX 4
 
 void DemoModuleDataSeq::runTask()
 {
@@ -64,32 +66,7 @@ void DemoModuleDataSeq::runTask()
     }
 
     // --- process ---
-
-    while (!getOutPorts()[outPortA]->tryStartDataSequence())
-    {
-        poco_debug(logger(),
-                "DemoModuleDataSeq::runTask(): "
-                "failed to acquire the output data lock "
-                "for the start sequence");
-
-        if (sleep(TIME_LAPSE))
-        {
-            mainMutex.unlock();
-            return;
-        }
-    }
-
-    setProgress(0.2);
-
-    if (isCancelled())
-    {
-        mainMutex.unlock();
-        return;
-    }
-
-
-    // data
-    for (int index=0; index<3; index++)
+    for (int index = 0; index < MAX_INDEX + 1; index++)
     {
         int *pData;
 
@@ -107,26 +84,19 @@ void DemoModuleDataSeq::runTask()
             }
         }
 
-        *pData = index;
-        getOutPorts()[outPortA]->notifyReady();
+        DataAttribute attr = DataAttribute::newDataAttribute();
 
-        setProgress((index + 2) * 0.2);
+        if (index==0)
+            ; // set start sequence to the attribute via the dispatcher
+        else if (index==MAX_INDEX)
+            ; // set end sequence to the attribute via the dispatcher
+
+        *pData = index;
+        getOutPorts()[outPortA]->notifyReady(attr);
+
+        setProgress(static_cast<float>(index + 1) / static_cast<float>(MAX_INDEX + 1));
 
         if (isCancelled())
-        {
-            mainMutex.unlock();
-            return;
-        }
-    }
-
-    while (!getOutPorts()[outPortA]->tryEndDataSequence())
-    {
-        poco_debug(logger(),
-                "DemoModuleDataSeq::runTask(): "
-                "failed to acquire the output data lock "
-                "for the start sequence");
-
-        if (sleep(TIME_LAPSE))
         {
             mainMutex.unlock();
             return;

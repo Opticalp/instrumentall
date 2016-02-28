@@ -29,6 +29,7 @@
 #ifndef SRC_OUTPORT_H_
 #define SRC_OUTPORT_H_
 
+#include "DataItem.h"
 #include "Port.h"
 
 #include "Poco/RWLock.h"
@@ -52,7 +53,7 @@ public:
     OutPort(Module* parent,
             std::string name,
             std::string description,
-            dataTypeEnum datatype,
+            DataItem::DataTypeEnum datatype,
             size_t index);
 
     /**
@@ -60,7 +61,7 @@ public:
      */
     OutPort();
 
-    virtual ~OutPort() { }
+    virtual ~OutPort();
 
     /**
      * Retrieve the target ports
@@ -72,32 +73,20 @@ public:
      *
      * @return false if the lock cannot be acquired
      */
-    template<typename T> bool tryData(T*& data);
-
-    /**
-     * Try to set a data sequence start.
-     *
-     *  - try to acquire the lock on the data
-     *  - write a data sequence start
-     *  - release the lock and notifies the dispatcher
-     */
-    bool tryStartDataSequence();
-
-    /**
-     * Try to set a data sequence end.
-     *
-     *  - try to acquire the lock on the data
-     *  - write a data sequence end
-     *  - release the lock and notifies the dispatcher
-     */
-    bool tryEndDataSequence();
+    template<typename T> bool tryData(T*& pData);
 
     /**
      * Notify the dispatcher that the new data is ready
      *
-     * And release the lock acquired with tryData
+     * With the given attributes,
+     * and release the lock acquired with tryData
      */
-    void notifyReady();
+    void notifyReady(DataAttribute attribute);
+
+    /**
+     * Get the DataItem for this OutPort
+     */
+    DataItem* dataItem() { return &DataItem; }
 
 private:
     /**
@@ -122,6 +111,8 @@ private:
     RWLock targetPortsLock; ///< lock for targetPorts operations
 
     friend class InPort;
+
+    DataItem data;
 };
 
 #endif /* SRC_OUTPORT_H_ */

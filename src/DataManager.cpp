@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleB.cpp
- * @date	feb. 2016
+ * @file	src/DataManager.cpp
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,26 +26,37 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleB.h"
-#include "Poco/NumberFormatter.h"
+#include "DataManager.h"
 
-size_t DemoModuleB::refCount = 0;
-
-DemoModuleB::DemoModuleB(ModuleFactory* parent, std::string customName):
-                Module(parent)
+DataManager::DataManager()
 {
-    poco_debug(logger(),"Creating a new demo module B");
-
-    setInternalName("DemoModuleB" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
-    setLogger("module" + name());
-
-    // ports
-    setOutPortCount(outPortCnt);
-    addOutPort("outPortA", "demo port that transmits nothing", DataItem::typeInteger, outPortA);
-
-    notifyCreation();
-
-    // if nothing failed
-    refCount++;
+    // nothing to do
 }
+
+DataManager::~DataManager()
+{
+    uninitialize(); // should have been already called by the system.
+
+    // dataStore should clean itself nicely
+}
+
+void DataManager::initialize(Poco::Util::Application& app)
+{
+}
+
+void DataManager::uninitialize()
+{
+}
+
+void DataManager::addOutPort(OutPort* port)
+{
+    allData.push_back(SharedPtr<DataItem*>(new DataItem*(port->dataItem())));
+}
+
+void DataManager::removeOutPort(OutPort* port)
+{
+    // TODO:
+    // - remove the outPort dataItem from the dataStore.
+    // - replace it by an empty dataItem
+}
+
