@@ -87,13 +87,13 @@ public:
       return lhs; // return the result by value (uses move constructor)
     }
 
-    static DataAttribute newDataAttribute();
-private:
-    static size_t nextToBeUsedIndex; ///< next available data index
-    static Poco::Mutex lock; ///< lock to safely use and increment nextToBeUsedIndex
-
+protected:
     void swap(DataAttribute& other);
 
+    void appendIndex(size_t index)
+    	{ indexes.insert(index); }
+
+private:
     std::set<size_t> indexes;
     std::set<InPort*> startSequences;
     std::set<InPort*> endSequences;

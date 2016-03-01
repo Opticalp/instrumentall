@@ -29,6 +29,7 @@
 #include "DemoModuleDataSeq.h"
 
 #include "OutPort.h"
+#include "DataAttributeOut.h"
 
 #include "Poco/NumberFormatter.h"
 
@@ -87,12 +88,12 @@ void DemoModuleDataSeq::runTask()
             }
         }
 
-        DataAttribute attr = DataAttribute::newDataAttribute();
+        DataAttributeOut attr = DataAttributeOut::newDataAttribute();
 
         if (index==0)
-            ; // set start sequence to the attribute via the dispatcher
+            attr.startSequence(); // set start sequence to the attribute via the dispatcher
         else if (index==MAX_INDEX)
-            ; // set end sequence to the attribute via the dispatcher
+            attr.endSequence(); // set end sequence to the attribute via the dispatcher
 
         *pData = index;
         getOutPorts()[outPortA]->notifyReady(attr);

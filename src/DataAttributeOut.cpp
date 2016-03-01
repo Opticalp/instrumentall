@@ -1,6 +1,6 @@
 /**
- * @file	src/DataAttribute.cpp
- * @date	Feb. 2016
+ * @file	src/DataAttributeOut.cpp
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,40 +26,38 @@
  THE SOFTWARE.
  */
 
-#include "DataAttribute.h"
+#include "DataAttributeOut.h"
 
+size_t DataAttributeOut::nextToBeUsedIndex = 0;
+Poco::Mutex DataAttributeOut::lock;
 
-DataAttribute::~DataAttribute()
+DataAttributeOut DataAttributeOut::newDataAttribute()
 {
-    // nothing to do
+    DataAttributeOut tmp;
+    lock.lock();
+    tmp.appendIndex(nextToBeUsedIndex++);
+    lock.unlock();
+
+    return tmp;
 }
 
-DataAttribute::DataAttribute(const DataAttribute& other)
+DataAttributeOut::~DataAttributeOut()
 {
-    indexes = other.indexes;
-    startSequences = other.startSequences;
-    endSequences = other.endSequences;
+	// TODO Auto-generated destructor stub
 }
 
-DataAttribute& DataAttribute::operator =(const DataAttribute& other)
+DataAttributeOut& DataAttributeOut::operator =(const DataAttribute& other)
 {
-    DataAttribute tmp(other);
-    swap(tmp);
-    return *this;
+	DataAttribute tmp(other);
+	swap(tmp);
+	seqInfo = undefSeqInfo;
+	return *this;
 }
 
-DataAttribute& DataAttribute::operator +=(const DataAttribute& rhs)
+DataAttributeOut& DataAttributeOut::operator =(const DataAttributeOut& other)
 {
-    indexes.insert(rhs.indexes.begin(), rhs.indexes.end());
-    startSequences.insert(rhs.startSequences.begin(), rhs.startSequences.end());
-    endSequences.insert(rhs.endSequences.begin(), rhs.endSequences.end());
-
-    return *this; // return the result by reference
-}
-
-void DataAttribute::swap(DataAttribute& other)
-{
-    indexes.swap(other.indexes);
-    startSequences.swap(other.startSequences);
-    endSequences.swap(other.endSequences);
+	DataAttribute tmp(other);
+	swap(tmp);
+	seqInfo = other.seqInfo;
+	return *this;
 }
