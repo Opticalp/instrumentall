@@ -27,12 +27,20 @@
  */
 
 #include "DemoModuleSeqMax.h"
+
+#include "DataAttributeIn.h"
+#include "DataAttributeOut.h"
+
+#include "InPort.h"
+#include "OutPort.h"
+
 #include "Poco/NumberFormatter.h"
 
 size_t DemoModuleSeqMax::refCount = 0;
 
 DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName):
-    Module(parent, customName)
+    Module(parent, customName),
+    tmpMax(0) // no special meaning for this value
 {
     poco_debug(logger(),"Creating a new DemoModuleSeqMax");
 
@@ -52,4 +60,77 @@ DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName
 
     // if nothing failed
     refCount++;
+}
+
+void DemoModuleSeqMax::runTask()
+{
+    // try to acquire the mutex
+    while (!mainMutex.tryLock(TIME_LAPSE))
+    {
+        poco_debug(logger(),
+                "DemoModuleSeqMax::runTask(): failed to acquire the mutex");
+
+        if (isCancelled())
+            return;
+    }
+
+    DataAttributeIn attr;
+
+    int* pData;
+
+    // try to acquire the data
+    // It should not be a problem since this is the only input data
+    // then, if the task was launched, it is probably that this is due
+    // to a push.
+    if (!getInPorts()[inPortA]->tryData<int>(pData, &attr))
+    {
+        poco_debug(logger(),
+                "DemoModuleSeqMax::runTask(): "
+                "failed to acquire the input data lock");
+
+        return; // data not up to date
+    }
+
+    if (attr.isStartSequence())
+    {
+        tmpMax = *pData;
+        getInPorts()[inPortA]->releaseData();
+    }
+    else
+    {
+        if (*pData > tmpMax)
+            tmpMax = *pData;
+
+        if (!attr.isEndSequence())
+        {
+            getInPorts()[inPortA]->releaseData();
+            return;
+        }
+        else
+        {
+            DataAttributeOut outAttr = attr;
+            getInPorts()[inPortA]->releaseData();
+
+            int* pOutData;
+
+            // try to acquire the output data lock
+            while (!getOutPorts()[outPortA]->tryData(pOutData))
+            {
+                poco_debug(logger(),
+                        "DemoModuleDataSeq::runTask(): "
+                        "failed to acquire the output data lock");
+
+                if (sleep(TIME_LAPSE))
+                {
+                    mainMutex.unlock();
+                    return;
+                }
+            }
+
+            *pOutData = tmpMax;
+            getOutPorts()[outPortA]->notifyReady(outAttr);
+        }
+    }
+
+
 }

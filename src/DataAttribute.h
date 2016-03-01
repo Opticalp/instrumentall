@@ -50,11 +50,9 @@ class InPort;
  *  - merge (+): concatenate the lists
  *
  * Typical use cases:
- *  1. in a module that generates data from nothing, a newDataAttribute()
- * is set to the output ports data
- *  2. in a module that process data from input data, get the attributes
+ *  - in a module that process data from input data, get the attributes
  * from the input ports data, merge their attributes, then set it to the
- * output ports data.
+ * output ports data (as DataAttributeOut)
  *
  * No need to lock the read/write since each attribute is supposed to be
  * used only in one DataItem, and the DataItem should be locked when accessed.
@@ -88,10 +86,36 @@ public:
     }
 
 protected:
+    /**
+     * Swap content with another DataAttribute
+     *
+     * Used in operator = to avoid self-affectation issues.
+     */
     void swap(DataAttribute& other);
 
+    /**
+     * Add a data index to the current list
+     */
     void appendIndex(size_t index)
     	{ indexes.insert(index); }
+
+    /**
+     * Check if the given port is targeted by a startSequence
+     *
+     * Check if the InPort is in the startSequences list
+     * and remove it if present
+     */
+    bool isStartSequence(InPort* port)
+        { return startSequences.erase(port); }
+
+    /**
+     * Check if the given port is targeted by a endSequence
+     *
+     * Check if the InPort is in the endSequences list
+     * and remove it if present
+     */
+    bool isEndSequence(InPort* port)
+        { return endSequences.erase(port); }
 
 private:
     std::set<size_t> indexes;

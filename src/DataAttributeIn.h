@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleSeqMax.h
- * @date	Feb. 2016
+ * @file	src/DataAttributeIn.h
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,58 +26,43 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOMODULESEQMAX_H_
-#define SRC_DEMOMODULESEQMAX_H_
+#ifndef SRC_DATAATTRIBUTEIN_H_
+#define SRC_DATAATTRIBUTEIN_H_
 
-#include "Module.h"
-
-#include "Poco/Mutex.h"
+#include "DataAttribute.h"
 
 /**
- * DemoModuleSeqMax
+ * DataAttributeIn
  *
- * Simple demo module to retrieve the maximum of a data sequence.
+ * DataAttribute specialized by the input port in the tryData query
+ * to leave the ability to this DataAttribute to query itself about
+ * the startSequence and endSequence, comparing its internal lists.
  */
-class DemoModuleSeqMax: public Module
+class DataAttributeIn: public DataAttribute
 {
 public:
-    DemoModuleSeqMax(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleSeqMax() { }
+    DataAttributeIn(DataAttribute attribute, InPort* parent):
+        DataAttribute(attribute), mParent(parent) { }
 
-    const char * description() const
-    {
-        return "Demo Module to retrieve the max of a data sequence. ";
-    }
+    DataAttributeIn(): mParent(NULL) { }
+
+    virtual ~DataAttributeIn() { }
+
+    DataAttributeIn& operator =(const DataAttributeIn& other);
 
     /**
-     * Main logic
+     * Check if the InPort is concerned by a startSequence
      *
-     * Find the max of a data sequence:
-     *  - reinit the temp max storage at each startSequence
-     *  - send the max at each endSequence
+     * and then remove the InPort from the list
      */
-    void runTask();
+    bool isStartSequence()
+        { return DataAttribute::isStartSequence(mParent); }
+
+    bool isEndSequence()
+        { return DataAttribute::isEndSequence(mParent); }
 
 private:
-    static size_t refCount; ///< reference counter to generate a unique internal name
-
-    /// Indexes of the input ports
-    enum inPorts
-    {
-        inPortA,
-        inPortCnt
-    };
-
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        outPortA,
-        outPortCnt
-    };
-
-    Poco::Mutex mainMutex; ///< runTask() mutex.
-
-    int tmpMax;
+    InPort* mParent;
 };
 
-#endif /* SRC_DEMOMODULESEQMAX_H_ */
+#endif /* SRC_DATAATTRIBUTEIN_H_ */

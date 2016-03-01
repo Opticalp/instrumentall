@@ -37,7 +37,8 @@ InPort::InPort(Module* parent,
         std::string description,
         DataItem::DataTypeEnum datatype,
         size_t index):
-    Port(parent, name, description, datatype, index)
+    Port(parent, name, description, datatype, index),
+    used(true)
 {
     mSourcePort = SharedPtr<OutPort*>(
             new (OutPort*)( Poco::Util::Application::instance()
@@ -50,7 +51,8 @@ InPort::InPort(OutPort* emptySourcePort):
                     .getSubsystem<ModuleManager>()
                     .getEmptyModule(),
                 "emptyIn", "replace an expired port",
-                DataItem::typeUndefined, 0)
+                DataItem::typeUndefined, 0),
+        used(true)
 {
     mSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
 }
@@ -71,6 +73,15 @@ void InPort::setSourcePort(SharedPtr<OutPort*> port)
                                         .getEmptyOutPort()       ) );
         e.rethrow();
     }
+}
+
+void InPort::releaseData()
+{
+    // TODO: release the corresponding locks,
+
+    // TODO: update expiration information?
+
+    setNew(false);
 }
 
 void InPort::releaseSourcePort()

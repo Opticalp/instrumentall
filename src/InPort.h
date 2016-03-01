@@ -38,6 +38,7 @@ using Poco::SharedPtr;
 
 class Dispatcher;
 class OutPort;
+class DataAttributeIn;
 
 /**
  * InPort
@@ -74,6 +75,48 @@ public:
     /// Retrieve the source port
     SharedPtr<OutPort*> getSourcePort();
 
+    /**
+     * Try to acquire the data and its attribute
+     *
+     * call isUpToDate() to check if the data is valid
+     *
+     * @return false if the lock can not be acquired or if the data
+     * is not up to date
+     */
+    template<typename T> bool tryData(T*& pData, DataAttributeIn* pAttr)
+    {
+        if (!isNew())
+        {
+            // try to get the lock
+
+            // check if the data is up to date
+            if (!isUpToDate())
+            {
+                // unlock
+
+                return false;
+            }
+        }
+        //else: nothing to do, the lock is already activated (by the dispatcher)
+
+        // TODO: un-comment this... may be in an .ipp file.
+//        // transform the data attribute into a DataAttributeIn
+//        *pAttr = DataAttributeIn(
+//            (*getSourcePort())->dataItem()->getDataAttribute(), this);
+//
+//        pData = (*getSourcePort())->dataItem()->getDataToRead<T>();
+
+        return true;
+    }
+
+    /**
+     * Notify that the data has been used and can be released.
+     *
+     * release the corresponding locks, notify that the data is not new
+     * any more, set expiration information...
+     */
+    void releaseData();
+
 private:
     /**
      * Set the source port
@@ -95,6 +138,31 @@ private:
     void releaseSourcePort();
 
     SharedPtr<OutPort*> mSourcePort;
+
+    /**
+     * To be called by the dispatcher
+     *
+     * when new data is available, just before the push.
+     */
+    void setNew(bool value = true)
+    {
+        // TODO: readLock the source port data?
+
+        used = !value;
+    }
+
+    bool isNew() { return !used; }
+
+    /**
+     * Determine if the data of this port are up to date
+     *
+     * To be used before getting the data to be sure not to retrieve
+     * expired data.
+     */
+    bool isUpToDate()
+        { return true; } // FIXME
+
+    bool used;
 
     friend class Dispatcher;
 };

@@ -81,6 +81,17 @@ public:
         }
     }
 
+    /**
+     * Retrieve a pointer on the data to read it
+     *
+     * @warning The lock has to have been previously acquired
+     */
+    template <typename T> T* getDataToRead()
+    {
+        // TODO: check type
+        return reinterpret_cast<T*>(dataStore);
+    }
+
     void releaseData()
     {
         dataLock.unlock();
