@@ -33,6 +33,8 @@
 
 #include "Poco/RWLock.h"
 
+class OutPort;
+
 /**
  * DataItem
  *
@@ -53,7 +55,7 @@ public:
         typeCnt
     };
 
-    DataItem(DataTypeEnum dataType);
+    DataItem(DataTypeEnum dataType = typeUndefined);
     virtual ~DataItem();
 
     /// get port data type as a character string
@@ -98,7 +100,6 @@ private:
 
     OutPort* parentPort; ///< parent output data port.
 };
-
 
 //
 // inlines

@@ -38,7 +38,7 @@ OutPort::OutPort(Module* parent,
         DataItem::DataTypeEnum datatype,
         size_t index):
     Port(parent, name, description, datatype, index),
-    data(dataType)
+    data(datatype)
 {
     // notify the DataManager of the creation
     Poco::Util::Application::instance()
@@ -125,11 +125,11 @@ OutPort::OutPort():
     // nothing to do
 }
 
-template<typename T>
-bool OutPort::tryData(T*& pData)
-{
-    return data.tryGetDataToWrite<T>(pData);
-}
+//template<typename T>
+//bool OutPort::tryData(T*& pData)
+//{
+//    return data.tryGetDataToWrite<T>(pData);
+//}
 
 void OutPort::notifyReady(DataAttribute attribute)
 {

@@ -30,6 +30,7 @@
 #define SRC_OUTPORT_H_
 
 #include "DataItem.h"
+#include "DataAttribute.h"
 #include "Port.h"
 
 #include "Poco/RWLock.h"
@@ -73,7 +74,11 @@ public:
      *
      * @return false if the lock cannot be acquired
      */
-    template<typename T> bool tryData(T*& pData);
+    template<typename T> bool tryData(T*& pData)
+    {
+    	// TODO
+    	return false;
+    }
 
     /**
      * Notify the dispatcher that the new data is ready
@@ -86,7 +91,7 @@ public:
     /**
      * Get the DataItem for this OutPort
      */
-    DataItem* dataItem() { return &DataItem; }
+    DataItem* dataItem() { return &data; }
 
 private:
     /**

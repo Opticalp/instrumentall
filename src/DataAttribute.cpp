@@ -29,7 +29,8 @@
 #include "DataAttribute.h"
 
 
-size_t nextToBeUsedIndex = 0;
+size_t DataAttribute::nextToBeUsedIndex = 0;
+Poco::Mutex DataAttribute::lock;
 
 DataAttribute DataAttribute::newDataAttribute()
 {
@@ -46,21 +47,21 @@ DataAttribute::~DataAttribute()
     // nothing to do
 }
 
-DataAttribute::DataAttribute(DataAttribute& other)
+DataAttribute::DataAttribute(const DataAttribute& other)
 {
     indexes = other.indexes;
     startSequences = other.startSequences;
     endSequences = other.endSequences;
 }
 
-DataAttribute& DataAttribute::operator =(DataAttribute& other)
+DataAttribute& DataAttribute::operator =(const DataAttribute& other)
 {
     DataAttribute tmp(other);
     swap(tmp);
     return *this;
 }
 
-DataAttribute& DataAttribute::operator +=(DataAttribute& rhs)
+DataAttribute& DataAttribute::operator +=(const DataAttribute& rhs)
 {
     indexes.insert(rhs.indexes.begin(), rhs.indexes.end());
     startSequences.insert(rhs.startSequences.begin(), rhs.startSequences.end());

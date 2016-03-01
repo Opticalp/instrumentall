@@ -27,6 +27,9 @@
  */
 
 #include "DemoModuleDataSeq.h"
+
+#include "OutPort.h"
+
 #include "Poco/NumberFormatter.h"
 
 size_t DemoModuleDataSeq::refCount = 0;

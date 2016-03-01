@@ -28,6 +28,8 @@
 
 #include "DataManager.h"
 
+#include "OutPort.h"
+
 DataManager::DataManager()
 {
     // nothing to do

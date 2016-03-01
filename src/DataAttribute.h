@@ -34,6 +34,8 @@
 
 #include <set>
 
+class InPort;
+
 /**
  * DataAttribute
  *
@@ -67,15 +69,15 @@ public:
      * Create empty attributes. To be used at the DataItem creation,
      * when no data index is defined.
      */
-    DataAttribute();
+    DataAttribute() { }
 
     /// Copy constructor
-    DataAttribute(DataAttribute& other);
+    DataAttribute(const DataAttribute& other);
     virtual ~DataAttribute();
 
-    DataAttribute& operator =(DataAttribute& other);
+    DataAttribute& operator =(const DataAttribute& other);
 
-    DataAttribute& operator +=(DataAttribute& rhs);
+    DataAttribute& operator +=(const DataAttribute& rhs);
 
     // friends defined inside class body are inline and are hidden from non-ADL lookup
     friend DataAttribute operator+(DataAttribute lhs,  // passing lhs by value helps optimize chained a+b+c

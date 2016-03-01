@@ -28,14 +28,12 @@
 
 #include "DataItem.h"
 
-DataItem::DataItem()
-{
-    // TODO Auto-generated constructor stub
-
-}
-
 DataItem::~DataItem()
 {
     // TODO Auto-generated destructor stub
+}
+
+DataItem::DataItem(DataTypeEnum dataType)
+{
 }
 
