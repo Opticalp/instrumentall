@@ -81,38 +81,54 @@ std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
 
 void OutPort::addTargetPort(InPort* port)
 {
-    targetPortsLock.writeLock();
+    Poco::ScopedRWLock lock(targetPortsLock, true);
 
-    try
-    {
-        SharedPtr<InPort*> sharedPort =
-            Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .getInPort(port);
-        targetPorts.push_back(sharedPort);
-        targetPortsLock.unlock();
-    }
-    catch (DispatcherException& e)
-    {
-        targetPortsLock.unlock();
-        e.rethrow();
-    }
+    SharedPtr<InPort*> sharedPort =
+        Poco::Util::Application::instance()
+                    .getSubsystem<Dispatcher>()
+                    .getInPort(port);
+    targetPorts.push_back(sharedPort);
 }
 
 void OutPort::removeTargetPort(InPort* port)
 {
-    targetPortsLock.writeLock();
+    Poco::ScopedRWLock lock(targetPortsLock, true);
+
     for (std::vector< SharedPtr<InPort*> >::iterator it=targetPorts.begin(),
             ite=targetPorts.end(); it != ite; it++ )
     {
         if (**it==port)
         {
             targetPorts.erase(it);
-            targetPortsLock.unlock();
             return;
         }
     }
-    targetPortsLock.unlock();
+}
+
+void OutPort::addSeqTargetPort(InPort* port)
+{
+    Poco::ScopedRWLock lock(seqTargetPortsLock, true);
+
+    SharedPtr<InPort*> sharedPort =
+        Poco::Util::Application::instance()
+                    .getSubsystem<Dispatcher>()
+                    .getInPort(port);
+        seqTargetPorts.push_back(sharedPort);
+}
+
+void OutPort::removeSeqTargetPort(InPort* port)
+{
+    Poco::ScopedRWLock lock(seqTargetPortsLock, true);
+
+    for (std::vector< SharedPtr<InPort*> >::iterator it=seqTargetPorts.begin(),
+            ite=seqTargetPorts.end(); it != ite; it++ )
+    {
+        if (**it==port)
+        {
+            seqTargetPorts.erase(it);
+            return;
+        }
+    }
 }
 
 OutPort::OutPort():
@@ -134,7 +150,12 @@ OutPort::OutPort():
 void OutPort::notifyReady(DataAttribute attribute)
 {
     // TODO: lock, unlock
-    // dispatcher.notifyOutPortDataReady(this, attribute);
+    // set the data as new in the target ports,
+    // set expiration information...
+
+    dataItem()->releaseData();
+
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .setOutPortDataReady(this);
 }
-
-

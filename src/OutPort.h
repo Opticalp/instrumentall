@@ -30,7 +30,7 @@
 #define SRC_OUTPORT_H_
 
 #include "DataItem.h"
-#include "DataAttribute.h"
+#include "DataAttributeOut.h"
 #include "Port.h"
 
 #include "Poco/RWLock.h"
@@ -76,8 +76,7 @@ public:
      */
     template<typename T> bool tryData(T*& pData)
     {
-    	// TODO
-    	return false;
+    	return dataItem()->tryGetDataToWrite<T>(pData);
     }
 
     /**
@@ -114,6 +113,28 @@ private:
 
     std::vector< SharedPtr<InPort*> > targetPorts;
     RWLock targetPortsLock; ///< lock for targetPorts operations
+
+    /**
+     * Add a sequence re-combiner target port
+     *
+     * This function should only be called by the seq target InPort.
+     *
+     * The Dispatcher is requested to get the shared pointer
+     * on the InPort.
+     */
+    void addSeqTargetPort(InPort* port);
+
+    /**
+     * Remove a sequence re-combiner target port
+     *
+     * Should not throw an exception if the port is not present
+     * in the seqTargetPorts
+     */
+    void removeSeqTargetPort(InPort* port);
+
+    /// list of target ports for data sequence re-combination
+    std::vector< SharedPtr<InPort*> > seqTargetPorts;
+    RWLock seqTargetPortsLock; ///< lock for seqTargetPorts operations
 
     friend class InPort;
 

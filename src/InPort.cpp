@@ -75,15 +75,6 @@ void InPort::setSourcePort(SharedPtr<OutPort*> port)
     }
 }
 
-void InPort::releaseData()
-{
-    // TODO: release the corresponding locks,
-
-    // TODO: update expiration information?
-
-    setNew(false);
-}
-
 void InPort::releaseSourcePort()
 {
     (*mSourcePort)->removeTargetPort(this);
@@ -96,5 +87,46 @@ void InPort::releaseSourcePort()
 SharedPtr<OutPort*> InPort::getSourcePort()
 {
     return mSourcePort;
+}
+
+void InPort::setSeqSourcePort(SharedPtr<OutPort*> port)
+{
+    (*mSeqSourcePort)->removeSeqTargetPort(this);
+    mSeqSourcePort = port;
+    try
+    {
+        (*mSeqSourcePort)->addSeqTargetPort(this);
+    }
+    catch (DispatcherException& e)
+    {
+        mSeqSourcePort = SharedPtr<OutPort*>(
+                new (OutPort*)( Poco::Util::Application::instance()
+                                        .getSubsystem<Dispatcher>()
+                                        .getEmptyOutPort()       ) );
+        e.rethrow();
+    }
+}
+
+void InPort::releaseSeqSourcePort()
+{
+    (*mSeqSourcePort)->removeSeqTargetPort(this);
+    mSeqSourcePort = SharedPtr<OutPort*>(
+            new (OutPort*)( Poco::Util::Application::instance()
+                                    .getSubsystem<Dispatcher>()
+                                    .getEmptyOutPort()       ) );
+}
+
+SharedPtr<OutPort*> InPort::getSourcePort()
+{
+    return mSeqSourcePort;
+}
+
+void InPort::releaseData()
+{
+    // TODO: release the corresponding locks,
+
+    // TODO: update expiration information?
+
+    setNew(false);
 }
 

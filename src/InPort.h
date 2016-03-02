@@ -75,6 +75,9 @@ public:
     /// Retrieve the source port
     SharedPtr<OutPort*> getSourcePort();
 
+    /// Retrieve the data sequence source port
+    SharedPtr<OutPort*> getSeqSourcePort();
+
     /**
      * Try to acquire the data and its attribute
      *
@@ -87,12 +90,16 @@ public:
     {
         if (!isNew())
         {
+            // TODO
             // try to get the lock
+            // if  not outport.data.dataitem.tryReadLock
+            //      return false;
 
             // check if the data is up to date
             if (!isUpToDate())
             {
-                // unlock
+                // TODO: unlock
+                // outport.data.dataitem.releaseData
 
                 return false;
             }
@@ -138,6 +145,27 @@ private:
     void releaseSourcePort();
 
     SharedPtr<OutPort*> mSourcePort;
+
+    /**
+     * Set the data sequence source port
+     *
+     * This function should only be called by the dispatcher.
+     *
+     * If the source port was not the empty port,
+     * the port that was previously bound is notified
+     */
+    void setSeqSourcePort(SharedPtr<OutPort*> port);
+
+    /**
+     * Release the data sequence source port
+     *
+     * And replace it by the empty port.
+     * If the source port was not the empty port,
+     * the port that was previously bound is notified
+     */
+    void releaseSeqSourcePort();
+
+    SharedPtr<OutPort*> mSeqSourcePort;
 
     /**
      * To be called by the dispatcher
