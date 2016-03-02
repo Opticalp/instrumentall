@@ -86,35 +86,7 @@ public:
      * @return false if the lock can not be acquired or if the data
      * is not up to date
      */
-    template<typename T> bool tryData(T*& pData, DataAttributeIn* pAttr)
-    {
-        if (!isNew())
-        {
-            // TODO
-            // try to get the lock
-            // if  not outport.data.dataitem.tryReadLock
-            //      return false;
-
-            // check if the data is up to date
-            if (!isUpToDate())
-            {
-                // TODO: unlock
-                // outport.data.dataitem.releaseData
-
-                return false;
-            }
-        }
-        //else: nothing to do, the lock is already activated (by the dispatcher)
-
-        // TODO: un-comment this... may be in an .ipp file.
-//        // transform the data attribute into a DataAttributeIn
-//        *pAttr = DataAttributeIn(
-//            (*getSourcePort())->dataItem()->getDataAttribute(), this);
-//
-//        pData = (*getSourcePort())->dataItem()->getDataToRead<T>();
-
-        return true;
-    }
+    template<typename T> bool tryData(T*& pData, DataAttributeIn* pAttr);
 
     /**
      * Notify that the data has been used and can be released.
@@ -172,12 +144,7 @@ private:
      *
      * when new data is available, just before the push.
      */
-    void setNew(bool value = true)
-    {
-        // TODO: readLock the source port data?
-
-        used = !value;
-    }
+    void setNew(bool value = true);
 
     bool isNew() { return !used; }
 
@@ -194,5 +161,7 @@ private:
 
     friend class Dispatcher;
 };
+
+#include "InPort.ipp"
 
 #endif /* SRC_INPORT_H_ */

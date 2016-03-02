@@ -37,8 +37,8 @@ DataAttribute::~DataAttribute()
 DataAttribute::DataAttribute(const DataAttribute& other)
 {
     indexes = other.indexes;
-    startSequences = other.startSequences;
-    endSequences = other.endSequences;
+    startSequenceTargets = other.startSequenceTargets;
+    endSequenceTargets = other.endSequenceTargets;
 }
 
 DataAttribute& DataAttribute::operator =(const DataAttribute& other)
@@ -51,8 +51,8 @@ DataAttribute& DataAttribute::operator =(const DataAttribute& other)
 DataAttribute& DataAttribute::operator +=(const DataAttribute& rhs)
 {
     indexes.insert(rhs.indexes.begin(), rhs.indexes.end());
-    startSequences.insert(rhs.startSequences.begin(), rhs.startSequences.end());
-    endSequences.insert(rhs.endSequences.begin(), rhs.endSequences.end());
+    startSequenceTargets.insert(rhs.startSequenceTargets.begin(), rhs.startSequenceTargets.end());
+    endSequenceTargets.insert(rhs.endSequenceTargets.begin(), rhs.endSequenceTargets.end());
 
     return *this; // return the result by reference
 }
@@ -60,6 +60,6 @@ DataAttribute& DataAttribute::operator +=(const DataAttribute& rhs)
 void DataAttribute::swap(DataAttribute& other)
 {
     indexes.swap(other.indexes);
-    startSequences.swap(other.startSequences);
-    endSequences.swap(other.endSequences);
+    startSequenceTargets.swap(other.startSequenceTargets);
+    endSequenceTargets.swap(other.endSequenceTargets);
 }

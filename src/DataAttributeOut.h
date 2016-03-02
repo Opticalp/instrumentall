@@ -54,6 +54,9 @@ public:
 	void startSequence() { seqInfo = startSeqInfo; }
 	void endSequence() { seqInfo = endSeqInfo; }
 
+	bool isStartSequence() { return (seqInfo == startSeqInfo); }
+	bool isEndSequence() { return (seqInfo == endSeqInfo); }
+
     static DataAttributeOut newDataAttribute();
 
 private:

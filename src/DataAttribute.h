@@ -85,6 +85,12 @@ public:
       return lhs; // return the result by value (uses move constructor)
     }
 
+    void appendStartSeqPortTarget(InPort* port)
+        { startSequenceTargets.insert(port); }
+
+    void appendEndSeqPortTarget(InPort* port)
+        { endSequenceTargets.insert(port); }
+
 protected:
     /**
      * Swap content with another DataAttribute
@@ -106,7 +112,7 @@ protected:
      * and remove it if present
      */
     bool isStartSequence(InPort* port)
-        { return startSequences.erase(port); }
+        { return startSequenceTargets.erase(port); }
 
     /**
      * Check if the given port is targeted by a endSequence
@@ -115,12 +121,12 @@ protected:
      * and remove it if present
      */
     bool isEndSequence(InPort* port)
-        { return endSequences.erase(port); }
+        { return endSequenceTargets.erase(port); }
 
 private:
     std::set<size_t> indexes;
-    std::set<InPort*> startSequences;
-    std::set<InPort*> endSequences;
+    std::set<InPort*> startSequenceTargets;
+    std::set<InPort*> endSequenceTargets;
 };
 
 #endif /* SRC_DATAATTRIBUTE_H_ */

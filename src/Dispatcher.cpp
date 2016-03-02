@@ -286,3 +286,41 @@ void Dispatcher::unbind(SharedPtr<InPort*> target)
 {
     (*target)->releaseSourcePort();
 }
+
+void Dispatcher::seqBind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
+{
+    (*target)->setSeqSourcePort(source);
+}
+
+void Dispatcher::seqUnbind(SharedPtr<InPort*> target)
+{
+    (*target)->releaseSeqSourcePort();
+}
+
+void Dispatcher::setOutPortDataReady(OutPort* port)
+{
+    std::set<Module*> targetModules;
+
+    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
+    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
+    {
+        (**it)->setNew();
+        targetModules.insert((**it)->parent());
+    }
+
+    for ( std::set<Module*>::iterator it = targetModules.begin(),
+            ite = targetModules.end(); it != ite; it++ )
+    {
+        // get module from module manager
+        SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
+                                        .getSubsystem<ModuleManager>()
+                                        .getModule(*it);
+
+        // poco_debug(logger(), "Pushing " + (*shdMod)->name());
+        poco_information(logger(), "Pushing " + (*shdMod)->name());
+
+        // launch task
+        taskManager.start(*shdMod);
+    }
+}

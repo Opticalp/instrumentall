@@ -43,7 +43,7 @@ class DemoModuleDataSeq: public Module
 {
 public:
     DemoModuleDataSeq(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleDataSeq() { }
+    virtual ~DemoModuleDataSeq() { mainMutex.lock(); }
 
     const char * description() const
     {

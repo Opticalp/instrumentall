@@ -42,7 +42,7 @@ class DemoModuleSeqMax: public Module
 {
 public:
     DemoModuleSeqMax(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleSeqMax() { }
+    virtual ~DemoModuleSeqMax() { mainMutex.lock(); }
 
     const char * description() const
     {

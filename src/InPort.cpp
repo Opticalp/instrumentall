@@ -116,17 +116,26 @@ void InPort::releaseSeqSourcePort()
                                     .getEmptyOutPort()       ) );
 }
 
-SharedPtr<OutPort*> InPort::getSourcePort()
+SharedPtr<OutPort*> InPort::getSeqSourcePort()
 {
     return mSeqSourcePort;
 }
 
 void InPort::releaseData()
 {
-    // TODO: release the corresponding locks,
+    setNew(false);
+    (*getSourcePort())->dataItem()->releaseData();
 
     // TODO: update expiration information?
-
-    setNew(false);
 }
 
+void InPort::setNew(bool value)
+{
+    if (value)
+    {
+        poco_debug(logger(), name() + " has new data. ");
+        (*getSourcePort())->dataItem()->readLock();
+    }
+
+    used = !value;
+}

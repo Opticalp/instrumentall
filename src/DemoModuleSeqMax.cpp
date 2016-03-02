@@ -29,7 +29,7 @@
 #include "DemoModuleSeqMax.h"
 
 #include "DataAttributeIn.h"
-#include "DataAttributeOut.h"
+#include "DataAttribute.h"
 
 #include "InPort.h"
 #include "OutPort.h"
@@ -64,6 +64,15 @@ DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName
 
 void DemoModuleSeqMax::runTask()
 {
+    // FIXME: if an exception is raised,
+    // the mainMutex unlock is not guaranteed...
+
+    poco_information(logger(), "DemoModuleSeqMax::runTask started. ");
+
+    // We could use a scoped lock here:
+    //Poco::Mutex::ScopedLock lock(mainMutex);
+    // but then, it could not be possible to check a time out in the lock acquisition
+
     // try to acquire the mutex
     while (!mainMutex.tryLock(TIME_LAPSE))
     {
@@ -88,6 +97,7 @@ void DemoModuleSeqMax::runTask()
                 "DemoModuleSeqMax::runTask(): "
                 "failed to acquire the input data lock");
 
+        mainMutex.unlock();
         return; // data not up to date
     }
 
@@ -104,6 +114,7 @@ void DemoModuleSeqMax::runTask()
         if (!attr.isEndSequence())
         {
             getInPorts()[inPortA]->releaseData();
+            mainMutex.unlock();
             return;
         }
         else
@@ -132,5 +143,5 @@ void DemoModuleSeqMax::runTask()
         }
     }
 
-
+    mainMutex.unlock();
 }

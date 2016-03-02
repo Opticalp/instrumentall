@@ -28,17 +28,6 @@
 
 #include "DataAttributeIn.h"
 
-DataAttributeIn::DataAttributeIn()
-{
-    // TODO Auto-generated constructor stub
-
-}
-
-DataAttributeIn::~DataAttributeIn()
-{
-    // TODO Auto-generated destructor stub
-}
-
 DataAttributeIn& DataAttributeIn::operator =(const DataAttributeIn& other)
 {
     DataAttribute tmp(other);

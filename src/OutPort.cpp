@@ -147,12 +147,31 @@ OutPort::OutPort():
 //    return data.tryGetDataToWrite<T>(pData);
 //}
 
-void OutPort::notifyReady(DataAttribute attribute)
+void OutPort::notifyReady(DataAttributeOut attribute)
 {
-    // TODO: lock, unlock
-    // set the data as new in the target ports,
-    // set expiration information...
+    if (attribute.isStartSequence())
+    {
+        seqTargetPortsLock.readLock();
 
+        for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
+                ite = seqTargetPorts.end(); it != ite; it++ )
+            attribute.appendStartSeqPortTarget(**it);
+
+        seqTargetPortsLock.unlock();
+    }
+
+    if (attribute.isEndSequence())
+    {
+        seqTargetPortsLock.readLock();
+
+        for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
+                ite = seqTargetPorts.end(); it != ite; it++ )
+            attribute.appendEndSeqPortTarget(**it);
+
+        seqTargetPortsLock.unlock();
+    }
+
+    dataItem()->setDataAttribute(attribute);
     dataItem()->releaseData();
 
     Poco::Util::Application::instance()

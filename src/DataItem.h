@@ -92,10 +92,20 @@ public:
         return reinterpret_cast<T*>(dataStore);
     }
 
+    bool tryReadLock()
+        { return dataLock.tryReadLock(); }
+
+    void readLock()
+        { dataLock.readLock(); }
+
+    /**
+     * Unlock the data
+     *
+     * unlock the data that was previously locked using tryGetDataToWrite
+     * or tryReadLock()
+     */
     void releaseData()
-    {
-        dataLock.unlock();
-    }
+        { dataLock.unlock(); }
 
 private:
     DataTypeEnum mDataType; ///< data type

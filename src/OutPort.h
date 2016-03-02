@@ -75,9 +75,7 @@ public:
      * @return false if the lock cannot be acquired
      */
     template<typename T> bool tryData(T*& pData)
-    {
-    	return dataItem()->tryGetDataToWrite<T>(pData);
-    }
+        { return dataItem()->tryGetDataToWrite<T>(pData); }
 
     /**
      * Notify the dispatcher that the new data is ready
@@ -85,7 +83,7 @@ public:
      * With the given attributes,
      * and release the lock acquired with tryData
      */
-    void notifyReady(DataAttribute attribute);
+    void notifyReady(DataAttributeOut attribute);
 
     /**
      * Get the DataItem for this OutPort
