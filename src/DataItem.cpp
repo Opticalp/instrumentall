@@ -36,8 +36,9 @@ DataItem::~DataItem()
         delete reinterpret_cast<int*>(dataStore);
 }
 
-DataItem::DataItem(DataTypeEnum dataType):
-        mDataType(dataType)
+DataItem::DataItem(DataTypeEnum dataType, OutPort* parent):
+        mDataType(dataType),
+        mParentPort(parent)
 {
     if (mDataType == typeInteger)
         dataStore = reinterpret_cast<void*>(new int);

@@ -55,7 +55,7 @@ public:
         typeCnt
     };
 
-    DataItem(DataTypeEnum dataType = typeUndefined);
+    DataItem(DataTypeEnum dataType = typeUndefined, OutPort* parent = NULL);
     virtual ~DataItem();
 
     /// get port data type as a character string
@@ -113,6 +113,13 @@ public:
     void releaseData()
         { dataLock.unlock(); }
 
+    /**
+     * Get the parent port
+     *
+     * @warning the parent port can be NULL
+     */
+    OutPort* parentPort() { return mParentPort; }
+
 private:
     DataTypeEnum mDataType; ///< data type
     void* dataStore; ///< pointer to the data
@@ -126,7 +133,7 @@ private:
     // TODO: separate volatile data (issue from a outport.push(data)) in UI
     // and other data, that do really have a parent port.
 
-    OutPort* parentPort; ///< parent output data port.
+    OutPort* mParentPort; ///< parent output data port.
 };
 
 //

@@ -38,7 +38,7 @@ OutPort::OutPort(Module* parent,
         DataItem::DataTypeEnum datatype,
         size_t index):
     Port(parent, name, description, datatype, index),
-    data(datatype)
+    data(datatype, this)
 {
     // notify the DataManager of the creation
     Poco::Util::Application::instance()
