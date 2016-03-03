@@ -75,7 +75,8 @@ def myMain():
         print ( target.name + ", from module: " +
             target.parent().name )
             
-    # launch action
+    print "launch action: run mod1"
+    runModule(mod1)
 
     print "End of script modDataSeqTest.py"
     

@@ -30,10 +30,14 @@
 
 DataItem::~DataItem()
 {
-    // TODO Auto-generated destructor stub
+    if (mDataType == typeInteger)
+        delete reinterpret_cast<int*>(dataStore);
 }
 
-DataItem::DataItem(DataTypeEnum dataType)
+DataItem::DataItem(DataTypeEnum dataType):
+        mDataType(dataType)
 {
+    if (mDataType == typeInteger)
+        dataStore = reinterpret_cast<void*>(new int);
 }
 

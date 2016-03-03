@@ -140,6 +140,9 @@ void DemoModuleSeqMax::runTask()
 
             *pOutData = tmpMax;
             getOutPorts()[outPortA]->notifyReady(outAttr);
+
+            poco_information(logger(), "DemoModuleSeqMax::runTask() outputs: "
+                    + Poco::NumberFormatter::format(tmpMax));
         }
     }
 

@@ -268,7 +268,7 @@ pythonDispatchSeqBind(PyObject* self, PyObject* args)
     PyObject *pyObj1, *pyObj2;
 
     // arguments parsing
-    if (!PyArg_ParseTuple(args, "OO:bind", &pyObj1, &pyObj2))
+    if (!PyArg_ParseTuple(args, "OO:seqBind", &pyObj1, &pyObj2))
         return NULL;
 
     // check the type of the object.
@@ -313,7 +313,7 @@ pythonDispatchSeqUnbind(PyObject* self, PyObject* args)
     PyObject* pyObj;
 
     // arguments parsing
-    if (!PyArg_ParseTuple(args, "O:unbind", &pyObj))
+    if (!PyArg_ParseTuple(args, "O:seqUnbind", &pyObj))
         return NULL;
 
     // check the type of the object.
@@ -331,6 +331,34 @@ pythonDispatchSeqUnbind(PyObject* self, PyObject* args)
     Poco::Util::Application::instance()
         .getSubsystem<Dispatcher>()
         .seqUnbind(*pyPort->inPort);
+
+    return Py_BuildValue("");
+}
+
+extern "C" PyObject*
+pythonDispatchRunModule(PyObject *self, PyObject *args)
+{
+    PyObject* pyObj;
+
+    // arguments parsing
+    if (!PyArg_ParseTuple(args, "O:unbind", &pyObj))
+        return NULL;
+
+    // check the type of the object.
+    // the comparison uses type name (str)
+    std::string typeName(pyObj->ob_type->tp_name);
+
+    if (typeName.compare("instru.Module"))
+    {
+        PyErr_SetString(PyExc_TypeError, "The argument has to be a Module");
+        return NULL;
+    }
+
+    ModMembers* pyMod = reinterpret_cast<ModMembers*>(pyObj);
+
+    Poco::Util::Application::instance()
+        .getSubsystem<Dispatcher>()
+        .runModule(*pyMod->module);
 
     return Py_BuildValue("");
 }

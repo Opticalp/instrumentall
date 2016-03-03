@@ -139,6 +139,9 @@ void DemoModuleSeqAccu::runTask()
 
             *pOutData = accumulator;
             getOutPorts()[outPortA]->notifyReady(outAttr);
+
+            poco_information(logger(), "DemoModuleSeqAccu::runTask() outputs: "
+                    + Poco::NumberFormatter::format(accumulator));
         }
     }
 

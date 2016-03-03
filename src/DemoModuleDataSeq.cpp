@@ -103,6 +103,9 @@ void DemoModuleDataSeq::runTask()
         *pData = index;
         getOutPorts()[outPortA]->notifyReady(attr);
 
+        poco_information(logger(), "DemoModuleDataSeq::runTask(): sent "
+                + Poco::NumberFormatter::format(index));
+
         setProgress(static_cast<float>(index + 1) / static_cast<float>(MAX_INDEX + 1));
 
         if (isCancelled())
@@ -111,6 +114,8 @@ void DemoModuleDataSeq::runTask()
             return;
         }
     }
+
+    poco_information(logger(), "DemoModuleDataSeq::runTask(): all sent. ");
 
     mainMutex.unlock();
 }

@@ -34,6 +34,8 @@
 #include "InPort.h"
 #include "OutPort.h"
 
+#include "Poco/NumberFormatter.h"
+
 #include <typeinfo>
 POCO_IMPLEMENT_EXCEPTION( DispatcherException, Poco::Exception, "Dispatcher error")
 
@@ -76,6 +78,14 @@ void Dispatcher::uninitialize()
     initialized = false;
 
     poco_debug(logger(), "Dispatcher un-initialization.");
+
+    size_t taskCnt = taskManager.count();
+    if (taskCnt)
+        poco_warning(logger(), "Dispatcher uninit: "
+            + Poco::NumberFormatter::format(taskCnt)
+            + " task(s) to stop");
+
+    cancelModuleTasks();
 
     inPortsLock.writeLock();
     outPortsLock.writeLock();
@@ -324,6 +334,7 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
         poco_information(logger(), "Pushing " + (*shdMod)->name());
 
         // launch task
+        (*shdMod)->duplicate(); // to avoid the task manager from deleting the module
         taskManager.start(*shdMod);
     }
 }
@@ -331,6 +342,7 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
 void Dispatcher::runModule(SharedPtr<Module*> module)
 {
     // launch task
+    (*module)->duplicate(); // to avoid the task manager from deleting the module
     taskManager.start(*module);
 }
 

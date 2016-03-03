@@ -61,8 +61,6 @@ public:
     /// get port data type as a character string
     static std::string dataTypeStr(DataTypeEnum dataType);
 
-    void* dataStore; ///< pointer to the data
-
     DataAttribute getDataAttribute() { return attribute; }
 
     void setDataAttribute(DataAttribute attr) { attribute = attr; }
@@ -109,6 +107,7 @@ public:
 
 private:
     DataTypeEnum mDataType; ///< data type
+    void* dataStore; ///< pointer to the data
 
     DataAttribute attribute; ///< data attribute
 

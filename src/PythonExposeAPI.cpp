@@ -60,8 +60,11 @@ static PyMethodDef EmbMethods[] =
     // dispatcher
     pyMethodDispatchBind,
     pyMethodDispatchUnbind,
+
     pyMethodDispatchSeqBind,
     pyMethodDispatchSeqUnbind,
+
+    pyMethodDispatchRunModule,
 
     // sentinel
     {NULL, NULL, 0, NULL}

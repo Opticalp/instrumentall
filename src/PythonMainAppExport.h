@@ -185,5 +185,21 @@ static PyMethodDef pyMethodDispatchSeqUnbind =
     "from its sequence source"
 };
 
+/**
+ * Python wrapper to launch a Module::runTask()
+ *
+ * This is done via the dispatcher that creates a thread.
+ */
+extern "C" PyObject*
+pythonDispatchRunModule(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDispatchRunModule =
+{
+    "runModule",
+    pythonDispatchRunModule,
+    METH_VARARGS,
+    "runModule(module1): Launch the module1 main thread. "
+};
+
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_PYTHONMAINAPPEXPORT_H_ */
