@@ -79,6 +79,8 @@ def myMain():
     runModule(mod1)
     
     waitAll()
+    
+    print "mod3b return value is: " + str(mod3b.outPorts()[0].data().getValue())
 
     print "End of script modDataSeqTest.py"
     

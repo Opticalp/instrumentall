@@ -121,51 +121,24 @@ PyObject* pyDataParent(DataMembers* self)
 
 PyObject* pyDataGetValue(DataMembers* self)
 {
-    PyErr_SetString(PyExc_NotImplementedError, "getValue is not implemented");
-    return NULL;
+    // TODO: other data types
 
-//    Poco::SharedPtr<OutPort*> sharedSource;
-//
-//    sharedSource = (**self->inPort)->getSourcePort();
-//
-//    // check if connected
-//    if ( *sharedSource == Poco::Util::Application::instance()
-//                            .getSubsystem<Dispatcher>()
-//                            .getEmptyOutPort() )
-//    {
-//        PyErr_SetString(PyExc_ReferenceError,
-//                "This input port has no source");
-//        return NULL;
-//    }
-//
-//    // prepare OutPort python type
-//    if (PyType_Ready(&PythonOutPort) < 0)
-//    {
-//        PyErr_SetString(PyExc_ImportError,
-//                "Not able to create the OutPort Type");
-//        return NULL;
-//    }
-//
-//    // create the python object
-//    OutPortMembers* pyPort =
-//        (OutPortMembers*)(pyOutPortNew((PyTypeObject*)&PythonOutPort, NULL, NULL) );
-//
-//    PyObject* tmp=NULL;
-//
-//    // init
-//    // retrieve name and description
-//    tmp = pyPort->name;
-//    pyPort->name = PyString_FromString((*sharedSource)->name().c_str());
-//    Py_XDECREF(tmp);
-//
-//    tmp = pyPort->description;
-//    pyPort->description = PyString_FromString((*sharedSource)->description().c_str());
-//    Py_XDECREF(tmp);
-//
-//    // set ModuleFactory reference
-//    *(pyPort->outPort) = sharedSource;
-//
-//    return (PyObject*) pyPort;
+    if ((**self->data)->dataType() == DataItem::typeInteger)
+    {
+        (**self->data)->readLock();
+
+        int value = *((**self->data)->getDataToRead<int>());
+
+        (**self->data)->releaseData();
+
+        return PyInt_FromLong(value);
+    }
+    else
+    {
+        PyErr_SetString(PyExc_NotImplementedError,
+                "getValue is not implemented for dataType != integer");
+        return NULL;
+    }
 }
 
 PyObject* pyDataGetNewValue(DataMembers* self)

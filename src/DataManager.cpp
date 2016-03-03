@@ -31,6 +31,8 @@
 
 #include "OutPort.h"
 
+#include "Poco/Exception.h"
+
 DataManager::DataManager()
 {
     // nothing to do
@@ -55,14 +57,32 @@ void DataManager::uninitialize()
 
 void DataManager::addOutPort(OutPort* port)
 {
+    allDataLock.writeLock();
     allData.push_back(SharedPtr<DataItem*>(new DataItem*(port->dataItem())));
+    allDataLock.unlock();
 }
 
 void DataManager::removeOutPort(OutPort* port)
 {
-    // TODO:
-    // - remove the outPort dataItem from the dataStore.
-    // - replace it by an empty dataItem
+    allDataLock.writeLock();
+
+    for (std::vector< SharedPtr<DataItem*> >::iterator it = allData.begin(),
+            ite = allData.end(); it != ite; it++)
+    {
+        if (port->dataItem() == **it)
+        {
+            **it = &emptyDataItem; // replace the pointed factory by something throwing exceptions
+            allData.erase(it);
+            poco_debug(logger(), port->name() + " port DataItem "
+                    "erased from DataManager::allData. ");
+            allDataLock.unlock();
+            return;
+        }
+    }
+
+    allDataLock.unlock();
+    poco_error(logger(), "removeOutPort(): "
+            "the port was not found");
 }
 
 void DataManager::newData(DataItem* self)
@@ -84,4 +104,20 @@ void DataManager::newData(DataItem* self)
 //        .start(*it)
 }
 
+SharedPtr<DataItem*> DataManager::getDataItem(DataItem* dataItem)
+{
+    allDataLock.readLock();
+    for (std::vector< SharedPtr<DataItem*> >::iterator it = allData.begin(),
+            ite = allData.end(); it != ite; it++)
+    {
+        if (dataItem==**it)
+        {
+            allDataLock.unlock();
+            return *it;
+        }
+    }
 
+    allDataLock.unlock();
+    throw Poco::NotFoundException("getDataItem", "Data not found: "
+            "Should have been deleted during the query");
+}

@@ -246,4 +246,47 @@ PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
     return pyPorts;
 }
 
+
+#include "DataItem.h"
+#include "DataManager.h"
+#include "PythonData.h"
+
+extern "C" PyObject* pyOutPortData(OutPortMembers *self)
+{
+    Poco::SharedPtr<DataItem*> dataItem;
+
+    try
+    {
+        dataItem = Poco::Util::Application::instance()
+                          .getSubsystem<DataManager>()
+                          .getDataItem( (**self->outPort)->dataItem() );
+    }
+    catch (Poco::NotFoundException& e) // from getDataItem
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    // alloc
+    if (PyType_Ready(&PythonData) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the Data Type");
+        return NULL;
+    }
+
+    DataMembers* pyData =
+            reinterpret_cast<DataMembers*>(
+                    pyDataNew((PyTypeObject*)&PythonData, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // set ModuleFactory reference
+    *(pyData->data) = dataItem;
+
+    return (PyObject*)(pyData);
+}
+
 #endif /* HAVE_PYTHON27 */

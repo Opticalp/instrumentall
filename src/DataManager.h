@@ -105,8 +105,14 @@ public:
      */
     void newData(DataItem* self);
 
+    /**
+     * Get a shared pointer on a data item
+     */
+    SharedPtr<DataItem*> getDataItem(DataItem* dataItem);
+
 private:
     std::vector< SharedPtr<DataItem*> > allData; ///< data corresponding to each OutPort
+    Poco::RWLock allDataLock;
 
     DataItem emptyDataItem;
 

@@ -55,7 +55,7 @@ public:
         typeCnt
     };
 
-    DataItem(DataTypeEnum dataType = typeUndefined, OutPort* parent = NULL);
+    DataItem(DataTypeEnum datatype = typeUndefined, OutPort* parent = NULL);
     virtual ~DataItem();
 
     /// get port data type as a character string
@@ -119,6 +119,11 @@ public:
      * @warning the parent port can be NULL
      */
     OutPort* parentPort() { return mParentPort; }
+
+    /**
+     * Get the data item data type
+     */
+    DataTypeEnum dataType() { return mDataType; }
 
 private:
     DataTypeEnum mDataType; ///< data type
