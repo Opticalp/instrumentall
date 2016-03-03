@@ -175,16 +175,7 @@ public:
       */
      void runModule(SharedPtr<Module*> module);
 
-     /**
-      * Cancel all the module tasks
-      */
-     void cancelModuleTasks();
-
 private:
-     // TODO: manage the tasks via a subsystem
-     // with a task manager and a progress handler
-     Poco::TaskManager taskManager;
-
      /**
       * Remove a port from the allInPorts list
       *

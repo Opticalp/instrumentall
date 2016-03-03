@@ -93,6 +93,15 @@ public:
      */
     void removeOutPort(OutPort* port);
 
+    /**
+     * To be called when new data is available
+     *
+     * Launch the log actions
+     *
+     * @param self caller
+     */
+    void newData(DataItem* self);
+
 private:
     std::vector< SharedPtr<DataItem*> > allData; ///< data corresponding to each OutPort
 

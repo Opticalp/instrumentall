@@ -97,6 +97,14 @@ public:
         { dataLock.readLock(); }
 
     /**
+     * Release newly created data
+     *
+     *  - Release the lock
+     *  - Notify the data manager that will acquire a read lock if necessary
+     */
+    void releaseNewData();
+
+    /**
      * Unlock the data
      *
      * unlock the data that was previously locked using tryGetDataToWrite

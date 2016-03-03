@@ -44,10 +44,12 @@ DataManager::~DataManager()
 
 void DataManager::initialize(Poco::Util::Application& app)
 {
+    // TODO: init loggers from config file?
 }
 
 void DataManager::uninitialize()
 {
+    // TODO: remove loggers
 }
 
 void DataManager::addOutPort(OutPort* port)
@@ -61,4 +63,20 @@ void DataManager::removeOutPort(OutPort* port)
     // - remove the outPort dataItem from the dataStore.
     // - replace it by an empty dataItem
 }
+
+void DataManager::newData(DataItem* self)
+{
+    // TODO
+    // check if loggers are defined for this data
+
+    // if no loggers
+    //     return;
+
+
+    // else
+    // for each logger, acquireLock
+
+    // launch logger threads via thread manager.
+}
+
 

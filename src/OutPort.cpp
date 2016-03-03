@@ -161,7 +161,7 @@ void OutPort::notifyReady(DataAttributeOut attribute)
     }
 
     dataItem()->setDataAttribute(attribute);
-    dataItem()->releaseData();
+    dataItem()->releaseNewData();
 
     Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()

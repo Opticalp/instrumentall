@@ -1,6 +1,6 @@
 /**
- * @file	src/DataItem.cpp
- * @date	Feb. 2016
+ * @file	src/ThreadManager.cpp
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,28 +26,29 @@
  THE SOFTWARE.
  */
 
-#include "DataItem.h"
-#include "DataManager.h"
-#include "Poco/Util/Application.h"
+#include "ThreadManager.h"
 
-DataItem::~DataItem()
+#include "Poco/Observer.h"
+
+using Poco::Observer;
+
+ThreadManager::ThreadManager():
+        VerboseEntity(name())
 {
-    if (mDataType == typeInteger)
-        delete reinterpret_cast<int*>(dataStore);
+    taskManager.addObserver(
+            Observer<ThreadManager, Poco::TaskFailedNotification>(
+                    *this, &ThreadManager::onFailed ) );
+
 }
 
-DataItem::DataItem(DataTypeEnum dataType):
-        mDataType(dataType)
+void ThreadManager::onFailed(Poco::TaskFailedNotification* pNf)
 {
-    if (mDataType == typeInteger)
-        dataStore = reinterpret_cast<void*>(new int);
+    Poco::Exception e(pNf->reason());
+    poco_error(logger(), e.displayText());
 }
 
-void DataItem::releaseNewData()
+void ThreadManager::start(Poco::Task* task)
 {
-    releaseData();
-
-    Poco::Util::Application::instance()
-            .getSubsystem<DataManager>()
-            .newData(this);
+    task->duplicate();
+    taskManager.start(task);
 }

@@ -29,6 +29,7 @@
 #include "Dispatcher.h"
 
 #include "ModuleManager.h"
+#include "ThreadManager.h"
 #include "Module.h"
 
 #include "InPort.h"
@@ -79,13 +80,15 @@ void Dispatcher::uninitialize()
 
     poco_debug(logger(), "Dispatcher un-initialization.");
 
-    size_t taskCnt = taskManager.count();
+    ThreadManager& threadMan = Poco::Util::Application::instance()
+                                        .getSubsystem<ThreadManager>();
+    size_t taskCnt = threadMan.count();
     if (taskCnt)
         poco_warning(logger(), "Dispatcher uninit: "
             + Poco::NumberFormatter::format(taskCnt)
             + " task(s) to stop");
 
-    cancelModuleTasks();
+    threadMan.cancelAll();
 
     inPortsLock.writeLock();
     outPortsLock.writeLock();
@@ -334,22 +337,15 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
         poco_information(logger(), "Pushing " + (*shdMod)->name());
 
         // launch task
-        (*shdMod)->duplicate(); // to avoid the task manager from deleting the module
-        taskManager.start(*shdMod);
+        Poco::Util::Application::instance()
+                 .getSubsystem<ThreadManager>()
+                 .start(*shdMod);
     }
 }
 
 void Dispatcher::runModule(SharedPtr<Module*> module)
 {
-    // launch task
-    (*module)->duplicate(); // to avoid the task manager from deleting the module
-    taskManager.start(*module);
+    Poco::Util::Application::instance()
+             .getSubsystem<ThreadManager>()
+             .start(*module);
 }
-
-void Dispatcher::cancelModuleTasks()
-{
-    // TODO: this function should be part of the task manager subsystem
-
-    taskManager.cancelAll();
-}
-
