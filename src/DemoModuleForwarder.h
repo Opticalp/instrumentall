@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoLeafFactory.cpp
- * @date	jan. 2016
+ * @file	src/DemoModuleForwarder.h
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,53 @@
  THE SOFTWARE.
  */
 
-#include "DemoLeafFactory.h"
-#include "DemoModule.h"
-#include "DemoModuleA.h"
-#include "DemoModuleB.h"
-#include "DemoModuleDataSeq.h"
-#include "DemoModuleSeqAccu.h"
-#include "DemoModuleSeqMax.h"
-#include "DemoModuleForwarder.h"
+#ifndef SRC_DEMOMODULEFORWARDER_H_
+#define SRC_DEMOMODULEFORWARDER_H_
 
-Module* DemoLeafFactory::newChildModule(std::string customName)
+#include "Module.h"
+
+/**
+ * DemoModuleForwarder
+ *
+ * Simple demo module that forwards the integer data input port
+ * onto the output port.
+ */
+class DemoModuleForwarder: public Module
 {
-    if (getSelector().compare("leaf")==0)
-        return new DemoModule(this, customName);
+public:
+    DemoModuleForwarder(ModuleFactory* parent, std::string customName);
+    virtual ~DemoModuleForwarder() { mainMutex.lock(); }
 
-    if (getSelector().compare("leafA")==0)
-        return new DemoModuleA(this, customName);
+    const char * description() const
+    {
+        return "Demo Module to forward input onto output. ";
+    }
 
-    if (getSelector().compare("leafB")==0)
-        return new DemoModuleB(this, customName);
+    /**
+     * Main logic
+     *
+     * Forward data and attribute
+     */
+    void runTask();
 
-    if (getSelector().compare("leafDataSeq")==0)
-        return new DemoModuleDataSeq(this, customName);
+private:
+    static size_t refCount; ///< reference counter to generate a unique internal name
 
-    if (getSelector().compare("leafSeqAccu")==0)
-        return new DemoModuleSeqAccu(this, customName);
+    /// Indexes of the input ports
+    enum inPorts
+    {
+        inPortA,
+        inPortCnt
+    };
 
-    if (getSelector().compare("leafSeqMax")==0)
-        return new DemoModuleSeqMax(this, customName);
+    /// Indexes of the output ports
+    enum outPorts
+    {
+        outPortA,
+        outPortCnt
+    };
 
-    if (getSelector().compare("leafForwarder")==0)
-        return new DemoModuleForwarder(this, customName);
+    Poco::Mutex mainMutex; ///< runTask() mutex.
+};
 
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
-}
+#endif /* SRC_DEMOMODULEFORWARDER_H_ */

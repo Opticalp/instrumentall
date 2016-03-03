@@ -128,7 +128,7 @@ void DemoModuleSeqMax::runTask()
             while (!getOutPorts()[outPortA]->tryData(pOutData))
             {
                 poco_debug(logger(),
-                        "DemoModuleDataSeq::runTask(): "
+                        "DemoModuleSeqMax::runTask(): "
                         "failed to acquire the output data lock");
 
                 if (sleep(TIME_LAPSE))

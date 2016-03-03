@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleSeqAccu.cpp
- * @date	Feb. 2016
+ * @file	src/DemoModuleForwarder.cpp
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,7 +26,7 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleSeqAccu.h"
+#include "DemoModuleForwarder.h"
 
 #include "DataAttributeIn.h"
 #include "DataAttribute.h"
@@ -36,15 +36,14 @@
 
 #include "Poco/NumberFormatter.h"
 
-size_t DemoModuleSeqAccu::refCount = 0;
+size_t DemoModuleForwarder::refCount = 0;
 
-DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customName):
-    Module(parent, customName),
-    accumulator(0)
+DemoModuleForwarder::DemoModuleForwarder(ModuleFactory* parent, std::string customName):
+        Module(parent, customName)
 {
-    poco_debug(logger(),"Creating a new DemoModuleSeqAccu");
+    poco_debug(logger(),"Creating a new DemoModuleForwarder");
 
-    setInternalName("DemoModuleSeqAccu" + Poco::NumberFormatter::format(refCount));
+    setInternalName("DemoModuleForwarder" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
     setLogger("module" + name());
 
@@ -52,9 +51,9 @@ DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customNa
     setInPortCount(inPortCnt);
     setOutPortCount(outPortCnt);
 
-    addInPort("inPortA", "data sequence", DataItem::typeInteger, inPortA);
+    addInPort("inPortA", "data in", DataItem::typeInteger, inPortA);
 
-    addOutPort("outPortA", "sum of data sequence", DataItem::typeInteger, outPortA);
+    addOutPort("outPortA", "forwarded data as is", DataItem::typeInteger, outPortA);
 
     notifyCreation();
 
@@ -62,22 +61,18 @@ DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customNa
     refCount++;
 }
 
-void DemoModuleSeqAccu::runTask()
+void DemoModuleForwarder::runTask()
 {
     // FIXME: if an exception is raised,
     // the mainMutex unlock is not guaranteed...
 
-    poco_information(logger(), "DemoModuleSeqAccu::runTask started. ");
-
-    // We could use a scoped lock here:
-    //Poco::Mutex::ScopedLock lock(mainMutex);
-    // but then, it could not be possible to check a time out in the lock acquisition
+    poco_information(logger(), "DemoModuleForwarder::runTask started. ");
 
     // try to acquire the mutex
     while (!mainMutex.tryLock(TIME_LAPSE))
     {
         poco_debug(logger(),
-                "DemoModuleSeqAccu::runTask(): failed to acquire the mutex");
+                "DemoModuleForwarder::runTask(): failed to acquire the mutex");
 
         if (isCancelled())
             return;
@@ -94,53 +89,39 @@ void DemoModuleSeqAccu::runTask()
     if (!getInPorts()[inPortA]->tryData<int>(pData, &attr))
     {
         poco_debug(logger(),
-                "DemoModuleSeqAccu::runTask(): "
+                "DemoModuleForwarder::runTask(): "
                 "failed to acquire the input data lock");
 
         mainMutex.unlock();
         return; // data not up to date
     }
 
-    if (attr.isStartSequence())
-    {
-        accumulator = *pData;
-        getInPorts()[inPortA]->releaseData();
-    }
-    else
-    {
-        accumulator += *pData;
+    int tmpData = *pData;
+    DataAttributeOut outAttr = attr;
 
-        if (!attr.isEndSequence())
+    getInPorts()[inPortA]->releaseData();
+
+    int* pOutData;
+
+    // try to acquire the output data lock
+    while (!getOutPorts()[outPortA]->tryData(pOutData))
+    {
+        poco_debug(logger(),
+                "DemoModuleForwarder::runTask(): "
+                "failed to acquire the output data lock");
+
+        if (sleep(TIME_LAPSE))
         {
-            getInPorts()[inPortA]->releaseData();
             mainMutex.unlock();
             return;
         }
-        else
-        {
-            DataAttributeOut outAttr = attr;
-            getInPorts()[inPortA]->releaseData();
-
-            int* pOutData;
-
-            // try to acquire the output data lock
-            while (!getOutPorts()[outPortA]->tryData(pOutData))
-            {
-                poco_debug(logger(),
-                        "DemoModuleSeqAccu::runTask(): "
-                        "failed to acquire the output data lock");
-
-                if (sleep(TIME_LAPSE))
-                {
-                    mainMutex.unlock();
-                    return;
-                }
-            }
-
-            *pOutData = accumulator;
-            getOutPorts()[outPortA]->notifyReady(outAttr);
-        }
     }
+
+    *pOutData = tmpData;
+    getOutPorts()[outPortA]->notifyReady(outAttr);
+
+    poco_information(logger(), "DemoModuleForwarder::runTask(): "
+            + Poco::NumberFormatter::format(tmpData) + " was forwarded.");
 
     mainMutex.unlock();
 }

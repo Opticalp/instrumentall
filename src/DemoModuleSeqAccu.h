@@ -47,6 +47,15 @@ public:
         return "Demo Module to retrieve the sum of a data sequence. ";
     }
 
+    /**
+     * Main logic
+     *
+     * Accumulate the data sequence:
+     *  - reinit the accumulator storage at each startSequence
+     *  - send the accumulator at each endSequence
+     */
+    void runTask();
+
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name
 
@@ -63,6 +72,10 @@ private:
         outPortA,
         outPortCnt
     };
+
+    Poco::Mutex mainMutex; ///< runTask() mutex.
+
+    int accumulator;
 };
 
 #endif /* SRC_DEMOMODULESEQACCU_H_ */
