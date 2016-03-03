@@ -46,28 +46,6 @@ OutPort::OutPort(Module* parent,
                             .addOutPort(this);
 }
 
-OutPort::~OutPort()
-{
-    // notify the DataManager of the deletion
-    try
-    {
-        Poco::Util::Application::instance()
-                            .getSubsystem<DataManager>()
-                            .removeOutPort(this);
-    }
-    catch (Poco::NotFoundException&)
-    {
-        if (parent() != Poco::Util::Application::instance()
-                    .getSubsystem<ModuleManager>()
-                    .getEmptyModule())
-        {
-            poco_bugcheck_msg("the dataManager was unregistered "
-                "before all Modules were deleted...");
-        }
-    }
-}
-
-
 std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
 {
     std::vector<SharedPtr<InPort*> > list;
@@ -75,6 +53,17 @@ std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
     targetPortsLock.readLock();
     list = targetPorts;
     targetPortsLock.unlock();
+
+    return list;
+}
+
+std::vector<SharedPtr<InPort*> > OutPort::getSeqTargetPorts()
+{
+    std::vector<SharedPtr<InPort*> > list;
+
+    seqTargetPortsLock.readLock();
+    list = seqTargetPorts;
+    seqTargetPortsLock.unlock();
 
     return list;
 }

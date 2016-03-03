@@ -180,4 +180,50 @@ PyObject* pyInPortGetSourcePort(InPortMembers* self)
     return (PyObject*) pyPort;
 }
 
+PyObject* pyInPortGetSeqSourcePort(InPortMembers* self)
+{
+    Poco::SharedPtr<OutPort*> sharedSource;
+
+    sharedSource = (**self->inPort)->getSeqSourcePort();
+
+    // check if connected
+    if ( *sharedSource == Poco::Util::Application::instance()
+                            .getSubsystem<Dispatcher>()
+                            .getEmptyOutPort() )
+    {
+        PyErr_SetString(PyExc_ReferenceError,
+                "This input port has no source");
+        return NULL;
+    }
+
+    // prepare OutPort python type
+    if (PyType_Ready(&PythonOutPort) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the OutPort Type");
+        return NULL;
+    }
+
+    // create the python object
+    OutPortMembers* pyPort =
+        (OutPortMembers*)(pyOutPortNew((PyTypeObject*)&PythonOutPort, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // retrieve name and description
+    tmp = pyPort->name;
+    pyPort->name = PyString_FromString((*sharedSource)->name().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = pyPort->description;
+    pyPort->description = PyString_FromString((*sharedSource)->description().c_str());
+    Py_XDECREF(tmp);
+
+    // set ModuleFactory reference
+    *(pyPort->outPort) = sharedSource;
+
+    return (PyObject*) pyPort;
+}
+
 #endif /* HAVE_PYTHON27 */

@@ -301,6 +301,9 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
 {
     std::set<Module*> targetModules;
 
+    //poco_debug(logger(), port->name() + " data ready");
+    poco_information(logger(), port->name() + " data ready");
+
     std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
     for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
             ite = targetPorts.end(); it != ite; it++ )
@@ -324,3 +327,17 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
         taskManager.start(*shdMod);
     }
 }
+
+void Dispatcher::runModule(SharedPtr<Module*> module)
+{
+    // launch task
+    taskManager.start(*module);
+}
+
+void Dispatcher::cancelModuleTasks()
+{
+    // TODO: this function should be part of the task manager subsystem
+
+    taskManager.cancelAll();
+}
+

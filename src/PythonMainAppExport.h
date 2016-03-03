@@ -149,5 +149,41 @@ static PyMethodDef pyMethodDispatchUnbind =
     "from its source"
 };
 
+/**
+ * @brief Python wrapper to bind ports for data sequences
+ *
+ * Call Dispatcher::seqBind(portA, portB) method
+ *
+ */
+extern "C" PyObject*
+pythonDispatchSeqBind(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDispatchSeqBind =
+{
+    "seqBind",
+    pythonDispatchSeqBind,
+    METH_VARARGS,
+    "seqBind(portA, portB): Bind a data output sequence generator source port portA "
+    "to a data input sequence combiner target port portB"
+};
+
+/**
+ * @brief Python wrapper to unbind ports for data sequences
+ *
+ * Call Dispatcher::seqUnbind(inPortA) method
+ *
+ */
+extern "C" PyObject*
+pythonDispatchSeqUnbind(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDispatchSeqUnbind =
+{
+    "seqUnbind",
+    pythonDispatchSeqUnbind,
+    METH_VARARGS,
+    "unbind(inPortA): unbind a data input sequence combiner target port inPortA "
+    "from its sequence source"
+};
+
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_PYTHONMAINAPPEXPORT_H_ */

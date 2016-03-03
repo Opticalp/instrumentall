@@ -44,6 +44,7 @@ InPort::InPort(Module* parent,
             new (OutPort*)( Poco::Util::Application::instance()
                                     .getSubsystem<Dispatcher>()
                                     .getEmptyOutPort()       ) );
+    mSeqSourcePort = mSourcePort;
 }
 
 InPort::InPort(OutPort* emptySourcePort):
@@ -55,6 +56,7 @@ InPort::InPort(OutPort* emptySourcePort):
         used(true)
 {
     mSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
+    mSeqSourcePort = mSourcePort;
 }
 
 void InPort::setSourcePort(SharedPtr<OutPort*> port)

@@ -62,12 +62,27 @@ public:
      */
     OutPort();
 
-    virtual ~OutPort();
+    /**
+     * Destructor
+     *
+     * Do not need to call removeTargetPort.
+     * Indeed, this destructor is called when the parent module
+     * is deleted. On Module deletion, the ModuleManager::removeModule
+     * is called, then the Dispatcher::removeModule is called,
+     * then this output port is deleted from Dispatcher::allOutPorts
+     * after this removeTargetPort has been called.
+     */
+    virtual ~OutPort() { }
 
     /**
      * Retrieve the target ports
      */
     std::vector< SharedPtr<InPort*> > getTargetPorts();
+
+    /**
+     * Retrieve the data sequence target ports
+     */
+    std::vector< SharedPtr<InPort*> > getSeqTargetPorts();
 
     /**
      * Try to retrieve a pointer on the data to be written

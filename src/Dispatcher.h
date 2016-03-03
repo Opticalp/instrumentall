@@ -170,6 +170,16 @@ public:
       */
      void setOutPortDataReady(OutPort* port);
 
+     /**
+      * Launch a module task
+      */
+     void runModule(SharedPtr<Module*> module);
+
+     /**
+      * Cancel all the module tasks
+      */
+     void cancelModuleTasks();
+
 private:
      // TODO: manage the tasks via a subsystem
      // with a task manager and a progress handler

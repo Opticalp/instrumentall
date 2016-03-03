@@ -45,14 +45,27 @@ def myMain():
     print "module " + mod2a.name + " created. "
     
     print "Create module from leafSeqMax factory"
-    mod2b = fac.select("branch").select("leafSeqAccu").create("mod2b")
+    mod2b = fac.select("branch").select("leafSeqMax").create("mod2b")
     print "module " + mod2b.name + " created. "
     
+    print "Bind the ports: "
+    print " - mod1 output to mod2a input"
     bind(mod1.outPorts()[0], mod2a.inPorts()[0])
+    print " - mod1 output to mod2b input"
     bind(mod1.outPorts()[0], mod2b.inPorts()[0])
     
     print "Query mod1 output targets: "
     for target in mod1.outPorts()[0].getTargetPorts():    
+        print ( target.name + ", from module: " +
+            target.parent().name )
+            
+    print "Bind the sequence generator (mod1) to the sequence combiners (mod2a/b)"
+    seqBind(mod1.outPorts()[0], mod2a.inPorts()[0])
+    seqBind(mod1.outPorts()[0], mod2b.inPorts()[0])
+    print "Sequence binding done. "
+    
+    print "Query mod1 data sequence output targets: "
+    for target in mod1.outPorts()[0].getSeqTargetPorts():    
         print ( target.name + ", from module: " +
             target.parent().name )
             

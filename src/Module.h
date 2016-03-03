@@ -149,7 +149,7 @@ public:
 	/**
 	 * Implementation of Poco::Task::runTask()
 	 */
-	virtual void runTask() { }
+	virtual void runTask() { poco_warning(logger(), name() + ": empty task"); }
 
 protected:
     /**

@@ -108,11 +108,23 @@ static PyMethodDef pyMethodInPortGetSourcePort =
     "Retrieve the source port"
 };
 
+/// python wrapper to get the source port of the current input port
+extern "C" PyObject* pyInPortGetSeqSourcePort(InPortMembers *self);
+
+static PyMethodDef pyMethodInPortGetSeqSourcePort =
+{
+    "getSeqSourcePort",
+    (PyCFunction)pyInPortGetSeqSourcePort,
+    METH_NOARGS,
+    "Retrieve the data sequence source port"
+};
+
 /// exported methods
 static PyMethodDef pyInPortMethods[] = {
         pyMethodInPortParent,
 
         pyMethodInPortGetSourcePort,
+        pyMethodInPortGetSeqSourcePort,
 
         {NULL} // sentinel
 };
