@@ -77,10 +77,10 @@ public:
      void uninitialize() { }
      ///@}
 
-//    void onStarted(Poco::TaskStartedNotification* pNf);
+    void onStarted(Poco::TaskStartedNotification* pNf);
 //    void onProgress(Poco::TaskProgressNotification* pNf);
     void onFailed(Poco::TaskFailedNotification* pNf);
-//    void onFinished(Poco::TaskFinishedNotification* pNf);
+    void onFinished(Poco::TaskFinishedNotification* pNf);
 
     /**
      * Count the active tasks
@@ -102,9 +102,15 @@ public:
      */
     void start(Poco::Task* task);
 
+    /**
+     * Wait for all tasks to be terminated
+     */
+    void waitAll();
+
 private:
     Poco::TaskManager taskManager;
 
+    Poco::Event noMoreThread;
 
 };
 

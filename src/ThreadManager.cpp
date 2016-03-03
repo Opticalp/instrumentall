@@ -29,16 +29,30 @@
 #include "ThreadManager.h"
 
 #include "Poco/Observer.h"
+#include "Poco/NumberFormatter.h"
 
 using Poco::Observer;
 
 ThreadManager::ThreadManager():
-        VerboseEntity(name())
+        VerboseEntity(name()),
+        noMoreThread(false)
 {
+    taskManager.addObserver(
+            Observer<ThreadManager, Poco::TaskStartedNotification>(
+                    *this, &ThreadManager::onStarted ) );
     taskManager.addObserver(
             Observer<ThreadManager, Poco::TaskFailedNotification>(
                     *this, &ThreadManager::onFailed ) );
+    taskManager.addObserver(
+                Observer<ThreadManager, Poco::TaskFinishedNotification>(
+                        *this, &ThreadManager::onFinished ) );
+}
 
+void ThreadManager::onStarted(Poco::TaskStartedNotification* pNf)
+{
+    poco_debug(logger(), pNf->task()->name() + " was started");
+
+    noMoreThread.reset();
 }
 
 void ThreadManager::onFailed(Poco::TaskFailedNotification* pNf)
@@ -47,8 +61,36 @@ void ThreadManager::onFailed(Poco::TaskFailedNotification* pNf)
     poco_error(logger(), e.displayText());
 }
 
+void ThreadManager::onFinished(Poco::TaskFinishedNotification* pNf)
+{
+    poco_debug(logger(), pNf->task()->name() + " has stopped");
+
+    // It seems that we are in the thread that sent the notification,
+    // then, it is running...
+    if (count() <= 1)
+    {
+        noMoreThread.set();
+        poco_debug(logger(), "No more thread is running. "
+                "Setting the corresponding event. ");
+    }
+}
+
 void ThreadManager::start(Poco::Task* task)
 {
     task->duplicate();
     taskManager.start(task);
+}
+
+void ThreadManager::waitAll()
+{
+    // joinAll does not work here,
+    // since it seems that it locks the recursive creation of new threads...
+    // We use an event instead.
+    if (count())
+    {
+        poco_information(logger(), Poco::NumberFormatter::format(count())
+            + " threads are running. Waiting for them to finish. ");
+
+        noMoreThread.wait();
+    }
 }

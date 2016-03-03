@@ -201,5 +201,26 @@ static PyMethodDef pyMethodDispatchRunModule =
     "runModule(module1): Launch the module1 main thread. "
 };
 
+// ----------------------------------------------------------------
+//     Thread Manager
+// ----------------------------------------------------------------
+
+/**
+ * @brief Python wrapper to wait for all tasks to be terminated
+ *
+ * Call ThreadManager::waitAll() method
+ *
+ */
+extern "C" PyObject*
+pythonThreadManWaitAll(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodThreadManWaitAll =
+{
+    "waitAll",
+    pythonThreadManWaitAll,
+    METH_NOARGS,
+    "Wait for all the tasks to be terminated"
+};
+
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_PYTHONMAINAPPEXPORT_H_ */

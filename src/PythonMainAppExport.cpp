@@ -363,4 +363,16 @@ pythonDispatchRunModule(PyObject *self, PyObject *args)
     return Py_BuildValue("");
 }
 
+#include "ThreadManager.h"
+
+extern "C" PyObject*
+pythonThreadManWaitAll(PyObject *self, PyObject *args)
+{
+    Poco::Util::Application::instance()
+            .getSubsystem<ThreadManager>()
+            .waitAll();
+
+    return Py_BuildValue("");
+}
+
 #endif /* HAVE_PYTHON27 */

@@ -66,6 +66,9 @@ static PyMethodDef EmbMethods[] =
 
     pyMethodDispatchRunModule,
 
+    // thread manager
+    pyMethodThreadManWaitAll,
+
     // sentinel
     {NULL, NULL, 0, NULL}
 };

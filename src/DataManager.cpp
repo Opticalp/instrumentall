@@ -27,6 +27,7 @@
  */
 
 #include "DataManager.h"
+#include "ThreadManager.h"
 
 #include "OutPort.h"
 
@@ -75,8 +76,12 @@ void DataManager::newData(DataItem* self)
 
     // else
     // for each logger, acquireLock
+    //      (*it)->acquireLock();
 
     // launch logger threads via thread manager.
+//    Poco::Util::Application::instance()
+//        .getSubsystem<ThreadManager>()
+//        .start(*it)
 }
 
 

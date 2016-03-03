@@ -29,13 +29,16 @@
 #ifndef SRC_DATAMANAGER_H_
 #define SRC_DATAMANAGER_H_
 
+#include "DataItem.h"
+
+#include "VerboseEntity.h"
+
 #include "Poco/Util/Subsystem.h"
 #include "Poco/SharedPtr.h"
 
-#include "DataItem.h"
-#include "VerboseEntity.h"
-
 using Poco::SharedPtr;
+
+class DataLogger;
 
 /**
  * DataManager
