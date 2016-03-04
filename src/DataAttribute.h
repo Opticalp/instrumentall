@@ -112,7 +112,7 @@ protected:
      * and remove it if present
      */
     bool isStartSequence(InPort* port)
-        { return startSequenceTargets.erase(port); }
+        { return (startSequenceTargets.erase(port) > 0); }
 
     /**
      * Check if the given port is targeted by a endSequence
@@ -121,7 +121,7 @@ protected:
      * and remove it if present
      */
     bool isEndSequence(InPort* port)
-        { return endSequenceTargets.erase(port); }
+        { return (endSequenceTargets.erase(port) > 0); }
 
 private:
     std::set<size_t> indexes;
