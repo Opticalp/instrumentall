@@ -36,6 +36,11 @@
 #include "Poco/Util/Subsystem.h"
 #include "Poco/SharedPtr.h"
 
+#include "Poco/DynamicFactory.h"
+
+#include <map>
+#include <set>
+
 using Poco::SharedPtr;
 
 class DataLogger;
@@ -48,6 +53,11 @@ class DataLogger;
 class DataManager: public Poco::Util::Subsystem, public VerboseEntity
 {
 public:
+    /**
+     * Constructor
+     *
+     * Register the DataLoggers in the dynamic factory
+     */
     DataManager();
     virtual ~DataManager();
 
@@ -113,6 +123,16 @@ public:
 private:
     std::vector< SharedPtr<DataItem*> > allData; ///< data corresponding to each OutPort
     Poco::RWLock allDataLock;
+
+    Poco::DynamicFactory<DataLogger> loggerFactory;
+    // TODO: use unordered map for c++11-able compilers
+    std::map<std::string, std::string> loggerClasses;
+    /// To be used with loggerClasses
+    typedef std::pair<std::string,std::string> classPair;
+
+    // all loggers
+    std::set< SharedPtr<DataLogger*> > loggers;
+    Poco::RWLock loggersLock;
 
     DataItem emptyDataItem;
 

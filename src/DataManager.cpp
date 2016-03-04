@@ -35,7 +35,11 @@
 
 DataManager::DataManager()
 {
-    // nothing to do
+    // Register data loggers in the factory using the C++ class name
+
+    // e.g.:
+    // loggerFactory.registerClass<DataPocoLogger>("DataPocoLogger");
+    // loggerClasses.insert(classPair("DataPocoLogger", DataPocoLogger::description()));
 }
 
 DataManager::~DataManager()
