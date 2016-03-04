@@ -32,6 +32,8 @@
 #include "OutPort.h"
 #include "DataItem.h"
 
+#include "DataPocoLogger.h"
+
 #include "Poco/Exception.h"
 #include "Poco/Util/Application.h"
 
@@ -39,9 +41,8 @@ DataManager::DataManager()
 {
     // Register data loggers in the factory using the C++ class name
 
-    // e.g.:
-    // loggerFactory.registerClass<DataPocoLogger>("DataPocoLogger");
-    // loggerClasses.insert(classPair("DataPocoLogger", DataPocoLogger::description()));
+    loggerFactory.registerClass<DataPocoLogger>("DataPocoLogger");
+    loggerClasses.insert(classPair("DataPocoLogger", DataPocoLogger::description()));
 }
 
 DataManager::~DataManager()
