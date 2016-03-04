@@ -35,14 +35,16 @@
 InPort::InPort(Module* parent,
         std::string name,
         std::string description,
-        dataTypeEnum datatype,
+        DataItem::DataTypeEnum datatype,
         size_t index):
-    Port(parent, name, description, datatype, index)
+    Port(parent, name, description, datatype, index),
+    used(true)
 {
     mSourcePort = SharedPtr<OutPort*>(
             new (OutPort*)( Poco::Util::Application::instance()
                                     .getSubsystem<Dispatcher>()
                                     .getEmptyOutPort()       ) );
+    mSeqSourcePort = mSourcePort;
 }
 
 InPort::InPort(OutPort* emptySourcePort):
@@ -50,9 +52,11 @@ InPort::InPort(OutPort* emptySourcePort):
                     .getSubsystem<ModuleManager>()
                     .getEmptyModule(),
                 "emptyIn", "replace an expired port",
-                Port::typeUndefined, 0)
+                DataItem::typeUndefined, 0),
+        used(true)
 {
     mSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
+    mSeqSourcePort = mSourcePort;
 }
 
 void InPort::setSourcePort(SharedPtr<OutPort*> port)
@@ -87,3 +91,53 @@ SharedPtr<OutPort*> InPort::getSourcePort()
     return mSourcePort;
 }
 
+void InPort::setSeqSourcePort(SharedPtr<OutPort*> port)
+{
+    (*mSeqSourcePort)->removeSeqTargetPort(this);
+    mSeqSourcePort = port;
+    try
+    {
+        (*mSeqSourcePort)->addSeqTargetPort(this);
+    }
+    catch (DispatcherException& e)
+    {
+        mSeqSourcePort = SharedPtr<OutPort*>(
+                new (OutPort*)( Poco::Util::Application::instance()
+                                        .getSubsystem<Dispatcher>()
+                                        .getEmptyOutPort()       ) );
+        e.rethrow();
+    }
+}
+
+void InPort::releaseSeqSourcePort()
+{
+    (*mSeqSourcePort)->removeSeqTargetPort(this);
+    mSeqSourcePort = SharedPtr<OutPort*>(
+            new (OutPort*)( Poco::Util::Application::instance()
+                                    .getSubsystem<Dispatcher>()
+                                    .getEmptyOutPort()       ) );
+}
+
+SharedPtr<OutPort*> InPort::getSeqSourcePort()
+{
+    return mSeqSourcePort;
+}
+
+void InPort::releaseData()
+{
+    setNew(false);
+    (*getSourcePort())->dataItem()->releaseData();
+
+    // TODO: update expiration information?
+}
+
+void InPort::setNew(bool value)
+{
+    if (value)
+    {
+        poco_debug(Poco::Logger::get("portDebug"), name() + " has new data. ");
+        (*getSourcePort())->dataItem()->readLock();
+    }
+
+    used = !value;
+}

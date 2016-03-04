@@ -262,4 +262,117 @@ pythonDispatchUnbind(PyObject* self, PyObject* args)
     return Py_BuildValue("");
 }
 
+extern "C" PyObject*
+pythonDispatchSeqBind(PyObject* self, PyObject* args)
+{
+    PyObject *pyObj1, *pyObj2;
+
+    // arguments parsing
+    if (!PyArg_ParseTuple(args, "OO:seqBind", &pyObj1, &pyObj2))
+        return NULL;
+
+    // check the type of the object.
+    // the comparison uses type name (str)
+    std::string typeName1(pyObj1->ob_type->tp_name);
+    std::string typeName2(pyObj2->ob_type->tp_name);
+
+    if (typeName2.compare("instru.InPort")==0
+            && typeName1.compare("instru.OutPort")==0)
+    {
+        std::swap(pyObj1, pyObj2);
+    }
+    else if (typeName1.compare("instru.InPort")
+            || typeName2.compare("instru.OutPort"))
+    {
+        PyErr_SetString(PyExc_TypeError,
+                "The arguments must be an InPort and an OutPort");
+        return NULL;
+    }
+
+    InPortMembers* pyInPort = reinterpret_cast<InPortMembers*>(pyObj1);
+    OutPortMembers* pyOutPort = reinterpret_cast<OutPortMembers*>(pyObj2);
+
+    try
+    {
+        Poco::Util::Application::instance()
+            .getSubsystem<Dispatcher>()
+            .seqBind(*pyOutPort->outPort,*pyInPort->inPort);
+    }
+    catch (DispatcherException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("");
+}
+
+extern "C" PyObject*
+pythonDispatchSeqUnbind(PyObject* self, PyObject* args)
+{
+    PyObject* pyObj;
+
+    // arguments parsing
+    if (!PyArg_ParseTuple(args, "O:seqUnbind", &pyObj))
+        return NULL;
+
+    // check the type of the object.
+    // the comparison uses type name (str)
+    std::string typeName(pyObj->ob_type->tp_name);
+
+    if (typeName.compare("instru.InPort"))
+    {
+        PyErr_SetString(PyExc_TypeError, "inPort has to be an InPort");
+        return NULL;
+    }
+
+    InPortMembers* pyPort = reinterpret_cast<InPortMembers*>(pyObj);
+
+    Poco::Util::Application::instance()
+        .getSubsystem<Dispatcher>()
+        .seqUnbind(*pyPort->inPort);
+
+    return Py_BuildValue("");
+}
+
+extern "C" PyObject*
+pythonDispatchRunModule(PyObject *self, PyObject *args)
+{
+    PyObject* pyObj;
+
+    // arguments parsing
+    if (!PyArg_ParseTuple(args, "O:unbind", &pyObj))
+        return NULL;
+
+    // check the type of the object.
+    // the comparison uses type name (str)
+    std::string typeName(pyObj->ob_type->tp_name);
+
+    if (typeName.compare("instru.Module"))
+    {
+        PyErr_SetString(PyExc_TypeError, "The argument has to be a Module");
+        return NULL;
+    }
+
+    ModMembers* pyMod = reinterpret_cast<ModMembers*>(pyObj);
+
+    Poco::Util::Application::instance()
+        .getSubsystem<Dispatcher>()
+        .runModule(*pyMod->module);
+
+    return Py_BuildValue("");
+}
+
+#include "ThreadManager.h"
+
+extern "C" PyObject*
+pythonThreadManWaitAll(PyObject *self, PyObject *args)
+{
+    Poco::Util::Application::instance()
+            .getSubsystem<ThreadManager>()
+            .waitAll();
+
+    return Py_BuildValue("");
+}
+
 #endif /* HAVE_PYTHON27 */

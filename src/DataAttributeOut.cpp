@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoLeafFactory.cpp
- * @date	jan. 2016
+ * @file	src/DataAttributeOut.cpp
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,38 @@
  THE SOFTWARE.
  */
 
-#include "DemoLeafFactory.h"
-#include "DemoModule.h"
-#include "DemoModuleA.h"
-#include "DemoModuleB.h"
-#include "DemoModuleDataSeq.h"
-#include "DemoModuleSeqAccu.h"
-#include "DemoModuleSeqMax.h"
-#include "DemoModuleForwarder.h"
+#include "DataAttributeOut.h"
 
-Module* DemoLeafFactory::newChildModule(std::string customName)
+size_t DataAttributeOut::nextToBeUsedIndex = 0;
+Poco::Mutex DataAttributeOut::lock;
+
+DataAttributeOut DataAttributeOut::newDataAttribute()
 {
-    if (getSelector().compare("leaf")==0)
-        return new DemoModule(this, customName);
+    DataAttributeOut tmp;
+    lock.lock();
+    tmp.appendIndex(nextToBeUsedIndex++);
+    lock.unlock();
 
-    if (getSelector().compare("leafA")==0)
-        return new DemoModuleA(this, customName);
+    return tmp;
+}
 
-    if (getSelector().compare("leafB")==0)
-        return new DemoModuleB(this, customName);
+DataAttributeOut::~DataAttributeOut()
+{
+	// TODO Auto-generated destructor stub
+}
 
-    if (getSelector().compare("leafDataSeq")==0)
-        return new DemoModuleDataSeq(this, customName);
+DataAttributeOut& DataAttributeOut::operator =(const DataAttribute& other)
+{
+	DataAttribute tmp(other);
+	swap(tmp);
+	seqInfo = undefSeqInfo;
+	return *this;
+}
 
-    if (getSelector().compare("leafSeqAccu")==0)
-        return new DemoModuleSeqAccu(this, customName);
-
-    if (getSelector().compare("leafSeqMax")==0)
-        return new DemoModuleSeqMax(this, customName);
-
-    if (getSelector().compare("leafForwarder")==0)
-        return new DemoModuleForwarder(this, customName);
-
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
+DataAttributeOut& DataAttributeOut::operator =(const DataAttributeOut& other)
+{
+	DataAttribute tmp(other);
+	swap(tmp);
+	seqInfo = other.seqInfo;
+	return *this;
 }

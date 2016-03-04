@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoLeafFactory.cpp
- * @date	jan. 2016
+ * @file	src/DataAttributeIn.cpp
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,12 @@
  THE SOFTWARE.
  */
 
-#include "DemoLeafFactory.h"
-#include "DemoModule.h"
-#include "DemoModuleA.h"
-#include "DemoModuleB.h"
-#include "DemoModuleDataSeq.h"
-#include "DemoModuleSeqAccu.h"
-#include "DemoModuleSeqMax.h"
-#include "DemoModuleForwarder.h"
+#include "DataAttributeIn.h"
 
-Module* DemoLeafFactory::newChildModule(std::string customName)
+DataAttributeIn& DataAttributeIn::operator =(const DataAttributeIn& other)
 {
-    if (getSelector().compare("leaf")==0)
-        return new DemoModule(this, customName);
-
-    if (getSelector().compare("leafA")==0)
-        return new DemoModuleA(this, customName);
-
-    if (getSelector().compare("leafB")==0)
-        return new DemoModuleB(this, customName);
-
-    if (getSelector().compare("leafDataSeq")==0)
-        return new DemoModuleDataSeq(this, customName);
-
-    if (getSelector().compare("leafSeqAccu")==0)
-        return new DemoModuleSeqAccu(this, customName);
-
-    if (getSelector().compare("leafSeqMax")==0)
-        return new DemoModuleSeqMax(this, customName);
-
-    if (getSelector().compare("leafForwarder")==0)
-        return new DemoModuleForwarder(this, customName);
-
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
+    DataAttribute tmp(other);
+    swap(tmp);
+    mParent = other.mParent;
+    return *this;
 }

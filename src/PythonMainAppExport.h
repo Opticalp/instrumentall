@@ -149,5 +149,78 @@ static PyMethodDef pyMethodDispatchUnbind =
     "from its source"
 };
 
+/**
+ * @brief Python wrapper to bind ports for data sequences
+ *
+ * Call Dispatcher::seqBind(portA, portB) method
+ *
+ */
+extern "C" PyObject*
+pythonDispatchSeqBind(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDispatchSeqBind =
+{
+    "seqBind",
+    pythonDispatchSeqBind,
+    METH_VARARGS,
+    "seqBind(portA, portB): Bind a data output sequence generator source port portA "
+    "to a data input sequence combiner target port portB"
+};
+
+/**
+ * @brief Python wrapper to unbind ports for data sequences
+ *
+ * Call Dispatcher::seqUnbind(inPortA) method
+ *
+ */
+extern "C" PyObject*
+pythonDispatchSeqUnbind(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDispatchSeqUnbind =
+{
+    "seqUnbind",
+    pythonDispatchSeqUnbind,
+    METH_VARARGS,
+    "unbind(inPortA): unbind a data input sequence combiner target port inPortA "
+    "from its sequence source"
+};
+
+/**
+ * Python wrapper to launch a Module::runTask()
+ *
+ * This is done via the dispatcher that creates a thread.
+ */
+extern "C" PyObject*
+pythonDispatchRunModule(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDispatchRunModule =
+{
+    "runModule",
+    pythonDispatchRunModule,
+    METH_VARARGS,
+    "runModule(module1): Launch the module1 main thread. "
+};
+
+// ----------------------------------------------------------------
+//     Thread Manager
+// ----------------------------------------------------------------
+
+/**
+ * @brief Python wrapper to wait for all tasks to be terminated
+ *
+ * Call ThreadManager::waitAll() method
+ *
+ */
+extern "C" PyObject*
+pythonThreadManWaitAll(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodThreadManWaitAll =
+{
+    "waitAll",
+    pythonThreadManWaitAll,
+    METH_NOARGS,
+    "Wait for all the tasks to be terminated"
+};
+
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_PYTHONMAINAPPEXPORT_H_ */

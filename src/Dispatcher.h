@@ -37,6 +37,7 @@
 #include "Poco/Util/Subsystem.h"
 #include "Poco/RWLock.h"
 #include "Poco/SharedPtr.h"
+#include "Poco/TaskManager.h"
 
 #include <vector>
 
@@ -141,6 +142,39 @@ public:
       */
      void unbind(SharedPtr<InPort*> target);
 
+     /**
+      * Create a sequence combination connection between two ports
+      *
+      * @throw DispatcherException that is forwarded
+      * from @ref getInPort. It is issued if the port is deleted
+      * during the binding.
+      * @note If the target port expired during the binding,
+      * no exception is thrown, but the binding is not made.
+      */
+     void seqBind (SharedPtr<OutPort*> source, SharedPtr<InPort*> target);
+
+     /**
+      * Remove a seq combination connection between two ports
+      *
+      * No exception is thrown
+      */
+     void seqUnbind(SharedPtr<InPort*> target);
+
+     /**
+      * Function to be called when new data is ready on an OutPort
+      *
+      *  - Translate the DataAttributeOut attribute into a DataAttribute
+      *  by checking the sequence targets
+      *  - readLock the data for every target InPort
+      *  - notify the Modules corresponding to the target Ports (push)
+      */
+     void setOutPortDataReady(OutPort* port);
+
+     /**
+      * Launch a module task
+      */
+     void runModule(SharedPtr<Module*> module);
+
 private:
      /**
       * Remove a port from the allInPorts list
@@ -184,7 +218,7 @@ private:
 
      /// output ports to be used as sources for input ports
      std::vector< SharedPtr<OutPort*> > allOutPorts;
-     RWLock outPortsLock; ///< lock for the transactiosn on allOutPorts
+     RWLock outPortsLock; ///< lock for the transactions on allOutPorts
 
      /// Flag to decide if addModule adds a newly created module or not
      bool initialized;

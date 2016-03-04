@@ -29,6 +29,7 @@
 #ifndef SRC_PORT_H_
 #define SRC_PORT_H_
 
+#include "DataItem.h"
 #include <string>
 
 class Module;
@@ -42,27 +43,16 @@ class Module;
 class Port
 {
 public:
-    /**
-     * Data type descriptor
-     */
-    enum dataTypeEnum
-    {
-        typeUndefined, /// to be used in empty ports
-        typeInteger,
-        typeFloat,
-        typeString,
-        typeCnt
-    };
 
     /// Constructor
     Port(Module* parent,
             std::string name,
             std::string description,
-            dataTypeEnum datatype,
+            DataItem::DataTypeEnum dataType,
             size_t index):
                 pParent(parent),
                 mName(name), mDescription(description),
-                mType(datatype), mIndex(index) { }
+                mType(dataType), mIndex(index) { }
     /// Destructor
     virtual ~Port() { }
 
@@ -73,36 +63,18 @@ public:
     /// get port description
     std::string description() { return mDescription; }
     /// get port data type
-    dataTypeEnum dataType() { return mType; }
+    DataItem::DataTypeEnum dataType() { return mType; }
     /// get port data type as a character string
-    std::string dataTypeStr();
-    /// get the index in the port list
-    size_t index();
+    std::string dataTypeStr() { return DataItem::dataTypeStr(mType); }
+    /// get port indexing at the parent module
+    size_t index() { return mIndex; }
 
 private:
     Module* pParent; ///< parent module reference
     std::string mName; ///< port name
     std::string mDescription; ///< port description
-    dataTypeEnum mType; ///< port data type
+    DataItem::DataTypeEnum mType; ///< port data type
     size_t mIndex; ///< index in the module port list
 };
-
-
-inline std::string Port::dataTypeStr()
-{
-    switch (mType)
-    {
-    case typeUndefined:
-        return "undefined";
-    case typeInteger:
-        return "integer";
-    case typeFloat:
-        return "floating point scalar";
-    case typeString:
-        return "character string";
-    default:
-        return "";
-    }
-}
 
 #endif /* SRC_PORT_H_ */

@@ -190,4 +190,103 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
     return pyPorts;
 }
 
+PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
+{
+    std::vector< Poco::SharedPtr<InPort*> > targets;
+
+    targets = (**self->outPort)->getSeqTargetPorts();
+
+    // prepare python list
+    PyObject* pyPorts = PyList_New(0);
+
+    // prepare InPort python type
+    if (PyType_Ready(&PythonInPort) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the InPort Type");
+        return NULL;
+    }
+
+
+    for ( std::vector< Poco::SharedPtr<InPort*> >::iterator it = targets.begin(),
+            ite = targets.end(); it != ite; it++ )
+    {
+        // create the python object
+        InPortMembers* pyPort =
+            (InPortMembers*)(pyInPortNew((PyTypeObject*)&PythonInPort, NULL, NULL) );
+
+        PyObject* tmp=NULL;
+
+        // init
+        // retrieve name and description
+        tmp = pyPort->name;
+        pyPort->name = PyString_FromString((**it)->name().c_str());
+        Py_XDECREF(tmp);
+
+        tmp = pyPort->description;
+        pyPort->description = PyString_FromString((**it)->description().c_str());
+        Py_XDECREF(tmp);
+
+        // set ModuleFactory reference
+        *(pyPort->inPort) = *it;
+
+        // create the dict entry
+        if (0 > PyList_Append(
+                pyPorts,
+                (PyObject*) pyPort))
+        {
+            // appending the item failed
+            PyErr_SetString(PyExc_RuntimeError,
+                    "Not able to build the return list");
+            return NULL;
+        }
+
+    }
+
+    return pyPorts;
+}
+
+
+#include "DataItem.h"
+#include "DataManager.h"
+#include "PythonData.h"
+
+extern "C" PyObject* pyOutPortData(OutPortMembers *self)
+{
+    Poco::SharedPtr<DataItem*> dataItem;
+
+    try
+    {
+        dataItem = Poco::Util::Application::instance()
+                          .getSubsystem<DataManager>()
+                          .getDataItem( (**self->outPort)->dataItem() );
+    }
+    catch (Poco::NotFoundException& e) // from getDataItem
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    // alloc
+    if (PyType_Ready(&PythonData) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the Data Type");
+        return NULL;
+    }
+
+    DataMembers* pyData =
+            reinterpret_cast<DataMembers*>(
+                    pyDataNew((PyTypeObject*)&PythonData, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // set ModuleFactory reference
+    *(pyData->data) = dataItem;
+
+    return (PyObject*)(pyData);
+}
+
 #endif /* HAVE_PYTHON27 */

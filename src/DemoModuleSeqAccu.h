@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoLeafFactory.cpp
- * @date	jan. 2016
+ * @file	src/DemoModuleSeqAccu.h
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,56 @@
  THE SOFTWARE.
  */
 
-#include "DemoLeafFactory.h"
-#include "DemoModule.h"
-#include "DemoModuleA.h"
-#include "DemoModuleB.h"
-#include "DemoModuleDataSeq.h"
-#include "DemoModuleSeqAccu.h"
-#include "DemoModuleSeqMax.h"
-#include "DemoModuleForwarder.h"
+#ifndef SRC_DEMOMODULESEQACCU_H_
+#define SRC_DEMOMODULESEQACCU_H_
 
-Module* DemoLeafFactory::newChildModule(std::string customName)
+#include "Module.h"
+
+/**
+ * DemoModuleSeqAccu
+ *
+ * Demo module to retrieve the sum of a data sequence.
+ */
+class DemoModuleSeqAccu: public Module
 {
-    if (getSelector().compare("leaf")==0)
-        return new DemoModule(this, customName);
+public:
+    DemoModuleSeqAccu(ModuleFactory* parent, std::string customName);
+    virtual ~DemoModuleSeqAccu() { }
 
-    if (getSelector().compare("leafA")==0)
-        return new DemoModuleA(this, customName);
+    const char * description() const
+    {
+        return "Demo Module to retrieve the sum of a data sequence. ";
+    }
 
-    if (getSelector().compare("leafB")==0)
-        return new DemoModuleB(this, customName);
+    /**
+     * Main logic
+     *
+     * Accumulate the data sequence:
+     *  - reinit the accumulator storage at each startSequence
+     *  - send the accumulator at each endSequence
+     */
+    void runTask();
 
-    if (getSelector().compare("leafDataSeq")==0)
-        return new DemoModuleDataSeq(this, customName);
+private:
+    static size_t refCount; ///< reference counter to generate a unique internal name
 
-    if (getSelector().compare("leafSeqAccu")==0)
-        return new DemoModuleSeqAccu(this, customName);
+    /// Indexes of the input ports
+    enum inPorts
+    {
+        inPortA,
+        inPortCnt
+    };
 
-    if (getSelector().compare("leafSeqMax")==0)
-        return new DemoModuleSeqMax(this, customName);
+    /// Indexes of the output ports
+    enum outPorts
+    {
+        outPortA,
+        outPortCnt
+    };
 
-    if (getSelector().compare("leafForwarder")==0)
-        return new DemoModuleForwarder(this, customName);
+    Poco::Mutex mainMutex; ///< runTask() mutex.
 
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
-}
+    int accumulator;
+};
+
+#endif /* SRC_DEMOMODULESEQACCU_H_ */

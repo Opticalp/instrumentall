@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoLeafFactory.cpp
- * @date	jan. 2016
+ * @file	src/DataAttributeIn.h
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,43 @@
  THE SOFTWARE.
  */
 
-#include "DemoLeafFactory.h"
-#include "DemoModule.h"
-#include "DemoModuleA.h"
-#include "DemoModuleB.h"
-#include "DemoModuleDataSeq.h"
-#include "DemoModuleSeqAccu.h"
-#include "DemoModuleSeqMax.h"
-#include "DemoModuleForwarder.h"
+#ifndef SRC_DATAATTRIBUTEIN_H_
+#define SRC_DATAATTRIBUTEIN_H_
 
-Module* DemoLeafFactory::newChildModule(std::string customName)
+#include "DataAttribute.h"
+
+/**
+ * DataAttributeIn
+ *
+ * DataAttribute specialized by the input port in the tryData query
+ * to leave the ability to this DataAttribute to query itself about
+ * the startSequence and endSequence, comparing its internal lists.
+ */
+class DataAttributeIn: public DataAttribute
 {
-    if (getSelector().compare("leaf")==0)
-        return new DemoModule(this, customName);
+public:
+    DataAttributeIn(DataAttribute attribute, InPort* parent):
+        DataAttribute(attribute), mParent(parent) { }
 
-    if (getSelector().compare("leafA")==0)
-        return new DemoModuleA(this, customName);
+    DataAttributeIn(): mParent(NULL) { }
 
-    if (getSelector().compare("leafB")==0)
-        return new DemoModuleB(this, customName);
+    virtual ~DataAttributeIn() { }
 
-    if (getSelector().compare("leafDataSeq")==0)
-        return new DemoModuleDataSeq(this, customName);
+    DataAttributeIn& operator =(const DataAttributeIn& other);
 
-    if (getSelector().compare("leafSeqAccu")==0)
-        return new DemoModuleSeqAccu(this, customName);
+    /**
+     * Check if the InPort is concerned by a startSequence
+     *
+     * and then remove the InPort from the list
+     */
+    bool isStartSequence()
+        { return DataAttribute::isStartSequence(mParent); }
 
-    if (getSelector().compare("leafSeqMax")==0)
-        return new DemoModuleSeqMax(this, customName);
+    bool isEndSequence()
+        { return DataAttribute::isEndSequence(mParent); }
 
-    if (getSelector().compare("leafForwarder")==0)
-        return new DemoModuleForwarder(this, customName);
+private:
+    InPort* mParent;
+};
 
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
-}
+#endif /* SRC_DATAATTRIBUTEIN_H_ */

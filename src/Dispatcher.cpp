@@ -29,10 +29,13 @@
 #include "Dispatcher.h"
 
 #include "ModuleManager.h"
+#include "ThreadManager.h"
 #include "Module.h"
 
 #include "InPort.h"
 #include "OutPort.h"
+
+#include "Poco/NumberFormatter.h"
 
 #include <typeinfo>
 POCO_IMPLEMENT_EXCEPTION( DispatcherException, Poco::Exception, "Dispatcher error")
@@ -76,6 +79,16 @@ void Dispatcher::uninitialize()
     initialized = false;
 
     poco_debug(logger(), "Dispatcher un-initialization.");
+
+    ThreadManager& threadMan = Poco::Util::Application::instance()
+                                        .getSubsystem<ThreadManager>();
+    size_t taskCnt = threadMan.count();
+    if (taskCnt)
+        poco_warning(logger(), "Dispatcher uninit: "
+            + Poco::NumberFormatter::format(taskCnt)
+            + " task(s) to stop");
+
+    threadMan.cancelAll();
 
     inPortsLock.writeLock();
     outPortsLock.writeLock();
@@ -285,4 +298,52 @@ void Dispatcher::bind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
 void Dispatcher::unbind(SharedPtr<InPort*> target)
 {
     (*target)->releaseSourcePort();
+}
+
+void Dispatcher::seqBind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
+{
+    (*target)->setSeqSourcePort(source);
+}
+
+void Dispatcher::seqUnbind(SharedPtr<InPort*> target)
+{
+    (*target)->releaseSeqSourcePort();
+}
+
+void Dispatcher::setOutPortDataReady(OutPort* port)
+{
+    std::set<Module*> targetModules;
+
+    poco_debug(logger(), port->name() + " data ready");
+
+    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
+    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
+    {
+        (**it)->setNew();
+        targetModules.insert((**it)->parent());
+    }
+
+    for ( std::set<Module*>::iterator it = targetModules.begin(),
+            ite = targetModules.end(); it != ite; it++ )
+    {
+        // get module from module manager
+        SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
+                                        .getSubsystem<ModuleManager>()
+                                        .getModule(*it);
+
+        poco_debug(logger(), "Pushing " + (*shdMod)->name());
+
+        // launch task
+        Poco::Util::Application::instance()
+                 .getSubsystem<ThreadManager>()
+                 .start(*shdMod);
+    }
+}
+
+void Dispatcher::runModule(SharedPtr<Module*> module)
+{
+    Poco::Util::Application::instance()
+             .getSubsystem<ThreadManager>()
+             .start(*module);
 }

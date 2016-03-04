@@ -34,11 +34,11 @@
 #include "Poco/RWLock.h"
 #include "Poco/SharedPtr.h"
 
-using Poco::RWLock;
 using Poco::SharedPtr;
 
 class Dispatcher;
 class OutPort;
+class DataAttributeIn;
 
 /**
  * InPort
@@ -52,7 +52,7 @@ public:
     InPort(Module* parent,
             std::string name,
             std::string description,
-            dataTypeEnum datatype,
+            DataItem::DataTypeEnum datatype,
             size_t index);
 
     /**
@@ -74,6 +74,27 @@ public:
 
     /// Retrieve the source port
     SharedPtr<OutPort*> getSourcePort();
+
+    /// Retrieve the data sequence source port
+    SharedPtr<OutPort*> getSeqSourcePort();
+
+    /**
+     * Try to acquire the data and its attribute
+     *
+     * call isUpToDate() to check if the data is valid
+     *
+     * @return false if the lock can not be acquired or if the data
+     * is not up to date
+     */
+    template<typename T> bool tryData(T*& pData, DataAttributeIn* pAttr);
+
+    /**
+     * Notify that the data has been used and can be released.
+     *
+     * release the corresponding locks, notify that the data is not new
+     * any more, set expiration information...
+     */
+    void releaseData();
 
 private:
     /**
@@ -97,7 +118,50 @@ private:
 
     SharedPtr<OutPort*> mSourcePort;
 
+    /**
+     * Set the data sequence source port
+     *
+     * This function should only be called by the dispatcher.
+     *
+     * If the source port was not the empty port,
+     * the port that was previously bound is notified
+     */
+    void setSeqSourcePort(SharedPtr<OutPort*> port);
+
+    /**
+     * Release the data sequence source port
+     *
+     * And replace it by the empty port.
+     * If the source port was not the empty port,
+     * the port that was previously bound is notified
+     */
+    void releaseSeqSourcePort();
+
+    SharedPtr<OutPort*> mSeqSourcePort;
+
+    /**
+     * To be called by the dispatcher
+     *
+     * when new data is available, just before the push.
+     */
+    void setNew(bool value = true);
+
+    bool isNew() { return !used; }
+
+    /**
+     * Determine if the data of this port are up to date
+     *
+     * To be used before getting the data to be sure not to retrieve
+     * expired data.
+     */
+    bool isUpToDate()
+        { return true; } // FIXME
+
+    bool used;
+
     friend class Dispatcher;
 };
+
+#include "InPort.ipp"
 
 #endif /* SRC_INPORT_H_ */

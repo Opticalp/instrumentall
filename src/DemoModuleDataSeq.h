@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoLeafFactory.cpp
- * @date	jan. 2016
+ * @file	src/DemoModuleDataSeq.h
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,48 @@
  THE SOFTWARE.
  */
 
-#include "DemoLeafFactory.h"
-#include "DemoModule.h"
-#include "DemoModuleA.h"
-#include "DemoModuleB.h"
-#include "DemoModuleDataSeq.h"
-#include "DemoModuleSeqAccu.h"
-#include "DemoModuleSeqMax.h"
-#include "DemoModuleForwarder.h"
+#ifndef SRC_DEMOMODULEDATASEQ_H_
+#define SRC_DEMOMODULEDATASEQ_H_
 
-Module* DemoLeafFactory::newChildModule(std::string customName)
+#include "Poco/Mutex.h"
+
+#include "Module.h"
+
+/**
+ * DemoModuleDataSeq
+ *
+ * Demo module to generate a data sequence at each call to run()
+ * It has no input port, but 1 output port.
+ */
+class DemoModuleDataSeq: public Module
 {
-    if (getSelector().compare("leaf")==0)
-        return new DemoModule(this, customName);
+public:
+    DemoModuleDataSeq(ModuleFactory* parent, std::string customName);
+    virtual ~DemoModuleDataSeq() { mainMutex.lock(); }
 
-    if (getSelector().compare("leafA")==0)
-        return new DemoModuleA(this, customName);
+    const char * description() const
+    {
+        return "Demo Module to generate a data sequence. ";
+    }
 
-    if (getSelector().compare("leafB")==0)
-        return new DemoModuleB(this, customName);
+    /**
+     * Main logic
+     *
+     * Generate an integer data sequence {0;1;2;3}
+     */
+    void runTask();
 
-    if (getSelector().compare("leafDataSeq")==0)
-        return new DemoModuleDataSeq(this, customName);
+private:
+    static size_t refCount; ///< reference counter to generate a unique internal name
 
-    if (getSelector().compare("leafSeqAccu")==0)
-        return new DemoModuleSeqAccu(this, customName);
+    /// Indexes of the output ports
+    enum outPorts
+    {
+        outPortA,
+        outPortCnt
+    };
 
-    if (getSelector().compare("leafSeqMax")==0)
-        return new DemoModuleSeqMax(this, customName);
+    Poco::Mutex mainMutex; ///< runTask() mutex.
+};
 
-    if (getSelector().compare("leafForwarder")==0)
-        return new DemoModuleForwarder(this, customName);
-
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
-}
+#endif /* SRC_DEMOMODULEDATASEQ_H_ */

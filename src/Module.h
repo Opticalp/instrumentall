@@ -33,11 +33,15 @@
 
 #include "Port.h"
 
+#include "Poco/Task.h"
 #include "Poco/RWLock.h"
 
 class InPort;
 class OutPort;
 class ModuleFactory;
+
+/// Time lapse in milliseconds between 2 tries in multithread lock case
+#define TIME_LAPSE 10
 
 POCO_DECLARE_EXCEPTION( , ModuleException, Poco::Exception)
 
@@ -51,8 +55,11 @@ POCO_DECLARE_EXCEPTION( , ModuleException, Poco::Exception)
  *  actuators or sensors
  *  - a computing cell: image processing, signal processing,
  *  ...
+ *
+ *  Inherit from Poco::Task to have the Poco::Runnable features
+ *  and to be able to control progress and task cancellation.
  */
-class Module: public VerboseEntity
+class Module: public VerboseEntity, public Poco::Task
 {
 public:
 	/**
@@ -65,11 +72,15 @@ public:
 	 *  - call @ref setCustomName after the internalName is set
 	 *  - call @ref notifyCreation to let the module being registered
 	 *  in the managers
-	 * @throw ModuleException forwarded from setCustomName if customName
-	 * is already in use.
+	 *
+	 * @param parent Parent module factory
+	 * @param name Name to be used as task name. E.g. use the custom name
+	 *
+	 * @throw ModuleException forwarded from setCustomName or setInternalName
+	 * if customName or internalName is already in use.
 	 */
-	Module(ModuleFactory* parent):
-	      mParent(parent) { }
+	Module(ModuleFactory* parent, std::string name = ""):
+	      mParent(parent), Poco::Task(name), VerboseEntity("module") { }
 
 	/**
 	 * Destructor
@@ -135,6 +146,11 @@ public:
 	 */
 	std::vector<OutPort*> getOutPorts() { return outPorts; }
 
+	/**
+	 * Implementation of Poco::Task::runTask()
+	 */
+	virtual void runTask() { poco_warning(logger(), name() + ": empty task"); }
+
 protected:
     /**
      * Set the internal name of the module
@@ -180,7 +196,7 @@ protected:
 	 */
 	void addInPort(
 	        std::string name, std::string description,
-	        Port::dataTypeEnum dataType,
+	        DataItem::DataTypeEnum dataType,
 	        size_t index );
 
     /**
@@ -198,7 +214,7 @@ protected:
      */
     void addOutPort(
             std::string name, std::string description,
-            Port::dataTypeEnum dataType,
+            DataItem::DataTypeEnum dataType,
             size_t index );
 
 private:

@@ -1,8 +1,8 @@
 /**
- * Definition of the InPort python class
+ * Definition of the Data python class
  * 
- * @file	src/PythonInPort.h
- * @date	feb. 2016
+ * @file	src/PythonData.h
+ * @date	mar. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -29,8 +29,8 @@ THE SOFTWARE.
 */
 
 
-#ifndef SRC_PYTHONINPORT_H_
-#define SRC_PYTHONINPORT_H_
+#ifndef SRC_PYTHONDATA_H_
+#define SRC_PYTHONDATA_H_
 
 #ifdef HAVE_PYTHON27
 
@@ -39,38 +39,22 @@ THE SOFTWARE.
 
 #include "Poco/SharedPtr.h"
 
-#include "InPort.h"
+class DataItem;
 
 // -----------------------------------------------------------------------
 // Variables
 // -----------------------------------------------------------------------
 
-/// member variables for the python InPort class
+/// member variables for the python Data class
 typedef struct
 {
     PyObject_HEAD ///< a refcount and a pointer to a type object (convenience python/C API macro)
-    PyObject* name;  ///< name attribute
-    PyObject* description;  ///< description attribute
-    Poco::SharedPtr<InPort*>* inPort; ///< pointer to the C++ internal InPort object
-} InPortMembers;
+    Poco::SharedPtr<DataItem*>* data; ///< pointer to the C++ internal DataItem object
+} DataMembers;
 
-/// Description of the InPortMembers structure
-static PyMemberDef pyInPortMembers[] =
+/// Description of the DataMembers structure
+static PyMemberDef pyDataMembers[] =
 {
-    {
-        const_cast<char *>("name"),
-        T_OBJECT_EX,
-        offsetof(InPortMembers, name),
-        READONLY,
-        const_cast<char *>("Input Port name")
-    },
-    {
-        const_cast<char *>("description"),
-        T_OBJECT_EX,
-        offsetof(InPortMembers, description),
-        READONLY,
-        const_cast<char *>("Input Port description")
-    },
     { NULL } // Sentinel
 };
 
@@ -81,50 +65,37 @@ static PyMemberDef pyInPortMembers[] =
 /**
  * Initializer
  *
- * The python version of this initializer has to be called with the
- * name of the factory as argument.
+ * The Data direct initializing is not supported
  */
-extern "C" int pyInPortInit(InPortMembers* self, PyObject *args, PyObject *kwds);
+extern "C" int pyDataInit(DataMembers* self, PyObject *args, PyObject *kwds);
 
-/// InPort::parent python wrapper
-extern "C" PyObject* pyInPortParent(InPortMembers *self);
+/// Data::parent python wrapper
+extern "C" PyObject* pyDataParent(DataMembers *self);
 
-static PyMethodDef pyMethodInPortParent =
+static PyMethodDef pyMethodDataParent =
 {
     "parent",
-    (PyCFunction)pyInPortParent,
+    (PyCFunction)pyDataParent,
     METH_NOARGS,
-    "Retrieve the parent module"
+    "Retrieve the parent OutPort"
 };
 
-/// python wrapper to get the source port of the current input port
-extern "C" PyObject* pyInPortGetSourcePort(InPortMembers *self);
+/// python wrapper to get the current value of the data item
+extern "C" PyObject* pyDataGetValue(DataMembers *self);
 
-static PyMethodDef pyMethodInPortGetSourcePort =
+static PyMethodDef pyMethodDataGetValue =
 {
-    "getSourcePort",
-    (PyCFunction)pyInPortGetSourcePort,
+    "getValue",
+    (PyCFunction)pyDataGetValue,
     METH_NOARGS,
-    "Retrieve the source port"
-};
-
-/// python wrapper to get the source port of the current input port
-extern "C" PyObject* pyInPortGetSeqSourcePort(InPortMembers *self);
-
-static PyMethodDef pyMethodInPortGetSeqSourcePort =
-{
-    "getSeqSourcePort",
-    (PyCFunction)pyInPortGetSeqSourcePort,
-    METH_NOARGS,
-    "Retrieve the data sequence source port"
+    "Retrieve the current value"
 };
 
 /// exported methods
-static PyMethodDef pyInPortMethods[] = {
-        pyMethodInPortParent,
+static PyMethodDef pyDataMethods[] = {
+        pyMethodDataParent,
 
-        pyMethodInPortGetSourcePort,
-        pyMethodInPortGetSeqSourcePort,
+        pyMethodDataGetValue,
 
         {NULL} // sentinel
 };
@@ -136,7 +107,7 @@ static PyMethodDef pyInPortMethods[] = {
 /**
  * Deallocator
  */
-extern "C" void pyInPortDealloc(InPortMembers* self);
+extern "C" void pyDataDealloc(DataMembers* self);
 
 /**
  * Allocator
@@ -144,17 +115,17 @@ extern "C" void pyInPortDealloc(InPortMembers* self);
  * Initialize "name" and "description" to empty strings instead of
  * NULL because they are python objects.
  */
-extern "C" PyObject* pyInPortNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
+extern "C" PyObject* pyDataNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
 
 
 /// Definition of the PyTypeObject
-static PyTypeObject PythonInPort = {                  // SPECIFIC
+static PyTypeObject PythonData = {                  // SPECIFIC
     PyObject_HEAD_INIT(NULL)
     0,                          /*ob_size*/
-    "instru.InPort",            /*tp_name*/           // SPECIFIC
-    sizeof(InPortMembers),      /*tp_basicsize*/      // SPECIFIC
+    "instru.Data",            /*tp_name*/           // SPECIFIC
+    sizeof(DataMembers),      /*tp_basicsize*/      // SPECIFIC
     0,                          /*tp_itemsize*/
-    (destructor)pyInPortDealloc,/*tp_dealloc*/        // SPECIFIC
+    (destructor)pyDataDealloc,/*tp_dealloc*/        // SPECIFIC
     0,                          /*tp_print*/
     0,                          /*tp_getattr*/
     0,                          /*tp_setattr*/
@@ -171,27 +142,26 @@ static PyTypeObject PythonInPort = {                  // SPECIFIC
     0,                          /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT |
         Py_TPFLAGS_BASETYPE,    /*tp_flags*/
-    "Input port entity to "
-    "receive data from another "
-    "module port (source) ",    /* tp_doc */          // SPECIFIC
+    "data entity attached to "
+    "an output port ",          /* tp_doc */          // SPECIFIC
     0,                          /* tp_traverse */
     0,                          /* tp_clear */
     0,                          /* tp_richcompare */
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-    pyInPortMethods,            /* tp_methods */    // SPECIFIC
-    pyInPortMembers,            /* tp_members */    // SPECIFIC
+    pyDataMethods,            /* tp_methods */    // SPECIFIC
+    pyDataMembers,            /* tp_members */    // SPECIFIC
     0,                          /* tp_getset */
     0,                          /* tp_base */       // SPECIFIC
     0,                          /* tp_dict */
     0,                          /* tp_descr_get */
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
-    (initproc)pyInPortInit,        /* tp_init */       // SPECIFIC
+    (initproc)pyDataInit,        /* tp_init */       // SPECIFIC
     0,                          /* tp_alloc */
-    pyInPortNew,                /* tp_new */        // SPECIFIC
+    pyDataNew,                /* tp_new */        // SPECIFIC
 };
 
 #endif /* HAVE_PYTHON27 */
-#endif /* SRC_PYTHONINPORT_H_ */
+#endif /* SRC_PYTHONDATA_H_ */

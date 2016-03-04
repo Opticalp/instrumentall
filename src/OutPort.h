@@ -29,6 +29,8 @@
 #ifndef SRC_OUTPORT_H_
 #define SRC_OUTPORT_H_
 
+#include "DataItem.h"
+#include "DataAttributeOut.h"
 #include "Port.h"
 
 #include "Poco/RWLock.h"
@@ -52,7 +54,7 @@ public:
     OutPort(Module* parent,
             std::string name,
             std::string description,
-            dataTypeEnum datatype,
+            DataItem::DataTypeEnum datatype,
             size_t index);
 
     /**
@@ -60,10 +62,48 @@ public:
      */
     OutPort();
 
+    /**
+     * Destructor
+     *
+     * Do not need to call removeTargetPort.
+     * Indeed, this destructor is called when the parent module
+     * is deleted. On Module deletion, the ModuleManager::removeModule
+     * is called, then the Dispatcher::removeModule is called,
+     * then this output port is deleted from Dispatcher::allOutPorts
+     * after this removeTargetPort has been called.
+     */
     virtual ~OutPort() { }
 
-    /// retrieve the target ports
+    /**
+     * Retrieve the target ports
+     */
     std::vector< SharedPtr<InPort*> > getTargetPorts();
+
+    /**
+     * Retrieve the data sequence target ports
+     */
+    std::vector< SharedPtr<InPort*> > getSeqTargetPorts();
+
+    /**
+     * Try to retrieve a pointer on the data to be written
+     *
+     * @return false if the lock cannot be acquired
+     */
+    template<typename T> bool tryData(T*& pData)
+        { return dataItem()->tryGetDataToWrite<T>(pData); }
+
+    /**
+     * Notify the dispatcher that the new data is ready
+     *
+     * With the given attributes,
+     * and release the lock acquired with tryData
+     */
+    void notifyReady(DataAttributeOut attribute);
+
+    /**
+     * Get the DataItem for this OutPort
+     */
+    DataItem* dataItem() { return &data; }
 
 private:
     /**
@@ -85,9 +125,33 @@ private:
     void removeTargetPort(InPort* port);
 
     std::vector< SharedPtr<InPort*> > targetPorts;
-    RWLock lock; ///< lock for targetPorts operations
+    RWLock targetPortsLock; ///< lock for targetPorts operations
+
+    /**
+     * Add a sequence re-combiner target port
+     *
+     * This function should only be called by the seq target InPort.
+     *
+     * The Dispatcher is requested to get the shared pointer
+     * on the InPort.
+     */
+    void addSeqTargetPort(InPort* port);
+
+    /**
+     * Remove a sequence re-combiner target port
+     *
+     * Should not throw an exception if the port is not present
+     * in the seqTargetPorts
+     */
+    void removeSeqTargetPort(InPort* port);
+
+    /// list of target ports for data sequence re-combination
+    std::vector< SharedPtr<InPort*> > seqTargetPorts;
+    RWLock seqTargetPortsLock; ///< lock for seqTargetPorts operations
 
     friend class InPort;
+
+    DataItem data;
 };
 
 #endif /* SRC_OUTPORT_H_ */

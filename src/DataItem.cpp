@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoLeafFactory.cpp
- * @date	jan. 2016
+ * @file	src/DataItem.cpp
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,29 @@
  THE SOFTWARE.
  */
 
-#include "DemoLeafFactory.h"
-#include "DemoModule.h"
-#include "DemoModuleA.h"
-#include "DemoModuleB.h"
-#include "DemoModuleDataSeq.h"
-#include "DemoModuleSeqAccu.h"
-#include "DemoModuleSeqMax.h"
-#include "DemoModuleForwarder.h"
+#include "DataItem.h"
+#include "DataManager.h"
+#include "Poco/Util/Application.h"
 
-Module* DemoLeafFactory::newChildModule(std::string customName)
+DataItem::~DataItem()
 {
-    if (getSelector().compare("leaf")==0)
-        return new DemoModule(this, customName);
+    if (mDataType == typeInteger)
+        delete reinterpret_cast<int*>(dataStore);
+}
 
-    if (getSelector().compare("leafA")==0)
-        return new DemoModuleA(this, customName);
+DataItem::DataItem(DataTypeEnum dataType, OutPort* parent):
+        mDataType(dataType),
+        mParentPort(parent)
+{
+    if (mDataType == typeInteger)
+        dataStore = reinterpret_cast<void*>(new int);
+}
 
-    if (getSelector().compare("leafB")==0)
-        return new DemoModuleB(this, customName);
+void DataItem::releaseNewData()
+{
+    releaseData();
 
-    if (getSelector().compare("leafDataSeq")==0)
-        return new DemoModuleDataSeq(this, customName);
-
-    if (getSelector().compare("leafSeqAccu")==0)
-        return new DemoModuleSeqAccu(this, customName);
-
-    if (getSelector().compare("leafSeqMax")==0)
-        return new DemoModuleSeqMax(this, customName);
-
-    if (getSelector().compare("leafForwarder")==0)
-        return new DemoModuleForwarder(this, customName);
-
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
+    Poco::Util::Application::instance()
+            .getSubsystem<DataManager>()
+            .newData(this);
 }

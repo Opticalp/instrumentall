@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoLeafFactory.cpp
- * @date	jan. 2016
+ * @file	src/DataAttribute.cpp
+ * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,40 @@
  THE SOFTWARE.
  */
 
-#include "DemoLeafFactory.h"
-#include "DemoModule.h"
-#include "DemoModuleA.h"
-#include "DemoModuleB.h"
-#include "DemoModuleDataSeq.h"
-#include "DemoModuleSeqAccu.h"
-#include "DemoModuleSeqMax.h"
-#include "DemoModuleForwarder.h"
+#include "DataAttribute.h"
 
-Module* DemoLeafFactory::newChildModule(std::string customName)
+
+DataAttribute::~DataAttribute()
 {
-    if (getSelector().compare("leaf")==0)
-        return new DemoModule(this, customName);
+    // nothing to do
+}
 
-    if (getSelector().compare("leafA")==0)
-        return new DemoModuleA(this, customName);
+DataAttribute::DataAttribute(const DataAttribute& other)
+{
+    indexes = other.indexes;
+    startSequenceTargets = other.startSequenceTargets;
+    endSequenceTargets = other.endSequenceTargets;
+}
 
-    if (getSelector().compare("leafB")==0)
-        return new DemoModuleB(this, customName);
+DataAttribute& DataAttribute::operator =(const DataAttribute& other)
+{
+    DataAttribute tmp(other);
+    swap(tmp);
+    return *this;
+}
 
-    if (getSelector().compare("leafDataSeq")==0)
-        return new DemoModuleDataSeq(this, customName);
+DataAttribute& DataAttribute::operator +=(const DataAttribute& rhs)
+{
+    indexes.insert(rhs.indexes.begin(), rhs.indexes.end());
+    startSequenceTargets.insert(rhs.startSequenceTargets.begin(), rhs.startSequenceTargets.end());
+    endSequenceTargets.insert(rhs.endSequenceTargets.begin(), rhs.endSequenceTargets.end());
 
-    if (getSelector().compare("leafSeqAccu")==0)
-        return new DemoModuleSeqAccu(this, customName);
+    return *this; // return the result by reference
+}
 
-    if (getSelector().compare("leafSeqMax")==0)
-        return new DemoModuleSeqMax(this, customName);
-
-    if (getSelector().compare("leafForwarder")==0)
-        return new DemoModuleForwarder(this, customName);
-
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
+void DataAttribute::swap(DataAttribute& other)
+{
+    indexes.swap(other.indexes);
+    startSequenceTargets.swap(other.startSequenceTargets);
+    endSequenceTargets.swap(other.endSequenceTargets);
 }

@@ -43,6 +43,7 @@ THE SOFTWARE.
 #include "PythonModule.h"
 #include "PythonInPort.h"
 #include "PythonOutPort.h"
+#include "PythonData.h"
 
 /**
  * array to bind to-be-exposed methods (C to Python wrappers)
@@ -60,6 +61,14 @@ static PyMethodDef EmbMethods[] =
     // dispatcher
     pyMethodDispatchBind,
     pyMethodDispatchUnbind,
+
+    pyMethodDispatchSeqBind,
+    pyMethodDispatchSeqUnbind,
+
+    pyMethodDispatchRunModule,
+
+    // thread manager
+    pyMethodThreadManWaitAll,
 
     // sentinel
     {NULL, NULL, 0, NULL}
@@ -106,6 +115,9 @@ void PythonManager::exposeAPI()
     if (PyType_Ready(&PythonOutPort) < 0)
         return;
 
+    if (PyType_Ready(&PythonData) < 0)
+        return;
+
     PyObject* m;
 
     m = Py_InitModule3("instru", EmbMethods,
@@ -128,6 +140,9 @@ void PythonManager::exposeAPI()
 
     Py_INCREF(&PythonOutPort);
     PyModule_AddObject(m, "OutPort", (PyObject *)&PythonOutPort);
+
+    Py_INCREF(&PythonData);
+    PyModule_AddObject(m, "Data", (PyObject *)&PythonData);
 }
 
 

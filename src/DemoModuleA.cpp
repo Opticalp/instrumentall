@@ -34,7 +34,6 @@ size_t DemoModuleA::refCount = 0;
 DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
                 Module(parent)
 {
-    VerboseEntity("module.DemoModuleA");
     poco_debug(logger(),"Creating a new demo module A");
 
     setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
@@ -45,10 +44,10 @@ DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
     setInPortCount(inPortCnt);
     setOutPortCount(outPortCnt);
 
-    addInPort("inPortA", "demo port that transmits nothing", Port::typeInteger, inPortA);
-    addInPort("inPortB", "demo port that transmits nothing", Port::typeFloat, inPortB);
+    addInPort("inPortA", "demo port that transmits nothing", DataItem::typeInteger, inPortA);
+    addInPort("inPortB", "demo port that transmits nothing", DataItem::typeFloat, inPortB);
 
-    addOutPort("outPortA", "demo port that transmits nothing", Port::typeInteger, outPortA);
+    addOutPort("outPortA", "demo port that transmits nothing", DataItem::typeInteger, outPortA);
 
     notifyCreation();
 
