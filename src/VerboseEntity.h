@@ -108,10 +108,11 @@ protected:
      */
     Poco::Logger& logger()
     {
-    	poco_check_ptr (pLogger);
+    	poco_check_ptr(pLogger);
     	return *pLogger;
     }
 
+private:
     /// local logger
     Poco::Logger* pLogger;
 };
