@@ -91,23 +91,11 @@ static PyMethodDef pyMethodDataGetValue =
     "Retrieve the current value"
 };
 
-/// python wrapper to wait for new data and get its value
-extern "C" PyObject* pyDataGetNewValue(DataMembers *self);
-
-static PyMethodDef pyMethodDataGetNewValue =
-{
-    "getNewValue",
-    (PyCFunction)pyDataGetNewValue,
-    METH_NOARGS,
-    "Wait for new data, and retrieve it"
-};
-
 /// exported methods
 static PyMethodDef pyDataMethods[] = {
         pyMethodDataParent,
 
         pyMethodDataGetValue,
-        pyMethodDataGetNewValue,
 
         {NULL} // sentinel
 };

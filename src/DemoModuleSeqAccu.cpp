@@ -67,7 +67,7 @@ void DemoModuleSeqAccu::runTask()
     // FIXME: if an exception is raised,
     // the mainMutex unlock is not guaranteed...
 
-    poco_information(logger(), "DemoModuleSeqAccu::runTask started. ");
+    poco_debug(logger(), "DemoModuleSeqAccu::runTask started. ");
 
     // We could use a scoped lock here:
     //Poco::Mutex::ScopedLock lock(mainMutex);

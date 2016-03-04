@@ -314,8 +314,7 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
 {
     std::set<Module*> targetModules;
 
-    //poco_debug(logger(), port->name() + " data ready");
-    poco_information(logger(), port->name() + " data ready");
+    poco_debug(logger(), port->name() + " data ready");
 
     std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
     for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
@@ -333,8 +332,7 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
                                         .getSubsystem<ModuleManager>()
                                         .getModule(*it);
 
-        // poco_debug(logger(), "Pushing " + (*shdMod)->name());
-        poco_information(logger(), "Pushing " + (*shdMod)->name());
+        poco_debug(logger(), "Pushing " + (*shdMod)->name());
 
         // launch task
         Poco::Util::Application::instance()

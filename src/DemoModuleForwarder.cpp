@@ -66,7 +66,7 @@ void DemoModuleForwarder::runTask()
     // FIXME: if an exception is raised,
     // the mainMutex unlock is not guaranteed...
 
-    poco_information(logger(), "DemoModuleForwarder::runTask started. ");
+    poco_debug(logger(), "DemoModuleForwarder::runTask started. ");
 
     // try to acquire the mutex
     while (!mainMutex.tryLock(TIME_LAPSE))
@@ -120,7 +120,7 @@ void DemoModuleForwarder::runTask()
     *pOutData = tmpData;
     getOutPorts()[outPortA]->notifyReady(outAttr);
 
-    poco_information(logger(), "DemoModuleForwarder::runTask(): "
+    poco_debug(logger(), "DemoModuleForwarder::runTask(): "
             + Poco::NumberFormatter::format(tmpData) + " was forwarded.");
 
     mainMutex.unlock();

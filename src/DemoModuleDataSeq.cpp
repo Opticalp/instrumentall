@@ -62,7 +62,7 @@ void DemoModuleDataSeq::runTask()
     // FIXME: if an exception is raised,
     // the mainMutex unlock is not guaranteed...
 
-    poco_information(logger(), "DemoModuleDataSeq::runTask started. ");
+    poco_debug(logger(), "DemoModuleDataSeq::runTask started. ");
 
     // try to acquire the mutex
     while (!mainMutex.tryLock(TIME_LAPSE))
