@@ -28,6 +28,7 @@ THE SOFTWARE.
 
 #include "InPort.h"
 #include "OutPort.h"
+#include "DataAttributeIn.h"
 
 template<typename T> inline bool InPort::tryData(T*& pData, DataAttributeIn* pAttr)
 {
