@@ -145,6 +145,11 @@ public:
     SharedPtr<DataLogger*> getDataLogger(DataLogger* dataLogger);
 
     /**
+     * Get the source data of a logger
+     */
+    SharedPtr<DataItem*> getSourceDataItem(SharedPtr<DataLogger*> dataLogger);
+
+    /**
      * Delete a DataLogger
      *
      * Do nothing if the DataLogger is the empty data logger

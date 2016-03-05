@@ -182,6 +182,20 @@ SharedPtr<DataLogger*> DataManager::getDataLogger(DataLogger* dataLogger)
 
 }
 
+SharedPtr<DataItem*> DataManager::getSourceDataItem(
+        SharedPtr<DataLogger*> dataLogger)
+{
+    DataItem* data = (*dataLogger)->data();
+
+    if (data)
+        return getDataItem(data);
+    else
+        throw Poco::NotFoundException("DataManager::getsourceDataItem",
+                "No source data item found. "
+                "The logger may be detached. ");
+}
+
+
 void DataManager::removeDataLogger(SharedPtr<DataLogger*> logger)
 {
     // switch the logger into empty state

@@ -63,7 +63,11 @@ def myMain():
     for loggerClass in loggerClasses:
         print " - " + loggerClass + ": " + loggerClasses[loggerClass]
     
-#    logger = DataLogger("DataLoggerClassName") # creation using the factory
+    print 'Logger creation using the constructor: DataLogger("DataPocoLogger")'
+    logger = DataLogger("DataPocoLogger") 
+    print " - Name: " + logger.name
+    print " - Description: " + logger.description
+    
 #    # OR
 #    logger = dataLoggers()[N] # query the data manager about existing data loggers
 #    
@@ -79,7 +83,7 @@ def myMain():
 #              " of module: " + logger.parent().parent().parent().name  
 #    
 #    # remove a logger from a data
-#    detachDataLogger(logger)
+#    logger.detach()
 #
 #    # remove a logger 
 #    removeDataLogger(logger)

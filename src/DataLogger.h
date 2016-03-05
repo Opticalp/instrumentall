@@ -93,7 +93,10 @@ public:
     virtual void runTask() = 0;
 
 protected:
-    DataItem* data() { return pData; }
+    /**
+     * Retrieve parent data item
+     */
+    DataItem* data();
 
     /**
      * Bind the logger to its data item

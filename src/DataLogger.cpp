@@ -70,8 +70,10 @@ void DataLogger::registerData(DataItem* data)
 
 void DataLogger::acquireLock()
 {
-    if (data())
-        data()->readLock();
+    dataLock.lock();
+    if (pData)
+        pData->readLock();
+    dataLock.unlock();
 }
 
 void DataLogger::setEmpty()
@@ -82,4 +84,16 @@ void DataLogger::setEmpty()
     empty = true;
 
     dataLock.unlock();
+}
+
+DataItem* DataLogger::data()
+{
+    DataItem* tmp;
+
+    // lock in case somebody else already locks
+    dataLock.lock();
+    tmp =  pData;
+    dataLock.unlock();
+
+    return tmp;
 }
