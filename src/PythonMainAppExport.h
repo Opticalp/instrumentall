@@ -244,6 +244,22 @@ static PyMethodDef pyMethodDataManDataLoggerClasses =
     "of the available DataLogger classes"
 };
 
+/**
+ * @brief Python wrapper to retrieve the existing data loggers
+ *
+ * Call DataManager::dataLoggers() method
+ *
+ */
+extern "C" PyObject*
+pythonDataManDataLoggers(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDataManDataLoggers =
+{
+    "dataLoggers",
+    pythonDataManDataLoggers,
+    METH_NOARGS,
+    "Retrieve the existing data loggers"
+};
 
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_PYTHONMAINAPPEXPORT_H_ */

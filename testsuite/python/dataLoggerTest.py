@@ -68,9 +68,13 @@ def myMain():
     print " - Name: " + logger.name
     print " - Description: " + logger.description
     
-#    # OR
-#    logger = dataLoggers()[N] # query the data manager about existing data loggers
-#    
+    # OR
+    print "Retrieve the existing loggers list"
+    loggers = dataLoggers()
+    print str(len(loggers)) + " loggers available"
+    
+    print "logger#0 is of class: " + loggers[0].name 
+    
 #    # register a logger to some data
 #    module.OutPorts()[P].data().registerLogger(logger)
 #    
