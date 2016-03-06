@@ -77,29 +77,38 @@ def myMain():
     print "Register the new logger to mod2 output"
     mod2.outPorts()[0].data().register(logger)
     
-    # check the registered loggers
+    print "Check the registered loggers at the mod2 output port" 
     loggers = mod2.outPorts()[0].data().loggers()
 
-    for logger in loggers:
-        print ("Logger: " + logger.name + " (" + logger.description + ")" +
-               " on port: " + logger.dataSource().parent().name + 
-               " of module: " + logger.dataSource().parent().parent().name )  
+    for lolo in loggers:
+        print ("Logger: " + lolo.name + " (" + lolo.description + ")" +
+               " on port: " + lolo.dataSource().parent().name + 
+               " of module: " + lolo.dataSource().parent().parent().name )  
     
-#    # remove a logger 
-#    removeDataLogger(logger)
-   
     print "launch action: run mod1"
     runModule(mod1)
-    
     waitAll()
 
     print "Detach the logger and re-run"
     logger.detach()
 
     runModule(mod1)
-    
     waitAll()
     
+    print "Re-register the logger to mod2 output"
+    mod2.outPorts()[0].data().register(logger)
+
+    print "Remove the logger" 
+    removeDataLogger(logger)
+   
+    print "Check the registered loggers at the mod2 output port" 
+    if mod2.outPorts()[0].data().loggers() is None:
+        print "Ok, no more logger is registered"
+
+    print "And re-run..."
+    runModule(mod1)
+    waitAll()
+
     print "End of script dataLoggerTest.py"
     
 # main body    

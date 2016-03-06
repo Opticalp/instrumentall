@@ -489,4 +489,33 @@ pythonDataManDataLoggers(PyObject *self, PyObject *args)
     return pyLoggers;
 }
 
+extern "C" PyObject*
+pythonDataManRemoveDataLogger(PyObject *self, PyObject *args)
+{
+    PyObject *pyObj;
+
+    // arguments parsing
+    if (!PyArg_ParseTuple(args, "O:register", &pyObj))
+        return NULL;
+
+    // check the type of the object.
+    // the comparison uses type name (str)
+    std::string typeName(pyObj->ob_type->tp_name);
+
+    if (typeName.compare("instru.DataLogger"))
+    {
+        PyErr_SetString(PyExc_TypeError,
+                "The argument must be a DataLogger");
+        return NULL;
+    }
+
+    DataLoggerMembers* pyLogger = reinterpret_cast<DataLoggerMembers*>(pyObj);
+
+    Poco::Util::Application::instance()
+                            .getSubsystem<DataManager>()
+                            .removeDataLogger(*pyLogger->logger);
+
+    return Py_BuildValue("");
+}
+
 #endif /* HAVE_PYTHON27 */

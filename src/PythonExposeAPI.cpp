@@ -74,6 +74,7 @@ static PyMethodDef EmbMethods[] =
     // data manager
     pyMethodDataManDataLoggerClasses,
     pyMethodDataManDataLoggers,
+    pyMethodDataManRemoveDataLogger,
 
     // sentinel
     {NULL, NULL, 0, NULL}
