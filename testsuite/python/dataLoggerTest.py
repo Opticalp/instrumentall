@@ -77,14 +77,14 @@ def myMain():
     print "Register the new logger to mod2 output"
     mod2.outPorts()[0].data().register(logger)
     
-#    # check the registered loggers
-#    loggers = module.OutPorts()[P].data().loggers()
-#
-#    for logger in loggers:
-#        print "Logger: " + logger.name + "(" + logger.description + ") "
-#              " on port: " + logger.parent().parent().name + 
-#              " of module: " + logger.parent().parent().parent().name  
-#    
+    # check the registered loggers
+    loggers = mod2.outPorts()[0].data().loggers()
+
+    for logger in loggers:
+        print ("Logger: " + logger.name + " (" + logger.description + ")" +
+               " on port: " + logger.dataSource().parent().name + 
+               " of module: " + logger.dataSource().parent().parent().name )  
+    
 #    # remove a logger 
 #    removeDataLogger(logger)
    

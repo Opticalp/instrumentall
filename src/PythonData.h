@@ -102,11 +102,23 @@ static PyMethodDef pyMethodDataRegister =
     "register(logger): Register the DataLogger \"logger\" to log the data"
 };
 
+/// python wrapper to retrieve the registered data loggers
+extern "C" PyObject* pyDataLoggers(DataMembers *self);
+
+static PyMethodDef pyMethodDataLoggers =
+{
+    "loggers",
+    (PyCFunction)pyDataLoggers,
+    METH_NOARGS,
+    "Retrieve the registered data loggers"
+};
+
 /// exported methods
 static PyMethodDef pyDataMethods[] = {
         pyMethodDataParent,
         pyMethodDataGetValue,
         pyMethodDataRegister,
+        pyMethodDataLoggers,
 
         {NULL} // sentinel
 };
