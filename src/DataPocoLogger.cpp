@@ -50,3 +50,10 @@ void DataPocoLogger::runTask()
 
     data()->releaseData();
 }
+
+DataPocoLogger::DataPocoLogger():
+        DataLogger(name())
+{
+    // FIXME
+    setLogger("DataLoggerDebug");
+}

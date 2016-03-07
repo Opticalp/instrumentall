@@ -72,7 +72,9 @@ void DemoModuleForwarder::runTask()
     while (!mainMutex.tryLock(TIME_LAPSE))
     {
         poco_information(logger(),
-                "DemoModuleForwarder::runTask(): failed to acquire the mutex");
+                "DemoModuleForwarder::runTask(): "
+                "failed to acquire the mutex after "
+                + Poco::NumberFormatter::format(TIME_LAPSE) + " ms");
 
         if (isCancelled())
             return;
@@ -90,7 +92,8 @@ void DemoModuleForwarder::runTask()
     {
         poco_information(logger(),
                 "DemoModuleForwarder::runTask(): "
-                "failed to acquire the input data lock");
+                "failed to acquire the input data lock. "
+                "Data is probably not up to date. ");
 
         mainMutex.unlock();
         return; // data not up to date
@@ -104,7 +107,7 @@ void DemoModuleForwarder::runTask()
     int* pOutData;
 
     // try to acquire the output data lock
-    while (!getOutPorts()[outPortA]->tryData(pOutData))
+    while (!getOutPorts()[outPortA]->tryData<int>(pOutData))
     {
         poco_information(logger(),
                 "DemoModuleForwarder::runTask(): "
@@ -113,6 +116,8 @@ void DemoModuleForwarder::runTask()
         if (sleep(TIME_LAPSE))
         {
             mainMutex.unlock();
+            poco_notice(logger(),
+                    "DemoModuleForwarder::runTask(): cancelled!");
             return;
         }
     }

@@ -80,6 +80,8 @@ void Dispatcher::uninitialize()
 
     // poco_information(logger(), "Dispatcher un-initialization.");
 
+    // TODO: data man un-init
+
     ThreadManager& threadMan = Poco::Util::Application::instance()
                                         .getSubsystem<ThreadManager>();
     size_t taskCnt = threadMan.count();
@@ -89,6 +91,7 @@ void Dispatcher::uninitialize()
             + " task(s) to stop");
 
     threadMan.cancelAll();
+    threadMan.waitAll();
 
     inPortsLock.writeLock();
     outPortsLock.writeLock();

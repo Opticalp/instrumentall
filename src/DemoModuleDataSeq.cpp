@@ -68,7 +68,9 @@ void DemoModuleDataSeq::runTask()
     while (!mainMutex.tryLock(TIME_LAPSE))
     {
         poco_information(logger(),
-                "DemoModuleDataSeq::runTask(): failed to acquire the mutex");
+                "DemoModuleDataSeq::runTask(): "
+                "failed to acquire the mutex after "
+                + Poco::NumberFormatter::format(TIME_LAPSE) + " ms");
 
         if (isCancelled())
             return;
@@ -84,11 +86,14 @@ void DemoModuleDataSeq::runTask()
         {
             poco_information(logger(),
                     "DemoModuleDataSeq::runTask(): "
-                    "failed to acquire the output data lock");
+                    "failed to acquire the output data lock. "
+                    "Wait " + Poco::NumberFormatter::format(TIME_LAPSE)
+                    + " ms now and retry. ");
 
             if (sleep(TIME_LAPSE))
             {
                 mainMutex.unlock();
+                poco_notice(logger(), "DemoModuleDataSeq::runTask(): cancelled!" );
                 return;
             }
         }
@@ -111,6 +116,7 @@ void DemoModuleDataSeq::runTask()
         if (isCancelled())
         {
             mainMutex.unlock();
+            poco_notice(logger(), "DemoModuleDataSeq::runTask(): cancelled!" );
             return;
         }
     }

@@ -41,8 +41,7 @@
 class DataPocoLogger: public DataLogger
 {
 public:
-    // FIXME
-    DataPocoLogger() { setLogger("DataLoggerDebug"); }
+    DataPocoLogger();
 
     virtual ~DataPocoLogger() { }
 
