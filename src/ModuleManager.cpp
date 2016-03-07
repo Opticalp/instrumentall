@@ -41,7 +41,7 @@ ModuleManager::ModuleManager():
 
 ModuleManager::~ModuleManager()
 {
-    uninitialize(); // should be already called by the system.
+    // uninitialize(); // should be already called by the system.
 
     for (std::vector<ModuleFactory*>::reverse_iterator it=rootFactories.rbegin(), ite=rootFactories.rend();
             it != ite; it++)
