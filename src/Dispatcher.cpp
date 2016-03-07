@@ -93,13 +93,11 @@ void Dispatcher::uninitialize()
     inPortsLock.writeLock();
     outPortsLock.writeLock();
 
-    for (std::vector< SharedPtr<InPort*> >::reverse_iterator it = allInPorts.rbegin(),
-            ite = allInPorts.rend(); it != ite ; it++)
-        removeInPort(**it);
+    while( allInPorts.size() )
+        removeInPort(*allInPorts.back());
 
-    for (std::vector< SharedPtr<OutPort*> >::reverse_iterator it = allOutPorts.rbegin(),
-            ite = allOutPorts.rend(); it != ite ; it++)
-        removeOutPort(**it);
+    while( allOutPorts.size() )
+        removeOutPort(*allOutPorts.back());
 
     inPortsLock.unlock();
     outPortsLock.unlock();
@@ -214,6 +212,10 @@ SharedPtr<OutPort*> Dispatcher::getOutPort(OutPort* port)
 
 void Dispatcher::removeInPort(InPort* port)
 {
+    poco_information(logger(),"Dispatcher: trying to remove "
+            + port->name() + " (module "
+            + port->parent()->name() + ")" );
+
     // using a reverse iterator to improve performance when called
     // from the uninitializer
     for (std::vector< SharedPtr<InPort*> >::reverse_iterator it = allInPorts.rbegin(),
@@ -223,9 +225,7 @@ void Dispatcher::removeInPort(InPort* port)
         {
             (**it)->releaseSourcePort(); // break the connection
 
-            // poco_information(logger(),"Dispatcher: removing input port "
-            //         + port->name() + " (module "
-            //         + port->parent()->name() + ")" );
+            poco_information(logger(),"Dispatcher: OK, removing. " );
 
             **it = &emptyInPort; // replace the pointed factory by something throwing exceptions
             allInPorts.erase((it+1).base());
