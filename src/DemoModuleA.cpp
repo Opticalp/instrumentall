@@ -34,7 +34,7 @@ size_t DemoModuleA::refCount = 0;
 DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
                 Module(parent)
 {
-    poco_debug(logger(),"Creating a new demo module A");
+    // poco_information(logger(),"Creating a new demo module A");
 
     setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);

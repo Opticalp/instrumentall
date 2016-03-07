@@ -73,8 +73,8 @@ void DataManager::removeOutPort(OutPort* port)
         {
             **it = &emptyDataItem; // replace the pointed factory by something throwing exceptions
             allData.erase(it);
-            poco_debug(logger(), port->name() + " port DataItem "
-                    "erased from DataManager::allData. ");
+            // poco_information(logger(), port->name() + " port DataItem "
+            //         "erased from DataManager::allData. ");
             allDataLock.unlock();
             return;
         }

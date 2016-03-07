@@ -78,7 +78,7 @@ void Dispatcher::uninitialize()
 {
     initialized = false;
 
-    poco_debug(logger(), "Dispatcher un-initialization.");
+    // poco_information(logger(), "Dispatcher un-initialization.");
 
     ThreadManager& threadMan = Poco::Util::Application::instance()
                                         .getSubsystem<ThreadManager>();
@@ -110,8 +110,8 @@ void Dispatcher::addModule(SharedPtr<Module*> module)
 {
     if (!initialized)
     {
-        poco_debug(logger(),
-                "module insertion in the dispatcher: not initialized");
+        // poco_information(logger(),
+        //         "module insertion in the dispatcher: not initialized");
         return;
     }
 
@@ -136,7 +136,7 @@ void Dispatcher::addModule(SharedPtr<Module*> module)
     inPortsLock.unlock();
     outPortsLock.unlock();
 
-    poco_debug(logger(),"module " + (*module)->name() + " added in the dispatcher");
+    // poco_information(logger(),"module " + (*module)->name() + " added in the dispatcher");
 }
 
 void Dispatcher::removeModule(SharedPtr<Module*> module)
@@ -145,8 +145,8 @@ void Dispatcher::removeModule(SharedPtr<Module*> module)
 
     if (!initialized)
     {
-        poco_debug(logger(),
-                "module removal from the dispatcher: not initialized");
+        // poco_information(logger(),
+        //         "module removal from the dispatcher: not initialized");
         return;
     }
 
@@ -223,16 +223,16 @@ void Dispatcher::removeInPort(InPort* port)
         {
             (**it)->releaseSourcePort(); // break the connection
 
-            poco_debug(logger(),"Dispatcher: removing input port "
-                    + port->name() + " (module "
-                    + port->parent()->name() + ")" );
+            // poco_information(logger(),"Dispatcher: removing input port "
+            //         + port->name() + " (module "
+            //         + port->parent()->name() + ")" );
 
             **it = &emptyInPort; // replace the pointed factory by something throwing exceptions
             allInPorts.erase((it+1).base());
-            poco_debug(logger(),
-                    port->name() + " input port from module "
-                    + port->parent()->name() + " is erased "
-                            "from Dispatcher::allInPorts. ");
+            // poco_information(logger(),
+            //         port->name() + " input port from module "
+            //         + port->parent()->name() + " is erased "
+            //                 "from Dispatcher::allInPorts. ");
             return;
         }
     }
@@ -243,8 +243,8 @@ void Dispatcher::removeInPort(InPort* port)
 
 void Dispatcher::addInPort(InPort* port)
 {
-    poco_debug(logger(),"adding port " + port->name()
-            + " from module " + port->parent()->name());
+    // poco_information(logger(),"adding port " + port->name()
+    //         + " from module " + port->parent()->name());
     allInPorts.push_back(SharedPtr<InPort*>(new (InPort*)(port)));
 }
 
@@ -265,16 +265,16 @@ void Dispatcher::removeOutPort(OutPort* port)
                     srcIte = sources.end() ; srcIt != srcIte ; srcIt++)
                 (**srcIt)->releaseSourcePort();
 
-            poco_debug(logger(),"Dispatcher: removing output port "
-                    + port->name() + " (module "
-                    + port->parent()->name() + ")" );
+            // poco_information(logger(),"Dispatcher: removing output port "
+            //         + port->name() + " (module "
+            //         + port->parent()->name() + ")" );
 
             **it = &emptyOutPort; // replace the pointed factory by something throwing exceptions
             allOutPorts.erase((it+1).base());
-            poco_debug(logger(),
-                    port->name() + " output port from module "
-                    + port->parent()->name() + " is erased "
-                            "from Dispatcher::allInPorts. ");
+            // poco_information(logger(),
+            //         port->name() + " output port from module "
+            //         + port->parent()->name() + " is erased "
+            //                 "from Dispatcher::allInPorts. ");
             return;
         }
     }
@@ -285,8 +285,8 @@ void Dispatcher::removeOutPort(OutPort* port)
 
 void Dispatcher::addOutPort(OutPort* port)
 {
-    poco_debug(logger(),"adding port " + port->name()
-            + " from module " + port->parent()->name());
+    // poco_information(logger(),"adding port " + port->name()
+    //         + " from module " + port->parent()->name());
     allOutPorts.push_back(SharedPtr<OutPort*>(new (OutPort*)(port)));
 }
 
@@ -314,7 +314,7 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
 {
     std::set<Module*> targetModules;
 
-    poco_debug(logger(), port->name() + " data ready");
+    // poco_information(logger(), port->name() + " data ready");
 
     std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
     for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
@@ -332,7 +332,7 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
                                         .getSubsystem<ModuleManager>()
                                         .getModule(*it);
 
-        poco_debug(logger(), "Pushing " + (*shdMod)->name());
+        // poco_information(logger(), "Pushing " + (*shdMod)->name());
 
         // launch task
         Poco::Util::Application::instance()

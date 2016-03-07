@@ -50,7 +50,7 @@ ThreadManager::ThreadManager():
 
 void ThreadManager::onStarted(Poco::TaskStartedNotification* pNf)
 {
-    poco_debug(logger(), pNf->task()->name() + " was started");
+    poco_information(logger(), pNf->task()->name() + " was started");
 
     noMoreThread.reset();
 }
@@ -63,14 +63,14 @@ void ThreadManager::onFailed(Poco::TaskFailedNotification* pNf)
 
 void ThreadManager::onFinished(Poco::TaskFinishedNotification* pNf)
 {
-    poco_debug(logger(), pNf->task()->name() + " has stopped");
+    poco_information(logger(), pNf->task()->name() + " has stopped");
 
     // It seems that we are in the thread that sent the notification,
     // then, it is running...
     if (count() <= 1)
     {
         noMoreThread.set();
-        poco_debug(logger(), "No more thread is running. "
+        poco_information(logger(), "No more thread is running. "
                 "Setting the corresponding event. ");
     }
 }

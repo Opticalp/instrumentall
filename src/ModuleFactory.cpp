@@ -131,8 +131,8 @@ void ModuleFactory::deleteChildFactories()
 {
     if (isLeaf())
     {
-        poco_debug(logger(), "deleteChildFactories: factory is a leaf. "
-                "Nothing to delete.");
+        // poco_information(logger(), "deleteChildFactories: factory is a leaf. "
+        //         "Nothing to delete.");
         return;
     }
 
@@ -234,8 +234,8 @@ void ModuleFactory::deleteChildModules()
 {
     if (!isLeaf())
     {
-        poco_debug(logger(), "deleteChildModules: factory is not a leaf. "
-                "Nothing to delete.");
+        // poco_information(logger(), "deleteChildModules: factory is not a leaf. "
+        //         "Nothing to delete.");
         return;
     }
 

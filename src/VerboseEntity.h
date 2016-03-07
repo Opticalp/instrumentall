@@ -91,8 +91,8 @@ protected:
     void setLogger(Poco::Logger& logger)
     {
     	pLogger = &logger;
-        poco_debug(this->logger(),
-            this->logger().name() + " logger is now available");
+        // poco_information(this->logger(),
+        //     this->logger().name() + " logger is now available");
     }
 
     /**

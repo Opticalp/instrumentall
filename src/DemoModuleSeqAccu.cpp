@@ -42,7 +42,7 @@ DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customNa
     Module(parent, customName),
     accumulator(0)
 {
-    poco_debug(logger(),"Creating a new DemoModuleSeqAccu");
+    // poco_information(logger(),"Creating a new DemoModuleSeqAccu");
 
     setInternalName("DemoModuleSeqAccu" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
@@ -67,7 +67,7 @@ void DemoModuleSeqAccu::runTask()
     // FIXME: if an exception is raised,
     // the mainMutex unlock is not guaranteed...
 
-    poco_debug(logger(), "DemoModuleSeqAccu::runTask started. ");
+    poco_information(logger(), "DemoModuleSeqAccu::runTask started. ");
 
     // We could use a scoped lock here:
     //Poco::Mutex::ScopedLock lock(mainMutex);
@@ -76,8 +76,10 @@ void DemoModuleSeqAccu::runTask()
     // try to acquire the mutex
     while (!mainMutex.tryLock(TIME_LAPSE))
     {
-        poco_debug(logger(),
-                "DemoModuleSeqAccu::runTask(): failed to acquire the mutex");
+        poco_information(logger(),
+                "DemoModuleSeqAccu::runTask(): "
+                "failed to acquire the mutex after "
+                + Poco::NumberFormatter::format(TIME_LAPSE) + " ms");
 
         if (isCancelled())
             return;
@@ -93,7 +95,7 @@ void DemoModuleSeqAccu::runTask()
     // to a push.
     if (!getInPorts()[inPortA]->tryData<int>(pData, &attr))
     {
-        poco_debug(logger(),
+        poco_information(logger(),
                 "DemoModuleSeqAccu::runTask(): "
                 "failed to acquire the input data lock");
 
@@ -126,7 +128,7 @@ void DemoModuleSeqAccu::runTask()
             // try to acquire the output data lock
             while (!getOutPorts()[outPortA]->tryData(pOutData))
             {
-                poco_debug(logger(),
+                poco_information(logger(),
                         "DemoModuleSeqAccu::runTask(): "
                         "failed to acquire the output data lock");
 
