@@ -27,11 +27,14 @@
  */
 
 #include "DataItem.h"
+#include "DataLogger.h"
 #include "DataManager.h"
 #include "Poco/Util/Application.h"
 
 DataItem::~DataItem()
 {
+    // The loggers are detached by DataManager::removeOutPort()
+
     if (mDataType == typeInteger)
         delete reinterpret_cast<int*>(dataStore);
 }
@@ -51,4 +54,37 @@ void DataItem::releaseNewData()
     Poco::Util::Application::instance()
             .getSubsystem<DataManager>()
             .newData(this);
+}
+
+void DataItem::registerLogger(DataLogger* logger)
+{
+    loggersLock.writeLock();
+    allLoggers.insert(logger);
+    loggersLock.unlock();
+}
+
+std::set<SharedPtr<DataLogger*> > DataItem::loggers()
+{
+    std::set<SharedPtr<DataLogger*> > tmpList;
+
+    loggersLock.readLock();
+
+    for (std::set< DataLogger* >::iterator it = allLoggers.begin(),
+            ite = allLoggers.end(); it != ite; it++ )
+    {
+        tmpList.insert( Poco::Util::Application::instance()
+                            .getSubsystem<DataManager>()
+                            .getDataLogger(*it) );
+    }
+
+    loggersLock.unlock();
+
+    return tmpList;
+}
+
+void DataItem::detachLogger(DataLogger* logger)
+{
+    loggersLock.writeLock();
+    allLoggers.erase(logger);
+    loggersLock.unlock();
 }

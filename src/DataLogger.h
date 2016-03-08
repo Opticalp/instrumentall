@@ -30,6 +30,9 @@
 #define SRC_DATALOGGER_H_
 
 #include "Poco/Task.h"
+#include "Poco/Mutex.h"
+
+using Poco::Mutex;
 
 class DataItem;
 
@@ -45,7 +48,9 @@ class DataItem;
 class DataLogger: public Poco::Task
 {
 public:
-    DataLogger(std::string name = ""): pData(NULL), Task(name) { }
+    DataLogger(std::string name = ""):
+        pData(NULL), Task(name),
+        empty(false) { }
     virtual ~DataLogger();
 
     /**
@@ -65,9 +70,11 @@ public:
 //    virtual std::string description() = 0;
 
     /**
-     * Bind the logger to its data item
+     * Detach the logger from its parent data
+     *
+     * Lock the dataLock and call detachNoLock()
      */
-    void registerData(DataItem* data);
+    void detach();
 
     /**
      * Acquire the read lock of the data
@@ -81,14 +88,35 @@ public:
      * Main logic
      *
      * Log the data.
+     * The implementation must release the data lock.
      */
     virtual void runTask() = 0;
 
 protected:
     DataItem* data() { return pData; }
 
+    /**
+     * Bind the logger to its data item
+     */
+    void registerData(DataItem* data);
+
+    /**
+     * Detach the data logger from its data
+     *
+     * Without locking the dataLock.
+     * @warning: do not notify the parent data.
+     */
+    void detachNoLock();
+
+    void setEmpty();
+
+    friend class DataManager;
+
 private:
     DataItem* pData; ///< registered data
+    Mutex dataLock;
+
+    bool empty; ///< check if the data logger is activable
 };
 
 #endif /* SRC_DATALOGGER_H_ */

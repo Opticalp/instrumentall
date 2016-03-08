@@ -27,9 +27,59 @@
  */
 
 #include "DataLogger.h"
+#include "DataItem.h"
 
 DataLogger::~DataLogger()
 {
-    // TODO Auto-generated destructor stub
+    detach();
 }
 
+void DataLogger::detach()
+{
+    dataLock.lock();
+    detachNoLock();
+    dataLock.unlock();
+}
+
+void DataLogger::detachNoLock()
+{
+    if (pData)
+    {
+        pData->detachLogger(this);
+        pData = NULL;
+    }
+}
+
+void DataLogger::registerData(DataItem* data)
+{
+    if (empty)
+        throw Poco::InvalidAccessException(name(),
+                "The logger was deleted");
+
+    dataLock.lock();
+
+    // deregister previous parent
+    detachNoLock();
+
+    // bind to data
+    data->registerLogger(this);
+    pData = data;
+
+    dataLock.unlock();
+}
+
+void DataLogger::acquireLock()
+{
+    if (data())
+        data()->readLock();
+}
+
+void DataLogger::setEmpty()
+{
+    dataLock.lock();
+
+    detachNoLock();
+    empty = true;
+
+    dataLock.unlock();
+}

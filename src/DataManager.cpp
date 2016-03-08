@@ -30,8 +30,10 @@
 #include "ThreadManager.h"
 
 #include "OutPort.h"
+#include "DataItem.h"
 
 #include "Poco/Exception.h"
+#include "Poco/Util/Application.h"
 
 DataManager::DataManager()
 {
@@ -57,6 +59,7 @@ void DataManager::initialize(Poco::Util::Application& app)
 void DataManager::uninitialize()
 {
     // TODO: remove loggers
+    // TODO: empty all data (expired, etc)
 }
 
 void DataManager::addOutPort(OutPort* port)
@@ -75,7 +78,14 @@ void DataManager::removeOutPort(OutPort* port)
     {
         if (port->dataItem() == **it)
         {
-            **it = &emptyDataItem; // replace the pointed factory by something throwing exceptions
+            // unregister data item loggers
+            std::set< SharedPtr<DataLogger*> > itemLoggers = port->dataItem()->loggers();
+            for (std::set< SharedPtr<DataLogger*> >::iterator setIt = itemLoggers.begin(),
+                    setIte = itemLoggers.end(); setIt != setIte; setIt++ )
+                (**setIt)->detach();
+
+            // replace the pointed data item by something throwing exceptions
+            **it = &emptyDataItem;
             allData.erase(it);
             // poco_information(logger(), port->name() + " port DataItem "
             //         "erased from DataManager::allData. ");
@@ -91,21 +101,23 @@ void DataManager::removeOutPort(OutPort* port)
 
 void DataManager::newData(DataItem* self)
 {
-    // TODO
-    // check if loggers are defined for this data
+    if (!self->hasLoggers())
+        return;
 
-    // if no loggers
-    //     return;
+    std::set< SharedPtr<DataLogger*> > itemLoggers = self->loggers();
 
+    for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
+            ite = itemLoggers.end(); it != ite; it++ )
+        (**it)->acquireLock();
 
-    // else
-    // for each logger, acquireLock
-    //      (*it)->acquireLock();
-
-    // launch logger threads via thread manager.
-//    Poco::Util::Application::instance()
-//        .getSubsystem<ThreadManager>()
-//        .start(*it)
+    for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
+            ite = itemLoggers.end(); it != ite; it++ )
+    {
+        // launch logger threads via thread manager.
+        Poco::Util::Application::instance()
+            .getSubsystem<ThreadManager>()
+            .start(**it);
+    }
 }
 
 SharedPtr<DataItem*> DataManager::getDataItem(DataItem* dataItem)
@@ -124,4 +136,56 @@ SharedPtr<DataItem*> DataManager::getDataItem(DataItem* dataItem)
     allDataLock.unlock();
     throw Poco::NotFoundException("getDataItem", "Data not found: "
             "Should have been deleted during the query");
+}
+
+SharedPtr<DataLogger*> DataManager::newDataLogger(std::string className)
+{
+    DataLogger* logger = loggerFactory.createInstance(className);
+    SharedPtr<DataLogger*> tmpPtr(new (DataLogger*)(logger));
+
+    loggersLock.writeLock();
+    loggers.insert(tmpPtr);
+    loggersLock.unlock();
+
+    return tmpPtr;
+}
+
+std::set<SharedPtr<DataLogger*> > DataManager::dataLoggers()
+{
+    std::set< SharedPtr<DataLogger*> > tmpLoggers;
+    loggersLock.readLock();
+    tmpLoggers = loggers;
+    loggersLock.unlock();
+
+    return tmpLoggers;
+}
+
+SharedPtr<DataLogger*> DataManager::getDataLogger(DataLogger* dataLogger)
+{
+    loggersLock.readLock();
+
+    for (std::set< SharedPtr<DataLogger*> >::iterator it = loggers.begin(),
+            ite = loggers.end(); it != ite; it++ )
+    {
+        if (**it == dataLogger)
+        {
+            SharedPtr<DataLogger*> tmp = *it;
+            loggersLock.unlock();
+            return tmp;
+        }
+    }
+
+    loggersLock.unlock();
+    throw Poco::NotFoundException("DataManager",
+            "The given data logger was not found");
+
+}
+
+void DataManager::removeDataLogger(SharedPtr<DataLogger*> logger)
+{
+    // switch the logger into empty state
+    (*logger)->setEmpty();
+
+    // remove the data logger from loggers. nothing to delete.
+    loggers.erase(logger);
 }

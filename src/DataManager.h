@@ -101,6 +101,7 @@ public:
     /**
      * Remove the DataItem of a deleted output port
      *
+     * detach the loggers of the data item and
      * remove its DataItem from the dataStore
      * This function is called by the OutPort destructor
      */
@@ -120,6 +121,36 @@ public:
      */
     SharedPtr<DataItem*> getDataItem(DataItem* dataItem);
 
+    /**
+     * Get the data loggers class names
+     *
+     * To be used to create new loggers using the factory
+     */
+    std::map<std::string, std::string> dataLoggerClasses()
+        { return loggerClasses; }
+
+    /**
+     * Create a new data logger of the given type
+     */
+    SharedPtr<DataLogger*> newDataLogger(std::string className);
+
+    /**
+     * Get all the current data loggers
+     */
+    std::set< SharedPtr<DataLogger*> > dataLoggers();
+
+    /**
+     * Retrieve the shared pointer of a data logger
+     */
+    SharedPtr<DataLogger*> getDataLogger(DataLogger* dataLogger);
+
+    /**
+     * Delete a DataLogger
+     *
+     * Do nothing if the DataLogger is the empty data logger
+     */
+    void removeDataLogger(SharedPtr<DataLogger*> logger);
+
 private:
     std::vector< SharedPtr<DataItem*> > allData; ///< data corresponding to each OutPort
     Poco::RWLock allDataLock;
@@ -138,10 +169,6 @@ private:
 
     // TODO: any volatile data storage here that is used by the UI
     // to push data (one shot) into a given InPort
-
-    // TODO: all about the data loggers:
-    // - a list of used/available data loggers
-    // - a link from each data to its data logger(s)
 };
 
 //
