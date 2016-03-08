@@ -375,4 +375,42 @@ pythonThreadManWaitAll(PyObject *self, PyObject *args)
     return Py_BuildValue("");
 }
 
+#include "DataManager.h"
+
+extern "C" PyObject*
+pythonDataManDataLoggerClasses(PyObject *self, PyObject *args)
+{
+    std::map<std::string, std::string> loggerClasses;
+
+    loggerClasses = Poco::Util::Application::instance()
+                        .getSubsystem<DataManager>()
+                        .dataLoggerClasses();
+
+    if (loggerClasses.size() == 0)
+        return Py_BuildValue("");
+
+    // create a dict
+    PyObject* pyLoggerClasses = PyDict_New();
+
+    if (pyLoggerClasses == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Not able to create the dict");
+        return NULL;
+    }
+
+    for (std::map<std::string, std::string>::iterator it = loggerClasses.begin(),
+            ite = loggerClasses.end(); it != ite; it++)
+    {
+        if (-1 == PyDict_SetItemString( pyLoggerClasses,
+                it->first.c_str(),
+                PyString_FromString(it->second.c_str()) ) )
+        {
+            PyErr_SetString(PyExc_MemoryError, "Not able to insert a new pair in the dict");
+            return NULL;
+        }
+    }
+
+    return pyLoggerClasses;
+}
+
 #endif /* HAVE_PYTHON27 */

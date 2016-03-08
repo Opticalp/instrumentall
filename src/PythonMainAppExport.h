@@ -222,5 +222,28 @@ static PyMethodDef pyMethodThreadManWaitAll =
     "Wait for all the tasks to be terminated"
 };
 
+// ----------------------------------------------------------------
+//     Data Manager
+// ----------------------------------------------------------------
+
+/**
+ * @brief Python wrapper to retrieve the DataLogger classes
+ *
+ * Call DataManager::dataLoggerClasses() method
+ *
+ */
+extern "C" PyObject*
+pythonDataManDataLoggerClasses(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDataManDataLoggerClasses =
+{
+    "dataLoggerClasses",
+    pythonDataManDataLoggerClasses,
+    METH_NOARGS,
+    "Retrieve the names and descriptions "
+    "of the available DataLogger classes"
+};
+
+
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_PYTHONMAINAPPEXPORT_H_ */

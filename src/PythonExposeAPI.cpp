@@ -70,6 +70,9 @@ static PyMethodDef EmbMethods[] =
     // thread manager
     pyMethodThreadManWaitAll,
 
+    // data manager
+    pyMethodDataManDataLoggerClasses,
+
     // sentinel
     {NULL, NULL, 0, NULL}
 };
