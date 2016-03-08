@@ -145,6 +145,11 @@ public:
     SharedPtr<DataLogger*> getDataLogger(DataLogger* dataLogger);
 
     /**
+     * Register a logger to a data item
+     */
+    void registerLogger(SharedPtr<DataItem*> data, SharedPtr<DataLogger*> dataLogger);
+
+    /**
      * Get the source data of a logger
      */
     SharedPtr<DataItem*> getSourceDataItem(SharedPtr<DataLogger*> dataLogger);

@@ -182,6 +182,16 @@ SharedPtr<DataLogger*> DataManager::getDataLogger(DataLogger* dataLogger)
 
 }
 
+void DataManager::registerLogger(SharedPtr<DataItem*> data,
+        SharedPtr<DataLogger*> dataLogger)
+{
+    if (*data == &emptyDataItem)
+        throw Poco::NotFoundException("registerLogger",
+                                        "Data item not found");
+
+    (*dataLogger)->registerData(*data);
+}
+
 SharedPtr<DataItem*> DataManager::getSourceDataItem(
         SharedPtr<DataLogger*> dataLogger)
 {

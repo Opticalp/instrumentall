@@ -91,11 +91,22 @@ static PyMethodDef pyMethodDataGetValue =
     "Retrieve the current value"
 };
 
+/// python wrapper to register a logger to the data item
+extern "C" PyObject* pyDataRegister(DataMembers *self, PyObject* args);
+
+static PyMethodDef pyMethodDataRegister =
+{
+    "register",
+    (PyCFunction)pyDataRegister,
+    METH_VARARGS,
+    "register(logger): Register the DataLogger \"logger\" to log the data"
+};
+
 /// exported methods
 static PyMethodDef pyDataMethods[] = {
         pyMethodDataParent,
-
         pyMethodDataGetValue,
+        pyMethodDataRegister,
 
         {NULL} // sentinel
 };

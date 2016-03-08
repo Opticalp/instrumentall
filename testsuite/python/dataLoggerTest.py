@@ -68,16 +68,15 @@ def myMain():
     print " - Name: " + logger.name
     print " - Description: " + logger.description
     
-    # OR
     print "Retrieve the existing loggers list"
     loggers = dataLoggers()
     print str(len(loggers)) + " loggers available"
     
     print "logger#0 is of class: " + loggers[0].name 
     
-#    # register a logger to some data
-#    module.OutPorts()[P].data().registerLogger(logger)
-#    
+    print "Register the new logger to mod2 output"
+    mod2.outPorts()[0].data().register(logger)
+    
 #    # check the registered loggers
 #    loggers = module.OutPorts()[P].data().loggers()
 #
@@ -92,9 +91,6 @@ def myMain():
 #    # remove a logger 
 #    removeDataLogger(logger)
    
-    # set the poco logger to mod2 output data
-    #mod2.outPorts()[0].data().registerLogger(DataLogger("DataPocoLogger"))
-    
     print "launch action: run mod1"
     runModule(mod1)
     
