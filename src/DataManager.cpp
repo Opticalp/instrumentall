@@ -47,7 +47,7 @@ DataManager::DataManager()
 
 DataManager::~DataManager()
 {
-    uninitialize(); // should have been already called by the system.
+    // uninitialize(); // should have been already called by the system.
 
     // dataStore should clean itself nicely
 }
