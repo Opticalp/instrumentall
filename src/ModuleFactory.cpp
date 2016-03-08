@@ -138,13 +138,12 @@ void ModuleFactory::deleteChildFactories()
 
     childFactLock.writeLock();
 
-    for (std::vector<ModuleFactoryBranch*>::reverse_iterator it=childFactories.rbegin(),ite=childFactories.rend();
-            it!=ite;
-            it++)
+    while( childFactories.size() )
     {
-        poco_information(logger(),"deleting child factory: " + std::string((*it)->name()));
-        deletingChildFact = *it;
-        delete (*it);
+        deletingChildFact = childFactories.back();
+        poco_information(logger(),"deleting child factory: "
+                                    + std::string(deletingChildFact->name()));
+        delete (deletingChildFact);
         deletingChildFact = NULL;
     }
 
@@ -241,11 +240,10 @@ void ModuleFactory::deleteChildModules()
 
     childModLock.writeLock();
 
-    for (std::vector<Module*>::reverse_iterator it = childModules.rbegin(),
-            ite = childModules.rend(); it != ite; it++)
+    while( childModules.size() )
     {
-        deletingChildMod = *it;
-        delete *it;
+        deletingChildMod = childModules.back();
+        delete (deletingChildMod);
         deletingChildMod = NULL;
     }
 
