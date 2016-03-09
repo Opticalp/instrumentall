@@ -109,9 +109,6 @@ public:
 
 private:
     Poco::TaskManager taskManager;
-
-    Poco::Event noMoreThread;
-
 };
 
 #endif /* SRC_THREADMANAGER_H_ */

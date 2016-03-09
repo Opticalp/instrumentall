@@ -135,7 +135,7 @@ void InPort::setNew(bool value)
 {
     if (value)
     {
-        poco_debug(Poco::Logger::get("portDebug"), name() + " has new data. ");
+        // poco_information(Poco::Logger::get("portDebug"), name() + " has new data. ");
         (*getSourcePort())->dataItem()->readLock();
     }
 

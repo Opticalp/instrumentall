@@ -41,7 +41,7 @@ size_t DemoModuleForwarder::refCount = 0;
 DemoModuleForwarder::DemoModuleForwarder(ModuleFactory* parent, std::string customName):
         Module(parent, customName)
 {
-    poco_debug(logger(),"Creating a new DemoModuleForwarder");
+    // poco_information(logger(),"Creating a new DemoModuleForwarder");
 
     setInternalName("DemoModuleForwarder" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
@@ -66,12 +66,12 @@ void DemoModuleForwarder::runTask()
     // FIXME: if an exception is raised,
     // the mainMutex unlock is not guaranteed...
 
-    poco_debug(logger(), "DemoModuleForwarder::runTask started. ");
+    poco_information(logger(), "DemoModuleForwarder::runTask started. ");
 
     // try to acquire the mutex
     while (!mainMutex.tryLock(TIME_LAPSE))
     {
-        poco_debug(logger(),
+        poco_information(logger(),
                 "DemoModuleForwarder::runTask(): failed to acquire the mutex");
 
         if (isCancelled())
@@ -88,7 +88,7 @@ void DemoModuleForwarder::runTask()
     // to a push.
     if (!getInPorts()[inPortA]->tryData<int>(pData, &attr))
     {
-        poco_debug(logger(),
+        poco_information(logger(),
                 "DemoModuleForwarder::runTask(): "
                 "failed to acquire the input data lock");
 
@@ -106,7 +106,7 @@ void DemoModuleForwarder::runTask()
     // try to acquire the output data lock
     while (!getOutPorts()[outPortA]->tryData(pOutData))
     {
-        poco_debug(logger(),
+        poco_information(logger(),
                 "DemoModuleForwarder::runTask(): "
                 "failed to acquire the output data lock");
 
@@ -120,7 +120,7 @@ void DemoModuleForwarder::runTask()
     *pOutData = tmpData;
     getOutPorts()[outPortA]->notifyReady(outAttr);
 
-    poco_debug(logger(), "DemoModuleForwarder::runTask(): "
+    poco_information(logger(), "DemoModuleForwarder::runTask(): "
             + Poco::NumberFormatter::format(tmpData) + " was forwarded.");
 
     mainMutex.unlock();

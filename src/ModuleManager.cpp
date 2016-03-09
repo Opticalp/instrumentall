@@ -41,7 +41,7 @@ ModuleManager::ModuleManager():
 
 ModuleManager::~ModuleManager()
 {
-    uninitialize(); // should be already called by the system.
+    // uninitialize(); // should be already called by the system.
 
     for (std::vector<ModuleFactory*>::reverse_iterator it=rootFactories.rbegin(), ite=rootFactories.rend();
             it != ite; it++)
@@ -88,7 +88,7 @@ void ModuleManager::addModule(Module* pModule)
     SharedPtr<Module*> pMod(new (Module*)(pModule));
     modulesLock.writeLock();
     allModules.push_back(pMod);
-    poco_debug(logger(),"module " + pModule->name() + " added in the module manager");
+    // poco_information(logger(),"module " + pModule->name() + " added in the module manager");
     Poco::Util::Application::instance().getSubsystem<Dispatcher>().addModule(pMod);
     modulesLock.unlock();
 }
@@ -106,7 +106,7 @@ void ModuleManager::removeModule(Module* pModule)
             // remove module
             **it = &emptyModule; // replace the pointed factory by something throwing exceptions
             allModules.erase(it);
-            poco_debug(logger(), pModule->name() + " module erased from ModuleManager::allModules. ");
+            // poco_information(logger(), pModule->name() + " module erased from ModuleManager::allModules. ");
             modulesLock.unlock();
             return;
         }
@@ -191,7 +191,7 @@ void ModuleManager::removeFactory(ModuleFactory* pFactory)
             {
                 rootFactories.erase(it);
                 notFound = false;
-                poco_debug(logger(), "factory " + std::string(pFactory->name()) + " erased from rootFactories. ");
+                // poco_information(logger(), "factory " + std::string(pFactory->name()) + " erased from rootFactories. ");
                 break;
             }
         }
@@ -211,7 +211,7 @@ void ModuleManager::removeFactory(ModuleFactory* pFactory)
         {
             **it = &emptyFactory; // replace the pointed factory by something throwing exceptions
             allFactories.erase(it);
-            poco_debug(logger(), "factory erased " + std::string(pFactory->name()) + " from allFactories. ");
+            // poco_information(logger(), "factory erased " + std::string(pFactory->name()) + " from allFactories. ");
             factoriesLock.unlock();
             return;
         }

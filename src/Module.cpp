@@ -137,7 +137,7 @@ ModuleFactory* Module::parent()
 void Module::addInPort(std::string name, std::string description,
         DataItem::DataTypeEnum dataType, size_t index)
 {
-    if (index>=0 && index<inPorts.size())
+    if (index<inPorts.size())
         inPorts[index] = new InPort(this, name, description, dataType, index);
     else
         poco_bugcheck_msg(("addInPort: wrong index "
@@ -147,7 +147,7 @@ void Module::addInPort(std::string name, std::string description,
 void Module::addOutPort(std::string name, std::string description,
         DataItem::DataTypeEnum dataType, size_t index)
 {
-    if (index>=0 && index<outPorts.size())
+    if (index<outPorts.size())
         outPorts[index] = new OutPort(this, name, description, dataType, index);
     else
         poco_bugcheck_msg(("addOutPort: wrong index "
@@ -180,6 +180,11 @@ void Module::freeInternalName()
 
     for (std::vector<std::string>::reverse_iterator it = names.rbegin(),
             ite = names.rend(); it != ite; it++ )
+    {
         if (it->compare(internalName())==0)
+        {
             names.erase((it+1).base());
+            return;
+        }
+    }
 }

@@ -30,12 +30,12 @@
 
 #include "Poco/Observer.h"
 #include "Poco/NumberFormatter.h"
+#include "Poco/Thread.h"
 
 using Poco::Observer;
 
 ThreadManager::ThreadManager():
-        VerboseEntity(name()),
-        noMoreThread(false)
+        VerboseEntity(name())
 {
     taskManager.addObserver(
             Observer<ThreadManager, Poco::TaskStartedNotification>(
@@ -50,9 +50,7 @@ ThreadManager::ThreadManager():
 
 void ThreadManager::onStarted(Poco::TaskStartedNotification* pNf)
 {
-    poco_debug(logger(), pNf->task()->name() + " was started");
-
-    noMoreThread.reset();
+    poco_information(logger(), pNf->task()->name() + " was started");
 }
 
 void ThreadManager::onFailed(Poco::TaskFailedNotification* pNf)
@@ -63,16 +61,7 @@ void ThreadManager::onFailed(Poco::TaskFailedNotification* pNf)
 
 void ThreadManager::onFinished(Poco::TaskFinishedNotification* pNf)
 {
-    poco_debug(logger(), pNf->task()->name() + " has stopped");
-
-    // It seems that we are in the thread that sent the notification,
-    // then, it is running...
-    if (count() <= 1)
-    {
-        noMoreThread.set();
-        poco_debug(logger(), "No more thread is running. "
-                "Setting the corresponding event. ");
-    }
+    poco_information(logger(), pNf->task()->name() + " has stopped");
 }
 
 void ThreadManager::start(Poco::Task* task)
@@ -81,16 +70,27 @@ void ThreadManager::start(Poco::Task* task)
     taskManager.start(task);
 }
 
+#define TIME_LAPSE_WAIT_ALL 5
+
 void ThreadManager::waitAll()
 {
     // joinAll does not work here,
     // since it seems that it locks the recursive creation of new threads...
     // We use an event instead.
-    if (count())
+    while (count())
     {
-        poco_information(logger(), Poco::NumberFormatter::format(count())
-            + " threads are running. Waiting for them to finish. ");
+        Poco::TaskManager::TaskList list = taskManager.taskList();
+        std::string nameList("\n");
+        for (Poco::TaskManager::TaskList::iterator it = list.begin(),
+                ite = list.end(); it != ite; it++)
+            nameList += " - " + (*it)->name() + "\n";
 
-        noMoreThread.wait();
+        nameList.erase(nameList.end()-1);
+
+        poco_information(logger(), "active threads are : " + nameList);
+
+        Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
     }
+
+    poco_information(logger(), "All threads have stopped. ");
 }

@@ -42,7 +42,7 @@ DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName
     Module(parent, customName),
     tmpMax(0) // no special meaning for this value
 {
-    poco_debug(logger(),"Creating a new DemoModuleSeqMax");
+    // poco_information(logger(),"Creating a new DemoModuleSeqMax");
 
     setInternalName("DemoModuleSeqMax" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
@@ -67,7 +67,7 @@ void DemoModuleSeqMax::runTask()
     // FIXME: if an exception is raised,
     // the mainMutex unlock is not guaranteed...
 
-    poco_debug(logger(), "DemoModuleSeqMax::runTask started. ");
+    poco_information(logger(), "DemoModuleSeqMax::runTask started. ");
 
     // We could use a scoped lock here:
     //Poco::Mutex::ScopedLock lock(mainMutex);
@@ -76,8 +76,10 @@ void DemoModuleSeqMax::runTask()
     // try to acquire the mutex
     while (!mainMutex.tryLock(TIME_LAPSE))
     {
-        poco_debug(logger(),
-                "DemoModuleSeqMax::runTask(): failed to acquire the mutex");
+        poco_information(logger(),
+                "DemoModuleSeqMax::runTask(): "
+                "failed to acquire the mutex after "
+                + Poco::NumberFormatter::format(TIME_LAPSE) + " ms");
 
         if (isCancelled())
             return;
@@ -93,7 +95,7 @@ void DemoModuleSeqMax::runTask()
     // to a push.
     if (!getInPorts()[inPortA]->tryData<int>(pData, &attr))
     {
-        poco_debug(logger(),
+        poco_information(logger(),
                 "DemoModuleSeqMax::runTask(): "
                 "failed to acquire the input data lock");
 
@@ -127,7 +129,7 @@ void DemoModuleSeqMax::runTask()
             // try to acquire the output data lock
             while (!getOutPorts()[outPortA]->tryData(pOutData))
             {
-                poco_debug(logger(),
+                poco_information(logger(),
                         "DemoModuleSeqMax::runTask(): "
                         "failed to acquire the output data lock");
 

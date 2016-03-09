@@ -38,7 +38,7 @@ size_t DemoModuleDataSeq::refCount = 0;
 DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customName):
     Module(parent, customName)
 {
-    poco_debug(logger(),"Creating a new DemoModuleDataSeq");
+    // poco_information(logger(),"Creating a new DemoModuleDataSeq");
 
     setInternalName("DemoModuleDataSeq" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
@@ -62,12 +62,12 @@ void DemoModuleDataSeq::runTask()
     // FIXME: if an exception is raised,
     // the mainMutex unlock is not guaranteed...
 
-    poco_debug(logger(), "DemoModuleDataSeq::runTask started. ");
+    poco_information(logger(), "DemoModuleDataSeq::runTask started. ");
 
     // try to acquire the mutex
     while (!mainMutex.tryLock(TIME_LAPSE))
     {
-        poco_debug(logger(),
+        poco_information(logger(),
                 "DemoModuleDataSeq::runTask(): failed to acquire the mutex");
 
         if (isCancelled())
@@ -82,7 +82,7 @@ void DemoModuleDataSeq::runTask()
         // try to acquire the output data lock
         while (!getOutPorts()[outPortA]->tryData(pData))
         {
-            poco_debug(logger(),
+            poco_information(logger(),
                     "DemoModuleDataSeq::runTask(): "
                     "failed to acquire the output data lock");
 

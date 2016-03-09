@@ -91,7 +91,7 @@ import os
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
-    if checker == "instrumentall":
+    if checker == "instrumentall" or checker == "instrumentall.exe":
         print "current script: ",os.path.realpath(__file__)
         
         from instru import *
