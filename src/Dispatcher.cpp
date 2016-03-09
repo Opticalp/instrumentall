@@ -217,10 +217,6 @@ SharedPtr<OutPort*> Dispatcher::getOutPort(OutPort* port)
 
 void Dispatcher::removeInPort(InPort* port)
 {
-    poco_information(logger(),"Dispatcher: trying to remove "
-            + port->name() + " (module "
-            + port->parent()->name() + ")" );
-
     // using a reverse iterator to improve performance when called
     // from the uninitializer
     for (std::vector< SharedPtr<InPort*> >::reverse_iterator it = allInPorts.rbegin(),
@@ -229,8 +225,6 @@ void Dispatcher::removeInPort(InPort* port)
         if (port == **it)
         {
             (**it)->releaseSourcePort(); // break the connection
-
-            poco_information(logger(),"Dispatcher: OK, removing. " );
 
             **it = &emptyInPort; // replace the pointed factory by something throwing exceptions
             allInPorts.erase((it+1).base());
@@ -269,10 +263,6 @@ void Dispatcher::removeOutPort(OutPort* port)
             for (std::vector< SharedPtr<InPort*> >::iterator srcIt = sources.begin(),
                     srcIte = sources.end() ; srcIt != srcIte ; srcIt++)
                 (**srcIt)->releaseSourcePort();
-
-            // poco_information(logger(),"Dispatcher: removing output port "
-            //         + port->name() + " (module "
-            //         + port->parent()->name() + ")" );
 
             **it = &emptyOutPort; // replace the pointed factory by something throwing exceptions
             allOutPorts.erase((it+1).base());
@@ -337,9 +327,7 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
                                         .getSubsystem<ModuleManager>()
                                         .getModule(*it);
 
-        // poco_information(logger(), "Pushing " + (*shdMod)->name());
-
-        // launch task
+                // launch task
         Poco::Util::Application::instance()
                  .getSubsystem<ThreadManager>()
                  .start(*shdMod);
