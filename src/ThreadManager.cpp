@@ -30,12 +30,14 @@
 
 #include "Poco/Observer.h"
 #include "Poco/NumberFormatter.h"
-#include "Poco/Thread.h"
+#include "Poco/ThreadPool.h"
 
 using Poco::Observer;
 
 ThreadManager::ThreadManager():
-        VerboseEntity(name())
+        VerboseEntity(name()),
+        threadPool(2,32), // TODO set maxCapacity from config file
+        taskManager(threadPool)
 {
     taskManager.addObserver(
             Observer<ThreadManager, Poco::TaskStartedNotification>(
@@ -46,6 +48,8 @@ ThreadManager::ThreadManager():
     taskManager.addObserver(
                 Observer<ThreadManager, Poco::TaskFinishedNotification>(
                         *this, &ThreadManager::onFinished ) );
+
+    threadPool.addCapacity(32);
 }
 
 void ThreadManager::onStarted(Poco::TaskStartedNotification* pNf)
@@ -68,6 +72,12 @@ void ThreadManager::start(Poco::Task* task)
 {
     task->duplicate();
     taskManager.start(task);
+}
+
+int ThreadManager::count()
+{
+    threadPool.collect();
+    return taskManager.count();
 }
 
 #define TIME_LAPSE_WAIT_ALL 5
