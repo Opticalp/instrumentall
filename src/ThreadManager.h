@@ -75,7 +75,8 @@ public:
       *
       *
       */
-     void uninitialize() { }
+     void uninitialize()
+         { poco_information(logger(), "ThreadManager::uninitialize()"); }
      ///@}
 
     void onStarted(Poco::TaskStartedNotification* pNf);

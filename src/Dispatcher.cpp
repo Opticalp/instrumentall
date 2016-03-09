@@ -104,6 +104,8 @@ void Dispatcher::uninitialize()
 
     inPortsLock.unlock();
     outPortsLock.unlock();
+
+    poco_information(logger(), "Dispatcher uninit OK. Locks released");
 }
 
 

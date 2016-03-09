@@ -59,6 +59,7 @@ void DataManager::initialize(Poco::Util::Application& app)
 
 void DataManager::uninitialize()
 {
+    poco_information(logger(),"Data manager uninitializing");
     // TODO: remove loggers
     // TODO: empty all data (expired, etc)
 }

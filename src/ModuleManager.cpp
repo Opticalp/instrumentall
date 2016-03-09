@@ -65,6 +65,8 @@ void ModuleManager::initialize(Poco::Util::Application& app)
 
 void ModuleManager::uninitialize()
 {
+    poco_information(logger(), "ModuleManager::uninitialize");
+
     for (std::vector<ModuleFactory*>::reverse_iterator it=rootFactories.rbegin(), ite=rootFactories.rend();
             it != ite; it++)
     {
