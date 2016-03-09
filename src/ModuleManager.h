@@ -140,6 +140,7 @@ public:
      * Remove a factory from the list
      *
      * This function is called by the @ref ModuleFactory destructor
+     * only if the factory is not root.
      */
     void removeFactory(ModuleFactory* pFactory);
 
