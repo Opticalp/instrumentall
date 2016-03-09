@@ -180,6 +180,11 @@ void Module::freeInternalName()
 
     for (std::vector<std::string>::reverse_iterator it = names.rbegin(),
             ite = names.rend(); it != ite; it++ )
+    {
         if (it->compare(internalName())==0)
+        {
             names.erase((it+1).base());
+            return;
+        }
+    }
 }
