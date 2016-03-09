@@ -85,13 +85,17 @@ def myMain():
 #              " on port: " + logger.parent().parent().name + 
 #              " of module: " + logger.parent().parent().parent().name  
 #    
-#    # remove a logger from a data
-#    logger.detach()
-#
 #    # remove a logger 
 #    removeDataLogger(logger)
    
     print "launch action: run mod1"
+    runModule(mod1)
+    
+    waitAll()
+
+    print "Detach the logger and re-run"
+    logger.detach()
+
     runModule(mod1)
     
     waitAll()
