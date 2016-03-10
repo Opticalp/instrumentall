@@ -32,6 +32,7 @@
 #include "VerboseEntity.h"
 
 #include "Poco/TaskManager.h"
+#include "Poco/ThreadPool.h"
 #include "Poco/TaskNotification.h"
 #include "Poco/Util/Subsystem.h"
 
@@ -85,7 +86,7 @@ public:
     /**
      * Count the active tasks
      */
-    int count() { return taskManager.count(); }
+    int count();
 
     /**
      * Cancel all the tasks
@@ -109,6 +110,7 @@ public:
 
 private:
     Poco::TaskManager taskManager;
+    Poco::ThreadPool threadPool;
 };
 
 #endif /* SRC_THREADMANAGER_H_ */

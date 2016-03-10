@@ -44,6 +44,7 @@ THE SOFTWARE.
 #include "PythonInPort.h"
 #include "PythonOutPort.h"
 #include "PythonData.h"
+#include "PythonDataLogger.h"
 
 /**
  * array to bind to-be-exposed methods (C to Python wrappers)
@@ -69,6 +70,11 @@ static PyMethodDef EmbMethods[] =
 
     // thread manager
     pyMethodThreadManWaitAll,
+
+    // data manager
+    pyMethodDataManDataLoggerClasses,
+    pyMethodDataManDataLoggers,
+    pyMethodDataManRemoveDataLogger,
 
     // sentinel
     {NULL, NULL, 0, NULL}
@@ -118,6 +124,9 @@ void PythonManager::exposeAPI()
     if (PyType_Ready(&PythonData) < 0)
         return;
 
+    if (PyType_Ready(&PythonDataLogger) < 0)
+        return;
+
     PyObject* m;
 
     m = Py_InitModule3("instru", EmbMethods,
@@ -143,6 +152,9 @@ void PythonManager::exposeAPI()
 
     Py_INCREF(&PythonData);
     PyModule_AddObject(m, "Data", (PyObject *)&PythonData);
+
+    Py_INCREF(&PythonDataLogger);
+    PyModule_AddObject(m, "DataLogger", (PyObject *)&PythonDataLogger);
 }
 
 

@@ -32,8 +32,13 @@
 #include "DataAttribute.h"
 
 #include "Poco/RWLock.h"
+#include "Poco/SharedPtr.h"
+
+using Poco::RWLock;
+using Poco::SharedPtr;
 
 class OutPort;
+class DataLogger;
 
 /**
  * DataItem
@@ -125,6 +130,19 @@ public:
      */
     DataTypeEnum dataType() { return mDataType; }
 
+    /**
+     * Retrieve the data loggers
+     *
+     * This function calls the DataManager::getDataLogger
+     * to retrieve the shared pointers
+     */
+    std::set< SharedPtr<DataLogger*> > loggers();
+
+    /**
+     * Check if loggers are registered
+     */
+    bool hasLoggers() { return (allLoggers.size()>0); }
+
 private:
     DataTypeEnum mDataType; ///< data type
     void* dataStore; ///< pointer to the data
@@ -133,12 +151,20 @@ private:
 
 //    bool expired;
 
-    Poco::RWLock dataLock; ///< lock to manage the access to the dataStore
+    RWLock dataLock; ///< lock to manage the access to the dataStore
 
     // TODO: separate volatile data (issue from a outport.push(data)) in UI
     // and other data, that do really have a parent port.
 
     OutPort* mParentPort; ///< parent output data port.
+
+    friend class DataLogger;
+
+    void registerLogger(DataLogger* logger);
+    void detachLogger(DataLogger* logger);
+
+    std::set<DataLogger*> allLoggers;
+    RWLock loggersLock;
 };
 
 //

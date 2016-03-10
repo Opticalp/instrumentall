@@ -36,6 +36,11 @@
 #include "Poco/Util/Subsystem.h"
 #include "Poco/SharedPtr.h"
 
+#include "Poco/DynamicFactory.h"
+
+#include <map>
+#include <set>
+
 using Poco::SharedPtr;
 
 class DataLogger;
@@ -48,6 +53,11 @@ class DataLogger;
 class DataManager: public Poco::Util::Subsystem, public VerboseEntity
 {
 public:
+    /**
+     * Constructor
+     *
+     * Register the DataLoggers in the dynamic factory
+     */
     DataManager();
     virtual ~DataManager();
 
@@ -91,6 +101,7 @@ public:
     /**
      * Remove the DataItem of a deleted output port
      *
+     * detach the loggers of the data item and
      * remove its DataItem from the dataStore
      * This function is called by the OutPort destructor
      */
@@ -110,18 +121,64 @@ public:
      */
     SharedPtr<DataItem*> getDataItem(DataItem* dataItem);
 
+    /**
+     * Get the data loggers class names
+     *
+     * To be used to create new loggers using the factory
+     */
+    std::map<std::string, std::string> dataLoggerClasses()
+        { return loggerClasses; }
+
+    /**
+     * Create a new data logger of the given type
+     */
+    SharedPtr<DataLogger*> newDataLogger(std::string className);
+
+    /**
+     * Get all the current data loggers
+     */
+    std::set< SharedPtr<DataLogger*> > dataLoggers();
+
+    /**
+     * Retrieve the shared pointer of a data logger
+     */
+    SharedPtr<DataLogger*> getDataLogger(DataLogger* dataLogger);
+
+    /**
+     * Register a logger to a data item
+     */
+    void registerLogger(SharedPtr<DataItem*> data, SharedPtr<DataLogger*> dataLogger);
+
+    /**
+     * Get the source data of a logger
+     */
+    SharedPtr<DataItem*> getSourceDataItem(SharedPtr<DataLogger*> dataLogger);
+
+    /**
+     * Delete a DataLogger
+     *
+     * Do nothing if the DataLogger is the empty data logger
+     */
+    void removeDataLogger(SharedPtr<DataLogger*> logger);
+
 private:
     std::vector< SharedPtr<DataItem*> > allData; ///< data corresponding to each OutPort
     Poco::RWLock allDataLock;
+
+    Poco::DynamicFactory<DataLogger> loggerFactory;
+    // TODO: use unordered map for c++11-able compilers
+    std::map<std::string, std::string> loggerClasses;
+    /// To be used with loggerClasses
+    typedef std::pair<std::string,std::string> classPair;
+
+    // all loggers
+    std::set< SharedPtr<DataLogger*> > loggers;
+    Poco::RWLock loggersLock;
 
     DataItem emptyDataItem;
 
     // TODO: any volatile data storage here that is used by the UI
     // to push data (one shot) into a given InPort
-
-    // TODO: all about the data loggers:
-    // - a list of used/available data loggers
-    // - a link from each data to its data logger(s)
 };
 
 //

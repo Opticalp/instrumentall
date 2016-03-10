@@ -97,7 +97,8 @@ void DemoModuleSeqAccu::runTask()
     {
         poco_information(logger(),
                 "DemoModuleSeqAccu::runTask(): "
-                "failed to acquire the input data lock");
+                "failed to acquire the input data lock. "
+                "Data is probably not up to date. ");
 
         mainMutex.unlock();
         return; // data not up to date
@@ -126,7 +127,7 @@ void DemoModuleSeqAccu::runTask()
             int* pOutData;
 
             // try to acquire the output data lock
-            while (!getOutPorts()[outPortA]->tryData(pOutData))
+            while (!getOutPorts()[outPortA]->tryData<int>(pOutData))
             {
                 poco_information(logger(),
                         "DemoModuleSeqAccu::runTask(): "
@@ -135,6 +136,8 @@ void DemoModuleSeqAccu::runTask()
                 if (sleep(TIME_LAPSE))
                 {
                     mainMutex.unlock();
+                    poco_notice(logger(),
+                            "DemoModuleSeqAccu::runTask(): cancelled!");
                     return;
                 }
             }

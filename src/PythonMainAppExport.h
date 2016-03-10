@@ -222,5 +222,61 @@ static PyMethodDef pyMethodThreadManWaitAll =
     "Wait for all the tasks to be terminated"
 };
 
+// ----------------------------------------------------------------
+//     Data Manager
+// ----------------------------------------------------------------
+
+/**
+ * @brief Python wrapper to retrieve the DataLogger classes
+ *
+ * Call DataManager::dataLoggerClasses() method
+ *
+ */
+extern "C" PyObject*
+pythonDataManDataLoggerClasses(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDataManDataLoggerClasses =
+{
+    "dataLoggerClasses",
+    pythonDataManDataLoggerClasses,
+    METH_NOARGS,
+    "Retrieve the names and descriptions "
+    "of the available DataLogger classes"
+};
+
+/**
+ * @brief Python wrapper to retrieve the existing data loggers
+ *
+ * Call DataManager::dataLoggers() method
+ *
+ */
+extern "C" PyObject*
+pythonDataManDataLoggers(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDataManDataLoggers =
+{
+    "dataLoggers",
+    pythonDataManDataLoggers,
+    METH_NOARGS,
+    "Retrieve the existing data loggers"
+};
+
+/**
+ * @brief Python wrapper to delete a data logger
+ *
+ * Call DataManager::removeDataLogger() method
+ *
+ */
+extern "C" PyObject*
+pythonDataManRemoveDataLogger(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDataManRemoveDataLogger =
+{
+    "removeDataLogger",
+    pythonDataManRemoveDataLogger,
+    METH_VARARGS,
+    "removeDataLogger(logger): delete the data logger \"logger\""
+};
+
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_PYTHONMAINAPPEXPORT_H_ */

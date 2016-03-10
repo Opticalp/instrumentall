@@ -141,4 +141,131 @@ PyObject* pyDataGetValue(DataMembers* self)
     }
 }
 
+#include "PythonDataLogger.h"
+#include "DataManager.h"
+
+extern "C" PyObject* pyDataRegister(DataMembers *self, PyObject* args)
+{
+    PyObject *pyObj;
+
+    // arguments parsing
+    if (!PyArg_ParseTuple(args, "O:register", &pyObj))
+        return NULL;
+
+    // check the type of the object.
+    // the comparison uses type name (str)
+    std::string typeName(pyObj->ob_type->tp_name);
+
+    if (typeName.compare("instru.DataLogger"))
+    {
+        PyErr_SetString(PyExc_TypeError,
+                "The argument must be a DataLogger");
+        return NULL;
+    }
+
+    DataLoggerMembers* pyLogger = reinterpret_cast<DataLoggerMembers*>(pyObj);
+
+    try
+    {
+        Poco::Util::Application::instance()
+                                .getSubsystem<DataManager>()
+                                .registerLogger(*self->data, *pyLogger->logger);
+    }
+    catch (Poco::NotFoundException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+    catch (Poco::InvalidAccessException& e1)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e1.displayText().c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("");
+}
+
+extern "C" PyObject* pyDataLoggers(DataMembers *self)
+{
+    std::set< SharedPtr<DataLogger*> > loggers;
+    try
+    {
+        loggers = (**self->data)->loggers();
+    }
+    catch (Poco::NotFoundException& e)
+    {
+        PyErr_SetString( PyExc_RuntimeError,
+                e.displayText().c_str() );
+        return NULL;
+    }
+
+    if (loggers.size() == 0)
+        return Py_BuildValue("");
+
+    // construct the list to return
+    PyObject* pyLoggers = PyList_New(0);
+
+    // prepare DataLogger python type
+    if (PyType_Ready(&PythonDataLogger) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the DataLogger Type");
+        return NULL;
+    }
+
+    // to retrieve the logger description
+    std::map<std::string, std::string> classes;
+    classes = Poco::Util::Application::instance()
+                        .getSubsystem<DataManager>()
+                        .dataLoggerClasses();
+
+    for (std::set< SharedPtr<DataLogger*> >::iterator it = loggers.begin(),
+            ite = loggers.end(); it != ite; it++ )
+    {
+        // create the python object
+        DataLoggerMembers* pyLogger =
+            reinterpret_cast<DataLoggerMembers*>(
+                pyDataLoggerNew(
+                    reinterpret_cast<PyTypeObject*>(&PythonDataLogger), NULL, NULL) );
+
+        PyObject* tmp=NULL;
+
+        // init
+        // retrieve name and description
+        tmp = pyLogger->name;
+        pyLogger->name = PyString_FromString((**it)->name().c_str());
+        Py_XDECREF(tmp);
+
+        std::map<std::string, std::string>::iterator loggerClass = classes.find((**it)->name());
+        if (loggerClass == classes.end())
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Logger description not found" );
+            return NULL;
+        }
+
+        tmp = pyLogger->description;
+        pyLogger->description = PyString_FromString(loggerClass->second.c_str());
+        Py_XDECREF(tmp);
+
+        // set Logger reference
+        *(pyLogger->logger) = *it;
+
+        // create the dict entry
+        if (0 > PyList_Append(
+                pyLoggers,
+                reinterpret_cast<PyObject*>(pyLogger)))
+        {
+            // appending the item failed
+            PyErr_SetString(PyExc_RuntimeError,
+                    "Not able to build the return list");
+            return NULL;
+        }
+    }
+
+    return pyLoggers;
+
+}
+
 #endif /* HAVE_PYTHON27 */

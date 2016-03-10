@@ -1,8 +1,8 @@
 /**
- * Definition of the Data python class
+ * Definition of the DataLogger python class
  * 
- * @file	src/PythonData.h
- * @date	mar. 2016
+ * @file	src/PythonDataLogger.h
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -29,32 +29,46 @@ THE SOFTWARE.
 */
 
 
-#ifndef SRC_PYTHONDATA_H_
-#define SRC_PYTHONDATA_H_
+#ifndef SRC_PYTHONDATALOGGER_H_
+#define SRC_PYTHONDATALOGGER_H_
 
 #ifdef HAVE_PYTHON27
 
 #include "PythonAPI.h"
 #include "structmember.h"
 
-#include "Poco/SharedPtr.h"
-
-class DataItem;
+#include "DataLogger.h"
 
 // -----------------------------------------------------------------------
 // Variables
 // -----------------------------------------------------------------------
 
-/// member variables for the python Data class
+/// member variables for the python DataLogger class
 typedef struct
 {
     PyObject_HEAD ///< a refcount and a pointer to a type object (convenience python/C API macro)
-    Poco::SharedPtr<DataItem*>* data; ///< pointer to the C++ internal DataItem object
-} DataMembers;
+    PyObject* name;  ///< name attribute
+    PyObject* description;  ///< description attribute
+    Poco::SharedPtr<DataLogger*>* logger; ///< pointer to the C++ internal DataLogger object
+} DataLoggerMembers;
 
-/// Description of the DataMembers structure
-static PyMemberDef pyDataMembers[] =
+/// Description of the DataLoggerMembers structure
+static PyMemberDef pyDataLoggerMembers[] =
 {
+    {
+        const_cast<char *>("name"),
+        T_OBJECT_EX,
+        offsetof(DataLoggerMembers, name),
+        READONLY,
+        const_cast<char *>("DataLogger class name")
+    },
+    {
+        const_cast<char *>("description"),
+        T_OBJECT_EX,
+        offsetof(DataLoggerMembers, description),
+        READONLY,
+        const_cast<char *>("DataLogger description")
+    },
     { NULL } // Sentinel
 };
 
@@ -65,60 +79,37 @@ static PyMemberDef pyDataMembers[] =
 /**
  * Initializer
  *
- * The Data direct initializing is not supported
+ * The python version of this initializer has to be called with the
+ * name of the class as argument to create a new logger
  */
-extern "C" int pyDataInit(DataMembers* self, PyObject *args, PyObject *kwds);
+extern "C" int pyDataLoggerInit(DataLoggerMembers* self, PyObject *args, PyObject *kwds);
 
-/// Data::parent python wrapper
-extern "C" PyObject* pyDataParent(DataMembers *self);
+/// DataLogger::parent python wrapper
+extern "C" PyObject* pyDataLoggerSource(DataLoggerMembers *self);
 
-static PyMethodDef pyMethodDataParent =
+static PyMethodDef pyMethodDataLoggerSource =
 {
-    "parent",
-    (PyCFunction)pyDataParent,
+    "dataSource",
+    (PyCFunction)pyDataLoggerSource,
     METH_NOARGS,
-    "Retrieve the parent OutPort"
+    "Retrieve the source Data object"
 };
 
-/// python wrapper to get the current value of the data item
-extern "C" PyObject* pyDataGetValue(DataMembers *self);
+/// python wrapper to get the target ports of the current output port
+extern "C" PyObject* pyDataLoggerDetach(DataLoggerMembers *self);
 
-static PyMethodDef pyMethodDataGetValue =
+static PyMethodDef pyMethodDataLoggerDetach =
 {
-    "getValue",
-    (PyCFunction)pyDataGetValue,
+    "detach",
+    (PyCFunction)pyDataLoggerDetach,
     METH_NOARGS,
-    "Retrieve the current value"
-};
-
-/// python wrapper to register a logger to the data item
-extern "C" PyObject* pyDataRegister(DataMembers *self, PyObject* args);
-
-static PyMethodDef pyMethodDataRegister =
-{
-    "register",
-    (PyCFunction)pyDataRegister,
-    METH_VARARGS,
-    "register(logger): Register the DataLogger \"logger\" to log the data"
-};
-
-/// python wrapper to retrieve the registered data loggers
-extern "C" PyObject* pyDataLoggers(DataMembers *self);
-
-static PyMethodDef pyMethodDataLoggers =
-{
-    "loggers",
-    (PyCFunction)pyDataLoggers,
-    METH_NOARGS,
-    "Retrieve the registered data loggers"
+    "Detach the logger from its data source"
 };
 
 /// exported methods
-static PyMethodDef pyDataMethods[] = {
-        pyMethodDataParent,
-        pyMethodDataGetValue,
-        pyMethodDataRegister,
-        pyMethodDataLoggers,
+static PyMethodDef pyDataLoggerMethods[] = {
+        pyMethodDataLoggerSource,
+        pyMethodDataLoggerDetach,
 
         {NULL} // sentinel
 };
@@ -130,7 +121,7 @@ static PyMethodDef pyDataMethods[] = {
 /**
  * Deallocator
  */
-extern "C" void pyDataDealloc(DataMembers* self);
+extern "C" void pyDataLoggerDealloc(DataLoggerMembers* self);
 
 /**
  * Allocator
@@ -138,17 +129,17 @@ extern "C" void pyDataDealloc(DataMembers* self);
  * Initialize "name" and "description" to empty strings instead of
  * NULL because they are python objects.
  */
-extern "C" PyObject* pyDataNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
+extern "C" PyObject* pyDataLoggerNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
 
 
 /// Definition of the PyTypeObject
-static PyTypeObject PythonData = {                  // SPECIFIC
+static PyTypeObject PythonDataLogger = {                  // SPECIFIC
     PyObject_HEAD_INIT(NULL)
     0,                          /*ob_size*/
-    "instru.Data",            /*tp_name*/           // SPECIFIC
-    sizeof(DataMembers),      /*tp_basicsize*/      // SPECIFIC
+    "instru.DataLogger",            /*tp_name*/           // SPECIFIC
+    sizeof(DataLoggerMembers),      /*tp_basicsize*/      // SPECIFIC
     0,                          /*tp_itemsize*/
-    (destructor)pyDataDealloc,/*tp_dealloc*/        // SPECIFIC
+    (destructor)pyDataLoggerDealloc,/*tp_dealloc*/        // SPECIFIC
     0,                          /*tp_print*/
     0,                          /*tp_getattr*/
     0,                          /*tp_setattr*/
@@ -165,26 +156,26 @@ static PyTypeObject PythonData = {                  // SPECIFIC
     0,                          /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT |
         Py_TPFLAGS_BASETYPE,    /*tp_flags*/
-    "data entity attached to "
-    "an output port ",          /* tp_doc */          // SPECIFIC
+    "DataLogger to automatically"
+    "log newly created data ",  /* tp_doc */          // SPECIFIC
     0,                          /* tp_traverse */
     0,                          /* tp_clear */
     0,                          /* tp_richcompare */
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-    pyDataMethods,            /* tp_methods */    // SPECIFIC
-    pyDataMembers,            /* tp_members */    // SPECIFIC
+    pyDataLoggerMethods,            /* tp_methods */    // SPECIFIC
+    pyDataLoggerMembers,            /* tp_members */    // SPECIFIC
     0,                          /* tp_getset */
     0,                          /* tp_base */       // SPECIFIC
     0,                          /* tp_dict */
     0,                          /* tp_descr_get */
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
-    (initproc)pyDataInit,        /* tp_init */       // SPECIFIC
+    (initproc)pyDataLoggerInit,        /* tp_init */       // SPECIFIC
     0,                          /* tp_alloc */
-    pyDataNew,                /* tp_new */        // SPECIFIC
+    pyDataLoggerNew,                /* tp_new */        // SPECIFIC
 };
 
 #endif /* HAVE_PYTHON27 */
-#endif /* SRC_PYTHONDATA_H_ */
+#endif /* SRC_PYTHONDATALOGGER_H_ */
