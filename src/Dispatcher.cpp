@@ -287,6 +287,10 @@ void Dispatcher::addOutPort(OutPort* port)
 
 void Dispatcher::bind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
 {
+    if ((*target)->dataType() != (*source)->dataType())
+        throw DispatcherException("bind",
+                "The source and target port data types must fit");
+
     (*target)->setSourcePort(source);
 }
 
