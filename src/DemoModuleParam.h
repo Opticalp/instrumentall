@@ -61,6 +61,24 @@ private:
     long iPar; ///< storage for integer parameter
     double fPar; ///< storage for float parameter
     std::string sPar; ///< storage for char string parameter
+
+    long getIntParameterValue(size_t paramIndex)
+    {
+        poco_assert(paramIndex == paramInt);
+        return iPar;
+    }
+
+    double getFloatParameterValue(size_t paramIndex)
+    {
+        poco_assert(paramIndex == paramFloat);
+        return fPar;
+    }
+
+    std::string getStrParameterValue(size_t paramIndex)
+    {
+        poco_assert(paramIndex == paramStr);
+        return sPar;
+    }
 };
 
 #endif /* SRC_DEMOMODULEPARAM_H_ */

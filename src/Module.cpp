@@ -219,3 +219,20 @@ void Module::getParameterSet(ParameterSet* pSet)
     }
     // mainMutex.unlock();
 }
+
+size_t Module::getParameterIndex(std::string paramName)
+{
+    size_t length = paramSet.size();
+
+    for (size_t index = 0; index < length; index++)
+        if (paramSet[index].name.compare(paramName) == 0)
+            return index;
+
+    throw Poco::NotFoundException("getParameterIndex", "parameter name not found");
+}
+
+ParamItem::ParamType Module::getParameterType(std::string paramName)
+{
+    // TODO: mainMutex scoped lock
+    return paramSet[getParameterIndex(paramName)].datatype;
+}

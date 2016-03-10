@@ -138,6 +138,19 @@ static PyMethodDef pyMethodModGetParameterSet =
     "Retrieve the parameter set"
 };
 
+/// Module::getParameterValue python wrapper
+extern "C"
+PyObject* pyModGetParameterValue(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModGetParameterValue =
+{
+    "getParameterValue",
+    (PyCFunction)pyModGetParameterValue,
+    METH_VARARGS,
+    "GetParameterValue(paramName): get the value of the given parameter"
+};
+
+
 /// exported methods
 static PyMethodDef pyModMethods[] = {
         pyMethodModParent,
@@ -146,6 +159,7 @@ static PyMethodDef pyModMethods[] = {
         pyMethodModOutPorts,
 
         pyMethodModGetParameterSet,
+        pyMethodModGetParameterValue,
 
         {NULL} // sentinel
 };

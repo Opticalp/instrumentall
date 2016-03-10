@@ -369,7 +369,50 @@ PyObject* pyModGetParameterSet(ModMembers *self)
     }
 
     return pyParamSet;
+}
 
+PyObject* pyModGetParameterValue(ModMembers *self, PyObject *args)
+{
+    char *charParamName;
+
+    if (!PyArg_ParseTuple(args, "s:getParameterValue", &charParamName))
+        return NULL;
+
+    std::string paramName(charParamName);
+
+    try
+    {
+        switch ((**self->module)->getParameterType(paramName))
+        {
+        case ParamItem::typeInteger:
+        {
+            long value =
+                    (**self->module)->getParameterValue<long>(paramName);
+            return PyLong_FromLong(value);
+        }
+        case ParamItem::typeFloat:
+        {
+            double value =
+                    (**self->module)->getParameterValue<double>(paramName);
+            return PyFloat_FromDouble(value);
+        }
+        case ParamItem::typeString:
+        {
+            std::string value =
+                    (**self->module)->getParameterValue<std::string>(paramName);
+            return PyString_FromString(value.c_str());
+        }
+        default:
+            poco_bugcheck_msg("python getParameterValue, "
+                    "getParameterType returned unknown data type");
+            throw Poco::BugcheckException();
+        }
+    }
+    catch (Poco::NotFoundException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
+        return NULL;
+    }
 }
 
 #endif /* HAVE_PYTHON27 */

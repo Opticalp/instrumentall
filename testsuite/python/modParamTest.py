@@ -44,12 +44,12 @@ def myMain():
     params = mod1.getParameterSet()
     
     for param in params:
-        print " - " + param["name"] + ": " + param["descr"]
+        value = mod1.getParameterValue(param["name"])
+        if not isinstance(value, basestring):
+            value = str(value)
+        print ( " - " + param["name"] + ": " + param["descr"] +
+                " ; value = " + value )
         
-    #print "parameter#0 value: " + str(mod1.getParameter(0))
-    #print "parameter#1 value: " + str(mod1.getParameter(1))
-    #print "parameter#2 value: " + mod1.getParameter(2)
-
     print "End of script modParamTest.py"
     
 # main body    

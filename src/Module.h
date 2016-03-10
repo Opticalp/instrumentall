@@ -160,6 +160,26 @@ public:
 	 */
 	void getParameterSet(ParameterSet* pSet);
 
+	/**
+	 * Retrieve the value of the parameter given by its name
+	 *
+	 * Check the parameter type and call one of:
+	 *  - getIntParameterValue
+	 *  - getFloatParameterValue
+	 *  - getStrParameterValue
+	 *
+	 * @throw Poco::NotFoundException if the name is not found
+	 * @throw Poco::DataFormatException if the parameter format does not fit
+	 */
+    template<typename T> T getParameterValue(std::string paramName);
+
+    /**
+     * Retrieve the parameter data type
+     *
+     * @throw Poco::NotFoundException if the parameter name is not found
+     */
+    ParamItem::ParamType getParameterType(std::string paramName);
+
 protected:
     /**
      * Set the internal name of the module
@@ -241,6 +261,15 @@ protected:
      */
     void addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype);
 
+    virtual long getIntParameterValue(size_t paramIndex)
+        { poco_bugcheck_msg("getIntParameterValue not implemented for this module"); }
+
+    virtual double getFloatParameterValue(size_t paramIndex)
+        { poco_bugcheck_msg("getFloatParameterValue not implemented for this module"); }
+
+    virtual std::string getStrParameterValue(size_t paramIndex)
+        { poco_bugcheck_msg("getStrParameterValue not implemented for this module"); }
+
 private:
     /// enum to be returned by checkName
     enum NameStatus
@@ -284,6 +313,16 @@ private:
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
 	ParameterSet paramSet;
+
+	/**
+	 * Retrieve a parameter index from its name
+	 *
+	 * The main mutex has to be locked before calling this function
+	 */
+	size_t getParameterIndex(std::string paramName);
 };
+
+/// templates implementation
+#include "Module.ipp"
 
 #endif /* SRC_MODULE_H_ */
