@@ -81,6 +81,12 @@ def myMain():
     waitAll()
     
     print "mod3b return value is: " + str(mod3b.outPorts()[0].data().getValue())
+    
+    print "Run twice to check the sync of the threads"
+
+    runModule(mod1)
+    runModule(mod1)
+    waitAll()
 
     print "End of script modDataSeqTest.py"
     

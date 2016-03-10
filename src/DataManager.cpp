@@ -47,7 +47,7 @@ DataManager::DataManager()
 
 DataManager::~DataManager()
 {
-    uninitialize(); // should have been already called by the system.
+    // uninitialize(); // should have been already called by the system.
 
     // dataStore should clean itself nicely
 }
@@ -59,6 +59,7 @@ void DataManager::initialize(Poco::Util::Application& app)
 
 void DataManager::uninitialize()
 {
+    poco_information(logger(),"Data manager uninitializing");
     // TODO: remove loggers
     // TODO: empty all data (expired, etc)
 }

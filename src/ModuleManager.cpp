@@ -65,6 +65,8 @@ void ModuleManager::initialize(Poco::Util::Application& app)
 
 void ModuleManager::uninitialize()
 {
+    poco_information(logger(), "ModuleManager::uninitialize");
+
     for (std::vector<ModuleFactory*>::reverse_iterator it=rootFactories.rbegin(), ite=rootFactories.rend();
             it != ite; it++)
     {
@@ -73,6 +75,8 @@ void ModuleManager::uninitialize()
         else
             (*it)->deleteChildFactories();
     }
+
+    poco_information(logger(), "ModuleManager uninitialized");
 }
 
 void ModuleManager::defineOptions(Poco::Util::OptionSet& options)
@@ -180,27 +184,8 @@ void ModuleManager::addFactory(ModuleFactory* pFactory)
 void ModuleManager::removeFactory(ModuleFactory* pFactory)
 {
     if (pFactory->isRoot())
-    {
-        bool notFound = true;
-
-        for (std::vector<ModuleFactory*>::iterator it=rootFactories.begin(),ite=rootFactories.end();
-                it!=ite;
-                it++)
-        {
-            if (pFactory == *it)
-            {
-                rootFactories.erase(it);
-                notFound = false;
-                // poco_information(logger(), "factory " + std::string(pFactory->name()) + " erased from rootFactories. ");
-                break;
-            }
-        }
-
-        if (notFound)
-            poco_error(logger(), "removeFactory(): "
-                "the factory was not found as a root factory "
-                "although isRoot() is set");
-    }
+        poco_bugcheck_msg("ModuleManager::removeFactory, "
+                "the factory should not be a root factory");
 
     // find pFactory in allFactories
     factoriesLock.writeLock();
