@@ -317,4 +317,59 @@ PyObject* pyModOutPorts(ModMembers* self)
 
     return pyPorts;
 }
+
+PyObject* pyModGetParameterSet(ModMembers *self)
+{
+    ParameterSet paramSet;
+
+    (**self->module)->getParameterSet(&paramSet);
+
+    // prepare python list
+    PyObject* pyParamSet = PyList_New(0);
+
+    size_t length = paramSet.size();
+    for (size_t index = 0; index < length; index++)
+    {
+        PyObject* pyParam = PyDict_New();
+
+        PyDict_SetItemString(pyParam, "index", PyLong_FromSize_t(index));
+        PyDict_SetItemString(pyParam, "name", PyString_FromString(paramSet[index].name.c_str()));
+        PyDict_SetItemString(pyParam, "descr", PyString_FromString(paramSet[index].descr.c_str()));
+
+        PyObject* paramType;
+        switch (paramSet[index].datatype)
+        {
+        case ParamItem::typeInteger:
+            paramType = PyObject_Type(PyInt_FromLong(0));
+            break;
+        case ParamItem::typeFloat:
+            paramType = PyObject_Type(PyFloat_FromDouble(0.0));
+            break;
+        case ParamItem::typeString:
+            paramType = PyObject_Type(PyString_FromString("0"));
+            break;
+        default:
+            PyErr_SetString(PyExc_RuntimeError,"unknown parameter type");
+            return NULL;
+        }
+
+        PyDict_SetItemString(pyParam, "type", paramType);
+
+        // create the dict entry
+        if (0 > PyList_Append(
+                pyParamSet,
+                pyParam))
+        {
+            // appending the item failed
+            PyErr_SetString(PyExc_RuntimeError,
+                    "Not able to build the return list");
+            return NULL;
+        }
+
+    }
+
+    return pyParamSet;
+
+}
+
 #endif /* HAVE_PYTHON27 */

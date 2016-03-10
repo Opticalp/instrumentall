@@ -32,9 +32,11 @@
 #include "VerboseEntity.h"
 
 #include "Port.h"
+#include "ParameterSet.h"
 
 #include "Poco/Task.h"
 #include "Poco/RWLock.h"
+#include "Poco/Mutex.h"
 
 class InPort;
 class OutPort;
@@ -151,6 +153,13 @@ public:
 	 */
 	virtual void runTask() { poco_warning(logger(), name() + ": empty task"); }
 
+	/**
+	 * Retrieve a copy of the parameter set of the module
+	 *
+	 * @param pSet reference to a user allocated ParameterSet
+	 */
+	void getParameterSet(ParameterSet* pSet);
+
 protected:
     /**
      * Set the internal name of the module
@@ -217,6 +226,21 @@ protected:
             DataItem::DataTypeEnum dataType,
             size_t index );
 
+    /**
+     * Set parameter set size
+     *
+     * to be called before adding parameters
+     */
+    void setParameterCount(size_t count)
+        { paramSet.resize(count); }
+
+    /**
+     * Add a parameter in the parameter set
+     *
+     * Should be called in the module constructor
+     */
+    void addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype);
+
 private:
     /// enum to be returned by checkName
     enum NameStatus
@@ -258,6 +282,8 @@ private:
 
 	static std::vector<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
+
+	ParameterSet paramSet;
 };
 
 #endif /* SRC_MODULE_H_ */

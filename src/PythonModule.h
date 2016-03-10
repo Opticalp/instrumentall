@@ -127,12 +127,25 @@ static PyMethodDef pyMethodModOutPorts =
     "Retrieve the output ports"
 };
 
+/// Module::parameterSet() python wrapper
+extern "C" PyObject* pyModGetParameterSet(ModMembers *self);
+
+static PyMethodDef pyMethodModGetParameterSet =
+{
+    "getParameterSet",
+    (PyCFunction)pyModGetParameterSet,
+    METH_NOARGS,
+    "Retrieve the parameter set"
+};
+
 /// exported methods
 static PyMethodDef pyModMethods[] = {
         pyMethodModParent,
 
         pyMethodModInPorts,
         pyMethodModOutPorts,
+
+        pyMethodModGetParameterSet,
 
         {NULL} // sentinel
 };

@@ -34,6 +34,7 @@
 #include "DemoModuleSeqAccu.h"
 #include "DemoModuleSeqMax.h"
 #include "DemoModuleForwarder.h"
+#include "DemoModuleParam.h"
 
 Module* DemoLeafFactory::newChildModule(std::string customName)
 {
@@ -57,6 +58,9 @@ Module* DemoLeafFactory::newChildModule(std::string customName)
 
     if (getSelector().compare("leafForwarder")==0)
         return new DemoModuleForwarder(this, customName);
+
+    if (getSelector().compare("leafParam")==0)
+        return new DemoModuleParam(this, customName);
 
     throw ModuleFactoryException("newChildModule","Impossible selector value");
 }
