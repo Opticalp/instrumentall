@@ -151,7 +151,7 @@ std::string MainApplication::about()
 {
     std::string strAbout( std::string(name()) + " " + version()
             + " - " + std::string(description()) + "\n"
-        "Copyright (c) 2013-2015, Opticalp.fr and contributors\n"
+        "Copyright (c) 2013-2016, Opticalp.fr and contributors\n"
         "MIT License, see http://www.opensource.org/licenses/MIT\n");
 
     strAbout += "Generated using CMake " + std::string(CMAKE_VERSION)
