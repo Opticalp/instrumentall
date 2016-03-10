@@ -42,13 +42,28 @@ def myMain():
     
     print "Retrieve the module parameters: "
     params = mod1.getParameterSet()
-    
+
     for param in params:
         value = mod1.getParameterValue(param["name"])
         if not isinstance(value, basestring):
             value = str(value)
         print ( " - " + param["name"] + ": " + param["descr"] +
                 " ; value = " + value )
+        
+    print "Trying to set some parameter values: "
+    print " - set intParam to 666"
+    mod1.setParameterValue("intParam", 666)
+    print " - set floatParam to 0"
+    mod1.setParameterValue("floatParam", 0)
+    print " - set strParam to mojo"
+    mod1.setParameterValue("strParam", "mojo")
+
+    print "Get the new values: "    
+    for param in params:
+        value = mod1.getParameterValue(param["name"])
+        if not isinstance(value, basestring):
+            value = str(value)
+        print " - " + param["name"] + ": " +  value 
         
     print "End of script modParamTest.py"
     

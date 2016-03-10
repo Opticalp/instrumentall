@@ -160,6 +160,13 @@ public:
 	 */
 	void getParameterSet(ParameterSet* pSet);
 
+    /**
+     * Retrieve the parameter data type
+     *
+     * @throw Poco::NotFoundException if the parameter name is not found
+     */
+    ParamItem::ParamType getParameterType(std::string paramName);
+
 	/**
 	 * Retrieve the value of the parameter given by its name
 	 *
@@ -174,11 +181,17 @@ public:
     template<typename T> T getParameterValue(std::string paramName);
 
     /**
-     * Retrieve the parameter data type
+     * Set the value of the parameter given by its name
      *
-     * @throw Poco::NotFoundException if the parameter name is not found
+     * Check the parameter type and call one of:
+     *  - setIntParameterValue
+     *  - setFloatParameterValue
+     *  - setStrParameterValue
+     *
+     * @throw Poco::NotFoundException if the name is not found
+     * @throw Poco::DataFormatException if the parameter format does not fit
      */
-    ParamItem::ParamType getParameterType(std::string paramName);
+    template<typename T> void setParameterValue(std::string paramName, T value);
 
 protected:
     /**
@@ -269,6 +282,15 @@ protected:
 
     virtual std::string getStrParameterValue(size_t paramIndex)
         { poco_bugcheck_msg("getStrParameterValue not implemented for this module"); }
+
+    virtual void setIntParameterValue(size_t paramIndex, long value)
+        { poco_bugcheck_msg("setIntParameterValue not implemented for this module"); }
+
+    virtual void setFloatParameterValue(size_t paramIndex, double value)
+        { poco_bugcheck_msg("setFloatParameterValue not implemented for this module"); }
+
+    virtual void setStrParameterValue(size_t paramIndex, std::string value)
+        { poco_bugcheck_msg("setStrParameterValue not implemented for this module"); }
 
 private:
     /// enum to be returned by checkName

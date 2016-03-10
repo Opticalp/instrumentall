@@ -415,4 +415,54 @@ PyObject* pyModGetParameterValue(ModMembers *self, PyObject *args)
     }
 }
 
+PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args)
+{
+    char* charParamName;
+    PyObject* pyValue;
+
+    if (!PyArg_ParseTuple(args, "sO:setParameterValue", &charParamName, &pyValue))
+        return NULL;
+
+    std::string paramName(charParamName);
+
+    try
+    {
+        switch ((**self->module)->getParameterType(paramName))
+        {
+        case ParamItem::typeInteger:
+        {
+            long value = PyLong_AsLong(pyValue);
+            if (PyErr_Occurred()) { return NULL; }
+            (**self->module)->setParameterValue<long>(paramName, value);
+            break;
+        }
+        case ParamItem::typeFloat:
+        {
+            double value = PyFloat_AsDouble(pyValue);
+            if (PyErr_Occurred()) { return NULL; }
+            (**self->module)->setParameterValue<double>(paramName, value);
+            break;
+        }
+        case ParamItem::typeString:
+        {
+            std::string value(PyString_AsString(pyValue)) ;
+            if (PyErr_Occurred()) { return NULL; }
+            (**self->module)->setParameterValue<std::string>(paramName, value);
+            break;
+        }
+        default:
+            poco_bugcheck_msg("python setParameterValue, "
+                    "getParameterType returned unknown data type");
+            throw Poco::BugcheckException();
+        }
+    }
+    catch (Poco::NotFoundException& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("");
+}
+
 #endif /* HAVE_PYTHON27 */

@@ -47,11 +47,11 @@ long Module::getParameterValue<long>(std::string paramName)
     case ParamItem::typeFloat:
         throw Poco::DataFormatException("getParameterValue",
                 "The parameter " + paramName + " has float type. "
-                "Integer was given. ");
+                "Integer was requested. ");
     case ParamItem::typeString:
         throw Poco::DataFormatException("getParameterValue",
                 "The parameter " + paramName + " has string type. "
-                "Integer was given. ");
+                "Integer was requested. ");
     default:
         poco_bugcheck_msg("unrecognized parameter type");
         throw Poco::BugcheckException(); // to avoid compiler warning
@@ -70,13 +70,13 @@ double Module::getParameterValue<double>(std::string paramName)
     case ParamItem::typeInteger:
         throw Poco::DataFormatException("getParameterValue",
                 "The parameter " + paramName + " has integer type. "
-                "Float was given. ");
+                "Float was requested. ");
     case ParamItem::typeFloat:
         return getFloatParameterValue(paramIndex);
     case ParamItem::typeString:
         throw Poco::DataFormatException("getParameterValue",
                 "The parameter " + paramName + " has string type. "
-                "Float was given. ");
+                "Float was requested. ");
     default:
         poco_bugcheck_msg("unrecognized parameter type");
         throw Poco::BugcheckException(); // to avoid compiler warning
@@ -96,13 +96,92 @@ std::string Module::getParameterValue<std::string>(std::string paramName)
     case ParamItem::typeInteger:
         throw Poco::DataFormatException("getParameterValue",
                 "The parameter " + paramName + " has integer type. "
+                "String was requested. ");
+    case ParamItem::typeFloat:
+        throw Poco::DataFormatException("getParameterValue",
+                "The parameter " + paramName + " has float type. "
+                "String was requested. ");
+    case ParamItem::typeString:
+        return getStrParameterValue(paramIndex);
+    default:
+        poco_bugcheck_msg("unrecognized parameter type");
+        throw Poco::BugcheckException(); // to avoid compiler warning
+    }
+}
+
+template <> inline
+void Module::setParameterValue<long>(std::string paramName, long value)
+{
+    // TODO: scoped mainMutex
+
+    size_t paramIndex = getParameterIndex(paramName);
+
+    switch (paramSet[paramIndex].datatype)
+    {
+    case ParamItem::typeInteger:
+        setIntParameterValue(paramIndex, value);
+        break;
+    case ParamItem::typeFloat:
+        throw Poco::DataFormatException("setParameterValue",
+                "The parameter " + paramName + " has float type. "
+                "Integer was given. ");
+    case ParamItem::typeString:
+        throw Poco::DataFormatException("setParameterValue",
+                "The parameter " + paramName + " has string type. "
+                "Integer was given. ");
+    default:
+        poco_bugcheck_msg("unrecognized parameter type");
+        throw Poco::BugcheckException(); // to avoid compiler warning
+    }
+}
+
+template <> inline
+void Module::setParameterValue<double>(std::string paramName, double value)
+{
+    // TODO: scoped mainMutex
+
+    size_t paramIndex = getParameterIndex(paramName);
+
+    switch (paramSet[paramIndex].datatype)
+    {
+    case ParamItem::typeInteger:
+        throw Poco::DataFormatException("getParameterValue",
+                "The parameter " + paramName + " has integer type. "
+                "Float was given. ");
+    case ParamItem::typeFloat:
+        setFloatParameterValue(paramIndex, value);
+        break;
+    case ParamItem::typeString:
+        throw Poco::DataFormatException("getParameterValue",
+                "The parameter " + paramName + " has string type. "
+                "Float was given. ");
+    default:
+        poco_bugcheck_msg("unrecognized parameter type");
+        throw Poco::BugcheckException(); // to avoid compiler warning
+    }
+}
+
+/// Module::getParameter specialization for string parameters
+template <> inline
+void Module::setParameterValue<std::string>(std::string paramName, std::string value)
+{
+    // TODO: scoped mainMutex
+
+    size_t paramIndex = getParameterIndex(paramName);
+
+    switch (paramSet[paramIndex].datatype)
+    {
+    case ParamItem::typeInteger:
+        throw Poco::DataFormatException("getParameterValue",
+                "The parameter " + paramName + " has integer type. "
                 "String was given. ");
     case ParamItem::typeFloat:
         throw Poco::DataFormatException("getParameterValue",
                 "The parameter " + paramName + " has float type. "
                 "String was given. ");
     case ParamItem::typeString:
-        return getStrParameterValue(paramIndex);
+        setStrParameterValue(paramIndex, value);
+        break;
     default:
         poco_bugcheck_msg("unrecognized parameter type");
         throw Poco::BugcheckException(); // to avoid compiler warning
@@ -113,18 +192,18 @@ std::string Module::getParameterValue<std::string>(std::string paramName)
 // default templates - shouldn't be called!
 //
 
-template <typename T> inline T
-Module::getParameterValue(std::string paramName)
+template <typename T> inline
+T Module::getParameterValue(std::string paramName)
 {
-    // report a bug to the developper
+    // report a bug to the developer
     poco_bugcheck_msg("Module::getParameterValue<T>(): Wrong type T. ");
-    throw ModuleException();
+    throw Poco::BugcheckException();
 }
 
-//template <typename T> inline T
-//Module::setParameterValue(std::string paramName, T value)
-//{
-//    // report a bug to the developer
-//    poco_bugcheck_msg("Module::setParameterValue<T>(): Wrong type T. ");
-//    throw ModuleException();
-//}
+template <typename T> inline
+void Module::setParameterValue(std::string paramName, T value)
+{
+    // report a bug to the developer
+    poco_bugcheck_msg("Module::setParameterValue<T>(): Wrong type T. ");
+    throw Poco::BugcheckException();
+}

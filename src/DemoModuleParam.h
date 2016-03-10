@@ -79,6 +79,24 @@ private:
         poco_assert(paramIndex == paramStr);
         return sPar;
     }
+
+    void setIntParameterValue(size_t paramIndex, long value)
+    {
+        poco_assert(paramIndex == paramInt);
+        iPar = value;
+    }
+
+    void setFloatParameterValue(size_t paramIndex, double value)
+    {
+        poco_assert(paramIndex == paramFloat);
+        fPar = value;
+    }
+
+    void setStrParameterValue(size_t paramIndex, std::string value)
+    {
+        poco_assert(paramIndex == paramStr);
+        sPar = value;
+    }
 };
 
 #endif /* SRC_DEMOMODULEPARAM_H_ */
