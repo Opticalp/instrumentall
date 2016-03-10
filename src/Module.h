@@ -275,13 +275,22 @@ protected:
     void addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype);
 
     virtual long getIntParameterValue(size_t paramIndex)
-        { poco_bugcheck_msg("getIntParameterValue not implemented for this module"); }
+    {
+        poco_bugcheck_msg("getIntParameterValue not implemented for this module");
+        throw Poco::BugcheckException();
+    }
 
     virtual double getFloatParameterValue(size_t paramIndex)
-        { poco_bugcheck_msg("getFloatParameterValue not implemented for this module"); }
+    {
+        poco_bugcheck_msg("getFloatParameterValue not implemented for this module");
+        throw Poco::BugcheckException();
+    }
 
     virtual std::string getStrParameterValue(size_t paramIndex)
-        { poco_bugcheck_msg("getStrParameterValue not implemented for this module"); }
+    {
+        poco_bugcheck_msg("getStrParameterValue not implemented for this module");
+        throw Poco::BugcheckException();
+    }
 
     virtual void setIntParameterValue(size_t paramIndex, long value)
         { poco_bugcheck_msg("setIntParameterValue not implemented for this module"); }
