@@ -38,7 +38,7 @@ DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
 
     setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
-    setLogger("module" + name());
+    setLogger("module." + name());
 
     // ports
     setInPortCount(inPortCnt);

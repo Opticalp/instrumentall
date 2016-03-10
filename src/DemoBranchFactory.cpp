@@ -31,6 +31,20 @@ THE SOFTWARE.
 #include "DemoBranchFactory.h"
 #include "DemoLeafFactory.h"
 
+std::vector<std::string> DemoBranchFactory::selectValueList()
+{
+	std::vector<std::string> list;
+	list.push_back("leaf");
+	list.push_back("leafA");
+	list.push_back("leafB");
+	list.push_back("leafDataSeq");
+	list.push_back("leafSeqAccu");
+	list.push_back("leafSeqMax");
+	list.push_back("leafForwarder");
+	list.push_back("leafParam");
+	return list;
+}
+
 ModuleFactoryBranch* DemoBranchFactory::newChildFactory(std::string selector)
 {
     return new DemoLeafFactory(this, selector);

@@ -37,7 +37,7 @@ DemoModuleParam::DemoModuleParam(ModuleFactory* parent, std::string customName):
 {
     setInternalName("DemoModuleParam" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
-    setLogger("module" + name());
+    setLogger("module." + name());
 
     // parameters
     setParameterCount(paramCnt);

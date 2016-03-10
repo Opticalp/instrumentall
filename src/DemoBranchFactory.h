@@ -59,19 +59,7 @@ public:
                 "See selectValueList()";
     }
 
-    std::vector<std::string> selectValueList()
-    {
-        std::vector<std::string> list;
-        list.push_back("leaf");
-        list.push_back("leafA");
-        list.push_back("leafB");
-        list.push_back("leafDataSeq");
-        list.push_back("leafSeqAccu");
-        list.push_back("leafSeqMax");
-        list.push_back("leafForwarder");
-        list.push_back("leafParam");
-        return list;
-    }
+    std::vector<std::string> selectValueList();
 
 private:
     ModuleFactoryBranch* newChildFactory(std::string selector);

@@ -40,7 +40,7 @@ DemoModule::DemoModule(ModuleFactory* parent, std::string customName):
     setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
 
-    setLogger("module" + name());
+    setLogger("module." + name());
 
     notifyCreation();
 
