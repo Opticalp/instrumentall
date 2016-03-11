@@ -188,3 +188,51 @@ void Module::freeInternalName()
         }
     }
 }
+
+void Module::addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype)
+{
+    try
+    {
+        paramSet.at(index).name = name;
+        paramSet[index].descr = descr;
+        paramSet[index].datatype = datatype;
+    }
+    catch (std::out_of_range& )
+    {
+        poco_bugcheck_msg("addParameter: incorrect index. "
+                "Please check your module constructor");
+    }
+}
+
+void Module::getParameterSet(ParameterSet* pSet)
+{
+    // mainMutex.lock();
+    pSet->clear();
+    pSet->reserve(paramSet.size());
+    for (ParameterSet::iterator it = paramSet.begin(),
+            ite = paramSet.end(); it != ite; it++)
+    {
+        pSet->push_back(ParamItem());
+        pSet->back().name = it->name;
+        pSet->back().descr = it->descr;
+        pSet->back().datatype = it->datatype;
+    }
+    // mainMutex.unlock();
+}
+
+size_t Module::getParameterIndex(std::string paramName)
+{
+    size_t length = paramSet.size();
+
+    for (size_t index = 0; index < length; index++)
+        if (paramSet[index].name.compare(paramName) == 0)
+            return index;
+
+    throw Poco::NotFoundException("getParameterIndex", "parameter name not found");
+}
+
+ParamItem::ParamType Module::getParameterType(std::string paramName)
+{
+    // TODO: mainMutex scoped lock
+    return paramSet[getParameterIndex(paramName)].datatype;
+}

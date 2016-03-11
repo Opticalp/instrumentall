@@ -127,12 +127,51 @@ static PyMethodDef pyMethodModOutPorts =
     "Retrieve the output ports"
 };
 
+/// Module::parameterSet() python wrapper
+extern "C" PyObject* pyModGetParameterSet(ModMembers *self);
+
+static PyMethodDef pyMethodModGetParameterSet =
+{
+    "getParameterSet",
+    (PyCFunction)pyModGetParameterSet,
+    METH_NOARGS,
+    "Retrieve the parameter set"
+};
+
+/// Module::getParameterValue python wrapper
+extern "C"
+PyObject* pyModGetParameterValue(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModGetParameterValue =
+{
+    "getParameterValue",
+    (PyCFunction)pyModGetParameterValue,
+    METH_VARARGS,
+    "GetParameterValue(paramName): get the value of the given parameter"
+};
+
+/// Module::setParameterValue python wrapper
+extern "C"
+PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModSetParameterValue =
+{
+    "setParameterValue",
+    (PyCFunction)pyModSetParameterValue,
+    METH_VARARGS,
+    "SetParameterValue(paramName): set the value of the given parameter"
+};
+
 /// exported methods
 static PyMethodDef pyModMethods[] = {
         pyMethodModParent,
 
         pyMethodModInPorts,
         pyMethodModOutPorts,
+
+        pyMethodModGetParameterSet,
+        pyMethodModGetParameterValue,
+        pyMethodModSetParameterValue,
 
         {NULL} // sentinel
 };
