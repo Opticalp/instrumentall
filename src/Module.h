@@ -140,6 +140,7 @@ public:
 	 * @return a copy of the input ports list
 	 */
 	std::vector<InPort*> getInPorts() { return inPorts; }
+	InPort* getInPort(std::string portName);
 
 	/**
 	 * Get output ports
@@ -147,6 +148,7 @@ public:
 	 * @see getInPorts
 	 */
 	std::vector<OutPort*> getOutPorts() { return outPorts; }
+	OutPort* getOutPort(std::string portName);
 
 	/**
 	 * Implementation of Poco::Task::runTask()

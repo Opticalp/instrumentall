@@ -247,6 +247,59 @@ PyObject* pyModInPorts(ModMembers* self)
     return pyPorts;
 }
 
+PyObject* pyModInPort(ModMembers* self, PyObject *args)
+{
+    char* portNameChar;
+
+    if (!PyArg_ParseTuple(args, "s:inPort", &portNameChar))
+        return NULL;
+
+    std::string portName(portNameChar);
+
+    SharedPtr<InPort*> sharedPort;
+    try
+    {
+        sharedPort = Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .getInPort((**self->module)->getInPort(portName));
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    // prepare InPort python type
+    if (PyType_Ready(&PythonInPort) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the InPort Type");
+        return NULL;
+    }
+
+    // create the python object
+    InPortMembers* pyPort =
+        (InPortMembers*)(pyInPortNew((PyTypeObject*)&PythonInPort, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // retrieve name and description
+    tmp = pyPort->name;
+    pyPort->name = PyString_FromString((*sharedPort)->name().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = pyPort->description;
+    pyPort->description = PyString_FromString((*sharedPort)->description().c_str());
+    Py_XDECREF(tmp);
+
+    // set InPort reference
+    *(pyPort->inPort) = sharedPort;
+
+    return reinterpret_cast<PyObject*>(pyPort);
+}
+
 #include "OutPort.h"
 #include "PythonOutPort.h"
 
@@ -316,6 +369,60 @@ PyObject* pyModOutPorts(ModMembers* self)
     }
 
     return pyPorts;
+}
+
+PyObject* pyModOutPort(ModMembers* self, PyObject *args)
+{
+    char* portNameChar;
+
+    if (!PyArg_ParseTuple(args, "s:outPort", &portNameChar))
+        return NULL;
+
+    std::string portName(portNameChar);
+
+    SharedPtr<OutPort*> sharedPort;
+
+    try
+    {
+        sharedPort = Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .getOutPort((**self->module)->getOutPort(portName));
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    // prepare OutPort python type
+    if (PyType_Ready(&PythonOutPort) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the OutPort Type");
+        return NULL;
+    }
+
+    // create the python object
+    OutPortMembers* pyPort =
+        (OutPortMembers*)(pyOutPortNew((PyTypeObject*)&PythonOutPort, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // retrieve name and description
+    tmp = pyPort->name;
+    pyPort->name = PyString_FromString((*sharedPort)->name().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = pyPort->description;
+    pyPort->description = PyString_FromString((*sharedPort)->description().c_str());
+    Py_XDECREF(tmp);
+
+    // set InPort reference
+    *(pyPort->outPort) = sharedPort;
+
+    return reinterpret_cast<PyObject*>(pyPort);
 }
 
 PyObject* pyModGetParameterSet(ModMembers *self)
