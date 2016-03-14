@@ -29,22 +29,128 @@
 #include "DataItem.h"
 #include "DataLogger.h"
 #include "DataManager.h"
+
+#include "Poco/Types.h"
 #include "Poco/Util/Application.h"
+
+DataItem::DataItem(int dataType, OutPort* parent):
+        mDataType(dataType),
+        mParentPort(parent)
+{
+    switch (mDataType)
+    {
+    // scalar containers
+    case (typeInt32 | contScalar):
+        dataStore = reinterpret_cast<void*>(new Poco::Int32);
+        break;
+    case (typeUInt32 | contScalar):
+        dataStore = reinterpret_cast<void*>(new Poco::UInt32);
+        break;
+    case (typeInt64 | contScalar):
+        dataStore = reinterpret_cast<void*>(new Poco::Int64);
+        break;
+    case (typeUInt64 | contScalar):
+        dataStore = reinterpret_cast<void*>(new Poco::UInt64);
+        break;
+    case (typeFloat | contScalar):
+        dataStore = reinterpret_cast<void*>(new float);
+        break;
+    case (typeDblFloat | contScalar):
+        dataStore = reinterpret_cast<void*>(new double);
+        break;
+    case (typeString | contScalar):
+        dataStore = reinterpret_cast<void*>(new std::string);
+        break;
+
+    // vector containers
+    case (typeInt32 | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<Poco::Int32>);
+        break;
+    case (typeUInt32 | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<Poco::UInt32>);
+        break;
+    case (typeInt64 | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<Poco::Int64>);
+        break;
+    case (typeUInt64 | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<Poco::UInt64>);
+        break;
+    case (typeFloat | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<float>);
+        break;
+    case (typeDblFloat | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<double>);
+        break;
+    case (typeString | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<std::string>);
+        break;
+
+    // others
+    case typeUndefined:
+        break;
+    default:
+        poco_bugcheck_msg("DataItem::DataItem: unknown requested data type");
+        throw Poco::BugcheckException();
+    }
+}
 
 DataItem::~DataItem()
 {
     // The loggers are detached by DataManager::removeOutPort()
 
-    if (mDataType == typeInteger)
-        delete reinterpret_cast<int*>(dataStore);
-}
+    switch (mDataType)
+    {
+    // scalar containers
+    case (typeInt32 | contScalar):
+        delete reinterpret_cast<Poco::Int32*>(dataStore);
+        break;
+    case (typeUInt32 | contScalar):
+        delete reinterpret_cast<Poco::UInt32*>(dataStore);
+        break;
+    case (typeInt64 | contScalar):
+        delete reinterpret_cast<Poco::Int64*>(dataStore);
+        break;
+    case (typeUInt64 | contScalar):
+        delete reinterpret_cast<Poco::UInt64*>(dataStore);
+        break;
+    case (typeFloat | contScalar):
+        delete reinterpret_cast<float*>(dataStore);
+        break;
+    case (typeDblFloat | contScalar):
+        delete reinterpret_cast<double*>(dataStore);
+        break;
+    case (typeString | contScalar):
+        delete reinterpret_cast<std::string*>(dataStore);
+        break;
 
-DataItem::DataItem(DataTypeEnum dataType, OutPort* parent):
-        mDataType(dataType),
-        mParentPort(parent)
-{
-    if (mDataType == typeInteger)
-        dataStore = reinterpret_cast<void*>(new int);
+    // vector containers
+    case (typeInt32 | contVector):
+        delete reinterpret_cast<std::vector<Poco::Int32>*>(dataStore);
+        break;
+    case (typeUInt32 | contVector):
+        delete reinterpret_cast<std::vector<Poco::UInt32>*>(dataStore);
+        break;
+    case (typeInt64 | contVector):
+        delete reinterpret_cast<std::vector<Poco::Int64>*>(dataStore);
+        break;
+    case (typeUInt64 | contVector):
+        delete reinterpret_cast<std::vector<Poco::UInt64>*>(dataStore);
+        break;
+    case (typeFloat | contVector):
+        delete reinterpret_cast<std::vector<float>*>(dataStore);
+        break;
+    case (typeDblFloat | contVector):
+        delete reinterpret_cast<std::vector<double>*>(dataStore);
+        break;
+    case (typeString | contVector):
+        delete reinterpret_cast<std::vector<std::string>*>(dataStore);
+        break;
+
+    // others
+    case typeUndefined:
+    default:
+        break;
+    }
 }
 
 void DataItem::releaseNewData()
@@ -88,3 +194,13 @@ void DataItem::detachLogger(DataLogger* logger)
     allLoggers.erase(logger);
     loggersLock.unlock();
 }
+
+void DataItem::checkDataType(int datatype)
+{
+    if ((datatype & ~contVector) == (mDataType & ~contVector))
+        return;
+
+    throw Poco::DataFormatException(dataTypeStr(mDataType) + " is expected");
+}
+
+

@@ -48,7 +48,7 @@ public:
     Port(Module* parent,
             std::string name,
             std::string description,
-            DataItem::DataTypeEnum dataType,
+            int dataType,
             size_t index):
                 pParent(parent),
                 mName(name), mDescription(description),
@@ -63,7 +63,7 @@ public:
     /// get port description
     std::string description() { return mDescription; }
     /// get port data type
-    DataItem::DataTypeEnum dataType() { return mType; }
+    int dataType() { return mType; }
     /// get port data type as a character string
     std::string dataTypeStr() { return DataItem::dataTypeStr(mType); }
     /// get port indexing at the parent module
@@ -73,7 +73,7 @@ private:
     Module* pParent; ///< parent module reference
     std::string mName; ///< port name
     std::string mDescription; ///< port description
-    DataItem::DataTypeEnum mType; ///< port data type
+    int mType; ///< port data type
     size_t mIndex; ///< index in the module port list
 };
 

@@ -53,26 +53,70 @@ public:
      */
     enum DataTypeEnum
     {
-        typeUndefined, /// to be used in empty ports
-        typeInteger,
+        /// Undefined data type.
+        /// To be combined with contScalar container.
+        /// To be used in empty ports
+        typeUndefined,
+
+        // integer types
+        typeInt32,
+        typeInteger = typeInt32,
+        typeUInt32,
+        typeInt64,
+        typeUInt64,
+
+        // float types
         typeFloat,
-        typeString,
-        typeCnt
+        typeDblFloat,
+
+        // character string
+        typeString
     };
 
-    DataItem(DataTypeEnum datatype = typeUndefined, OutPort* parent = NULL);
+    /**
+     * Mask to apply on the data type enum
+     *
+     * to get the complete data type description
+     */
+    enum DataContainerEnum
+    {
+        contScalar = 0, ///< no mask
+        contVector = 0x8000
+    };
+
+    DataItem(int datatype = typeUndefined, OutPort* parent = NULL);
     virtual ~DataItem();
 
-    /// get port data type as a character string
-    static std::string dataTypeStr(DataTypeEnum dataType);
+    /**
+     * Get dataType as a character string
+     *
+     * To get the data type of a data item, use
+     *
+     *     dataTypeStr(item.dataType())
+     *
+     */
+    static std::string dataTypeStr(int datatype);
+
+    /**
+     * @throw Poco::DataFormatException is the type T
+     * does not fit mDataType
+     */
+    template <typename T> void checkType();
 
     DataAttribute getDataAttribute() { return attribute; }
 
     void setDataAttribute(DataAttribute attr) { attribute = attr; }
 
+    /**
+     * Retrieve a write reference on the data
+     *
+     * Lock the data
+     * @throw Poco::DataFormatException forwarded from checkType()
+     */
     template <typename T> bool tryGetDataToWrite(T*& pData)
     {
-        // TODO: check type
+        checkType<T>();
+
         if (dataLock.tryWriteLock())
         {
             pData = reinterpret_cast<T*>(dataStore);
@@ -88,16 +132,24 @@ public:
      * Retrieve a pointer on the data to read it
      *
      * @warning The lock has to have been previously acquired
+     * @throw Poco::DataFormatException forwarded from checkType()
      */
     template <typename T> T* getDataToRead()
     {
-        // TODO: check type
+        checkType<T>();
+
         return reinterpret_cast<T*>(dataStore);
     }
 
+    /**
+     * Forward the tryReadLock() call to the data RWLock
+     */
     bool tryReadLock()
         { return dataLock.tryReadLock(); }
 
+    /**
+     * Forward the readLock() call to the data RWLock
+     */
     void readLock()
         { dataLock.readLock(); }
 
@@ -128,7 +180,7 @@ public:
     /**
      * Get the data item data type
      */
-    DataTypeEnum dataType() { return mDataType; }
+    int dataType() { return mDataType; }
 
     /**
      * Retrieve the data loggers
@@ -144,7 +196,34 @@ public:
     bool hasLoggers() { return (allLoggers.size()>0); }
 
 private:
-    DataTypeEnum mDataType; ///< data type
+    /**
+     * Data type
+     *
+     * The data type is a combination (logical OR) of
+     * a DataTypeEnum value and a DataContainerEnum value
+     */
+    int mDataType;
+
+    void checkContScalar()
+    {
+        if (mDataType & contVector)
+            throw Poco::DataFormatException("DataItem::checkType",
+                    "The data should be contained in a vector");
+    }
+
+    void checkContVector()
+    {
+        if ((mDataType & contVector) == 0)
+            throw Poco::DataFormatException("DataItem::checkType",
+                    "The data should be contained in a scalar");
+    }
+
+    /**
+     * @throw Poco::DataFormatException if datatype (without
+     * container) does not fit mDataType
+     */
+    void checkDataType(int datatype);
+
     void* dataStore; ///< pointer to the data
 
     DataAttribute attribute; ///< data attribute
@@ -170,16 +249,30 @@ private:
 //
 // inlines
 //
-inline std::string DataItem::dataTypeStr(DataTypeEnum dataType)
+inline std::string DataItem::dataTypeStr(int datatype)
 {
-    switch (dataType)
-    {
-    case typeUndefined:
+    if (datatype == typeUndefined)
         return "undefined";
-    case typeInteger:
-        return "integer";
+
+    std::string desc;
+
+    if (datatype & contVector)
+        desc = "vector of ";
+
+    switch (datatype & ~contVector)
+    {
+    case typeInt32:
+        return "32-bit integer";
+    case typeUInt32:
+        return "32-bit unsigned integer";
+    case typeInt64:
+        return "64-bit integer";
+    case typeUInt64:
+        return "64-bit unsigned integer";
     case typeFloat:
         return "floating point scalar";
+    case typeDblFloat:
+        return "double precision floating point scalar";
     case typeString:
         return "character string";
     default:
@@ -187,5 +280,6 @@ inline std::string DataItem::dataTypeStr(DataTypeEnum dataType)
     }
 }
 
+#include "DataItem.ipp"
 
 #endif /* SRC_DATAITEM_H_ */

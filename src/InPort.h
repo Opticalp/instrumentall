@@ -52,7 +52,7 @@ public:
     InPort(Module* parent,
             std::string name,
             std::string description,
-            DataItem::DataTypeEnum datatype,
+            int datatype,
             size_t index);
 
     /**

@@ -238,7 +238,7 @@ protected:
 	 */
 	void addInPort(
 	        std::string name, std::string description,
-	        DataItem::DataTypeEnum dataType,
+	        int dataType,
 	        size_t index );
 
     /**
@@ -256,7 +256,7 @@ protected:
      */
     void addOutPort(
             std::string name, std::string description,
-            DataItem::DataTypeEnum dataType,
+            int dataType,
             size_t index );
 
     /**

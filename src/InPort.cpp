@@ -35,7 +35,7 @@
 InPort::InPort(Module* parent,
         std::string name,
         std::string description,
-        DataItem::DataTypeEnum datatype,
+        int datatype,
         size_t index):
     Port(parent, name, description, datatype, index),
     used(true)
