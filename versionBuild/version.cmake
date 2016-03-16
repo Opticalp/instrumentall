@@ -15,10 +15,33 @@
 
 message ( STATUS "Version header generation" )
 message ( STATUS "VERSION file is: ${VERSION_FILE}" )
+message ( STATUS "fork_NAME file is: ${FORK_NAME_FILE}" )
+message ( STATUS "fork_VERSION file is: ${FORK_VERSION_FILE}" )
 
 # get VERSION
 file ( READ ${VERSION_FILE} VERSION_FROM_FILE LIMIT 16 )
 string ( STRIP ${VERSION_FROM_FILE} VERSION_FROM_FILE )
+
+# check if is a fork
+file ( READ ${FORK_NAME_FILE} FORK_NAME LIMIT 255 )
+
+if ( FORK_NAME STREQUAL "" )
+    message (STATUS "This branch is not a fork")
+    set ( IS_FORK false )
+
+else ()
+    string ( STRIP ${FORK_NAME} FORK_NAME )
+    set ( IS_FORK true )
+    
+    # copy VERSION_FROM_FILE to ROOT_VERSION
+    set ( ROOT_VERSION ${VERSION_FROM_FILE} )
+
+    set ( VERSION_FILE ${FORK_VERSION_FILE} )
+    
+    file ( READ ${VERSION_FILE} VERSION_FROM_FILE LIMIT 16 )
+    string ( STRIP ${VERSION_FROM_FILE} VERSION_FROM_FILE )    
+    
+endif ()
 
 get_filename_component(OutDir ${DST} DIRECTORY)
 

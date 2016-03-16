@@ -71,6 +71,8 @@ ADD_CUSTOM_TARGET(
     ${CMAKE_COMMAND} -D SRC=${CMAKE_SOURCE_DIR}/versionBuild/version.h.in
                      -D DST=${CMAKE_BINARY_DIR}/version/version.h
                      -D VERSION_FILE=${CMAKE_SOURCE_DIR}/VERSION
+                     -D FORK_NAME_FILE=${CMAKE_SOURCE_DIR}/fork_NAME
+                     -D FORK_VERSION_FILE=${CMAKE_SOURCE_DIR}/fork_VERSION
                      -P ${CMAKE_SOURCE_DIR}/versionBuild/version.cmake
 )
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/version)
