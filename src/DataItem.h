@@ -98,6 +98,15 @@ public:
     static std::string dataTypeStr(int datatype);
 
     /**
+     * Check if the given datatype container is a vector
+     */
+    static bool isVector(int datatype)
+        { return (datatype & contVector); }
+
+    static DataTypeEnum noContainerDataType(int datatype)
+        { return static_cast<DataTypeEnum>(datatype & ~contVector); }
+
+    /**
      * @throw Poco::DataFormatException is the type T
      * does not fit mDataType
      */

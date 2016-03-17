@@ -119,26 +119,236 @@ PyObject* pyDataParent(DataMembers* self)
 #include "OutPort.h"
 #include "PythonOutPort.h"
 
-PyObject* pyDataGetValue(DataMembers* self)
+/**
+ * Construct a python list from a vector
+ */
+PyObject* getVectorValue(SharedPtr<DataItem*> data)
 {
-    // TODO: other data types
+    // construct pyList
+    PyObject* list = PyList_New(0);
 
-    if ((**self->data)->dataType() == DataItem::typeInteger)
+    (*data)->readLock();
+
+    switch (DataItem::noContainerDataType((*data)->dataType()))
     {
-        (**self->data)->readLock();
+    case DataItem::typeInt32:
+    {
+        std::vector<Poco::Int32>* pData;
+        pData = (*data)->getDataToRead< std::vector<Poco::Int32> >();
 
-        int value = *((**self->data)->getDataToRead<int>());
-
-        (**self->data)->releaseData();
-
-        return PyInt_FromLong(value);
+        for (std::vector<Poco::Int32>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            // create the dict entry
+            if ( 0 > PyList_Append(list, PyInt_FromLong(*it)) )
+            {
+                // appending the item failed
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Not able to build the return list");
+                (*data)->releaseData();
+                return NULL;
+            }
+        }
+        break;
     }
-    else
+    case DataItem::typeUInt32:
     {
+        std::vector<Poco::UInt32>* pData;
+        pData = (*data)->getDataToRead< std::vector<Poco::UInt32> >();
+
+        for (std::vector<Poco::UInt32>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            // create the dict entry
+            if ( 0 > PyList_Append(list, PyInt_FromSize_t(*it)) )
+            {
+                // appending the item failed
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Not able to build the return list");
+                (*data)->releaseData();
+                return NULL;
+            }
+        }
+        break;
+    }
+    case DataItem::typeInt64:
+    {
+        std::vector<Poco::Int64>* pData;
+        pData = (*data)->getDataToRead< std::vector<Poco::Int64> >();
+
+        for (std::vector<Poco::Int64>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            // create the dict entry
+            if ( 0 > PyList_Append(list, PyInt_FromLong(*it)) )
+            {
+                // appending the item failed
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Not able to build the return list");
+                (*data)->releaseData();
+                return NULL;
+            }
+        }
+        break;
+    }
+    case DataItem::typeUInt64:
+    {
+        std::vector<Poco::UInt64>* pData;
+        pData = (*data)->getDataToRead< std::vector<Poco::UInt64> >();
+
+        for (std::vector<Poco::UInt64>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            // create the dict entry
+            if ( 0 > PyList_Append(list, PyInt_FromSize_t(*it)) )
+            {
+                // appending the item failed
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Not able to build the return list");
+                (*data)->releaseData();
+                return NULL;
+            }
+        }
+        break;
+    }
+    case DataItem::typeFloat:
+    {
+        std::vector<float>* pData;
+        pData = (*data)->getDataToRead< std::vector<float> >();
+
+        for (std::vector<float>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            // create the dict entry
+            if ( 0 > PyList_Append(list, PyFloat_FromDouble(*it)) )
+            {
+                // appending the item failed
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Not able to build the return list");
+                (*data)->releaseData();
+                return NULL;
+            }
+        }
+        break;
+    }
+    case DataItem::typeDblFloat:
+    {
+        std::vector<double>* pData;
+        pData = (*data)->getDataToRead< std::vector<double> >();
+
+        for (std::vector<double>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            // create the dict entry
+            if ( 0 > PyList_Append(list, PyFloat_FromDouble(*it)) )
+            {
+                // appending the item failed
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Not able to build the return list");
+                (*data)->releaseData();
+                return NULL;
+            }
+        }
+        break;
+    }
+    case DataItem::typeString:
+    {
+        std::vector<std::string>* pData;
+        pData = (*data)->getDataToRead< std::vector<std::string> >();
+
+        for (std::vector<std::string>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            // create the dict entry
+            if ( 0 > PyList_Append(list, PyString_FromString(it->c_str())) )
+            {
+                // appending the item failed
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Not able to build the return list");
+                (*data)->releaseData();
+                return NULL;
+            }
+        }
+        break;
+    }
+    default:
         PyErr_SetString(PyExc_NotImplementedError,
-                "getValue is not implemented for dataType != integer");
+                "getValue is not implemented for this dataType");
+        (*data)->releaseData();
         return NULL;
     }
+
+    (*data)->releaseData();
+
+    return list;
+}
+
+PyObject* pyDataGetValue(DataMembers* self)
+{
+    int dataType = (**self->data)->dataType();
+
+    if (DataItem::isVector(dataType))
+        return getVectorValue(*self->data);
+
+    // python object to return
+    PyObject* pyObj;
+
+    (**self->data)->readLock();
+
+    switch (DataItem::noContainerDataType(dataType))
+    {
+    case DataItem::typeInt32:
+    {
+        long data = *((**self->data)->getDataToRead<Poco::Int32>());
+        pyObj = PyInt_FromLong(data);
+        break;
+    }
+    case DataItem::typeUInt32:
+    {
+        size_t data = *((**self->data)->getDataToRead<Poco::UInt32>());
+        pyObj = PyInt_FromSize_t(data);
+        break;
+    }
+    case DataItem::typeInt64:
+    {
+        long data = *((**self->data)->getDataToRead<Poco::Int64>());
+        pyObj = PyInt_FromLong(data);
+        break;
+    }
+    case DataItem::typeUInt64:
+    {
+        size_t data = *((**self->data)->getDataToRead<Poco::UInt64>());
+        pyObj = PyInt_FromSize_t(data);
+        break;
+    }
+    case DataItem::typeFloat:
+    {
+        double data = *((**self->data)->getDataToRead<float>());
+        pyObj = PyFloat_FromDouble(data);
+        break;
+    }
+    case DataItem::typeDblFloat:
+    {
+        double data = *((**self->data)->getDataToRead<double>());
+        pyObj = PyFloat_FromDouble(data);
+        break;
+    }
+    case DataItem::typeString:
+    {
+        std::string* pData = (**self->data)->getDataToRead<std::string>();
+        pyObj = PyString_FromString(pData->c_str());
+        break;
+    }
+    default:
+        PyErr_SetString(PyExc_NotImplementedError,
+                "getValue is not implemented for this dataType");
+        (**self->data)->releaseData();
+        return NULL;
+    }
+
+    (**self->data)->releaseData();
+
+    return pyObj;
 }
 
 #include "PythonDataLogger.h"
@@ -265,7 +475,6 @@ extern "C" PyObject* pyDataLoggers(DataMembers *self)
     }
 
     return pyLoggers;
-
 }
 
 #endif /* HAVE_PYTHON27 */
