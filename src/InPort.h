@@ -155,7 +155,7 @@ private:
      * expired data.
      */
     bool isUpToDate()
-        { return true; } // FIXME
+        { return false; } // FIXME
 
     bool used;
 
