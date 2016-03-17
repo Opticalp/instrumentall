@@ -27,28 +27,198 @@
  */
 
 #include "DataPocoLogger.h"
-#include "DataItem.h"
 
 #include "Poco/NumberFormatter.h"
 
 void DataPocoLogger::runTask()
 {
+    // TODO: lock main mutex?
+
     if (data() == NULL)
         return;
 
-    switch (data()->dataType())
+    int dataType = data()->dataType();
+
+    if (DataItem::isVector(dataType))
     {
-    case DataItem::typeInteger:
-        poco_information(logger(),
-                Poco::NumberFormatter::format(*(data()->getDataToRead<int>())));
+        logVectorValue(DataItem::noContainerDataType(dataType));
+    }
+    else
+    {
+        switch (DataItem::noContainerDataType(dataType))
+        {
+        case DataItem::typeInt32:
+            poco_information(logger(),
+                    Poco::NumberFormatter::format(*(data()->getDataToRead<Poco::Int32>())));
+            break;
+        case DataItem::typeUInt32:
+            poco_information(logger(),
+                    Poco::NumberFormatter::format(*(data()->getDataToRead<Poco::UInt32>())));
+            break;
+        case DataItem::typeInt64:
+            poco_information(logger(),
+                    Poco::NumberFormatter::format(*(data()->getDataToRead<Poco::Int64>())));
+            break;
+        case DataItem::typeUInt64:
+            poco_information(logger(),
+                    Poco::NumberFormatter::format(*(data()->getDataToRead<Poco::UInt64>())));
+            break;
+        case DataItem::typeFloat:
+            poco_information(logger(),
+                    Poco::NumberFormatter::format(*(data()->getDataToRead<float>())));
+            break;
+        case DataItem::typeDblFloat:
+            poco_information(logger(),
+                    Poco::NumberFormatter::format(*(data()->getDataToRead<double>())));
+            break;
+        case DataItem::typeString:
+            poco_information(logger(), *(data()->getDataToRead<std::string>()));
+            break;
+        default:
+            data()->releaseData();
+            throw Poco::NotImplementedException("DataPocoLogger",
+                    "data type not implemented");
+        }
+    }
+
+    data()->releaseData();
+}
+
+void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
+{
+    switch (dataType)
+    {
+    case DataItem::typeInt32:
+    {
+        std::vector<Poco::Int32>* pData;
+        pData = data()->getDataToRead< std::vector<Poco::Int32> >();
+
+        std::string msg;
+
+        for (std::vector<Poco::Int32>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            msg += Poco::NumberFormatter::format(*it) + "\t";
+        }
+
+        msg.erase(msg.end()-1);
+
+        poco_information(logger(), msg);
         break;
+    }
+    case DataItem::typeUInt32:
+    {
+        std::vector<Poco::UInt32>* pData;
+        pData = data()->getDataToRead< std::vector<Poco::UInt32> >();
+
+        std::string msg;
+
+        for (std::vector<Poco::UInt32>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            msg += Poco::NumberFormatter::format(*it) + "\t";
+        }
+
+        msg.erase(msg.end()-1);
+
+        poco_information(logger(), msg);
+        break;
+    }
+    case DataItem::typeInt64:
+    {
+        std::vector<Poco::Int64>* pData;
+        pData = data()->getDataToRead< std::vector<Poco::Int64> >();
+
+        std::string msg;
+
+        for (std::vector<Poco::Int64>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            msg += Poco::NumberFormatter::format(*it) + "\t";
+        }
+
+        msg.erase(msg.end()-1);
+
+        poco_information(logger(), msg);
+        break;
+    }
+    case DataItem::typeUInt64:
+    {
+        std::vector<Poco::UInt64>* pData;
+        pData = data()->getDataToRead< std::vector<Poco::UInt64> >();
+
+        std::string msg;
+
+        for (std::vector<Poco::UInt64>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            msg += Poco::NumberFormatter::format(*it) + "\t";
+        }
+
+        msg.erase(msg.end()-1);
+
+        poco_information(logger(), msg);
+        break;
+    }
+    case DataItem::typeFloat:
+    {
+        std::vector<float>* pData;
+        pData = data()->getDataToRead< std::vector<float> >();
+
+        std::string msg;
+
+        for (std::vector<float>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            msg += Poco::NumberFormatter::format(*it) + "\t";
+        }
+
+        msg.erase(msg.end()-1);
+
+        poco_information(logger(), msg);
+        break;
+    }
+    case DataItem::typeDblFloat:
+    {
+        std::vector<double>* pData;
+        pData = data()->getDataToRead< std::vector<double> >();
+
+        std::string msg;
+
+        for (std::vector<double>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            msg += Poco::NumberFormatter::format(*it) + "\t";
+        }
+
+        msg.erase(msg.end()-1);
+
+        poco_information(logger(), msg);
+        break;
+    }
+    case DataItem::typeString:
+    {
+        std::vector<std::string>* pData;
+        pData = data()->getDataToRead< std::vector<std::string> >();
+
+        std::string msg;
+
+        for (std::vector<std::string>::iterator it = pData->begin(),
+                ite = pData->end(); it != ite; it++)
+        {
+            msg += "\"" + *it + "\"\t";
+        }
+
+        msg.erase(msg.end()-1);
+
+        poco_information(logger(), msg);
+        break;
+    }
     default:
         data()->releaseData();
         throw Poco::NotImplementedException("DataPocoLogger",
                 "data type not implemented");
     }
-
-    data()->releaseData();
 }
 
 DataPocoLogger::DataPocoLogger():

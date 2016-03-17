@@ -98,6 +98,15 @@ public:
     static std::string dataTypeStr(int datatype);
 
     /**
+     * Check if the given datatype container is a vector
+     */
+    static bool isVector(int datatype)
+        { return (datatype & contVector); }
+
+    static DataTypeEnum noContainerDataType(int datatype)
+        { return static_cast<DataTypeEnum>(datatype & ~contVector); }
+
+    /**
      * @throw Poco::DataFormatException is the type T
      * does not fit mDataType
      */
@@ -262,22 +271,31 @@ inline std::string DataItem::dataTypeStr(int datatype)
     switch (datatype & ~contVector)
     {
     case typeInt32:
-        return "32-bit integer";
+        desc += "32-bit integer";
+        break;
     case typeUInt32:
-        return "32-bit unsigned integer";
+        desc += "32-bit unsigned integer";
+        break;
     case typeInt64:
-        return "64-bit integer";
+        desc += "64-bit integer";
+        break;
     case typeUInt64:
-        return "64-bit unsigned integer";
+        desc += "64-bit unsigned integer";
+        break;
     case typeFloat:
-        return "floating point scalar";
+        desc += "floating point scalar";
+        break;
     case typeDblFloat:
-        return "double precision floating point scalar";
+        desc += "double precision floating point scalar";
+        break;
     case typeString:
-        return "character string";
+        desc += "character string";
+        break;
     default:
         return "";
     }
+
+    return desc;
 }
 
 #include "DataItem.ipp"

@@ -31,6 +31,8 @@
 
 #include "DataLogger.h"
 
+#include "DataItem.h"
+
 #include "Poco/Logger.h"
 
 /**
@@ -71,6 +73,13 @@ private:
     }
 
     Poco::Logger* pLogger;
+
+    /**
+     * Log a vector
+     *
+     * called by runTask()
+     */
+    void logVectorValue(DataItem::DataTypeEnum dataType);
 };
 
 #endif /* SRC_DATAPOCOLOGGER_H_ */

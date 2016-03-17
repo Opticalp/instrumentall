@@ -68,13 +68,16 @@ def myMain():
     print " - Name: " + logger.name
     print " - Description: " + logger.description
     
+    print 'And once again: DataLogger("DataPocoLogger")'
+    logger1 = DataLogger("DataPocoLogger") 
+    
     print "Retrieve the existing loggers list"
     loggers = dataLoggers()
     print str(len(loggers)) + " loggers available"
     
     print "logger#0 is of class: " + loggers[0].name 
     
-    print "Register the new logger to mod2 output"
+    print "Register the first logger to mod2 output"
     mod2.outPorts()[0].data().register(logger)
     
     print "Check the registered loggers at the mod2 output port" 
@@ -85,17 +88,20 @@ def myMain():
                " on port: " + lolo.dataSource().parent().name + 
                " of module: " + lolo.dataSource().parent().parent().name )  
     
+    print "Register the second logger to mod3 output"
+    mod3.outPorts()[0].data().register(logger1)
+    
     print "launch action: run mod1"
     runModule(mod1)
     waitAll()
 
-    print "Detach the logger and re-run"
+    print "Detach the 1st logger and re-run"
     logger.detach()
 
     runModule(mod1)
     waitAll()
     
-    print "Re-register the logger to mod2 output"
+    print "Re-register the 1st logger to mod2 output"
     mod2.outPorts()[0].data().register(logger)
 
     print "Remove the logger" 

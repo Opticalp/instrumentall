@@ -54,7 +54,8 @@ DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customNa
 
     addInPort("inPortA", "data sequence", DataItem::typeInteger, inPortA);
 
-    addOutPort("outPortA", "sum of data sequence", DataItem::typeInteger, outPortA);
+    addOutPort("outPortA", "data sequence as a vector",
+            DataItem::typeInteger | DataItem::contVector, outPortA);
 
     notifyCreation();
 
@@ -87,13 +88,13 @@ void DemoModuleSeqAccu::runTask()
 
     DataAttributeIn attr;
 
-    int* pData;
+    Poco::Int32* pData;
 
     // try to acquire the data
     // It should not be a problem since this is the only input data
     // then, if the task was launched, it is probably that this is due
     // to a push.
-    if (!getInPorts()[inPortA]->tryData<int>(pData, &attr))
+    if (!getInPorts()[inPortA]->tryData<Poco::Int32>(pData, &attr))
     {
         poco_information(logger(),
                 "DemoModuleSeqAccu::runTask(): "
@@ -106,12 +107,13 @@ void DemoModuleSeqAccu::runTask()
 
     if (attr.isStartSequence())
     {
-        accumulator = *pData;
+        accumulator.clear();
+        accumulator.push_back(*pData);
         getInPorts()[inPortA]->releaseData();
     }
     else
     {
-        accumulator += *pData;
+        accumulator.push_back(*pData);
 
         if (!attr.isEndSequence())
         {
@@ -124,10 +126,10 @@ void DemoModuleSeqAccu::runTask()
             DataAttributeOut outAttr = attr;
             getInPorts()[inPortA]->releaseData();
 
-            int* pOutData;
+            std::vector<Poco::Int32>* pOutData;
 
             // try to acquire the output data lock
-            while (!getOutPorts()[outPortA]->tryData<int>(pOutData))
+            while (!getOutPorts()[outPortA]->tryData< std::vector<Poco::Int32> >(pOutData))
             {
                 poco_information(logger(),
                         "DemoModuleSeqAccu::runTask(): "
@@ -144,9 +146,6 @@ void DemoModuleSeqAccu::runTask()
 
             *pOutData = accumulator;
             getOutPorts()[outPortA]->notifyReady(outAttr);
-
-            poco_information(logger(), "DemoModuleSeqAccu::runTask() outputs: "
-                    + Poco::NumberFormatter::format(accumulator));
         }
     }
 
