@@ -30,7 +30,48 @@ THE SOFTWARE.
 #include "DemoRootFactory.h"
 #include "DemoBranchFactory.h"
 
+std::vector<std::string> DemoRootFactory::selectValueList()
+{
+	std::vector<std::string> list;
+	list.push_back("branch");
+	return list;
+}
+
+
 ModuleFactoryBranch* DemoRootFactory::newChildFactory(std::string selector)
 {
-    return new DemoBranchFactory(this, selector);
+	if (selector.compare("branch") == 0)
+	{
+		return new DemoBranchFactory(this, selector);
+	}
+//	else if (selector.compare("branch1") == 0)
+//	{
+//		return new Branch1Factory(this, selector);
+//	}
+//	else if (selector.compare("branch2") == 0)
+//	{
+//		return new Branch2Factory(this, selector);
+//	}
+	else
+	{
+		// should not happen unless all the selectValueList()
+		// values are not all represented in the above cases
+		poco_bugcheck_msg("Create: unknown selector");
+		throw Poco::BugcheckException();
+	}
+}
+
+std::string DemoRootFactory::validateSelector(std::string selector)
+{
+	std::vector<std::string> list = selectValueList();
+
+	// TODO: For case insensitivity, compare to lower case and return *it
+	for (std::vector<std::string>::iterator it = list.begin(),
+			ite = list.end(); it != ite; it++)
+	{
+		if (it->compare(selector) == 0)
+			return selector;
+	}
+
+	throw ModuleFactoryException("Unrecognized selector: " + selector);
 }

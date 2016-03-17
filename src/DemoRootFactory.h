@@ -59,22 +59,12 @@ public:
         return "Demo select(). Please, use \"branch\" as selector. ";
     }
 
-    std::vector<std::string> selectValueList()
-    {
-        std::vector<std::string> list;
-        list.push_back("branch");
-        return list;
-    }
+    std::vector<std::string> selectValueList();
 
 private:
     ModuleFactoryBranch* newChildFactory(std::string selector);
 
-    std::string validateSelector(std::string selector)
-    {
-        if (selector.compare("branch"))
-            throw ModuleFactoryException("Unrecognized selector: " + selector);
-        return selector;
-    }
+    std::string validateSelector(std::string selector);
 };
 
 #endif /* SRC_DEMOROOTFACTORY_H_ */

@@ -49,6 +49,13 @@ def myMain():
     inPortA = inPorts[0]
     outPortA = mod2.outPorts()[0]
     
+    print "mod1.inPorts()[0] is: " + inPortA.name
+    print "Querying mod1.inPort(\"" + inPortA.name + "\")... "
+    print "got: " + mod1.inPort(inPortA.name).name + ". "
+    print "mod2.outPorts()[0] is: " + outPortA.name
+    print "Querying mod2.outPort(\"" + outPortA.name + "\")... "
+    print "got: " + mod2.outPort(outPortA.name).name + ". "
+    
     bind(inPortA, outPortA)
     unbind(inPortA)
     bind(outPortA, inPortA)
@@ -100,7 +107,7 @@ def myMain():
         for target in targets:    
             print ( target.name + ", from module: " +
                 target.parent().name )
-
+            
     print "End of script modPortTest.py"
     
 # main body    

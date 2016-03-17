@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModule.cpp
- * @date	jan. 2016
+ * @file	src/SignalProcFactory.h
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,24 +26,41 @@
  THE SOFTWARE.
  */
 
-#include "Poco/NumberFormatter.h"
+#ifndef SRC_SIGNALPROCFACTORY_H_
+#define SRC_SIGNALPROCFACTORY_H_
 
-#include "DemoModule.h"
+#include "ModuleFactory.h"
 
-size_t DemoModule::refCount = 0;
-
-DemoModule::DemoModule(ModuleFactory* parent, std::string customName):
-        Module(parent)
+/**
+ * SignalProcFactory
+ *
+ * Root factory for any signal processing module
+ */
+class SignalProcFactory: public ModuleFactory
 {
-    // poco_information(logger(),"Creating a new demo module");
+public:
+    SignalProcFactory(): ModuleFactory(false) // is not a leaf, is root.
+		{ setLogger(name()); }
 
-    setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
+    virtual ~SignalProcFactory() { }
 
-    setLogger("module." + name());
+    std::string name() { return "SignalProcFactory"; }
+    const char * description() const
+    {
+        return "Factory for signal processing modules";
+    }
 
-    notifyCreation();
+    const char* selectDescription()
+    {
+        return "Select the processing";
+    }
 
-    // if nothing failed
-    refCount++;
-}
+    std::vector<std::string> selectValueList();
+
+private:
+    ModuleFactoryBranch* newChildFactory(std::string selector);
+
+    std::string validateSelector(std::string selector);
+};
+
+#endif /* SRC_SIGNALPROCFACTORY_H_ */

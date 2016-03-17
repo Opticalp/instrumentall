@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModule.cpp
- * @date	jan. 2016
+ * @file	src/SignalProcFactory.cpp
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,24 +26,39 @@
  THE SOFTWARE.
  */
 
-#include "Poco/NumberFormatter.h"
+#include "SignalProcFactory.h"
 
-#include "DemoModule.h"
-
-size_t DemoModule::refCount = 0;
-
-DemoModule::DemoModule(ModuleFactory* parent, std::string customName):
-        Module(parent)
+std::vector<std::string> SignalProcFactory::selectValueList()
 {
-    // poco_information(logger(),"Creating a new demo module");
+    std::vector<std::string> list;
+    // list.push_back("signalProcessor");
+    return list;
+}
 
-    setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
+ModuleFactoryBranch* SignalProcFactory::newChildFactory(std::string selector)
+{
+//	if (selector.compare("signalProcessor") == 0)
+//	{
+//		return new SignalProcessorFactory(this, selector);
+//	}
+//	else
+	{
+		poco_bugcheck_msg("Create: unknown selector");
+		throw Poco::BugcheckException();
+	}
+}
 
-    setLogger("module." + name());
+std::string SignalProcFactory::validateSelector(std::string selector)
+{
+	std::vector<std::string> list = selectValueList();
 
-    notifyCreation();
+	// TODO: compare to lower case and return *it
+	for (std::vector<std::string>::iterator it = list.begin(),
+			ite = list.end(); it != ite; it++)
+	{
+		if (it->compare(selector) == 0)
+			return selector;
+	}
 
-    // if nothing failed
-    refCount++;
+	throw ModuleFactoryException("Unrecognized selector: " + selector);
 }

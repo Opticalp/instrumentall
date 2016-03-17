@@ -42,7 +42,7 @@ DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customNa
 
     setInternalName("DemoModuleDataSeq" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
-    setLogger("module" + name());
+    setLogger("module." + name());
 
     // ports
     setOutPortCount(outPortCnt);

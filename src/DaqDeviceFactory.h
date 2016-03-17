@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModule.cpp
- * @date	jan. 2016
+ * @file	src/DaqDeviceFactory.h
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,24 +26,43 @@
  THE SOFTWARE.
  */
 
-#include "Poco/NumberFormatter.h"
+#ifndef SRC_DAQDEVICEFACTORY_H_
+#define SRC_DAQDEVICEFACTORY_H_
 
-#include "DemoModule.h"
+#include "ModuleFactoryBranch.h"
 
-size_t DemoModule::refCount = 0;
-
-DemoModule::DemoModule(ModuleFactory* parent, std::string customName):
-        Module(parent)
+/**
+ * DaqDeviceFactory
+ *
+ * branch factory that selects any DAQ module factory
+ */
+class DaqDeviceFactory: public ModuleFactoryBranch
 {
-    // poco_information(logger(),"Creating a new demo module");
+public:
+    DaqDeviceFactory(ModuleFactory* parent, std::string selector):
+        ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
+    virtual ~DaqDeviceFactory() { }
 
-    setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
+    std::string name() { return "DemoBranchFactory"; }
+    const char * description() const
+    {
+        return "Example code for a branch module factory. "
+                "Please use selectValueList() to check "
+                "the authorized selectors. ";
+    }
 
-    setLogger("module." + name());
+    const char* selectDescription()
+    {
+        return "Demo select() with multiple selector choice. "
+                "See selectValueList()";
+    }
 
-    notifyCreation();
+    std::vector<std::string> selectValueList();
 
-    // if nothing failed
-    refCount++;
-}
+private:
+    ModuleFactoryBranch* newChildFactory(std::string selector);
+
+    std::string validateSelector(std::string selector);
+};
+
+#endif /* SRC_DAQDEVICEFACTORY_H_ */

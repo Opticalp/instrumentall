@@ -236,3 +236,31 @@ ParamItem::ParamType Module::getParameterType(std::string paramName)
     // TODO: mainMutex scoped lock
     return paramSet[getParameterIndex(paramName)].datatype;
 }
+
+InPort* Module::getInPort(std::string portName)
+{
+    for (std::vector<InPort*>::iterator it = inPorts.begin(),
+            ite = inPorts.end(); it != ite; it++)
+    {
+        if (portName.compare((*it)->name()) == 0)
+            return *it;
+    }
+
+    throw Poco::NotFoundException("getInPort",
+            "port: " + portName + " not found "
+            + "in module: " + name());
+}
+
+OutPort* Module::getOutPort(std::string portName)
+{
+    for (std::vector<OutPort*>::iterator it = outPorts.begin(),
+            ite = outPorts.end(); it != ite; it++)
+    {
+        if (portName.compare((*it)->name()) == 0)
+            return *it;
+    }
+
+    throw Poco::NotFoundException("getOutPort",
+            "port: " + portName + " not found "
+            + "in module: " + name());
+}

@@ -127,6 +127,28 @@ static PyMethodDef pyMethodModOutPorts =
     "Retrieve the output ports"
 };
 
+/// Module::getInPort() python wrapper
+extern "C" PyObject* pyModInPort(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModInPort =
+{
+    "inPort",
+    (PyCFunction)pyModInPort,
+    METH_VARARGS,
+    "inPort(portName): Retrieve the input port given its name"
+};
+
+/// Module::getOutPort() python wrapper
+extern "C" PyObject* pyModOutPort(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModOutPort =
+{
+    "outPort",
+    (PyCFunction)pyModOutPort,
+    METH_VARARGS,
+    "outPort(portName): Retrieve the output port given its name"
+};
+
 /// Module::parameterSet() python wrapper
 extern "C" PyObject* pyModGetParameterSet(ModMembers *self);
 
@@ -167,7 +189,9 @@ static PyMethodDef pyModMethods[] = {
         pyMethodModParent,
 
         pyMethodModInPorts,
+        pyMethodModInPort,
         pyMethodModOutPorts,
+        pyMethodModOutPort,
 
         pyMethodModGetParameterSet,
         pyMethodModGetParameterValue,

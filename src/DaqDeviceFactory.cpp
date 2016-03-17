@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModule.cpp
- * @date	jan. 2016
+ * @file	src/DaqDeviceFactory.cpp
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,24 +26,40 @@
  THE SOFTWARE.
  */
 
-#include "Poco/NumberFormatter.h"
+#include "DaqDeviceFactory.h"
 
-#include "DemoModule.h"
 
-size_t DemoModule::refCount = 0;
-
-DemoModule::DemoModule(ModuleFactory* parent, std::string customName):
-        Module(parent)
+std::vector<std::string> DaqDeviceFactory::selectValueList()
 {
-    // poco_information(logger(),"Creating a new demo module");
+    std::vector<std::string> list;
+    // list.push_back("NiDaq");
+    return list;
+}
 
-    setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
+ModuleFactoryBranch* DaqDeviceFactory::newChildFactory(
+		std::string selector)
+{
+//  if (selector.compare("NiDaq") == 0)
+//  {
+//      return new NiDaqFactory(this, selector);
+//  }
+//  else
+    {
+        poco_bugcheck_msg("Create: unknown selector");
+        throw Poco::BugcheckException();
+    }
+}
 
-    setLogger("module." + name());
+std::string DaqDeviceFactory::validateSelector(std::string selector)
+{
+    std::vector<std::string> selectors = selectValueList();
 
-    notifyCreation();
+    for (std::vector<std::string>::iterator it=selectors.begin(),ite=selectors.end();
+            it != ite; it++)
+    {
+        if (selector.compare(*it)==0)
+            return selector;
+    }
 
-    // if nothing failed
-    refCount++;
+    throw ModuleFactoryException("Unrecognized selector: " + selector);
 }

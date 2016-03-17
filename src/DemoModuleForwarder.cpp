@@ -45,7 +45,7 @@ DemoModuleForwarder::DemoModuleForwarder(ModuleFactory* parent, std::string cust
 
     setInternalName("DemoModuleForwarder" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
-    setLogger("module" + name());
+    setLogger("module." + name());
 
     // ports
     setInPortCount(inPortCnt);

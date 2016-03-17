@@ -46,7 +46,7 @@ DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customNa
 
     setInternalName("DemoModuleSeqAccu" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
-    setLogger("module" + name());
+    setLogger("module." + name());
 
     // ports
     setInPortCount(inPortCnt);
