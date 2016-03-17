@@ -80,6 +80,7 @@ def myMain():
     
     waitAll()
     
+    print "mod3a return value is: " + str(mod3a.outPorts()[0].data().getValue())
     print "mod3b return value is: " + str(mod3b.outPorts()[0].data().getValue())
     
     print "Run twice to check the sync of the threads"

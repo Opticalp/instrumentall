@@ -31,10 +31,12 @@
 
 #include "Module.h"
 
+#include "Poco/Types.h"
+
 /**
  * DemoModuleSeqAccu
  *
- * Demo module to retrieve the sum of a data sequence.
+ * Demo module to retrieve a data sequence as a vector.
  */
 class DemoModuleSeqAccu: public Module
 {
@@ -44,7 +46,7 @@ public:
 
     const char * description() const
     {
-        return "Demo Module to retrieve the sum of a data sequence. ";
+        return "Demo Module to transform a data sequence into a vector. ";
     }
 
     /**
@@ -75,7 +77,7 @@ private:
 
     Poco::Mutex mainMutex; ///< runTask() mutex.
 
-    int accumulator;
+    std::vector<Poco::Int32> accumulator;
 };
 
 #endif /* SRC_DEMOMODULESEQACCU_H_ */
