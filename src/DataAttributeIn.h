@@ -58,6 +58,9 @@ public:
     bool isStartSequence()
         { return DataAttribute::isStartSequence(mParent); }
 
+    bool isContinueSequence()
+        { return DataAttribute::isContinueSequence(mParent); }
+
     bool isEndSequence()
         { return DataAttribute::isEndSequence(mParent); }
 

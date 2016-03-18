@@ -101,9 +101,11 @@ void DemoModuleDataSeq::runTask()
         DataAttributeOut attr = DataAttributeOut::newDataAttribute();
 
         if (index==0)
-            attr.startSequence(); // set start sequence to the attribute via the dispatcher
+            attr.startSequence(); // set start sequence to the attribute
         else if (index==MAX_INDEX)
-            attr.endSequence(); // set end sequence to the attribute via the dispatcher
+            attr.endSequence(); // set end sequence to the attribute
+        else
+            attr.continueSequence(); // set continue sequence to the attribute
 
         *pData = index;
         getOutPorts()[outPortA]->notifyReady(attr);
