@@ -57,25 +57,8 @@ DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customNa
 
 #define MAX_INDEX 4
 
-void DemoModuleDataSeq::runTask()
+void DemoModuleDataSeq::process()
 {
-    // FIXME: if an exception is raised,
-    // the mainMutex unlock is not guaranteed...
-
-    poco_information(logger(), "DemoModuleDataSeq::runTask started. ");
-
-    // try to acquire the mutex
-    while (!mainMutex.tryLock(TIME_LAPSE))
-    {
-        poco_information(logger(),
-                "DemoModuleDataSeq::runTask(): "
-                "failed to acquire the mutex after "
-                + Poco::NumberFormatter::format(TIME_LAPSE) + " ms");
-
-        if (isCancelled())
-            return;
-    }
-
     // --- process ---
     for (int index = 0; index < MAX_INDEX + 1; index++)
     {
@@ -92,7 +75,6 @@ void DemoModuleDataSeq::runTask()
 
             if (sleep(TIME_LAPSE))
             {
-                mainMutex.unlock();
                 poco_notice(logger(), "DemoModuleDataSeq::runTask(): cancelled!" );
                 return;
             }
@@ -117,13 +99,10 @@ void DemoModuleDataSeq::runTask()
 
         if (isCancelled())
         {
-            mainMutex.unlock();
             poco_notice(logger(), "DemoModuleDataSeq::runTask(): cancelled!" );
             return;
         }
     }
 
     poco_information(logger(), "DemoModuleDataSeq::runTask(): all sent. ");
-
-    mainMutex.unlock();
 }

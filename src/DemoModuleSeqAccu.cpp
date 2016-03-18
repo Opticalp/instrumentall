@@ -63,29 +63,8 @@ DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customNa
     refCount++;
 }
 
-void DemoModuleSeqAccu::runTask()
+void DemoModuleSeqAccu::process()
 {
-    // FIXME: if an exception is raised,
-    // the mainMutex unlock is not guaranteed...
-
-    poco_information(logger(), "DemoModuleSeqAccu::runTask started. ");
-
-    // We could use a scoped lock here:
-    //Poco::Mutex::ScopedLock lock(mainMutex);
-    // but then, it could not be possible to check a time out in the lock acquisition
-
-    // try to acquire the mutex
-    while (!mainMutex.tryLock(TIME_LAPSE))
-    {
-        poco_information(logger(),
-                "DemoModuleSeqAccu::runTask(): "
-                "failed to acquire the mutex after "
-                + Poco::NumberFormatter::format(TIME_LAPSE) + " ms");
-
-        if (isCancelled())
-            return;
-    }
-
     DataAttributeIn attr;
 
     Poco::Int32* pData;
@@ -101,7 +80,6 @@ void DemoModuleSeqAccu::runTask()
                 "failed to acquire the input data lock. "
                 "Data is probably not up to date. ");
 
-        mainMutex.unlock();
         return; // data not up to date
     }
 
@@ -118,7 +96,6 @@ void DemoModuleSeqAccu::runTask()
         if (!attr.isEndSequence())
         {
             getInPorts()[inPortA]->releaseData();
-            mainMutex.unlock();
             return;
         }
         else
@@ -137,7 +114,6 @@ void DemoModuleSeqAccu::runTask()
 
                 if (sleep(TIME_LAPSE))
                 {
-                    mainMutex.unlock();
                     poco_notice(logger(),
                             "DemoModuleSeqAccu::runTask(): cancelled!");
                     return;
@@ -148,6 +124,4 @@ void DemoModuleSeqAccu::runTask()
             getOutPorts()[outPortA]->notifyReady(outAttr);
         }
     }
-
-    mainMutex.unlock();
 }

@@ -42,7 +42,7 @@ class DemoModuleSeqMax: public Module
 {
 public:
     DemoModuleSeqMax(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleSeqMax() { mainMutex.lock(); }
+    virtual ~DemoModuleSeqMax() { }
 
     const char * description() const
     {
@@ -56,7 +56,7 @@ public:
      *  - reinit the temp max storage at each startSequence
      *  - send the max at each endSequence
      */
-    void runTask();
+    void process();
 
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name
@@ -74,8 +74,6 @@ private:
         outPortA,
         outPortCnt
     };
-
-    Poco::Mutex mainMutex; ///< runTask() mutex.
 
     int tmpMax;
 };

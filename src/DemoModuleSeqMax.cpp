@@ -62,29 +62,8 @@ DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName
     refCount++;
 }
 
-void DemoModuleSeqMax::runTask()
+void DemoModuleSeqMax::process()
 {
-    // FIXME: if an exception is raised,
-    // the mainMutex unlock is not guaranteed...
-
-    poco_information(logger(), "DemoModuleSeqMax::runTask started. ");
-
-    // We could use a scoped lock here:
-    //Poco::Mutex::ScopedLock lock(mainMutex);
-    // but then, it could not be possible to check a time out in the lock acquisition
-
-    // try to acquire the mutex
-    while (!mainMutex.tryLock(TIME_LAPSE))
-    {
-        poco_information(logger(),
-                "DemoModuleSeqMax::runTask(): "
-                "failed to acquire the mutex after "
-                + Poco::NumberFormatter::format(TIME_LAPSE) + " ms");
-
-        if (isCancelled())
-            return;
-    }
-
     DataAttributeIn attr;
 
     int* pData;
@@ -100,7 +79,6 @@ void DemoModuleSeqMax::runTask()
                 "failed to acquire the input data lock. "
                 "Data is probably not up to date. ");
 
-        mainMutex.unlock();
         return; // data not up to date
     }
 
@@ -117,7 +95,6 @@ void DemoModuleSeqMax::runTask()
         if (!attr.isEndSequence())
         {
             getInPorts()[inPortA]->releaseData();
-            mainMutex.unlock();
             return;
         }
         else
@@ -136,7 +113,6 @@ void DemoModuleSeqMax::runTask()
 
                 if (sleep(TIME_LAPSE))
                 {
-                    mainMutex.unlock();
                     poco_notice(logger(),
                             "DemoModuleSeqMax::runTask(): cancelled!");
                     return;
@@ -150,6 +126,4 @@ void DemoModuleSeqMax::runTask()
                     + Poco::NumberFormatter::format(tmpMax));
         }
     }
-
-    mainMutex.unlock();
 }

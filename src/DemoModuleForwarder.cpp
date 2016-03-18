@@ -61,25 +61,8 @@ DemoModuleForwarder::DemoModuleForwarder(ModuleFactory* parent, std::string cust
     refCount++;
 }
 
-void DemoModuleForwarder::runTask()
+void DemoModuleForwarder::process()
 {
-    // FIXME: if an exception is raised,
-    // the mainMutex unlock is not guaranteed...
-
-    poco_information(logger(), "DemoModuleForwarder::runTask started. ");
-
-    // try to acquire the mutex
-    while (!mainMutex.tryLock(TIME_LAPSE))
-    {
-        poco_information(logger(),
-                "DemoModuleForwarder::runTask(): "
-                "failed to acquire the mutex after "
-                + Poco::NumberFormatter::format(TIME_LAPSE) + " ms");
-
-        if (isCancelled())
-            return;
-    }
-
     DataAttributeIn attr;
 
     int* pData;
@@ -95,7 +78,6 @@ void DemoModuleForwarder::runTask()
                 "failed to acquire the input data lock. "
                 "Data is probably not up to date. ");
 
-        mainMutex.unlock();
         return; // data not up to date
     }
 
@@ -115,7 +97,6 @@ void DemoModuleForwarder::runTask()
 
         if (sleep(TIME_LAPSE))
         {
-            mainMutex.unlock();
             poco_notice(logger(),
                     "DemoModuleForwarder::runTask(): cancelled!");
             return;
@@ -127,6 +108,4 @@ void DemoModuleForwarder::runTask()
 
     poco_information(logger(), "DemoModuleForwarder::runTask(): "
             + Poco::NumberFormatter::format(tmpData) + " was forwarded.");
-
-    mainMutex.unlock();
 }
