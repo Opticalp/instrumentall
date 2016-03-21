@@ -101,7 +101,7 @@ public:
      * Check if the given datatype container is a vector
      */
     static bool isVector(int datatype)
-        { return (datatype & contVector); }
+        { return (datatype & contVector) != 0 ; }
 
     static DataTypeEnum noContainerDataType(int datatype)
         { return static_cast<DataTypeEnum>(datatype & ~contVector); }
