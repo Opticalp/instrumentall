@@ -49,7 +49,7 @@ public:
     std::string name() { return "emptyFactory"; }
     const char * description() const { return "replaces an expired factory. "; }
 
-    const char* selectDescription()
+    std::string selectDescription()
     {
         throw ModuleFactoryException("selectDescription()",
                 "Empty factory ");

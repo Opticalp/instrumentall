@@ -50,7 +50,7 @@ public:
         return "Factory for signal processing modules";
     }
 
-    const char* selectDescription()
+    std::string selectDescription()
     {
         return "Select the processing";
     }

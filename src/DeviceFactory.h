@@ -51,7 +51,7 @@ public:
         		"a hardware device";
     }
 
-    const char* selectDescription()
+    std::string selectDescription()
     {
         return "Select the device type";
     }

@@ -122,7 +122,7 @@ public:
      * @note This method does not need to be implemented in inherited
      * leaf factories according to the default behavior.
      */
-    virtual const char* selectDescription()
+    virtual std::string selectDescription()
     {
         throw ModuleFactoryException("selectDescription()",
                 "This factory is probably a leaf. ");
