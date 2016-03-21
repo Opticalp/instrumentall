@@ -264,3 +264,25 @@ OutPort* Module::getOutPort(std::string portName)
             "port: " + portName + " not found "
             + "in module: " + name());
 }
+
+void Module::runTask()
+{
+    // try to acquire the mutex
+    while (!runTaskMutex.tryLock(TIME_LAPSE))
+    {
+        if (isCancelled())
+            return;
+    }
+
+    try
+    {
+        process();
+    }
+    catch (Poco::Exception& e)
+    {
+        runTaskMutex.unlock();
+        e.rethrow();
+    }
+
+    runTaskMutex.unlock();
+}

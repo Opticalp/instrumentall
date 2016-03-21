@@ -33,7 +33,7 @@ if (Poco_FIND_QUIETLY)
 endif()
 
 # avoiding recursion
-set ( __store CMAKE_MODULE_PATH )
+set ( __store ${CMAKE_MODULE_PATH} )
 unset ( CMAKE_MODULE_PATH ) 
 
 find_package ( Poco 
@@ -42,7 +42,7 @@ find_package ( Poco
     QUIET
 )
 
-set ( CMAKE_MODULE_PATH __store )
+set ( CMAKE_MODULE_PATH ${__store} )
 unset ( __store )
 
 if ( Poco_FOUND )

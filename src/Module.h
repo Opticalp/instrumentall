@@ -152,8 +152,19 @@ public:
 
 	/**
 	 * Implementation of Poco::Task::runTask()
+	 *
+	 * Lock the runTaskMutex and call process().
+	 * This function is virtual. it can be overloaded by
+	 * the derived class if the runTaskMutex lock is not wanted.
 	 */
-	virtual void runTask() { poco_warning(logger(), name() + ": empty task"); }
+	virtual void runTask();
+
+	/**
+	 * Main logic called by runTask
+	 *
+	 * with a lock on runTaskMutex.
+	 */
+	virtual void process() { poco_warning(logger(), name() + ": empty task"); }
 
 	/**
 	 * Retrieve a copy of the parameter set of the module
@@ -303,6 +314,7 @@ protected:
     virtual void setStrParameterValue(size_t paramIndex, std::string value)
         { poco_bugcheck_msg("setStrParameterValue not implemented for this module"); }
 
+    Poco::Mutex runTaskMutex; ///< mutex used to block runTask(), and then, process()
 private:
     /// enum to be returned by checkName
     enum NameStatus

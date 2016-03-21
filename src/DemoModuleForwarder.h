@@ -41,7 +41,7 @@ class DemoModuleForwarder: public Module
 {
 public:
     DemoModuleForwarder(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleForwarder() { mainMutex.lock(); }
+    virtual ~DemoModuleForwarder() { }
 
     const char * description() const
     {
@@ -53,7 +53,7 @@ public:
      *
      * Forward data and attribute
      */
-    void runTask();
+    void process();
 
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name
@@ -71,8 +71,6 @@ private:
         outPortA,
         outPortCnt
     };
-
-    Poco::Mutex mainMutex; ///< runTask() mutex.
 };
 
 #endif /* SRC_DEMOMODULEFORWARDER_H_ */

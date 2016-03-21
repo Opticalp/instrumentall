@@ -86,6 +86,8 @@ void DataPocoLogger::runTask()
 
 void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
 {
+    std::string msg;
+
     switch (dataType)
     {
     case DataItem::typeInt32:
@@ -93,17 +95,12 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
         std::vector<Poco::Int32>* pData;
         pData = data()->getDataToRead< std::vector<Poco::Int32> >();
 
-        std::string msg;
-
         for (std::vector<Poco::Int32>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
         {
             msg += Poco::NumberFormatter::format(*it) + "\t";
         }
 
-        msg.erase(msg.end()-1);
-
-        poco_information(logger(), msg);
         break;
     }
     case DataItem::typeUInt32:
@@ -111,17 +108,12 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
         std::vector<Poco::UInt32>* pData;
         pData = data()->getDataToRead< std::vector<Poco::UInt32> >();
 
-        std::string msg;
-
         for (std::vector<Poco::UInt32>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
         {
             msg += Poco::NumberFormatter::format(*it) + "\t";
         }
 
-        msg.erase(msg.end()-1);
-
-        poco_information(logger(), msg);
         break;
     }
     case DataItem::typeInt64:
@@ -129,17 +121,12 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
         std::vector<Poco::Int64>* pData;
         pData = data()->getDataToRead< std::vector<Poco::Int64> >();
 
-        std::string msg;
-
         for (std::vector<Poco::Int64>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
         {
             msg += Poco::NumberFormatter::format(*it) + "\t";
         }
 
-        msg.erase(msg.end()-1);
-
-        poco_information(logger(), msg);
         break;
     }
     case DataItem::typeUInt64:
@@ -147,17 +134,12 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
         std::vector<Poco::UInt64>* pData;
         pData = data()->getDataToRead< std::vector<Poco::UInt64> >();
 
-        std::string msg;
-
         for (std::vector<Poco::UInt64>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
         {
             msg += Poco::NumberFormatter::format(*it) + "\t";
         }
 
-        msg.erase(msg.end()-1);
-
-        poco_information(logger(), msg);
         break;
     }
     case DataItem::typeFloat:
@@ -165,17 +147,12 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
         std::vector<float>* pData;
         pData = data()->getDataToRead< std::vector<float> >();
 
-        std::string msg;
-
-        for (std::vector<float>::iterator it = pData->begin(),
+       for (std::vector<float>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
         {
             msg += Poco::NumberFormatter::format(*it) + "\t";
         }
 
-        msg.erase(msg.end()-1);
-
-        poco_information(logger(), msg);
         break;
     }
     case DataItem::typeDblFloat:
@@ -183,17 +160,12 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
         std::vector<double>* pData;
         pData = data()->getDataToRead< std::vector<double> >();
 
-        std::string msg;
-
         for (std::vector<double>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
         {
             msg += Poco::NumberFormatter::format(*it) + "\t";
         }
 
-        msg.erase(msg.end()-1);
-
-        poco_information(logger(), msg);
         break;
     }
     case DataItem::typeString:
@@ -201,17 +173,12 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
         std::vector<std::string>* pData;
         pData = data()->getDataToRead< std::vector<std::string> >();
 
-        std::string msg;
-
         for (std::vector<std::string>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
         {
             msg += "\"" + *it + "\"\t";
         }
 
-        msg.erase(msg.end()-1);
-
-        poco_information(logger(), msg);
         break;
     }
     default:
@@ -219,6 +186,11 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
         throw Poco::NotImplementedException("DataPocoLogger",
                 "data type not implemented");
     }
+
+    if (!msg.empty())
+        msg.erase(msg.end()-1);
+
+    poco_information(logger(), msg);
 }
 
 DataPocoLogger::DataPocoLogger():

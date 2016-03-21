@@ -38,6 +38,7 @@ DataAttribute::DataAttribute(const DataAttribute& other)
 {
     indexes = other.indexes;
     startSequenceTargets = other.startSequenceTargets;
+    contSequenceTargets = other.contSequenceTargets;
     endSequenceTargets = other.endSequenceTargets;
 }
 
@@ -52,6 +53,7 @@ DataAttribute& DataAttribute::operator +=(const DataAttribute& rhs)
 {
     indexes.insert(rhs.indexes.begin(), rhs.indexes.end());
     startSequenceTargets.insert(rhs.startSequenceTargets.begin(), rhs.startSequenceTargets.end());
+    contSequenceTargets.insert(rhs.contSequenceTargets.begin(), rhs.contSequenceTargets.end());
     endSequenceTargets.insert(rhs.endSequenceTargets.begin(), rhs.endSequenceTargets.end());
 
     return *this; // return the result by reference
@@ -61,5 +63,6 @@ void DataAttribute::swap(DataAttribute& other)
 {
     indexes.swap(other.indexes);
     startSequenceTargets.swap(other.startSequenceTargets);
+    contSequenceTargets.swap(other.contSequenceTargets);
     endSequenceTargets.swap(other.endSequenceTargets);
 }

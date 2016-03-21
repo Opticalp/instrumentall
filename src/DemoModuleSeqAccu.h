@@ -56,7 +56,7 @@ public:
      *  - reinit the accumulator storage at each startSequence
      *  - send the accumulator at each endSequence
      */
-    void runTask();
+    void process();
 
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name
@@ -74,8 +74,6 @@ private:
         outPortA,
         outPortCnt
     };
-
-    Poco::Mutex mainMutex; ///< runTask() mutex.
 
     std::vector<Poco::Int32> accumulator;
 };

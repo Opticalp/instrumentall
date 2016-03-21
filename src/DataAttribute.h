@@ -88,6 +88,9 @@ public:
     void appendStartSeqPortTarget(InPort* port)
         { startSequenceTargets.insert(port); }
 
+    void appendContSeqPortTarget(InPort* port)
+        { contSequenceTargets.insert(port); }
+
     void appendEndSeqPortTarget(InPort* port)
         { endSequenceTargets.insert(port); }
 
@@ -115,6 +118,15 @@ protected:
         { return (startSequenceTargets.erase(port) > 0); }
 
     /**
+     * Check if the given port is targeted by a contSequence
+     *
+     * Check if the InPort is in the contSequences list
+     * and remove it if present
+     */
+    bool isContinueSequence(InPort* port)
+        { return (contSequenceTargets.erase(port) > 0); }
+
+    /**
      * Check if the given port is targeted by a endSequence
      *
      * Check if the InPort is in the endSequences list
@@ -126,6 +138,7 @@ protected:
 private:
     std::set<size_t> indexes;
     std::set<InPort*> startSequenceTargets;
+    std::set<InPort*> contSequenceTargets;
     std::set<InPort*> endSequenceTargets;
 };
 

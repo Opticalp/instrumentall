@@ -180,7 +180,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
                 ite = pData->end(); it != ite; it++)
         {
             // create the dict entry
-            if ( 0 > PyList_Append(list, PyInt_FromLong(*it)) )
+            if ( 0 > PyList_Append(list, PyInt_FromLong(static_cast<long>(*it))) )
             {
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
@@ -311,7 +311,7 @@ PyObject* pyDataGetValue(DataMembers* self)
     }
     case DataItem::typeInt64:
     {
-        long data = *((**self->data)->getDataToRead<Poco::Int64>());
+        long data = static_cast<long>(*((**self->data)->getDataToRead<Poco::Int64>()));
         pyObj = PyInt_FromLong(data);
         break;
     }

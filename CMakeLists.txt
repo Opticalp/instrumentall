@@ -56,7 +56,9 @@ target_link_libraries(
 find_package( Poco 1.3.6 COMPONENTS Foundation Util REQUIRED )
 
 message ( STATUS "found Poco version: ${Poco_VERSION}" )
-message ( STATUS "libraries are: ${Poco_LIBRARIES}" ) 
+if ( DEFINED Poco_LIBRARIES )
+    message ( STATUS "libraries are: ${Poco_LIBRARIES}" )
+endif ( DEFINED Poco_LIBRARIES )
     
 if ( Poco_VERSION VERSION_GREATER "1.4.0" )
 	add_definitions ( -DPOCO_VERSION_H )

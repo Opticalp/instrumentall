@@ -149,6 +149,17 @@ void OutPort::notifyReady(DataAttributeOut attribute)
         seqTargetPortsLock.unlock();
     }
 
+    if (attribute.isContinueSequence())
+    {
+        seqTargetPortsLock.readLock();
+
+        for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
+                ite = seqTargetPorts.end(); it != ite; it++ )
+            attribute.appendContSeqPortTarget(**it);
+
+        seqTargetPortsLock.unlock();
+    }
+
     if (attribute.isEndSequence())
     {
         seqTargetPortsLock.readLock();

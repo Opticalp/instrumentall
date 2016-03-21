@@ -43,7 +43,7 @@ class DemoModuleDataSeq: public Module
 {
 public:
     DemoModuleDataSeq(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleDataSeq() { mainMutex.lock(); }
+    virtual ~DemoModuleDataSeq() { }
 
     const char * description() const
     {
@@ -55,7 +55,7 @@ public:
      *
      * Generate an integer data sequence {0;1;2;3}
      */
-    void runTask();
+    void process();
 
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name
@@ -66,8 +66,6 @@ private:
         outPortA,
         outPortCnt
     };
-
-    Poco::Mutex mainMutex; ///< runTask() mutex.
 };
 
 #endif /* SRC_DEMOMODULEDATASEQ_H_ */

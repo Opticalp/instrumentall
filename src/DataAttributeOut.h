@@ -52,9 +52,11 @@ public:
 	DataAttributeOut& operator =(const DataAttributeOut& other);
 
 	void startSequence() { seqInfo = startSeqInfo; }
+    void continueSequence() { seqInfo = contSeqInfo; }
 	void endSequence() { seqInfo = endSeqInfo; }
 
 	bool isStartSequence() { return (seqInfo == startSeqInfo); }
+    bool isContinueSequence() { return (seqInfo == contSeqInfo); }
 	bool isEndSequence() { return (seqInfo == endSeqInfo); }
 
     static DataAttributeOut newDataAttribute();
@@ -65,9 +67,10 @@ private:
 
 enum SeqInfoEnum
 	{
-		undefSeqInfo,
-		startSeqInfo,
-		endSeqInfo,
+		undefSeqInfo, // no sequence info
+		startSeqInfo, // start sequence
+		contSeqInfo, // continue sequence
+		endSeqInfo, // end sequence
 		seqInfoCnt
 	};
 
