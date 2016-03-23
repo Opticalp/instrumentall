@@ -112,7 +112,13 @@ public:
      */
     void errorMessage(std::string errorMsg);
 
-protected:
+private:
+    /**
+     * Callback function to handle the use of 'i' or 'iconsole' command line option
+     */
+    void handleIConsole(const std::string& name, const std::string& value)
+        { iconsoleFlag = true; }
+
     /**
      * Run the given scriptFile as a python script.
      *
@@ -194,8 +200,6 @@ protected:
     /// delete from python env a variable previously set
     void delVar(const char* name, const char* module = "instru");
 
-
-private:
     /// python variable tracking structure
     struct _varItem
     {
@@ -205,6 +209,8 @@ private:
 
     /// keep trace of the variables that were added in the python env
     std::vector<_varItem> _addedVarStore;
+
+    bool iconsoleFlag;
 };
 
 //

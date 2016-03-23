@@ -66,7 +66,8 @@ public:
       * Initialize
       *
       */
-     void initialize(Poco::Util::Application& app) { }
+     void initialize(Poco::Util::Application& app)
+         { setLogger(name()); }
 
      // void reinitialize(Application & app); // not needed. By default: uninit, then init.
 
