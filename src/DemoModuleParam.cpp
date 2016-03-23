@@ -41,9 +41,22 @@ DemoModuleParam::DemoModuleParam(ModuleFactory* parent, std::string customName):
 
     // parameters
     setParameterCount(paramCnt);
-    addParameter(paramInt, "intParam", "simple integer parameter", ParamItem::typeInteger);
+    addParameter(paramInt, "intParam", "simple integer parameter", ParamItem::typeInteger, "1515");
     addParameter(paramFloat, "floatParam", "simple floating point parameter", ParamItem::typeFloat);
     addParameter(paramStr, "strParam", "simple character string parameter", ParamItem::typeString);
+
+    // test the default values
+    setIntParameterValue(paramInt, getIntParameterDefaultValue(paramInt));
+
+    try
+    {
+        getFloatParameterDefaultValue(paramFloat);
+        poco_bugcheck_msg("should have caught an exception...");
+    }
+    catch (Poco::NotFoundException& e)
+    {
+        poco_information(logger(),"ok to catch: " + e.displayText());
+    }
 
     notifyCreation();
 

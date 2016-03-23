@@ -37,6 +37,9 @@
 #include "Poco/Task.h"
 #include "Poco/RWLock.h"
 #include "Poco/Mutex.h"
+#include "Poco/Util/Application.h" // layered configuration
+
+#include <map>
 
 class InPort;
 class OutPort;
@@ -287,6 +290,31 @@ protected:
      */
     void addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype);
 
+    /**
+     * Add a parameter in the parameter set
+     *
+     * Should be called in the module constructor.
+     * Specify a default value as a string,
+     * as could be read in a config file
+     */
+    void addParameter(size_t index,
+            std::string name, std::string descr,
+            ParamItem::ParamType datatype,
+            std::string hardCodedValue);
+
+    /**
+     * Retrieve the default value for the given parameter
+     *
+     * - Check if the parameter has an entry in the configuration:
+     *      module.<name>.<paramName>
+     * - if not found, return the hard-coded value that was defined at creation,
+     * - if not found...
+     * @throw Poco::NotFoundException
+     */
+    long getIntParameterDefaultValue(size_t index);
+    double getFloatParameterDefaultValue(size_t index);
+    std::string getStrParameterDefaultValue(size_t index);
+
     virtual long getIntParameterValue(size_t paramIndex)
     {
         poco_bugcheck_msg("getIntParameterValue not implemented for this module");
@@ -365,6 +393,26 @@ private:
 	 * The main mutex has to be locked before calling this function
 	 */
 	size_t getParameterIndex(std::string paramName);
+
+	/**
+	 * Table of hard-coded values
+	 *
+	 * @see addParameter
+	 */
+	std::map<size_t, std::string> hardCodedValues;
+
+	/**
+	 * Retrieve the raw default value as a string
+	 */
+	std::string getParameterDefaultValue(size_t index);
+
+    /**
+     * Convenience function to get the application config
+     *
+     * simple forwarder to `Poco::Util::Application::instance().config()`
+     */
+    Poco::Util::LayeredConfiguration& appConf()
+        { return Poco::Util::Application::instance().config(); }
 };
 
 /// templates implementation
