@@ -63,6 +63,8 @@ void Dispatcher::initialize(Poco::Util::Application& app)
                 "please uninitialize first");
     }
 
+    setLogger(name());
+
     std::vector< SharedPtr<Module*> > modules;
     modules = Poco::Util::Application::instance().getSubsystem<ModuleManager>().getModules();
 

@@ -34,6 +34,7 @@
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"
+#include "Poco/NumberParser.h"
 
 #include <typeinfo>
 POCO_IMPLEMENT_EXCEPTION( ModuleException, Poco::Exception, "Module error")
@@ -202,6 +203,56 @@ void Module::addParameter(size_t index, std::string name, std::string descr, Par
         poco_bugcheck_msg("addParameter: incorrect index. "
                 "Please check your module constructor");
     }
+}
+
+void Module::addParameter(size_t index, std::string name, std::string descr,
+        ParamItem::ParamType datatype, std::string hardCodedValue)
+{
+    addParameter(index, name, descr, datatype);
+    hardCodedValues.insert(std::pair<size_t, std::string>(index, hardCodedValue));
+}
+
+std::string Module::getParameterDefaultValue(size_t index)
+{
+    // 1. check in the conf file
+    std::string keyStr = "module." + name()
+            + "." + paramSet.at(index).name;
+
+    try
+    {
+        return appConf().getString(keyStr);
+    }
+    catch (Poco::NotFoundException&)
+    {
+        poco_information(logger(),
+            std::string("property key: ") + keyStr +
+            std::string(" not found in config file"));
+    }
+
+    // 2. check in the hard coded values
+    std::map<size_t, std::string>::iterator it = hardCodedValues.find(index);
+    if (it != hardCodedValues.end())
+        return it->second;
+
+    throw Poco::NotFoundException("getParameterDefaultValue",
+                                        "no default value found");
+}
+
+long Module::getIntParameterDefaultValue(size_t index)
+{
+    std::string strValue = getParameterDefaultValue(index);
+    return Poco::NumberParser::parse64(strValue);
+}
+
+double Module::getFloatParameterDefaultValue(size_t index)
+{
+    std::string strValue = getParameterDefaultValue(index);
+    return Poco::NumberParser::parseFloat(strValue);
+}
+
+std::string Module::getStrParameterDefaultValue(size_t index)
+{
+    return getParameterDefaultValue(index);
 }
 
 void Module::getParameterSet(ParameterSet* pSet)

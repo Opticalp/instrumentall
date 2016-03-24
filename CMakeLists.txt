@@ -86,6 +86,12 @@ enable_testing ()
 # find python
 include ( ${PROJECT_SOURCE_DIR}/cmake/python.cmake )
 
+# copy instrumentall.properties file to the bin dir
+file (
+  COPY "${PROJECT_SOURCE_DIR}/testsuite/resources/test.properties"
+  DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+  )
+
 # raw tests __without__ test framework
 # test that the final binary is executable
 if (UNIX)
@@ -97,6 +103,10 @@ if (UNIX)
         NAME instruHelp
         COMMAND $<TARGET_FILE:instrumentall> --help
         )
+    add_test (
+        NAME instruConf
+        COMMAND $<TARGET_FILE:instrumentall> --config-file=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test.properties
+        )
 else (UNIX)
     add_test (
         NAME instruExec
@@ -105,5 +115,9 @@ else (UNIX)
     add_test (
         NAME instruHelp
         COMMAND $<TARGET_FILE:instrumentall> /help
+        )
+    add_test (
+        NAME instruConf
+        COMMAND $<TARGET_FILE:instrumentall> /config-file=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test.properties
         )
 endif (UNIX)

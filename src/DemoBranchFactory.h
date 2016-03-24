@@ -53,7 +53,7 @@ public:
                 "the authorized selectors. ";
     }
 
-    const char* selectDescription()
+    std::string selectDescription()
     {
         return "Demo select() with multiple selector choice. "
                 "See selectValueList()";

@@ -54,7 +54,7 @@ public:
                 "Please use select(\"branch\") to access its only child. ";
     }
 
-    const char* selectDescription()
+    std::string selectDescription()
     {
         return "Demo select(). Please, use \"branch\" as selector. ";
     }

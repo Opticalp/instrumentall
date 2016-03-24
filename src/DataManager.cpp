@@ -37,7 +37,8 @@
 #include "Poco/Exception.h"
 #include "Poco/Util/Application.h"
 
-DataManager::DataManager()
+DataManager::DataManager():
+    VerboseEntity(name())
 {
     // Register data loggers in the factory using the C++ class name
 
@@ -54,6 +55,8 @@ DataManager::~DataManager()
 
 void DataManager::initialize(Poco::Util::Application& app)
 {
+    setLogger(name());
+
     // TODO: init loggers from config file?
 }
 

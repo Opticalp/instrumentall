@@ -166,7 +166,7 @@ PyObject* pyModFactSelectDescription(ModFactMembers* self)
 {
     try
     {
-        return PyString_FromString((**self->moduleFactory)->selectDescription());
+        return PyString_FromString((**self->moduleFactory)->selectDescription().c_str());
     }
     catch (ModuleFactoryException& e)
     {

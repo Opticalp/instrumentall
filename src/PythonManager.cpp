@@ -39,7 +39,6 @@
 
 /// @name Custom config keys
 ///@{
-#define CONF_KEY_PY_ICONSOLE       "python.iconsole"
 #define CONF_KEY_PY_SCRIPT         "python.script"
 #define CONF_KEY_PY_INITSCRIPT     "python.initScript"
 #define CONF_KEY_PY_CONSOLESCRIPT  "python.consoleScript"
@@ -53,7 +52,8 @@
 using Poco::Util::Application;
 
 PythonManager::PythonManager():
-	VerboseEntity(name())
+	VerboseEntity(name()),
+	iconsoleFlag(false)
 {
 	// nothing to do yet
 }
@@ -79,19 +79,7 @@ void stderrForwarder(const char* message)
 
 void PythonManager::initialize(Application& app)
 {
-    // -- setting logger name ---
-    // getting the subsystem name
-    std::string myName = name();
-
-    // removing white spaces
-    size_t pos = myName.rfind(' ') ;
-    if (pos != std::string::npos)
-    {
-        poco_bugcheck_msg(
-                "PythonManager: Please check that name() should return no spaces");
-    }
-
-    setLogger(Poco::Logger::get(app.logger().name() + "." + myName));
+    setLogger(name());
 
     _addedVarStore.clear();
 
@@ -118,6 +106,8 @@ void PythonManager::initialize(Application& app)
 
 void PythonManager::uninitialize()
 {
+    poco_information(logger(), "Python manager uninitializing...");
+
     // purge added variables
     std::vector<_varItem> varStoreCopy(_addedVarStore);
 
@@ -143,16 +133,17 @@ void PythonManager::uninitialize()
 
 int PythonManager::main(Application& app)
 {
-    if ( app.config().hasProperty(CONF_KEY_PY_ICONSOLE)
+    if ( iconsoleFlag
         && app.config().hasProperty(CONF_KEY_PY_SCRIPT)  )
     {
-        throw Poco::Exception("main","Can't launch a python script and assume \
-            interactive console together. Check your config files to remove one \
-            of the keys: " + std::string(CONF_KEY_PY_ICONSOLE) + " ; " +
-            std::string(CONF_KEY_PY_SCRIPT) );
+        poco_warning(logger(), "The \"iconsole\" command line option "
+                "takes precedence over the script defined by the "
+                "command line \"execute\" option, or by the "
+                + std::string(CONF_KEY_PY_SCRIPT)
+                + " key in the config file");
     }
 
-    if (app.config().hasProperty(CONF_KEY_PY_ICONSOLE))
+    if (iconsoleFlag)
     {
         runConsole(app);
     }
@@ -168,8 +159,7 @@ bool PythonManager::requestFullControl()
 {
     Poco::Util::Application *pApp = &Poco::Util::Application::instance();
 
-    return ( pApp->config().hasProperty(CONF_KEY_PY_ICONSOLE)
-        || pApp->config().hasProperty(CONF_KEY_PY_SCRIPT)  );
+    return ( iconsoleFlag || pApp->config().hasProperty(CONF_KEY_PY_SCRIPT)  );
 }
 
 void PythonManager::runScript(Poco::Path filePath)
@@ -570,6 +560,7 @@ void PythonManager::delVar(const char* name, const char* module)
 
 using Poco::Util::Option;
 using Poco::Util::OptionSet;
+using Poco::Util::OptionCallback;
 
 void PythonManager::defineOptions(OptionSet & options)
 {
@@ -579,7 +570,8 @@ void PythonManager::defineOptions(OptionSet & options)
                 "open an interactive python console" )
             .required(false)
             .repeatable(false)
-            .binding(CONF_KEY_PY_ICONSOLE)
+            .callback(OptionCallback<PythonManager>(
+                                this, &PythonManager::handleIConsole) )
             .group("interface"));
 
     options.addOption(

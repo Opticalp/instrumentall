@@ -54,6 +54,7 @@ static PyMethodDef EmbMethods[] =
     // misc
     pyMethodMainAppAbout,
     pyMethodMainAppVersion,
+    pyMethodMainAppLoadConfig,
 
     // module manager
     pyMethodModManGetRootFact,
