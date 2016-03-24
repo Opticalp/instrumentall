@@ -30,6 +30,7 @@
 #include "Dispatcher.h"
 
 #include "DemoRootFactory.h"
+#include "DataGenFactory.h"
 
 ModuleManager::ModuleManager():
 	VerboseEntity(name())
@@ -37,6 +38,7 @@ ModuleManager::ModuleManager():
     // Add root factories
     // Their constructor explicitly calls ModuleFactory(false)
     addFactory(new DemoRootFactory);
+    addFactory(new DataGenFactory);
 }
 
 ModuleManager::~ModuleManager()
