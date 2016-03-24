@@ -48,7 +48,7 @@ public:
     virtual ~DemoRootFactory() { }
 
     std::string name() { return "DemoRootFactory"; }
-    const char * description() const
+    std::string description()
     {
         return "Example code for a root module factory. "
                 "Please use select(\"branch\") to access its only child. ";

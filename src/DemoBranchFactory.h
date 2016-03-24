@@ -46,7 +46,7 @@ public:
     virtual ~DemoBranchFactory() { }
 
     std::string name() { return "DemoBranchFactory"; }
-    const char * description() const
+    std::string description()
     {
         return "Example code for a branch module factory. "
                 "Please use selectValueList() to check "

@@ -87,7 +87,7 @@ public:
 	 * @return full description of the module factory:
 	 * short description of modules to be created, default behavior.
 	 */
-	virtual const char * description() const = 0;
+	virtual std::string description() = 0;
 
     /**
      * Update the discovered modules list

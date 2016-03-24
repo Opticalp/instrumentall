@@ -166,7 +166,7 @@ PyObject* pyModParent(ModMembers* self)
     Py_XDECREF(tmp);
 
     tmp = pyParent->description;
-    pyParent->description = PyString_FromString((*factory)->description());
+    pyParent->description = PyString_FromString((*factory)->description().c_str());
     Py_XDECREF(tmp);
 
     // set ModuleFactory reference

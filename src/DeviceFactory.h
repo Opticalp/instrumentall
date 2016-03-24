@@ -45,7 +45,7 @@ public:
     virtual ~DeviceFactory() { }
 
     std::string name() { return "DeviceFactory"; }
-    const char * description() const
+    std::string description()
     {
         return "Factory for modules that interface "
         		"a hardware device";
