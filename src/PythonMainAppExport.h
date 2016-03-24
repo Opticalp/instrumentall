@@ -70,6 +70,26 @@ static PyMethodDef pyMethodMainAppVersion =
     "Retrieve version information of the current application"
 };
 
+/**
+ * @brief Python wrapper to load a configuration file
+ *
+ * Call MainApplication::loadConfiguration() method
+ * inherited from Poco::Application::loadConfiguration()
+ *
+ */
+extern "C" PyObject*
+pythonMainAppLoadConfig(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodMainAppLoadConfig =
+{
+    "loadConfiguration",
+    pythonMainAppLoadConfig,
+    METH_VARARGS,
+    "Load a configuration file. "
+    "Any default Poco format config file "
+    "is supported. "
+};
+
 
 // ----------------------------------------------------------------
 //     Module Manager

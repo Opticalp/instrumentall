@@ -58,6 +58,29 @@ pythonMainAppVersion(PyObject *self, PyObject *args)
     return PyString_FromString(retVal.c_str());
 }
 
+PyObject*
+pythonMainAppLoadConfig(PyObject *self, PyObject *args)
+{
+    char* charName;
+
+    if (!PyArg_ParseTuple(args, "s:loadConfiguration", &charName))
+        return NULL;
+
+    std::string cfgFile(charName);
+    try
+    {
+        Poco::Util::Application::instance().loadConfiguration(cfgFile);
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("");
+}
+
 #include "PythonModuleFactory.h"
 
 extern "C" PyObject*

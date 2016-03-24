@@ -27,6 +27,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from os.path import *
 
 def myMain():
     """Main function. Run the tests. """
@@ -64,6 +65,15 @@ def myMain():
         if not isinstance(value, basestring):
             value = str(value)
         print " - " + param["name"] + ": " +  value 
+
+    cfgFile = join(join(dirname(dirname(realpath(__file__))),"resources"),"modParamTest.properties")
+    print "Load test config file: modParamTest.properties from " + cfgFile
+
+    loadConfiguration(cfgFile)
+    print 'Config file loaded. Creating module "testParamMod" with default value for param' 
+    
+    val = fac.select("branch").select("leafParam").create("testParamMod").getParameterValue("intParam")
+    print "intParam value is: " + str(val)
         
     print "End of script modParamTest.py"
     

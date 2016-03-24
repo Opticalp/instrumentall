@@ -118,6 +118,6 @@ else (UNIX)
         )
     add_test (
         NAME instruConf
-        COMMAND $<TARGET_FILE:instrumentall> /config-file=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\test.properties
+        COMMAND $<TARGET_FILE:instrumentall> /config-file=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test.properties
         )
 endif (UNIX)
