@@ -203,4 +203,74 @@ void DataItem::checkDataType(int datatype)
     throw Poco::DataFormatException(dataTypeStr(mDataType) + " is expected");
 }
 
+std::string DataItem::dataTypeShortStr(int datatype)
+{
+    if (datatype == typeUndefined)
+        return "undef";
+
+    std::string desc;
+
+    switch (datatype & ~contVector)
+    {
+    case typeInt32:
+        desc = "int32";
+        break;
+    case typeUInt32:
+        desc = "uint32";
+        break;
+    case typeInt64:
+        desc = "int64";
+        break;
+    case typeUInt64:
+        desc = "uint64";
+        break;
+    case typeFloat:
+        desc = "float";
+        break;
+    case typeDblFloat:
+        desc = "dblFloat";
+        break;
+    case typeString:
+        desc = "str";
+        break;
+    default:
+        return "";
+    }
+
+    if (datatype & contVector)
+        desc += "Vect";
+
+    return desc;
+}
+
+int DataItem::getTypeFromShortStr(std::string typeName)
+{
+    int retType = 0;
+    std::string tmp(typeName);
+
+    int pos = tmp.rfind("Vect");
+    // container?
+    if (pos != std::string::npos)
+    {
+        tmp.erase(pos);
+        retType |= contVector;
+    }
+
+    if (tmp.compare("int32") == 0)
+        retType |= typeInt32;
+    else if (tmp.compare("uint32") == 0)
+        retType |= typeUInt32;
+    else if (tmp.compare("int64") == 0)
+        retType |= typeInt64;
+    else if (tmp.compare("uint64") == 0)
+        retType |= typeUInt64;
+    else if (tmp.compare("float") == 0)
+        retType |= typeFloat;
+    else if (tmp.compare("dblFloat") == 0)
+        retType |= typeDblFloat;
+    else if (tmp.compare("str") == 0)
+        retType |= typeString;
+
+    return retType;
+}
 

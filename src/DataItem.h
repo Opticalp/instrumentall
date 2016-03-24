@@ -70,7 +70,9 @@ public:
         typeDblFloat,
 
         // character string
-        typeString
+        typeString,
+
+        typeCnt // count the types
     };
 
     /**
@@ -96,6 +98,18 @@ public:
      *
      */
     static std::string dataTypeStr(int datatype);
+
+    /**
+     * Get dataType as a character string -- short version
+     *
+     * The string is "short" and contains no space
+     */
+    static std::string dataTypeShortStr(int datatype);
+
+    /**
+     * Counterpart of dataTypeShortStr
+     */
+    static int getTypeFromShortStr(std::string typeName);
 
     /**
      * Check if the given datatype container is a vector
