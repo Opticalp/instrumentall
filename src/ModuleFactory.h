@@ -258,10 +258,7 @@ protected:
      *
      * Should insure that the selector is unique for a given factory
      */
-    virtual std::string validateSelector(std::string selector)
-    {
-        return selector;
-    }
+    virtual std::string validateSelector(std::string selector);
 
     /**
      * Create a new module given its custom name

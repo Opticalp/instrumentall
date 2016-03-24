@@ -64,7 +64,9 @@ public:
 private:
     ModuleFactoryBranch* newChildFactory(std::string selector);
 
-    std::string validateSelector(std::string selector);
+    // to be implemented for custom behavior,
+    // like dealing with authorized not-listed selectors
+//    std::string validateSelector(std::string selector);
 };
 
 #endif /* SRC_DEMOBRANCHFACTORY_H_ */
