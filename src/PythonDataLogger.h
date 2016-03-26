@@ -89,10 +89,10 @@ extern "C" PyObject* pyDataLoggerSource(DataLoggerMembers *self);
 
 static PyMethodDef pyMethodDataLoggerSource =
 {
-    "dataSource",
+    "portSource",
     (PyCFunction)pyDataLoggerSource,
     METH_NOARGS,
-    "Retrieve the source Data object"
+    "Retrieve the source Port object"
 };
 
 /// python wrapper to get the target ports of the current output port

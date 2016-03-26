@@ -47,7 +47,7 @@ def myMain():
     runModule(mod1)
     
     waitAll()
-    print "Return value is: " + str(mod1.outPort("data").data().getValue())
+    print "Return value is: " + str(mod1.outPort("data").getDataValue())
 
     print "Create module from StringDataGen factory"
     mod1 = fac.select("str").create("strGenerator")
@@ -60,7 +60,7 @@ def myMain():
     runModule(mod1)
     
     waitAll()
-    print "Return value is: " + mod1.outPort("data").data().getValue()
+    print "Return value is: " + mod1.outPort("data").getDataValue()
     
     print "Create module from Int32DataGen factory"
     mod1 = fac.select("int32").create("intGenerator")
@@ -73,7 +73,7 @@ def myMain():
     runModule(mod1)
     
     waitAll()
-    print "Return value is: " + str(mod1.outPort("data").data().getValue())
+    print "Return value is: " + str(mod1.outPort("data").getDataValue())
 
     print "Test the data sequence management, using the seqAccu module"
     seqAccu = Factory("DemoRootFactory").select("branch").select("leafSeqAccu").create("seqAccu")
@@ -93,7 +93,7 @@ def myMain():
 
     runModule(mod1)
     waitAll()
-    print "Return value is: " + str(seqAccu.outPorts()[0].data().getValue())
+    print "Return value is: " + str(seqAccu.outPorts()[0].getDataValue())
 
     print "End of script dataGenTest.py"
     
