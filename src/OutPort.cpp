@@ -178,3 +178,18 @@ void OutPort::notifyReady(DataAttributeOut attribute)
                         .getSubsystem<Dispatcher>()
                         .setOutPortDataReady(this);
 }
+
+void OutPort::expire()
+{
+	// expire self data
+	data.expire();
+
+	// forward the expiration
+    seqTargetPortsLock.readLock();
+
+    for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
+            ite = seqTargetPorts.end(); it != ite; it++ )
+        (**it)->parent()->expireOutData();
+
+    seqTargetPortsLock.unlock();
+}

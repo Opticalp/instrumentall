@@ -226,4 +226,28 @@ PyObject* pyInPortGetSeqSourcePort(InPortMembers* self)
     return (PyObject*) pyPort;
 }
 
+PyObject* pyInPortHoldData(InPortMembers *self, PyObject* args)
+{
+    char* commandChar;
+
+    if (!PyArg_ParseTuple(args, "s:holdData", &commandChar))
+        return NULL;
+
+    std::string command(commandChar);
+
+    if (command.compare("on") == 0)
+    	(**self->inPort)->hold(true);
+    else if (command.compare("off") == 0)
+    	(**self->inPort)->hold(false);
+    else
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                "Please, pass \"on\" or \"off\" as function argument");
+        return NULL;
+    }
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 #endif /* HAVE_PYTHON27 */

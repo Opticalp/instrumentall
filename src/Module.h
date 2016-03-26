@@ -156,7 +156,8 @@ public:
 	/**
 	 * Implementation of Poco::Task::runTask()
 	 *
-	 * Lock the runTaskMutex and call process().
+	 * Lock the runTaskMutex, expire the output data,
+	 * and call process().
 	 * This function is virtual. it can be overloaded by
 	 * the derived class if the runTaskMutex lock is not wanted.
 	 */
@@ -208,6 +209,11 @@ public:
      * @throw Poco::DataFormatException if the parameter format does not fit
      */
     template<typename T> void setParameterValue(std::string paramName, T value);
+
+    /**
+     * Expire output data
+     */
+    void expireOutData();
 
 protected:
     /**

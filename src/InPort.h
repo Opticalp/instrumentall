@@ -96,6 +96,13 @@ public:
      */
     void releaseData();
 
+    /**
+     * Request to hold the data that came to this port
+     *
+     * The port will re-use the previous data if it is not expired.
+     */
+    void hold(bool status = true) { held = status; }
+
 private:
     /**
      * Set the source port
@@ -154,10 +161,10 @@ private:
      * To be used before getting the data to be sure not to retrieve
      * expired data.
      */
-    bool isUpToDate()
-        { return false; } // FIXME
+    bool isUpToDate();
 
     bool used;
+    bool held;
 
     friend class Dispatcher;
 };

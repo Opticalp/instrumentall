@@ -105,6 +105,11 @@ public:
      */
     DataItem* dataItem() { return &data; }
 
+    /**
+     * Expire port data
+     */
+    void expire();
+
 private:
     /**
      * Add a target port

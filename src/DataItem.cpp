@@ -35,7 +35,8 @@
 
 DataItem::DataItem(int dataType, OutPort* parent):
         mDataType(dataType),
-        mParentPort(parent)
+        mParentPort(parent),
+		expired(true)
 {
     switch (mDataType)
     {
@@ -155,6 +156,7 @@ DataItem::~DataItem()
 
 void DataItem::releaseNewData()
 {
+	expired = false;
     releaseData();
 
     Poco::Util::Application::instance()

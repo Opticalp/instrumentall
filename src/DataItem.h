@@ -218,6 +218,9 @@ public:
      */
     bool hasLoggers() { return (allLoggers.size()>0); }
 
+    void expire() { expired = true; }
+    bool isExpired() { return expired; }
+
 private:
     /**
      * Data type
@@ -251,12 +254,9 @@ private:
 
     DataAttribute attribute; ///< data attribute
 
-//    bool expired;
+    bool expired;
 
     RWLock dataLock; ///< lock to manage the access to the dataStore
-
-    // TODO: separate volatile data (issue from a outport.push(data)) in UI
-    // and other data, that do really have a parent port.
 
     OutPort* mParentPort; ///< parent output data port.
 
