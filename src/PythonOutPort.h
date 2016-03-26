@@ -119,17 +119,38 @@ static PyMethodDef pyMethodOutPortGetSeqTargetPorts =
     "Retrieve the data sequence target ports"
 };
 
-/// python wrapper to get the port data
-extern "C" PyObject* pyOutPortData(OutPortMembers *self);
+/// python wrapper to get the current value of the data item
+extern "C" PyObject* pyOutPortGetDataValue(OutPortMembers *self);
 
-static PyMethodDef pyMethodOutPortData =
+static PyMethodDef pyMethodOutPortGetDataValue =
 {
-    "data",
-    (PyCFunction)pyOutPortData,
+    "getDataValue",
+    (PyCFunction)pyOutPortGetDataValue,
     METH_NOARGS,
-    "Retrieve the port data"
+    "Retrieve the current value of the port data"
 };
 
+/// python wrapper to register a logger to the data item
+extern "C" PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args);
+
+static PyMethodDef pyMethodOutPortRegister =
+{
+    "register",
+    (PyCFunction)pyOutPortRegister,
+    METH_VARARGS,
+    "register(logger): Register the DataLogger \"logger\" to log the port data"
+};
+
+/// python wrapper to retrieve the registered data loggers
+extern "C" PyObject* pyOutPortLoggers(OutPortMembers *self);
+
+static PyMethodDef pyMethodOutPortLoggers =
+{
+    "loggers",
+    (PyCFunction)pyOutPortLoggers,
+    METH_NOARGS,
+    "Retrieve the registered data loggers"
+};
 
 /// exported methods
 static PyMethodDef pyOutPortMethods[] = {
@@ -138,7 +159,9 @@ static PyMethodDef pyOutPortMethods[] = {
         pyMethodOutPortGetTargetPorts,
         pyMethodOutPortGetSeqTargetPorts,
 
-        pyMethodOutPortData,
+		pyMethodOutPortGetDataValue,
+		pyMethodOutPortRegister,
+		pyMethodOutPortLoggers,
 
         {NULL} // sentinel
 };
