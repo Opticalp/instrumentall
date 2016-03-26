@@ -27,6 +27,7 @@
  */
 
 #include "TypedDataGenFactory.h"
+#include "DataGen.h"
 #include "DataItem.h"
 
 std::string TypedDataGenFactory::description()
@@ -41,5 +42,10 @@ std::string TypedDataGenFactory::description()
 
 Module* TypedDataGenFactory::newChildModule(std::string customName)
 {
-    throw Poco::NotImplementedException("create");
+	int datatype = DataItem::getTypeFromShortStr(getSelector());
+
+	if (DataItem::isVector(datatype))
+		throw Poco::NotImplementedException("create");
+
+	return new DataGen(this, customName, datatype);
 }
