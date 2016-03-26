@@ -69,15 +69,18 @@ private:
     enum params
     {
         paramValue,
-//        paramSeqStart,
-//        paramSeqContinue,
-//        paramSeqStop,
+        paramSeqStart,
+        paramSeqCont,
+        paramSeqEnd,
         paramCnt
     };
 
     long iPar; ///< storage for integer parameter
     double fPar; ///< storage for float parameter
     std::string sPar; ///< storage for char string parameter
+    bool seqStart;
+    bool seqCont;
+    bool seqEnd;
 
     Poco::RWLock dataLock;
 

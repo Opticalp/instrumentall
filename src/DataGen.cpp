@@ -41,8 +41,10 @@
 size_t DataGen::refCount = 0;
 
 DataGen::DataGen(ModuleFactory* parent, std::string customName, int dataType):
-	Module(parent),
-	mDataType(dataType)
+	Module(parent, customName),
+	mDataType(dataType),
+	iPar(0), fPar(0),
+	seqStart(false), seqCont(false), seqEnd(false)
 {
 	setInternalName(DataItem::dataTypeShortStr(mDataType)
 						+ "DataGen"
@@ -83,11 +85,23 @@ DataGen::DataGen(ModuleFactory* parent, std::string customName, int dataType):
     		"value that will be exported on the data output port",
     		paramType);
 
+    addParameter(paramSeqStart,
+    		"seqStart",
+    		"define if the data to be sent is a start sequence",
+    		ParamItem::typeInteger);
+    addParameter(paramSeqCont,
+    		"seqCont",
+    		"define if the data to be sent is a continue sequence",
+    		ParamItem::typeInteger);
+    addParameter(paramSeqEnd,
+    		"seqEnd",
+    		"define if the data to be sent is a end sequence",
+    		ParamItem::typeInteger);
+
     notifyCreation();
 
     // if nothing failed
     refCount++;
-
 }
 
 std::string DataGen::description()
@@ -100,7 +114,7 @@ std::string DataGen::description()
 
 void DataGen::runTask()
 {
-	dataLock.readLock();
+	dataLock.writeLock(); // write since the seq flags can be changed
 
     // try to acquire the output data lock
     while (!tryData())
@@ -121,8 +135,32 @@ void DataGen::runTask()
 
     DataAttributeOut attr = DataAttributeOut::newDataAttribute();
 
+    if (seqStart)
+    {
+    	poco_information(logger(), "DataGen seq start");
+    	attr.startSequence();
+    	seqStart = false;
+    	seqCont = true;
+    }
+
+    if (seqCont)
+    {
+    	poco_information(logger(), "DataGen seq continue");
+    	attr.continueSequence();
+    }
+
+    if (seqEnd)
+    {
+    	poco_information(logger(), "DataGen seq end");
+    	attr.endSequence();
+    	seqEnd = false;
+    }
+
     setData();
     getOutPorts()[outPortData]->notifyReady(attr);
+
+	poco_information(logger(), "DataGen : data sent");
+
 
 	dataLock.unlock();
 }
@@ -186,11 +224,52 @@ void DataGen::setData()
 
 long DataGen::getIntParameterValue(size_t paramIndex)
 {
-	poco_assert(paramIndex == paramValue);
 	dataLock.readLock();
-	long tmp = iPar;
-	dataLock.unlock();
-	return tmp;
+	switch (paramIndex)
+	{
+	case paramValue:
+	{
+		long tmp = iPar;
+		dataLock.unlock();
+		return tmp;
+	}
+	case paramSeqStart:
+		if (seqStart)
+		{
+			dataLock.unlock();
+			return 1;
+		}
+		else
+		{
+			dataLock.unlock();
+			return 0;
+		}
+	case paramSeqCont:
+		if (seqCont)
+		{
+			dataLock.unlock();
+			return 1;
+		}
+		else
+		{
+			dataLock.unlock();
+			return 0;
+		}
+	case paramSeqEnd:
+		if (seqEnd)
+		{
+			dataLock.unlock();
+			return 1;
+		}
+		else
+		{
+			dataLock.unlock();
+			return 0;
+		}
+	default:
+		poco_bugcheck_msg("getIntParameterValue: wrong index");
+		throw Poco::BugcheckException();
+	}
 }
 
 
@@ -214,9 +293,52 @@ std::string DataGen::getStrParameterValue(size_t paramIndex)
 
 void DataGen::setIntParameterValue(size_t paramIndex, long value)
 {
-	poco_assert(paramIndex == paramValue);
 	dataLock.writeLock();
-	iPar = value;
+
+	switch (paramIndex)
+	{
+	case paramValue:
+		iPar = value;
+		break;
+	case paramSeqStart:
+		if (value)
+		{
+			seqStart = true;
+			seqCont = false;
+		}
+		else
+		{
+			seqStart = false;
+		}
+		break;
+	case paramSeqCont:
+		if (value)
+		{
+			seqStart = false;
+			seqCont = true;
+			seqEnd = false;
+		}
+		else
+		{
+			seqCont = false;
+		}
+		break;
+	case paramSeqEnd:
+		if (value)
+		{
+			seqCont = false;
+			seqEnd = true;
+		}
+		else
+		{
+			seqEnd = false;
+		}
+		break;
+	default:
+		poco_bugcheck_msg("setIntParameterValue: wrong index");
+		throw Poco::BugcheckException();
+	}
+
 	dataLock.unlock();
 }
 
