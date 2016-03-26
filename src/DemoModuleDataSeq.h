@@ -45,7 +45,7 @@ public:
     DemoModuleDataSeq(ModuleFactory* parent, std::string customName);
     virtual ~DemoModuleDataSeq() { }
 
-    const char * description() const
+    std::string description()
     {
         return "Demo Module to generate a data sequence. ";
     }

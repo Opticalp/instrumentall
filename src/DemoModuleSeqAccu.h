@@ -44,7 +44,7 @@ public:
     DemoModuleSeqAccu(ModuleFactory* parent, std::string customName);
     virtual ~DemoModuleSeqAccu() { }
 
-    const char * description() const
+    std::string description()
     {
         return "Demo Module to transform a data sequence into a vector. ";
     }

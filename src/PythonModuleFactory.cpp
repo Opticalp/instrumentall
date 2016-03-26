@@ -279,7 +279,7 @@ PyObject* pyModFactCreate(ModFactMembers* self, PyObject *args)
     Py_XDECREF(tmp);
 
     tmp = pyMod->description;
-    pyMod->description = PyString_FromString((*module)->description());
+    pyMod->description = PyString_FromString((*module)->description().c_str());
     Py_XDECREF(tmp);
 
     // set ModuleFactory reference
@@ -327,7 +327,7 @@ PyObject* pyModFactGetChildModules(ModFactMembers *self)
         Py_XDECREF(tmp);
 
         tmp = pyMod->description;
-        pyMod->description = PyString_FromString((**it)->description());
+        pyMod->description = PyString_FromString((**it)->description().c_str());
         Py_XDECREF(tmp);
 
         // set InPort reference

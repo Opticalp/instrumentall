@@ -42,7 +42,7 @@ public:
     DemoModuleA(ModuleFactory* parent, std::string customName);
     virtual ~DemoModuleA() { }
 
-    const char * description() const
+    std::string description()
     {
         return "Very basic demo Module exhibiting some ports. ";
     }

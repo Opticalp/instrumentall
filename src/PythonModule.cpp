@@ -116,7 +116,7 @@ extern "C" int pyModInit(ModMembers* self, PyObject *args, PyObject *kwds)
     Py_XDECREF(tmp);
 
     tmp = self->description;
-    self->description = PyString_FromString((**self->module)->description());
+    self->description = PyString_FromString((**self->module)->description().c_str());
     Py_XDECREF(tmp);
 
     return 0;

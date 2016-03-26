@@ -126,7 +126,7 @@ public:
 	 * before module creation.
 	 * @return full description of the module: functionalities, usage
 	 */
-	virtual const char * description() const = 0;
+	virtual std::string description() = 0;
 
 	/**
 	 * Get parent ModuleFactory

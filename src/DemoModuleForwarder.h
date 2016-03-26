@@ -43,7 +43,7 @@ public:
     DemoModuleForwarder(ModuleFactory* parent, std::string customName);
     virtual ~DemoModuleForwarder() { }
 
-    const char * description() const
+    std::string description()
     {
         return "Demo Module to forward input onto output. ";
     }
