@@ -85,8 +85,8 @@ def myMain():
 
     for lolo in loggers:
         print ("Logger: " + lolo.name + " (" + lolo.description + ")" +
-               " on port: " + lolo.dataSource().parent().name + 
-               " of module: " + lolo.dataSource().parent().parent().name )  
+               " on port: " + lolo.dataSource().name + 
+               " of module: " + lolo.dataSource().parent().name )  
     
     print "Register the second logger to mod3 output"
     mod3.outPorts()[0].data().register(logger1)
