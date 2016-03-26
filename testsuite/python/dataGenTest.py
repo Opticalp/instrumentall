@@ -36,20 +36,6 @@ def myMain():
     fac = Factory("DataGenFactory")
     print "Retrieved factory: " + fac.name
     
-    print "Create module from Int32DataGen factory"
-    mod1 = fac.select("int32").create("intGenerator")
-    print "module " + mod1.name + " created (" + mod1.internalName + ") "
-    
-    print "Set output value to 1"
-    mod1.setParameterValue("value", 1)
-    
-    print "Run module"
-    runModule(mod1)
-    
-    waitAll()
-    
-    print "Return value is: " + str(mod1.outPort("data").data().getValue())
-
     print "Create module from floatDataGen factory"
     mod1 = fac.select("float").create("floatGenerator")
     print "module " + mod1.name + " created (" + mod1.internalName + ") "
@@ -61,7 +47,6 @@ def myMain():
     runModule(mod1)
     
     waitAll()
-    
     print "Return value is: " + str(mod1.outPort("data").data().getValue())
 
     print "Create module from StringDataGen factory"
@@ -75,9 +60,40 @@ def myMain():
     runModule(mod1)
     
     waitAll()
-    
     print "Return value is: " + mod1.outPort("data").data().getValue()
+    
+    print "Create module from Int32DataGen factory"
+    mod1 = fac.select("int32").create("intGenerator")
+    print "module " + mod1.name + " created (" + mod1.internalName + ") "
+    
+    print "Set output value to 1"
+    mod1.setParameterValue("value", 1)
+    
+    print "Run module"
+    runModule(mod1)
+    
+    waitAll()
+    print "Return value is: " + str(mod1.outPort("data").data().getValue())
 
+    print "Test the data sequence management, using the seqAccu module"
+    seqAccu = Factory("DemoRootFactory").select("branch").select("leafSeqAccu").create("seqAccu")
+    print "module " + seqAccu.name + " created. "
+    print "Binding the ports: data + data seq"
+    bind(mod1.outPort("data"), seqAccu.inPorts()[0])
+    seqBind(mod1.outPort("data"), seqAccu.inPorts()[0])
+
+    mod1.setParameterValue("value", 1)
+    mod1.setParameterValue("seqStart", 1)
+    runModule(mod1)
+    runModule(mod1)
+    runModule(mod1)
+    waitAll()
+    mod1.setParameterValue("seqEnd", 1)
+    mod1.setParameterValue("value", 10)
+
+    runModule(mod1)
+    waitAll()
+    print "Return value is: " + str(seqAccu.outPorts()[0].data().getValue())
 
     print "End of script dataGenTest.py"
     
