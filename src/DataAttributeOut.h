@@ -36,6 +36,9 @@
  *
  * DataAttribute used to be sent to the Dispatcher by any OutPort.
  * It can notify the Dispatcher that it has to generate a start sequence.
+ *
+ * "start sequence" and "end sequence" are flags that can be combined.
+ * "continue sequence" is not combined.
  */
 class DataAttributeOut: public DataAttribute
 {
@@ -51,13 +54,13 @@ public:
     DataAttributeOut& operator =(const DataAttribute& other);
 	DataAttributeOut& operator =(const DataAttributeOut& other);
 
-	void startSequence() { seqInfo = startSeqInfo; }
+	void startSequence() { seqInfo = static_cast<SeqInfoEnum>(startSeqInfo | (seqInfo & endSeqInfo)); }
     void continueSequence() { seqInfo = contSeqInfo; }
-	void endSequence() { seqInfo = endSeqInfo; }
+	void endSequence() { seqInfo = static_cast<SeqInfoEnum>(endSeqInfo | (seqInfo & startSeqInfo)); }
 
-	bool isStartSequence() { return (seqInfo == startSeqInfo); }
+	bool isStartSequence() { return (seqInfo & startSeqInfo); }
     bool isContinueSequence() { return (seqInfo == contSeqInfo); }
-	bool isEndSequence() { return (seqInfo == endSeqInfo); }
+	bool isEndSequence() { return (seqInfo & endSeqInfo); }
 
     static DataAttributeOut newDataAttribute();
 
@@ -68,9 +71,9 @@ private:
 enum SeqInfoEnum
 	{
 		undefSeqInfo, // no sequence info
-		startSeqInfo, // start sequence
-		contSeqInfo, // continue sequence
-		endSeqInfo, // end sequence
+		startSeqInfo = 1, // start sequence flag
+		contSeqInfo = 2, // continue sequence
+		endSeqInfo = 4, // end sequence flag
 		seqInfoCnt
 	};
 
