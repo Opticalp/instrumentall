@@ -62,7 +62,8 @@ DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName
     refCount++;
 }
 
-void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess)
+void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess,
+        OutPortLockUnlock& outPortsAccess)
 {
     DataAttributeIn attr;
 
@@ -104,7 +105,7 @@ void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess)
             int* pOutData;
 
             // try to acquire the output data lock
-            while (!getOutPorts()[outPortA]->tryData<int>(pOutData))
+            while (!outPortsAccess.tryData<int>(outPortA, pOutData))
             {
                 poco_information(logger(),
                         "DemoModuleSeqMax::runTask(): "
@@ -119,7 +120,7 @@ void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess)
             }
 
             *pOutData = tmpMax;
-            getOutPorts()[outPortA]->notifyReady(outAttr);
+            outPortsAccess.notifyReady(outPortA, outAttr);
 
             poco_information(logger(), "DemoModuleSeqMax::runTask() outputs: "
                     + Poco::NumberFormatter::format(tmpMax));

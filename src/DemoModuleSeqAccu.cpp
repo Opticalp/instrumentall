@@ -63,7 +63,8 @@ DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customNa
     refCount++;
 }
 
-void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess)
+void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
+        OutPortLockUnlock& outPortsAccess)
 {
     DataAttributeIn attr;
 
@@ -105,7 +106,7 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess)
             std::vector<Poco::Int32>* pOutData;
 
             // try to acquire the output data lock
-            while (!getOutPorts()[outPortA]->tryData< std::vector<Poco::Int32> >(pOutData))
+            while (!outPortsAccess.tryData< std::vector<Poco::Int32> >(outPortA, pOutData))
             {
                 poco_information(logger(),
                         "DemoModuleSeqAccu::runTask(): "
@@ -120,7 +121,7 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess)
             }
 
             *pOutData = accumulator;
-            getOutPorts()[outPortA]->notifyReady(outAttr);
+            outPortsAccess.notifyReady(outPortA, outAttr);
         }
     }
 }

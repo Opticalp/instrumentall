@@ -35,6 +35,7 @@
 #include "ParameterSet.h"
 
 #include "InPortLockUnlock.h"
+#include "OutPortLockUnlock.h"
 
 #include "Poco/Task.h"
 #include "Poco/RWLock.h"
@@ -160,6 +161,10 @@ public:
 	 *
 	 * Lock the runTaskMutex, expire the output data,
 	 * and call process().
+	 *
+	 * The arguments of process allow to automatically release
+	 * the data of the ports when exiting (even on exception thrown)
+	 *
 	 * This function is virtual. it can be overloaded by
 	 * the derived class if the runTaskMutex lock is not wanted.
 	 */
@@ -169,8 +174,12 @@ public:
 	 * Main logic called by runTask
 	 *
 	 * with a lock on runTaskMutex.
+	 * inPortsAccess and outPortsAccess should be used to
+	 * access the ports data, since it will handle the
+	 * unlocking of the ports in case of un-clean stop
 	 */
-	virtual void process(InPortLockUnlock& inPortsAccess)
+	virtual void process(InPortLockUnlock& inPortsAccess,
+	        OutPortLockUnlock& outPortsAccess)
 	    { poco_warning(logger(), name() + ": empty task"); }
 
 	/**

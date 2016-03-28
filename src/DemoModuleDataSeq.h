@@ -55,7 +55,7 @@ public:
      *
      * Generate an integer data sequence {0;1;2;3}
      */
-    void process(InPortLockUnlock& inPortsAccess);
+    void process(InPortLockUnlock& inPortsAccess, OutPortLockUnlock& outPortsAccess);
 
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name

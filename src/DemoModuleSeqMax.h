@@ -56,7 +56,7 @@ public:
      *  - reinit the temp max storage at each startSequence
      *  - send the max at each endSequence
      */
-    void process(InPortLockUnlock& inPortsAccess);
+    void process(InPortLockUnlock& inPortsAccess, OutPortLockUnlock& outPortsAccess);
 
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name

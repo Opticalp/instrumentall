@@ -61,7 +61,8 @@ DemoModuleForwarder::DemoModuleForwarder(ModuleFactory* parent, std::string cust
     refCount++;
 }
 
-void DemoModuleForwarder::process(InPortLockUnlock& inPortsAccess)
+void DemoModuleForwarder::process(InPortLockUnlock& inPortsAccess,
+        OutPortLockUnlock& outPortsAccess)
 {
     DataAttributeIn attr;
 
@@ -89,7 +90,7 @@ void DemoModuleForwarder::process(InPortLockUnlock& inPortsAccess)
     int* pOutData;
 
     // try to acquire the output data lock
-    while (!getOutPorts()[outPortA]->tryData<int>(pOutData))
+    while (!outPortsAccess.tryData<int>(outPortA, pOutData))
     {
         poco_information(logger(),
                 "DemoModuleForwarder::runTask(): "
@@ -104,7 +105,7 @@ void DemoModuleForwarder::process(InPortLockUnlock& inPortsAccess)
     }
 
     *pOutData = tmpData;
-    getOutPorts()[outPortA]->notifyReady(outAttr);
+    outPortsAccess.notifyReady(outPortA, outAttr);
 
     poco_information(logger(), "DemoModuleForwarder::runTask(): "
             + Poco::NumberFormatter::format(tmpData) + " was forwarded.");
