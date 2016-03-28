@@ -327,9 +327,13 @@ void Module::runTask()
 
 	expireOutData();
 
+	// scoped-lock-like objects for ports
+	InPortLockUnlock inPortAccess(getInPorts());
+	OutPortLockUnlock outPortAccess(getOutPorts());
+
     try
     {
-        process();
+        process(inPortAccess, outPortAccess);
     }
     catch (Poco::Exception& e)
     {
@@ -338,6 +342,8 @@ void Module::runTask()
     }
 
     runTaskMutex.unlock();
+
+    // outPortAccess and inPortAccess are destroyed here...
 }
 
 void Module::expireOutData()

@@ -62,7 +62,8 @@ DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName
     refCount++;
 }
 
-void DemoModuleSeqMax::process()
+void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess,
+        OutPortLockUnlock& outPortsAccess)
 {
     DataAttributeIn attr;
 
@@ -72,7 +73,7 @@ void DemoModuleSeqMax::process()
     // It should not be a problem since this is the only input data
     // then, if the task was launched, it is probably that this is due
     // to a push.
-    if (!getInPorts()[inPortA]->tryData<int>(pData, &attr))
+    if (!inPortsAccess.tryData<int>(inPortA, pData, &attr))
     {
         poco_information(logger(),
                 "DemoModuleSeqMax::runTask(): "
@@ -85,7 +86,7 @@ void DemoModuleSeqMax::process()
     if (attr.isStartSequence())
     {
         tmpMax = *pData;
-        getInPorts()[inPortA]->releaseData();
+        inPortsAccess.releaseData(inPortA);
     }
     else
     {
@@ -94,18 +95,17 @@ void DemoModuleSeqMax::process()
 
         if (!attr.isEndSequence())
         {
-            getInPorts()[inPortA]->releaseData();
-            return;
+            return; // release the inPort
         }
         else
         {
             DataAttributeOut outAttr = attr;
-            getInPorts()[inPortA]->releaseData();
+            inPortsAccess.releaseData(inPortA);
 
             int* pOutData;
 
             // try to acquire the output data lock
-            while (!getOutPorts()[outPortA]->tryData<int>(pOutData))
+            while (!outPortsAccess.tryData<int>(outPortA, pOutData))
             {
                 poco_information(logger(),
                         "DemoModuleSeqMax::runTask(): "
@@ -120,7 +120,7 @@ void DemoModuleSeqMax::process()
             }
 
             *pOutData = tmpMax;
-            getOutPorts()[outPortA]->notifyReady(outAttr);
+            outPortsAccess.notifyReady(outPortA, outAttr);
 
             poco_information(logger(), "DemoModuleSeqMax::runTask() outputs: "
                     + Poco::NumberFormatter::format(tmpMax));

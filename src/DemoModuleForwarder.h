@@ -53,7 +53,7 @@ public:
      *
      * Forward data and attribute
      */
-    void process();
+    void process(InPortLockUnlock& inPortsAccess, OutPortLockUnlock& outPortsAccess);
 
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name

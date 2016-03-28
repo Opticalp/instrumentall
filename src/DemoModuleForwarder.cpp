@@ -61,7 +61,8 @@ DemoModuleForwarder::DemoModuleForwarder(ModuleFactory* parent, std::string cust
     refCount++;
 }
 
-void DemoModuleForwarder::process()
+void DemoModuleForwarder::process(InPortLockUnlock& inPortsAccess,
+        OutPortLockUnlock& outPortsAccess)
 {
     DataAttributeIn attr;
 
@@ -71,7 +72,7 @@ void DemoModuleForwarder::process()
     // It should not be a problem since this is the only input data
     // then, if the task was launched, it is probably that this is due
     // to a push.
-    if (!getInPorts()[inPortA]->tryData<int>(pData, &attr))
+    if (!inPortsAccess.tryData<int>(inPortA, pData, &attr))
     {
         poco_information(logger(),
                 "DemoModuleForwarder::runTask(): "
@@ -84,12 +85,12 @@ void DemoModuleForwarder::process()
     int tmpData = *pData;
     DataAttributeOut outAttr = attr;
 
-    getInPorts()[inPortA]->releaseData();
+    inPortsAccess.releaseData(inPortA);
 
     int* pOutData;
 
     // try to acquire the output data lock
-    while (!getOutPorts()[outPortA]->tryData<int>(pOutData))
+    while (!outPortsAccess.tryData<int>(outPortA, pOutData))
     {
         poco_information(logger(),
                 "DemoModuleForwarder::runTask(): "
@@ -104,7 +105,7 @@ void DemoModuleForwarder::process()
     }
 
     *pOutData = tmpData;
-    getOutPorts()[outPortA]->notifyReady(outAttr);
+    outPortsAccess.notifyReady(outPortA, outAttr);
 
     poco_information(logger(), "DemoModuleForwarder::runTask(): "
             + Poco::NumberFormatter::format(tmpData) + " was forwarded.");
