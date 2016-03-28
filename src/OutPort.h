@@ -101,6 +101,14 @@ public:
     void notifyReady(DataAttributeOut attribute);
 
     /**
+     * Release the output port data lock
+     *
+     * Without notifying the dispatcher.
+     * To be used in case of failure.
+     */
+    void releaseOnFailure() { dataItem()->releaseData(); }
+
+    /**
      * Get the DataItem for this OutPort
      */
     DataItem* dataItem() { return &data; }
