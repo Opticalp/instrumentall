@@ -44,17 +44,13 @@ class InPortLockUnlock
 {
 public:
     InPortLockUnlock(std::vector<InPort*> inputPorts):
-        inPorts(inputPorts)
+        inPorts(inputPorts), allAcquired(false)
     { lockFlags.assign(inputPorts.size(), false); }
 
     /**
      * Destructor: release the ports that were not unlocked
      */
-    virtual ~InPortLockUnlock()
-    {
-        for (size_t index = 0; index < inPorts.size(); index++)
-            releaseData(index);
-    }
+    virtual ~InPortLockUnlock();
 
     /**
      * Forward tryData for the given port
@@ -67,6 +63,14 @@ public:
      */
     void releaseData(size_t portIndex);
 
+    /**
+     * Input port data is being processed.
+     *
+     * Set the allAcquired flag:
+     * The caller notifies that the data can be released, even if new.
+     */
+    void processing() { allAcquired = true; }
+
 private:
     std::vector<InPort*> inPorts;
 
@@ -74,6 +78,8 @@ private:
      * Flag array to store which input was locked using this class
      */
     std::vector<bool> lockFlags;
+
+    bool allAcquired;
 };
 
 template<typename T>
@@ -92,6 +98,15 @@ inline bool InPortLockUnlock::tryData(size_t portIndex, T*& pData,
         lockFlags[portIndex] = true;
 
     return retValue;
+}
+
+inline InPortLockUnlock::~InPortLockUnlock()
+{
+    for (size_t portIndex = 0; portIndex < inPorts.size(); portIndex++)
+    {
+        if (lockFlags[portIndex] && (!inPorts[portIndex]->isNew() || allAcquired) )
+            inPorts[portIndex]->releaseData();
+    }
 }
 
 inline void InPortLockUnlock::releaseData(size_t portIndex)

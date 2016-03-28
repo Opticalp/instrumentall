@@ -103,6 +103,8 @@ public:
      */
     void hold(bool status = true) { held = status; }
 
+    bool isNew() { return !used; }
+
 private:
     /**
      * Set the source port
@@ -152,8 +154,6 @@ private:
      * when new data is available, just before the push.
      */
     void setNew(bool value = true);
-
-    bool isNew() { return !used; }
 
     /**
      * Determine if the data of this port are up to date
