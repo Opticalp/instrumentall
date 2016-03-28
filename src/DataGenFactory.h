@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.h
- * @date	Feb. 2016
+ * @file	src/DataGeneratorFactory.h
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,44 +26,42 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOMODULEA_H_
-#define SRC_DEMOMODULEA_H_
+#ifndef SRC_DATAGENFACTORY_H_
+#define SRC_DATAGENFACTORY_H_
 
-#include "Module.h"
+#include "ModuleFactory.h"
 
 /**
- * DemoModuleA
+ * DataGenFactory
  *
- * Very simple demo module, but implementing some ports
+ * Root factory for the factories that build the data generators.
+ * The data generators are modules used to emit static data. They
+ * are used by the UI to push arbitrary data to the other modules.
  */
-class DemoModuleA: public Module
+class DataGenFactory: public ModuleFactory
 {
 public:
-    DemoModuleA(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleA() { }
+    DataGenFactory(): ModuleFactory(false) // is not a leaf, is root.
+        { setLogger(name()); }
+
+    virtual ~DataGenFactory() { }
+
+    std::string name() { return "DataGenFactory"; }
 
     std::string description()
     {
-        return "Very basic demo Module exhibiting some ports. ";
+        return "Root factory for all data generator factories. ";
     }
 
+    std::string selectDescription()
+    {
+        return "Set the type of the generated data";
+    }
+
+    std::vector<std::string> selectValueList();
+
 private:
-    static size_t refCount; ///< reference counter to generate a unique internal name
-
-    /// Indexes of the input ports
-    enum inPorts
-    {
-        inPortA,
-        inPortB,
-        inPortCnt
-    };
-
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        outPortA,
-        outPortCnt
-    };
+    ModuleFactoryBranch* newChildFactory(std::string selector);
 };
 
-#endif /* SRC_DEMOMODULEA_H_ */
+#endif /* SRC_DATAGENFACTORY_H_ */

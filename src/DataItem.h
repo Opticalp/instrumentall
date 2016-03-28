@@ -70,7 +70,9 @@ public:
         typeDblFloat,
 
         // character string
-        typeString
+        typeString,
+
+        typeCnt // count the types
     };
 
     /**
@@ -96,6 +98,18 @@ public:
      *
      */
     static std::string dataTypeStr(int datatype);
+
+    /**
+     * Get dataType as a character string -- short version
+     *
+     * The string is "short" and contains no space
+     */
+    static std::string dataTypeShortStr(int datatype);
+
+    /**
+     * Counterpart of dataTypeShortStr
+     */
+    static int getTypeFromShortStr(std::string typeName);
 
     /**
      * Check if the given datatype container is a vector
@@ -204,6 +218,9 @@ public:
      */
     bool hasLoggers() { return (allLoggers.size()>0); }
 
+    void expire() { expired = true; }
+    bool isExpired() { return expired; }
+
 private:
     /**
      * Data type
@@ -237,12 +254,9 @@ private:
 
     DataAttribute attribute; ///< data attribute
 
-//    bool expired;
+    bool expired;
 
     RWLock dataLock; ///< lock to manage the access to the dataStore
-
-    // TODO: separate volatile data (issue from a outport.push(data)) in UI
-    // and other data, that do really have a parent port.
 
     OutPort* mParentPort; ///< parent output data port.
 

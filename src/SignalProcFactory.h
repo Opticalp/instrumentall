@@ -45,7 +45,7 @@ public:
     virtual ~SignalProcFactory() { }
 
     std::string name() { return "SignalProcFactory"; }
-    const char * description() const
+    std::string description()
     {
         return "Factory for signal processing modules";
     }

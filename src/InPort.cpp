@@ -38,7 +38,7 @@ InPort::InPort(Module* parent,
         int datatype,
         size_t index):
     Port(parent, name, description, datatype, index),
-    used(true)
+    used(true), held(false)
 {
     mSourcePort = SharedPtr<OutPort*>(
             new (OutPort*)( Poco::Util::Application::instance()
@@ -53,7 +53,7 @@ InPort::InPort(OutPort* emptySourcePort):
                     .getEmptyModule(),
                 "emptyIn", "replace an expired port",
                 DataItem::typeUndefined, 0),
-        used(true)
+        used(true), held(false)
 {
     mSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
     mSeqSourcePort = mSourcePort;
@@ -140,4 +140,14 @@ void InPort::setNew(bool value)
     }
 
     used = !value;
+}
+
+bool InPort::isUpToDate()
+{
+	// TODO: should check if the input data is in a sequence?
+	// inside a sequence, the holding should be impossible?
+	if (!held)
+		return false;
+	else
+		return (!(*getSourcePort())->dataItem()->isExpired());
 }

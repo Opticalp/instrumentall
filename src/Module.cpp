@@ -325,6 +325,8 @@ void Module::runTask()
             return;
     }
 
+	expireOutData();
+
     try
     {
         process();
@@ -336,4 +338,11 @@ void Module::runTask()
     }
 
     runTaskMutex.unlock();
+}
+
+void Module::expireOutData()
+{
+    for (std::vector<OutPort*>::iterator it = outPorts.begin(),
+            ite = outPorts.end(); it != ite; it++)
+        (*it)->expire();
 }

@@ -75,6 +75,21 @@ ModuleFactoryBranch& ModuleFactory::select(std::string selector)
     return *factory;
 }
 
+std::string ModuleFactory::validateSelector(std::string selector)
+{
+    std::vector<std::string> list = selectValueList();
+
+    // TODO: For case insensitivity, compare to lower case and return *it
+    for (std::vector<std::string>::iterator it = list.begin(),
+            ite = list.end(); it != ite; it++)
+    {
+        if (it->compare(selector) == 0)
+            return selector;
+    }
+
+    throw ModuleFactoryException("Unrecognized selector: " + selector);
+}
+
 void ModuleFactory::deleteChildFactory(std::string property)
 {
     if (isLeaf())

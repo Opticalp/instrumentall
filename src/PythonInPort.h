@@ -119,12 +119,26 @@ static PyMethodDef pyMethodInPortGetSeqSourcePort =
     "Retrieve the data sequence source port"
 };
 
+/// python wrapper to hold the data coming from this port
+extern "C" PyObject* pyInPortHoldData(InPortMembers *self, PyObject* args);
+
+static PyMethodDef pyMethodInPortHoldData =
+{
+    "holdData",
+    (PyCFunction)pyInPortHoldData,
+    METH_VARARGS,
+    "holdData(\"on\"): re-use the same data if not expired. "
+    "holdData(\"off\"): release the data holding. "
+};
+
 /// exported methods
 static PyMethodDef pyInPortMethods[] = {
         pyMethodInPortParent,
 
         pyMethodInPortGetSourcePort,
         pyMethodInPortGetSeqSourcePort,
+
+		pyMethodInPortHoldData,
 
         {NULL} // sentinel
 };

@@ -103,7 +103,7 @@ extern "C" int pyModFactInit(ModFactMembers* self, PyObject *args, PyObject *kwd
     Py_XDECREF(tmp);
 
     tmp = self->description;
-    self->description = PyString_FromString((**self->moduleFactory)->description());
+    self->description = PyString_FromString((**self->moduleFactory)->description().c_str());
     Py_XDECREF(tmp);
 
     return 0;
@@ -153,7 +153,7 @@ PyObject* pyModFactSelect(ModFactMembers* self, PyObject* args)
     Py_XDECREF(tmp);
 
     tmp = pyChildFact->description;
-    pyChildFact->description = PyString_FromString((*childFact)->description());
+    pyChildFact->description = PyString_FromString((*childFact)->description().c_str());
     Py_XDECREF(tmp);
 
     // set ModuleFactory reference
@@ -279,7 +279,7 @@ PyObject* pyModFactCreate(ModFactMembers* self, PyObject *args)
     Py_XDECREF(tmp);
 
     tmp = pyMod->description;
-    pyMod->description = PyString_FromString((*module)->description());
+    pyMod->description = PyString_FromString((*module)->description().c_str());
     Py_XDECREF(tmp);
 
     // set ModuleFactory reference
@@ -327,7 +327,7 @@ PyObject* pyModFactGetChildModules(ModFactMembers *self)
         Py_XDECREF(tmp);
 
         tmp = pyMod->description;
-        pyMod->description = PyString_FromString((**it)->description());
+        pyMod->description = PyString_FromString((**it)->description().c_str());
         Py_XDECREF(tmp);
 
         // set InPort reference

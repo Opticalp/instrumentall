@@ -47,7 +47,7 @@ public:
     EmptyModuleFactory() { }
 
     std::string name() { return "emptyFactory"; }
-    const char * description() const { return "replaces an expired factory. "; }
+    std::string description() { return "replaces an expired factory. "; }
 
     std::string selectDescription()
     {

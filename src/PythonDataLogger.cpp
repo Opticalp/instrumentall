@@ -29,8 +29,10 @@ THE SOFTWARE.
 #ifdef HAVE_PYTHON27
 
 #include "DataManager.h"
+#include "Dispatcher.h"
 #include "PythonDataLogger.h"
-#include "PythonData.h"
+#include "PythonOutPort.h"
+
 #include "Poco/Util/Application.h"
 
 extern "C" void pyDataLoggerDealloc(DataLoggerMembers* self)
@@ -128,13 +130,14 @@ extern "C" int pyDataLoggerInit(DataLoggerMembers* self, PyObject *args, PyObjec
 
 PyObject* pyDataLoggerSource(DataLoggerMembers* self)
 {
-    Poco::SharedPtr<DataItem*> data;
+    OutPort* tmpPort;
 
     try
     {
-        data = Poco::Util::Application::instance()
+        tmpPort = (*Poco::Util::Application::instance()
                           .getSubsystem<DataManager>()
-                          .getSourceDataItem( *self->logger );
+                          .getSourceDataItem( *self->logger ))
+						  ->parentPort();
     }
     catch (Poco::NotFoundException& e)
     {
@@ -143,31 +146,52 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
         return NULL;
     }
 
+    if (tmpPort == NULL)
+    {
+    	Py_INCREF(Py_None);
+    	return Py_None;
+    }
+
+    Poco::SharedPtr<OutPort*> sharedPort = Poco::Util::Application::instance()
+    					.getSubsystem<Dispatcher>()
+						.getOutPort(tmpPort);
+
     // alloc
-    if (PyType_Ready(&PythonData) < 0)
+    if (PyType_Ready(&PythonOutPort) < 0)
     {
         PyErr_SetString(PyExc_ImportError,
-                "Not able to create the Data Type");
+                "Not able to create the OutPort Type");
         return NULL;
     }
 
-    DataMembers* pyData =
-            (DataMembers*)(
-                    pyDataNew((PyTypeObject*)&PythonData, NULL, NULL) );
+    // create the python object
+    OutPortMembers* pyPort =
+        (OutPortMembers*)(pyOutPortNew((PyTypeObject*)&PythonOutPort, NULL, NULL) );
 
     PyObject* tmp=NULL;
 
     // init
-    // set Data reference
-    *(pyData->data) = data;
+    // retrieve name and description
+    tmp = pyPort->name;
+    pyPort->name = PyString_FromString((*sharedPort)->name().c_str());
+    Py_XDECREF(tmp);
 
-    return (PyObject*)(pyData);
+    tmp = pyPort->description;
+    pyPort->description = PyString_FromString((*sharedPort)->description().c_str());
+    Py_XDECREF(tmp);
+
+    // set InPort reference
+    *(pyPort->outPort) = sharedPort;
+
+    return reinterpret_cast<PyObject*>(pyPort);
 }
 
 PyObject* pyDataLoggerDetach(DataLoggerMembers* self)
 {
     (**self->logger)->detach();
-    return Py_BuildValue("");
+
+    Py_INCREF(Py_None);
+	return Py_None;
 }
 
 #endif /* HAVE_PYTHON27 */

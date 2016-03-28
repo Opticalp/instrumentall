@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.h
- * @date	Feb. 2016
+ * @file	src/TypedDataGeneratorFactory.h
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,44 +26,32 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOMODULEA_H_
-#define SRC_DEMOMODULEA_H_
+#ifndef SRC_TYPEDDATAGENFACTORY_H_
+#define SRC_TYPEDDATAGENFACTORY_H_
 
-#include "Module.h"
+#include "ModuleFactoryBranch.h"
 
 /**
- * DemoModuleA
+ * TypedDataGenFactory
  *
- * Very simple demo module, but implementing some ports
+ * Child factory of DataGeneratorFactory.
+ * The selector gives the type of the output.
  */
-class DemoModuleA: public Module
+class TypedDataGenFactory: public ModuleFactoryBranch
 {
 public:
-    DemoModuleA(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleA() { }
+    TypedDataGenFactory(ModuleFactory* parent, std::string selector):
+        ModuleFactoryBranch(parent, selector) { setLogger(name()); }
+    virtual ~TypedDataGenFactory() { }
 
-    std::string description()
-    {
-        return "Very basic demo Module exhibiting some ports. ";
-    }
+    std::string name() { return getSelector() + "DataGenFactory"; }
+    std::string description();
+
+    size_t countRemain() { return 1; }
 
 private:
-    static size_t refCount; ///< reference counter to generate a unique internal name
+    Module* newChildModule(std::string customName);
 
-    /// Indexes of the input ports
-    enum inPorts
-    {
-        inPortA,
-        inPortB,
-        inPortCnt
-    };
-
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        outPortA,
-        outPortCnt
-    };
 };
 
-#endif /* SRC_DEMOMODULEA_H_ */
+#endif /* SRC_TYPEDDATAGENFACTORY_H_ */

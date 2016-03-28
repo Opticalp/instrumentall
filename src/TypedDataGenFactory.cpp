@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.h
- * @date	Feb. 2016
+ * @file	src/TypedDataGeneratorFactory.cpp
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,44 +26,26 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOMODULEA_H_
-#define SRC_DEMOMODULEA_H_
+#include "TypedDataGenFactory.h"
+#include "DataGen.h"
+#include "DataItem.h"
 
-#include "Module.h"
-
-/**
- * DemoModuleA
- *
- * Very simple demo module, but implementing some ports
- */
-class DemoModuleA: public Module
+std::string TypedDataGenFactory::description()
 {
-public:
-    DemoModuleA(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleA() { }
+    std::string descr("Factory of data generator modules for ");
 
-    std::string description()
-    {
-        return "Very basic demo Module exhibiting some ports. ";
-    }
+    descr += DataItem::dataTypeStr(DataItem::getTypeFromShortStr(getSelector()));
+    descr += " data";
 
-private:
-    static size_t refCount; ///< reference counter to generate a unique internal name
+    return descr;
+}
 
-    /// Indexes of the input ports
-    enum inPorts
-    {
-        inPortA,
-        inPortB,
-        inPortCnt
-    };
+Module* TypedDataGenFactory::newChildModule(std::string customName)
+{
+	int datatype = DataItem::getTypeFromShortStr(getSelector());
 
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        outPortA,
-        outPortCnt
-    };
-};
+	if (DataItem::isVector(datatype))
+		throw Poco::NotImplementedException("create");
 
-#endif /* SRC_DEMOMODULEA_H_ */
+	return new DataGen(this, customName, datatype);
+}

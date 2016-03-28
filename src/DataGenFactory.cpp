@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.h
- * @date	Feb. 2016
+ * @file	src/DataGeneratorFactory.cpp
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,44 +26,28 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOMODULEA_H_
-#define SRC_DEMOMODULEA_H_
+#include "DataGenFactory.h"
+#include "TypedDataGenFactory.h"
+#include "DataItem.h"
 
-#include "Module.h"
-
-/**
- * DemoModuleA
- *
- * Very simple demo module, but implementing some ports
- */
-class DemoModuleA: public Module
+std::vector<std::string> DataGenFactory::selectValueList()
 {
-public:
-    DemoModuleA(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleA() { }
+    std::vector<std::string> list;
 
-    std::string description()
+    for (int outType = DataItem::typeUndefined + 1; outType < DataItem::typeCnt; outType++)
     {
-        return "Very basic demo Module exhibiting some ports. ";
+        list.push_back(DataItem::dataTypeShortStr(outType));
+        list.push_back(DataItem::dataTypeShortStr(outType | DataItem::contVector));
     }
 
-private:
-    static size_t refCount; ///< reference counter to generate a unique internal name
+    return list;
+}
 
-    /// Indexes of the input ports
-    enum inPorts
-    {
-        inPortA,
-        inPortB,
-        inPortCnt
-    };
+ModuleFactoryBranch* DataGenFactory::newChildFactory(std::string selector)
+{
+	if (DataItem::isVector(DataItem::getTypeFromShortStr(selector)))
+		 throw Poco::NotImplementedException("DataGenFactory::create",
+				 "vector containers are not supported now");
 
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        outPortA,
-        outPortCnt
-    };
-};
-
-#endif /* SRC_DEMOMODULEA_H_ */
+	return new TypedDataGenFactory(this, selector);
+}

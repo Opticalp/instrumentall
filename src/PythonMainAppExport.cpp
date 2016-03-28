@@ -121,7 +121,7 @@ pythonModManGetRootFact(PyObject *self, PyObject *args)
         Py_XDECREF(tmp);
 
         tmp = pyFact->description;
-        pyFact->description = PyString_FromString((**it)->description());
+        pyFact->description = PyString_FromString((**it)->description().c_str());
         Py_XDECREF(tmp);
 
         // set InPort reference
@@ -186,7 +186,7 @@ pythonModManGetModules(PyObject *self, PyObject *args)
         Py_XDECREF(tmp);
 
         tmp = pyMod->description;
-        pyMod->description = PyString_FromString((**it)->description());
+        pyMod->description = PyString_FromString((**it)->description().c_str());
         Py_XDECREF(tmp);
 
         // set InPort reference

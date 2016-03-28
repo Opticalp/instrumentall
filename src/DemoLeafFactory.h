@@ -47,7 +47,7 @@ public:
     virtual ~DemoLeafFactory() { }
 
     std::string name() { return std::string("Demo" + getSelector() + "Factory"); }
-    const char * description() const
+    std::string description()
     {
         return "Example code for a leaf module factory. "
                 "Please use create() to create a module. ";

@@ -44,7 +44,7 @@ public:
     DemoModuleSeqMax(ModuleFactory* parent, std::string customName);
     virtual ~DemoModuleSeqMax() { }
 
-    const char * description() const
+    std::string description()
     {
         return "Demo Module to retrieve the max of a data sequence. ";
     }

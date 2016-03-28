@@ -121,7 +121,7 @@ PyObject* pyInPortParent(InPortMembers* self)
     Py_XDECREF(tmp);
 
     tmp = pyParent->description;
-    pyParent->description = PyString_FromString((*module)->description());
+    pyParent->description = PyString_FromString((*module)->description().c_str());
     Py_XDECREF(tmp);
 
     // set ModuleFactory reference
@@ -224,6 +224,30 @@ PyObject* pyInPortGetSeqSourcePort(InPortMembers* self)
     *(pyPort->outPort) = sharedSource;
 
     return (PyObject*) pyPort;
+}
+
+PyObject* pyInPortHoldData(InPortMembers *self, PyObject* args)
+{
+    char* commandChar;
+
+    if (!PyArg_ParseTuple(args, "s:holdData", &commandChar))
+        return NULL;
+
+    std::string command(commandChar);
+
+    if (command.compare("on") == 0)
+    	(**self->inPort)->hold(true);
+    else if (command.compare("off") == 0)
+    	(**self->inPort)->hold(false);
+    else
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                "Please, pass \"on\" or \"off\" as function argument");
+        return NULL;
+    }
+
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 #endif /* HAVE_PYTHON27 */

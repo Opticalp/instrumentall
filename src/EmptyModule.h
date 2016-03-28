@@ -52,7 +52,7 @@ public:
 
     virtual ~EmptyModule() { }
 
-    const char * description() const
+    std::string description()
         { return "Replaces an expired module"; }
 };
 

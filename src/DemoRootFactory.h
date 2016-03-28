@@ -48,7 +48,7 @@ public:
     virtual ~DemoRootFactory() { }
 
     std::string name() { return "DemoRootFactory"; }
-    const char * description() const
+    std::string description()
     {
         return "Example code for a root module factory. "
                 "Please use select(\"branch\") to access its only child. ";
@@ -64,7 +64,9 @@ public:
 private:
     ModuleFactoryBranch* newChildFactory(std::string selector);
 
-    std::string validateSelector(std::string selector);
+    // to be implemented for custom behavior,
+    // like dealing with authorized not-listed selectors
+//    std::string validateSelector(std::string selector);
 };
 
 #endif /* SRC_DEMOROOTFACTORY_H_ */

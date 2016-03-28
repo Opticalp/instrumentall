@@ -114,6 +114,8 @@ void Module::setParameterValue<long>(std::string paramName, long value)
 {
     // TODO: scoped mainMutex
 
+	expireOutData();
+
     size_t paramIndex = getParameterIndex(paramName);
 
     switch (paramSet[paramIndex].datatype)
@@ -139,6 +141,8 @@ template <> inline
 void Module::setParameterValue<double>(std::string paramName, double value)
 {
     // TODO: scoped mainMutex
+
+	expireOutData();
 
     size_t paramIndex = getParameterIndex(paramName);
 
@@ -166,6 +170,8 @@ template <> inline
 void Module::setParameterValue<std::string>(std::string paramName, std::string value)
 {
     // TODO: scoped mainMutex
+
+	expireOutData();
 
     size_t paramIndex = getParameterIndex(paramName);
 

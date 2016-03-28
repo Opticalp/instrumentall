@@ -78,18 +78,18 @@ def myMain():
     print "logger#0 is of class: " + loggers[0].name 
     
     print "Register the first logger to mod2 output"
-    mod2.outPorts()[0].data().register(logger)
+    mod2.outPorts()[0].register(logger)
     
     print "Check the registered loggers at the mod2 output port" 
-    loggers = mod2.outPorts()[0].data().loggers()
+    loggers = mod2.outPorts()[0].loggers()
 
     for lolo in loggers:
         print ("Logger: " + lolo.name + " (" + lolo.description + ")" +
-               " on port: " + lolo.dataSource().parent().name + 
-               " of module: " + lolo.dataSource().parent().parent().name )  
+               " on port: " + lolo.portSource().name + 
+               " of module: " + lolo.portSource().parent().name )  
     
     print "Register the second logger to mod3 output"
-    mod3.outPorts()[0].data().register(logger1)
+    mod3.outPorts()[0].register(logger1)
     
     print "launch action: run mod1"
     runModule(mod1)
@@ -102,13 +102,13 @@ def myMain():
     waitAll()
     
     print "Re-register the 1st logger to mod2 output"
-    mod2.outPorts()[0].data().register(logger)
+    mod2.outPorts()[0].register(logger)
 
     print "Remove the logger" 
     removeDataLogger(logger)
    
     print "Check the registered loggers at the mod2 output port" 
-    if mod2.outPorts()[0].data().loggers() is None:
+    if mod2.outPorts()[0].loggers() is None:
         print "Ok, no more logger is registered"
 
     print "And re-run..."

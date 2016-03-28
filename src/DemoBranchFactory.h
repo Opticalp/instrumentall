@@ -46,7 +46,7 @@ public:
     virtual ~DemoBranchFactory() { }
 
     std::string name() { return "DemoBranchFactory"; }
-    const char * description() const
+    std::string description()
     {
         return "Example code for a branch module factory. "
                 "Please use selectValueList() to check "
@@ -64,7 +64,9 @@ public:
 private:
     ModuleFactoryBranch* newChildFactory(std::string selector);
 
-    std::string validateSelector(std::string selector);
+    // to be implemented for custom behavior,
+    // like dealing with authorized not-listed selectors
+//    std::string validateSelector(std::string selector);
 };
 
 #endif /* SRC_DEMOBRANCHFACTORY_H_ */
