@@ -63,7 +63,7 @@ DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customNa
     refCount++;
 }
 
-void DemoModuleSeqAccu::process()
+void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess)
 {
     DataAttributeIn attr;
 
@@ -73,7 +73,7 @@ void DemoModuleSeqAccu::process()
     // It should not be a problem since this is the only input data
     // then, if the task was launched, it is probably that this is due
     // to a push.
-    if (!getInPorts()[inPortA]->tryData<Poco::Int32>(pData, &attr))
+    if (!inPortsAccess.tryData<Poco::Int32>(inPortA, pData, &attr))
     {
         poco_information(logger(),
                 "DemoModuleSeqAccu::runTask(): "
@@ -87,7 +87,7 @@ void DemoModuleSeqAccu::process()
     {
         accumulator.clear();
         accumulator.push_back(*pData);
-        getInPorts()[inPortA]->releaseData();
+        inPortsAccess.releaseData(inPortA);
     }
     else
     {
@@ -95,13 +95,12 @@ void DemoModuleSeqAccu::process()
 
         if (!attr.isEndSequence())
         {
-            getInPorts()[inPortA]->releaseData();
-            return;
+            return; // release input port data
         }
         else
         {
             DataAttributeOut outAttr = attr;
-            getInPorts()[inPortA]->releaseData();
+            inPortsAccess.releaseData(inPortA);
 
             std::vector<Poco::Int32>* pOutData;
 

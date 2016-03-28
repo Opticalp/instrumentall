@@ -34,6 +34,8 @@
 #include "Port.h"
 #include "ParameterSet.h"
 
+#include "InPortLockUnlock.h"
+
 #include "Poco/Task.h"
 #include "Poco/RWLock.h"
 #include "Poco/Mutex.h"
@@ -168,7 +170,8 @@ public:
 	 *
 	 * with a lock on runTaskMutex.
 	 */
-	virtual void process() { poco_warning(logger(), name() + ": empty task"); }
+	virtual void process(InPortLockUnlock& inPortsAccess)
+	    { poco_warning(logger(), name() + ": empty task"); }
 
 	/**
 	 * Retrieve a copy of the parameter set of the module

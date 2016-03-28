@@ -57,7 +57,7 @@ DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customNa
 
 #define MAX_INDEX 4
 
-void DemoModuleDataSeq::process()
+void DemoModuleDataSeq::process(InPortLockUnlock& inPortsAccess)
 {
     // --- process ---
     for (int index = 0; index < MAX_INDEX + 1; index++)
