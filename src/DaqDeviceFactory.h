@@ -61,8 +61,6 @@ public:
 
 private:
     ModuleFactoryBranch* newChildFactory(std::string selector);
-
-    std::string validateSelector(std::string selector);
 };
 
 #endif /* SRC_DAQDEVICEFACTORY_H_ */

@@ -47,18 +47,3 @@ ModuleFactoryBranch* SignalProcFactory::newChildFactory(std::string selector)
 		throw Poco::BugcheckException();
 	}
 }
-
-std::string SignalProcFactory::validateSelector(std::string selector)
-{
-	std::vector<std::string> list = selectValueList();
-
-	// TODO: compare to lower case and return *it
-	for (std::vector<std::string>::iterator it = list.begin(),
-			ite = list.end(); it != ite; it++)
-	{
-		if (it->compare(selector) == 0)
-			return selector;
-	}
-
-	throw ModuleFactoryException("Unrecognized selector: " + selector);
-}

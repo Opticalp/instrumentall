@@ -59,8 +59,6 @@ public:
 
 private:
     ModuleFactoryBranch* newChildFactory(std::string selector);
-
-    std::string validateSelector(std::string selector);
 };
 
 #endif /* SRC_SIGNALPROCFACTORY_H_ */
