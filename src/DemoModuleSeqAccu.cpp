@@ -84,6 +84,8 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
         return; // data not up to date
     }
 
+    inPortsAccess.processing();
+
     if (attr.isStartSequence())
     {
         accumulator.clear();
