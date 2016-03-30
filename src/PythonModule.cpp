@@ -515,7 +515,7 @@ PyObject* pyModGetParameterValue(ModMembers *self, PyObject *args)
             throw Poco::BugcheckException();
         }
     }
-    catch (Poco::NotFoundException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
         return NULL;
@@ -563,7 +563,7 @@ PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args)
             throw Poco::BugcheckException();
         }
     }
-    catch (Poco::NotFoundException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
         return NULL;
