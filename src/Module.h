@@ -88,7 +88,7 @@ public:
 	 * if customName or internalName is already in use.
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
-	      mParent(parent), Poco::Task(name), VerboseEntity("module") { }
+	      mParent(parent), Poco::Task(name), VerboseEntity() { }
 
 	/**
 	 * Destructor

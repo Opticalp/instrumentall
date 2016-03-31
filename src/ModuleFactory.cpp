@@ -36,7 +36,8 @@ POCO_IMPLEMENT_EXCEPTION( ModuleFactoryException, Poco::Exception, "ModuleFactor
 ModuleFactory::ModuleFactory(bool leaf, bool root):
     bRoot(root), bLeaf(leaf),
     deletingChildFact(NULL),
-    deletingChildMod(NULL)
+    deletingChildMod(NULL), 
+	VerboseEntity()
 {
     if (!isRoot())
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().addFactory(this);
