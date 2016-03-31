@@ -60,7 +60,7 @@ public:
 
 	bool isStartSequence() { return (seqInfo & startSeqInfo); }
     bool isContinueSequence() { return (seqInfo == contSeqInfo); }
-	bool isEndSequence() { return (seqInfo & endSeqInfo); }
+	bool isEndSequence() { return (seqInfo & endSeqInfo) != 0; }
 
     static DataAttributeOut newDataAttribute();
 

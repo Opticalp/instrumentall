@@ -250,7 +250,7 @@ int DataItem::getTypeFromShortStr(std::string typeName)
     int retType = 0;
     std::string tmp(typeName);
 
-    int pos = tmp.rfind("Vect");
+    size_t pos = tmp.rfind("Vect");
     // container?
     if (pos != std::string::npos)
     {

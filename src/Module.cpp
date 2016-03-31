@@ -241,7 +241,7 @@ std::string Module::getParameterDefaultValue(size_t index)
 long Module::getIntParameterDefaultValue(size_t index)
 {
     std::string strValue = getParameterDefaultValue(index);
-    return Poco::NumberParser::parse64(strValue);
+    return static_cast<long>(Poco::NumberParser::parse64(strValue));
 }
 
 double Module::getFloatParameterDefaultValue(size_t index)
