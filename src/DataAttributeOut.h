@@ -43,20 +43,35 @@
 class DataAttributeOut: public DataAttribute
 {
 public:
-	DataAttributeOut():seqInfo(undefSeqInfo) { }
-	virtual ~DataAttributeOut();
+	/**
+	 * Standard constructor
+	 */
+	DataAttributeOut():
+		seqInfo(undefSeqInfo) { }
 
+	/**
+	 * Copy constructor
+	 */
+    DataAttributeOut(const DataAttributeOut& other):
+    	DataAttribute(other),
+		seqInfo(other.seqInfo) { }
+
+    /**
+     * Constructor from a DataAttribute
+     *
+     * Can be used with a DataAttributeIn
+     */
     DataAttributeOut(const DataAttribute& other):
     	DataAttribute(other), seqInfo(undefSeqInfo) { }
-    DataAttributeOut(const DataAttributeOut& other):
-    	DataAttribute(other), seqInfo(other.seqInfo) { }
+
+	virtual ~DataAttributeOut();
 
     DataAttributeOut& operator =(const DataAttribute& other);
 	DataAttributeOut& operator =(const DataAttributeOut& other);
 
-	void startSequence() { seqInfo = static_cast<SeqInfoEnum>(startSeqInfo | (seqInfo & endSeqInfo)); }
-    void continueSequence() { seqInfo = contSeqInfo; }
-	void endSequence() { seqInfo = static_cast<SeqInfoEnum>(endSeqInfo | (seqInfo & startSeqInfo)); }
+	void startSequence(size_t imbrication=1);
+    void continueSequence(size_t imbrication=1);
+	void endSequence(size_t imbrication=1);
 
 	bool isStartSequence() { return (seqInfo & startSeqInfo); }
     bool isContinueSequence() { return (seqInfo == contSeqInfo); }

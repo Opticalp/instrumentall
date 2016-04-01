@@ -31,6 +31,24 @@
 size_t DataAttributeOut::nextToBeUsedIndex = 0;
 Poco::Mutex DataAttributeOut::lock;
 
+void DataAttributeOut::startSequence(size_t imbrication)
+{
+	seqInfo = static_cast<SeqInfoEnum>(startSeqInfo | (seqInfo & endSeqInfo));
+	incStartSeq(imbrication);
+}
+
+void DataAttributeOut::continueSequence(size_t imbrication)
+{
+    seqInfo = contSeqInfo;
+    incContSeq(imbrication);
+}
+
+void DataAttributeOut::endSequence(size_t imbrication)
+{
+	seqInfo = static_cast<SeqInfoEnum>(endSeqInfo | (seqInfo & startSeqInfo));
+	incEndSeq(imbrication);
+}
+
 DataAttributeOut DataAttributeOut::newDataAttribute()
 {
     DataAttributeOut tmp;
@@ -61,3 +79,4 @@ DataAttributeOut& DataAttributeOut::operator =(const DataAttributeOut& other)
 	seqInfo = other.seqInfo;
 	return *this;
 }
+

@@ -28,6 +28,7 @@
 
 #include "DataAttribute.h"
 
+#include <algorithm> // swap
 
 DataAttribute::~DataAttribute()
 {
@@ -40,6 +41,10 @@ DataAttribute::DataAttribute(const DataAttribute& other)
     startSequenceTargets = other.startSequenceTargets;
     contSequenceTargets = other.contSequenceTargets;
     endSequenceTargets = other.endSequenceTargets;
+
+    startCnt = other.startCnt;
+    contCnt = other.contCnt;
+    endCnt = other.endCnt;
 }
 
 DataAttribute& DataAttribute::operator =(const DataAttribute& other)
@@ -56,6 +61,8 @@ DataAttribute& DataAttribute::operator +=(const DataAttribute& rhs)
     contSequenceTargets.insert(rhs.contSequenceTargets.begin(), rhs.contSequenceTargets.end());
     endSequenceTargets.insert(rhs.endSequenceTargets.begin(), rhs.endSequenceTargets.end());
 
+    throw Poco::NotImplementedException("Adding DataAttributes is not supported now");
+
     return *this; // return the result by reference
 }
 
@@ -65,4 +72,57 @@ void DataAttribute::swap(DataAttribute& other)
     startSequenceTargets.swap(other.startSequenceTargets);
     contSequenceTargets.swap(other.contSequenceTargets);
     endSequenceTargets.swap(other.endSequenceTargets);
+
+    std::swap(startCnt, other.startCnt);
+    std::swap(contCnt, other.contCnt);
+    std::swap(endCnt, other.endCnt);
+
+}
+
+bool DataAttribute::isStartSequence(InPort* port)
+{
+    if (startCnt == 0)
+        return false;
+
+    bool ret = startSequenceTargets.erase(port) > 0;
+
+    // -- safety guard --
+    // if startCnt becomes null, it means that the seq flags
+    // were all used on this data flow branch. The reminding
+    // modules in startSequenceTargets are probably on other
+    // data flow branches. It is better to clean, then.
+    if (ret && (--startCnt == 0))
+        startSequenceTargets.clear();
+
+    return ret;
+}
+
+bool DataAttribute::isContinueSequence(InPort* port)
+{
+    if (contCnt == 0)
+        return false;
+
+    bool ret = contSequenceTargets.erase(port) > 0;
+
+    // -- safety guard --
+    // see isStartSequence
+    if (ret && (--contCnt == 0))
+        contSequenceTargets.clear();
+
+    return ret;
+}
+
+bool DataAttribute::isEndSequence(InPort* port)
+{
+    if (endCnt == 0)
+        return false;
+
+    bool ret = endSequenceTargets.erase(port) > 0;
+
+    // -- safety guard --
+    // see isStartSequence
+    if (ret && (--endCnt == 0))
+        endSequenceTargets.clear();
+
+    return ret;
 }

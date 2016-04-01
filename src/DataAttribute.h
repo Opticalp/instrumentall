@@ -67,7 +67,7 @@ public:
      * Create empty attributes. To be used at the DataItem creation,
      * when no data index is defined.
      */
-    DataAttribute() { }
+    DataAttribute(): startCnt(0), contCnt(0), endCnt(0) { }
 
     /// Copy constructor
     DataAttribute(const DataAttribute& other);
@@ -114,8 +114,7 @@ protected:
      * Check if the InPort is in the startSequences list
      * and remove it if present
      */
-    bool isStartSequence(InPort* port)
-        { return (startSequenceTargets.erase(port) > 0); }
+    bool isStartSequence(InPort* port);
 
     /**
      * Check if the given port is targeted by a contSequence
@@ -123,8 +122,7 @@ protected:
      * Check if the InPort is in the contSequences list
      * and remove it if present
      */
-    bool isContinueSequence(InPort* port)
-        { return (contSequenceTargets.erase(port) > 0); }
+    bool isContinueSequence(InPort* port);
 
     /**
      * Check if the given port is targeted by a endSequence
@@ -132,14 +130,24 @@ protected:
      * Check if the InPort is in the endSequences list
      * and remove it if present
      */
-    bool isEndSequence(InPort* port)
-        { return (endSequenceTargets.erase(port) > 0); }
+    bool isEndSequence(InPort* port);
+
+    /// Increment startCnt
+    void incStartSeq(size_t imbrication) { startCnt += imbrication; }
+    /// Increment contCnt
+    void incContSeq(size_t imbrication) { contCnt += imbrication; }
+    /// Increment endCnt
+    void incEndSeq(size_t imbrication) { endCnt += imbrication; }
 
 private:
     std::set<size_t> indexes;
     std::set<InPort*> startSequenceTargets;
     std::set<InPort*> contSequenceTargets;
     std::set<InPort*> endSequenceTargets;
+
+    size_t startCnt; ///< imbricated start
+    size_t contCnt; ///< imbricated continue
+    size_t endCnt; ///< imbricated stop
 };
 
 #endif /* SRC_DATAATTRIBUTE_H_ */
