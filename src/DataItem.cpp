@@ -164,6 +164,12 @@ void DataItem::releaseNewData()
             .newData(this);
 }
 
+void DataItem::releaseBrokenData()
+{
+    expired = true;
+    releaseData();
+}
+
 void DataItem::registerLogger(DataLogger* logger)
 {
     loggersLock.writeLock();

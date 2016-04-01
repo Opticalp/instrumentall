@@ -106,7 +106,7 @@ public:
      * Without notifying the dispatcher.
      * To be used in case of failure.
      */
-    void releaseOnFailure() { dataItem()->releaseData(); }
+    void releaseOnFailure() { dataItem()->releaseBrokenData(); }
 
     /**
      * Get the DataItem for this OutPort

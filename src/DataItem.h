@@ -185,6 +185,14 @@ public:
     void releaseNewData();
 
     /**
+     * Release data that failed to be created
+     *
+     *  - Release the lock
+     *  - expire the data
+     */
+    void releaseBrokenData();
+
+    /**
      * Unlock the data
      *
      * unlock the data that was previously locked using tryGetDataToWrite
