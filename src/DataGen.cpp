@@ -1,12 +1,7 @@
 /**
- * detailed comment
- * 
- * @file	/Instrumentall-Debug@instru-git-debug/[Source directory]/src/DataGen.cpp
- * @brief	short comment
- * @date	26 mars 2016
+ * @file	src/DataGen.cpp
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
- *
- * $Id$
  */
 
 /*
