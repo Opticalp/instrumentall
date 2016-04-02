@@ -113,7 +113,16 @@ protected:
     ///@}
 
 private:
+    enum allSeqComp
+    {
+        lhsInRhs,
+        rhsInLhs,
+        lhsEqRhs,
+        lhsNoRhs
+    };
 
+    allSeqComp compareSeqLists(const std::vector<size_t>& lhs,
+            const std::vector<size_t>& rhs);
 };
 
 #endif /* SRC_DATAATTRIBUTE_H_ */
