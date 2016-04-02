@@ -37,9 +37,23 @@ DataAttribute::~DataAttribute()
 DataAttribute::DataAttribute(const DataAttribute& other)
 {
     indexes = other.indexes;
-    startSequenceTargets = other.startSequenceTargets;
-    contSequenceTargets = other.contSequenceTargets;
-    endSequenceTargets = other.endSequenceTargets;
+
+    seqTargets = other.seqTargets;
+
+    startingSequences = other.startingSequences;
+    allSequences = other.allSequences;
+    endingSequences = other.endingSequences;
+}
+
+void DataAttribute::swap(DataAttribute& other)
+{
+    indexes.swap(other.indexes);
+
+    seqTargets.swap(other.seqTargets);
+
+    startingSequences.swap(other.startingSequences);
+    allSequences.swap(other.allSequences);
+    endingSequences.swap(other.endingSequences);
 }
 
 DataAttribute& DataAttribute::operator =(const DataAttribute& other)
@@ -52,17 +66,68 @@ DataAttribute& DataAttribute::operator =(const DataAttribute& other)
 DataAttribute& DataAttribute::operator +=(const DataAttribute& rhs)
 {
     indexes.insert(rhs.indexes.begin(), rhs.indexes.end());
-    startSequenceTargets.insert(rhs.startSequenceTargets.begin(), rhs.startSequenceTargets.end());
-    contSequenceTargets.insert(rhs.contSequenceTargets.begin(), rhs.contSequenceTargets.end());
-    endSequenceTargets.insert(rhs.endSequenceTargets.begin(), rhs.endSequenceTargets.end());
+
+    if (!rhs.allSequences.empty())
+    {
+        if (allSequences.empty())
+        {
+            seqTargets = rhs.seqTargets;
+            startingSequences = rhs.startingSequences;
+            allSequences = rhs.allSequences;
+            endingSequences = rhs.endingSequences;
+        }
+        else
+        {
+            switch (compareSeqLists(allSequences, rhs.allSequences))
+            {
+            case lhsInRhs:
+            {
+                // TODO: compare startingSequences and endingSequences
+
+                seqTargets = rhs.seqTargets;
+
+                startingSequences = rhs.startingSequences;
+                allSequences = rhs.allSequences;
+                endingSequences = rhs.endingSequences;
+
+                break;
+            }
+            case rhsInLhs:
+            case lhsEqRhs:
+                // TODO: compare startingSequences and endingSequences
+                break;
+            case lhsNoRhs:
+            default:
+                throw Poco::NotImplementedException("merging DataAttributes",
+                        "not supported for disjoint allSequences");
+            }
+
+        }
+    }
 
     return *this; // return the result by reference
 }
 
-void DataAttribute::swap(DataAttribute& other)
+DataAttribute::allSeqComp DataAttribute::compareSeqLists(const std::vector<size_t>& lhs,
+        const std::vector<size_t>& rhs)
 {
-    indexes.swap(other.indexes);
-    startSequenceTargets.swap(other.startSequenceTargets);
-    contSequenceTargets.swap(other.contSequenceTargets);
-    endSequenceTargets.swap(other.endSequenceTargets);
+    size_t sizeL = lhs.size();
+    size_t sizeR = rhs.size();
+
+    size_t indexL = sizeL-1;
+    size_t indexR = sizeR-1;
+
+    for (; (indexL < 0) || (indexR < 0); indexR--, indexL--)
+    {
+        if (lhs[indexL] != rhs[indexR])
+            return lhsNoRhs;
+    }
+
+    if (indexL < indexR)
+        return lhsInRhs;
+
+    if (indexR < indexL)
+        return rhsInLhs;
+
+    return lhsEqRhs;
 }

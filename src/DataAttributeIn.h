@@ -37,12 +37,52 @@
  * DataAttribute specialized by the input port in the tryData query
  * to leave the ability to this DataAttribute to query itself about
  * the startSequence and endSequence, comparing its internal lists.
+ *
+ * Typical use case in a Module:
+ *
+ *     class Mod1: public Module
+ *     {
+ *     public:
+ *       Mod1(): seqIndex(0) { }
+ *
+ *       process(inPortsAccess, outPortsAccess)
+ *       {
+ *         DataAttributeIn attr;
+ *
+ *         DataTypeName* pData;
+ *
+ *         inPortsAccess.tryData<DataTypeName>(inPortA, pData, &attr);
+ *         // we assume the the tryData works at the first try
+ *
+ *         if (attr.isStartSequence(seqIndex))
+ *         // sequence initialization stuff
+ *
+ *         if (attr.isInSequence(seqIndex))
+ *         {
+ *           // do things with the data in sequence: processing
+ *
+ *           if (attr.isEndSequence(seqIndex))
+ *           // sequence un-initialization stuff (writing output, ...)
+ *         }
+ *         else
+ *         {
+ *           // stuff that can be made if the input data is not in a seq
+ *         }
+ *       }
+ *
+ *     private:
+ *       size_t seqIndex;
+ *     };
+ *
  */
 class DataAttributeIn: public DataAttribute
 {
 public:
     DataAttributeIn(DataAttribute attribute, InPort* parent):
         DataAttribute(attribute), mParent(parent) { }
+
+    DataAttributeIn(const DataAttributeIn& other):
+        DataAttribute(other), mParent(other.mParent) { }
 
     DataAttributeIn(): mParent(NULL) { }
 
@@ -51,20 +91,37 @@ public:
     DataAttributeIn& operator =(const DataAttributeIn& other);
 
     /**
+     * Clean the present DataAttribute from the sequence info
+     * that should have been used here.
+     */
+    DataAttribute cleaned() const;
+
+    /**
      * Check if the InPort is concerned by a startSequence
      *
-     * and then remove the InPort from the list
+     * Perform check and modification in seqIndex
      */
-    bool isStartSequence()
-        { return DataAttribute::isStartSequence(mParent); }
-
-    bool isContinueSequence()
-        { return DataAttribute::isContinueSequence(mParent); }
-
-    bool isEndSequence()
-        { return DataAttribute::isEndSequence(mParent); }
+    bool isStartSequence(size_t& seqIndex);
+    bool isInSequence(size_t seqIndex);
+    /**
+     * To be used in a loop where isInSequence was already called
+     * with the same argument.
+     */
+    bool isEndSequence(size_t& seqIndex);
 
 private:
+    void swap(DataAttributeIn& other);
+
+    /**
+     * Routine check
+     *
+     * @throw Poco::RuntimeException if seqIndex not null
+     * and mParent not in seqTargets
+     * @throw Poco::RuntimeException if seqIndex not null
+     * and not present in allSequences
+     */
+    void checkSequence(size_t seqIndex);
+
     InPort* mParent;
 };
 

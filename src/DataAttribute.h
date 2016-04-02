@@ -33,6 +33,7 @@
 #include "Poco/RWLock.h"
 
 #include <set>
+#include <vector>
 
 class InPort;
 
@@ -85,14 +86,9 @@ public:
       return lhs; // return the result by value (uses move constructor)
     }
 
-    void appendStartSeqPortTarget(InPort* port)
-        { startSequenceTargets.insert(port); }
-
-    void appendContSeqPortTarget(InPort* port)
-        { contSequenceTargets.insert(port); }
-
-    void appendEndSeqPortTarget(InPort* port)
-        { endSequenceTargets.insert(port); }
+    /// Called by the outPort during notifyReady
+    void appendSeqPortTarget(InPort* port)
+        { seqTargets.insert(port); }
 
 protected:
     /**
@@ -102,44 +98,31 @@ protected:
      */
     void swap(DataAttribute& other);
 
-    /**
-     * Add a data index to the current list
-     */
-    void appendIndex(size_t index)
-    	{ indexes.insert(index); }
+    // data indexes
+    std::set<size_t> indexes;
 
-    /**
-     * Check if the given port is targeted by a startSequence
-     *
-     * Check if the InPort is in the startSequences list
-     * and remove it if present
-     */
-    bool isStartSequence(InPort* port)
-        { return (startSequenceTargets.erase(port) > 0); }
+    /// Sequences-related members
+    ///@{
+    std::set<InPort*> seqTargets;
 
-    /**
-     * Check if the given port is targeted by a contSequence
-     *
-     * Check if the InPort is in the contSequences list
-     * and remove it if present
-     */
-    bool isContinueSequence(InPort* port)
-        { return (contSequenceTargets.erase(port) > 0); }
-
-    /**
-     * Check if the given port is targeted by a endSequence
-     *
-     * Check if the InPort is in the endSequences list
-     * and remove it if present
-     */
-    bool isEndSequence(InPort* port)
-        { return (endSequenceTargets.erase(port) > 0); }
+    // using std::vector instead of std::stack
+    // to be able to use .swap even not in C++11
+    std::vector<size_t> startingSequences;
+    std::vector<size_t> allSequences;
+    std::vector<size_t> endingSequences;
+    ///@}
 
 private:
-    std::set<size_t> indexes;
-    std::set<InPort*> startSequenceTargets;
-    std::set<InPort*> contSequenceTargets;
-    std::set<InPort*> endSequenceTargets;
+    enum allSeqComp
+    {
+        lhsInRhs,
+        rhsInLhs,
+        lhsEqRhs,
+        lhsNoRhs
+    };
+
+    allSeqComp compareSeqLists(const std::vector<size_t>& lhs,
+            const std::vector<size_t>& rhs);
 };
 
 #endif /* SRC_DATAATTRIBUTE_H_ */

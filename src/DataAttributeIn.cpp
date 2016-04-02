@@ -27,11 +27,116 @@
  */
 
 #include "DataAttributeIn.h"
+#include <algorithm>
 
 DataAttributeIn& DataAttributeIn::operator =(const DataAttributeIn& other)
 {
-    DataAttribute tmp(other);
+    DataAttributeIn tmp(other);
     swap(tmp);
-    mParent = other.mParent;
     return *this;
+}
+
+void DataAttributeIn::swap(DataAttributeIn& other)
+{
+    DataAttribute::swap(other);
+    std::swap(mParent, other.mParent);
+}
+
+DataAttribute DataAttributeIn::cleaned() const
+{
+    DataAttributeIn retAttr(*this);
+
+    if (retAttr.seqTargets.erase(mParent))
+    {
+        if (retAttr.allSequences.empty())
+            throw Poco::RuntimeException("DataAttributeIn::cleaned",
+                    "no active sequence to clean for this target");
+
+        size_t currentSeq = retAttr.allSequences.back();
+        retAttr.allSequences.pop_back();
+
+        if (!retAttr.startingSequences.empty()
+                && (retAttr.startingSequences.back() == currentSeq) )
+            retAttr.startingSequences.pop_back();
+
+        if (!retAttr.endingSequences.empty()
+                && (retAttr.endingSequences.back() == currentSeq) )
+            retAttr.endingSequences.pop_back();
+
+        // some safety cleaning:
+        if (allSequences.empty())
+            retAttr.seqTargets.clear();
+        // we do not know what else to clean if allSequences is not empty
+    }
+
+    return retAttr; // implicit cast
+}
+
+bool DataAttributeIn::isStartSequence(size_t& seqIndex)
+{
+    checkSequence(seqIndex);
+
+    if (seqIndex)
+        return false;
+
+    // seqIndex == 0
+    if (seqTargets.count(mParent) == 0)
+        return false;
+
+    size_t currentSeq;
+    currentSeq = allSequences.back();
+    if (currentSeq == startingSequences.back())
+    {
+        seqIndex = currentSeq;
+        return true;
+    }
+    else
+        throw Poco::RuntimeException("isStartSequence",
+                "The current sequence is not flagged as starting. "
+                "Please, check the seq generating module");
+}
+
+bool DataAttributeIn::isInSequence(size_t seqIndex)
+{
+    checkSequence(seqIndex);
+
+    if (seqIndex == 0)
+        return false;
+
+    if (seqIndex == allSequences.back())
+        return true;
+
+    throw Poco::RuntimeException("isInSequence",
+            "The given seqIndex is not the current sequence");
+}
+
+bool DataAttributeIn::isEndSequence(size_t& seqIndex)
+{
+    // seqIndex should be != 0 since isInSequence should have been
+    // already called and returned true
+
+    if (!endingSequences.empty() && (seqIndex == endingSequences.back()))
+    {
+        seqIndex = 0;
+        return true;
+    }
+
+    return false;
+}
+
+void DataAttributeIn::checkSequence(size_t seqIndex)
+{
+    if (seqIndex == 0)
+        return;
+
+    if (seqTargets.count(mParent) == 0)
+        throw Poco::RuntimeException("checkSequence",
+                "this port is not a seq target, "
+                "but a seqIndex != 0 is given");
+
+    if (allSequences.back() != seqIndex)
+        throw Poco::RuntimeException("checkSequence",
+                "the given seqIndex does not correspond "
+                "to the last entered sequence");
+
 }

@@ -40,6 +40,7 @@ size_t DemoModuleSeqMax::refCount = 0;
 
 DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName):
     Module(parent, customName),
+    seqIndex(0),
     tmpMax(0) // no special meaning for this value
 {
     // poco_information(logger(),"Creating a new DemoModuleSeqMax");
@@ -85,21 +86,16 @@ void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess,
 
     inPortsAccess.processing();
 
-    if (attr.isStartSequence())
+    if (attr.isStartSequence(seqIndex))
     {
         tmpMax = *pData;
-        inPortsAccess.releaseData(inPortA);
     }
-    else
+    else if (attr.isInSequence(seqIndex))
     {
         if (*pData > tmpMax)
             tmpMax = *pData;
 
-        if (!attr.isEndSequence())
-        {
-            return; // release the inPort
-        }
-        else
+        if (attr.isEndSequence(seqIndex))
         {
             DataAttributeOut outAttr = attr;
             inPortsAccess.releaseData(inPortA);
@@ -128,4 +124,7 @@ void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess,
                     + Poco::NumberFormatter::format(tmpMax));
         }
     }
+    else
+        throw Poco::RuntimeException("DemoModuleSeqMax::process",
+                "not able to process data out of a sequence...");
 }
