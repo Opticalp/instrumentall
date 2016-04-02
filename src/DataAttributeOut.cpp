@@ -28,55 +28,116 @@
 
 #include "DataAttributeOut.h"
 
-size_t DataAttributeOut::nextToBeUsedIndex = 0;
+size_t DataAttributeOut::nextToBeUsedIndex = 1;
+size_t DataAttributeOut::nextToBeUsedSeqIndex = 1;
 Poco::Mutex DataAttributeOut::lock;
 
-void DataAttributeOut::startSequence(size_t imbrication)
+DataAttributeOut::DataAttributeOut(): seqManaging(0)
 {
-	seqInfo = static_cast<SeqInfoEnum>(startSeqInfo | (seqInfo & endSeqInfo));
-	incStartSeq(imbrication);
+    appendNewIndex();
 }
 
-void DataAttributeOut::continueSequence(size_t imbrication)
+DataAttributeOut::DataAttributeOut(const DataAttributeOut& other):
+        DataAttribute(other),
+        newIndex(0), seqManaging(0)
 {
-    seqInfo = contSeqInfo;
-    incContSeq(imbrication);
+    // nothing to do
 }
 
-void DataAttributeOut::endSequence(size_t imbrication)
+DataAttributeOut::DataAttributeOut(const DataAttributeIn& other):
+        DataAttribute(other.cleaned()),
+        newIndex(0), seqManaging(0)
 {
-	seqInfo = static_cast<SeqInfoEnum>(endSeqInfo | (seqInfo & startSeqInfo));
-	incEndSeq(imbrication);
+    // nothing to do
 }
 
-DataAttributeOut DataAttributeOut::newDataAttribute()
+void DataAttributeOut::swap(DataAttributeOut& other)
 {
-    DataAttributeOut tmp;
-    lock.lock();
-    tmp.appendIndex(nextToBeUsedIndex++);
-    lock.unlock();
-
-    return tmp;
+    DataAttribute::swap(other);
+    std::swap(newIndex, other.newIndex);
+    std::swap(seqManaging, other.seqManaging);
 }
 
-DataAttributeOut::~DataAttributeOut()
+DataAttributeOut& DataAttributeOut::operator =(const DataAttributeIn& other)
 {
-	// TODO Auto-generated destructor stub
-}
-
-DataAttributeOut& DataAttributeOut::operator =(const DataAttribute& other)
-{
-	DataAttribute tmp(other);
+	DataAttributeOut tmp(other);
 	swap(tmp);
-	seqInfo = undefSeqInfo;
 	return *this;
 }
 
 DataAttributeOut& DataAttributeOut::operator =(const DataAttributeOut& other)
 {
-	DataAttribute tmp(other);
+	DataAttributeOut tmp(other);
 	swap(tmp);
-	seqInfo = other.seqInfo;
 	return *this;
 }
 
+DataAttributeOut& DataAttributeOut::operator ++()
+{
+    // verify that a sequence is running
+    if (!seqManaging)
+        throw Poco::NotImplementedException("DataAttributeOut++",
+                "not part of a sequence generation...");
+
+    // remove previous index, add a new one.
+    if (newIndex) // verify who last produced the index: importing, or generating.
+        indexes.erase(newIndex);
+
+    appendNewIndex();
+
+    // update sequence info
+    size_t currentSeq = allSequences.back();
+
+    if (startingSequences.back() == currentSeq)
+        startingSequences.pop_back();
+
+    if (endingSequences.back() == currentSeq)
+    {
+        endingSequences.pop_back();
+        allSequences.pop_back();
+        seqManaging--;
+    }
+
+    return *this;
+}
+
+DataAttributeOut DataAttributeOut::operator ++(int int1)
+{
+    DataAttributeOut tmp(*this);
+    operator++();
+    return tmp;
+}
+
+void DataAttributeOut::startSequence()
+{
+    seqManaging++;
+
+    size_t newSeqIndex;
+    lock.lock();
+    newSeqIndex = nextToBeUsedSeqIndex++;
+    lock.unlock();
+
+    startingSequences.push_back(newSeqIndex);
+    allSequences.push_back(newSeqIndex);
+}
+
+void DataAttributeOut::endSequence()
+{
+    if (seqManaging == 0)
+        throw Poco::RuntimeException("endSequence",
+                "can not end a sequence that was not previously started "
+                "using the same data attribute");
+
+    if (allSequences.empty())
+        poco_bugcheck_msg("no sequence active?!");
+
+    endingSequences.push_back(allSequences.back());
+}
+
+void DataAttributeOut::appendNewIndex()
+{
+    lock.lock();
+    newIndex = nextToBeUsedIndex++;
+    lock.unlock();
+    indexes.insert(newIndex);
+}

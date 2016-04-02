@@ -29,70 +29,94 @@
 #ifndef DATAATTRIBUTEOUT_H_
 #define DATAATTRIBUTEOUT_H_
 
-#include "DataAttribute.h"
+#include "DataAttributeIn.h"
 
 /**
  * DataAttributeOut
  *
  * DataAttribute used to be sent to the Dispatcher by any OutPort.
- * It can notify the Dispatcher that it has to generate a start sequence.
+ * Manage data sequence generation.
  *
- * "start sequence" and "end sequence" are flags that can be combined.
- * "continue sequence" is not combined.
+ * Typical use case in Module::process:
+ *
+ *     AttributeOut attr; // or got it from intput data attribute
+ *
+ *     attr.startSequence(); // start main seq
+ *
+ *     for (index1 < MAX_index1+1)
+ *     {
+ *       if (index1 == MAX_index1)
+ *         attr.endSequence(); // end main seq
+ *
+ *       attr.startSequence(); // start included seq
+ *
+ *       for (index2 < MAX_index2+1)
+ *       {
+ *         // do things, prepare data to output
+ *
+ *         if (index2 == MAX_index2)
+ *           attr.endSequence(); // end included seq
+ *
+ *         outPortsAccess.notifyReady(outPortA, attr);
+ *         attr++; // increment attribute index, start becomes continue, stop becomes nothing.
+ *       }
+ *     }
+ *
  */
 class DataAttributeOut: public DataAttribute
 {
 public:
 	/**
 	 * Standard constructor
+	 *
+	 * Create a new DataAttribute with a never-used data index
 	 */
-	DataAttributeOut():
-		seqInfo(undefSeqInfo) { }
+	DataAttributeOut();
 
 	/**
 	 * Copy constructor
+	 *
+	 * Used to export data, e.g. via notifyReady
+	 * remove newIndex and seqManaging info
 	 */
-    DataAttributeOut(const DataAttributeOut& other):
-    	DataAttribute(other),
-		seqInfo(other.seqInfo) { }
+    DataAttributeOut(const DataAttributeOut& other);
 
     /**
-     * Constructor from a DataAttribute
-     *
-     * Can be used with a DataAttributeIn
+     * Constructor importing a DataAttributeIn
      */
-    DataAttributeOut(const DataAttribute& other):
-    	DataAttribute(other), seqInfo(undefSeqInfo) { }
+    DataAttributeOut(const DataAttributeIn& other);
 
-	virtual ~DataAttributeOut();
+	virtual ~DataAttributeOut() { }
 
-    DataAttributeOut& operator =(const DataAttribute& other);
+    DataAttributeOut& operator =(const DataAttributeIn& other);
 	DataAttributeOut& operator =(const DataAttributeOut& other);
 
-	void startSequence(size_t imbrication=1);
-    void continueSequence(size_t imbrication=1);
-	void endSequence(size_t imbrication=1);
+	/**
+	 * Prefix ++ operator
+	 */
+	DataAttributeOut& operator ++();
 
-	bool isStartSequence() { return (seqInfo & startSeqInfo); }
-    bool isContinueSequence() { return (seqInfo == contSeqInfo); }
-	bool isEndSequence() { return (seqInfo & endSeqInfo) != 0; }
+	/**
+	 * Postfix ++ operator
+	 */
+	DataAttributeOut operator ++(int);
 
-    static DataAttributeOut newDataAttribute();
+	void startSequence();
+	void endSequence();
+
+	bool isSettingSequence() { return seqManaging; }
 
 private:
     static size_t nextToBeUsedIndex; ///< next available data index
+    static size_t nextToBeUsedSeqIndex; ///< next available sequence index
     static Poco::Mutex lock; ///< lock to safely use and increment nextToBeUsedIndex
 
-enum SeqInfoEnum
-	{
-		undefSeqInfo, // no sequence info
-		startSeqInfo = 1, // start sequence flag
-		contSeqInfo = 2, // continue sequence
-		endSeqInfo = 4, // end sequence flag
-		seqInfoCnt
-	};
+    size_t newIndex; ///< last generated index in the standard constructor
+    size_t seqManaging;
 
-	SeqInfoEnum seqInfo;
+    void swap (DataAttributeOut& other);
+
+    void appendNewIndex();
 };
 
 #endif /* DATAATTRIBUTEOUT_H_ */
