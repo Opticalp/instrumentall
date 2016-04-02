@@ -68,7 +68,7 @@ public:
      * Create empty attributes. To be used at the DataItem creation,
      * when no data index is defined.
      */
-    DataAttribute();
+    DataAttribute() { }
 
     /// Copy constructor
     DataAttribute(const DataAttribute& other);

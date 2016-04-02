@@ -39,7 +39,7 @@ DataAttributeOut::DataAttributeOut(): seqManaging(0)
 
 DataAttributeOut::DataAttributeOut(const DataAttributeOut& other):
         DataAttribute(other),
-        newIndex(0), seqManaging(0)
+        newIndex(other.newIndex), seqManaging(other.seqManaging)
 {
     // nothing to do
 }
@@ -54,8 +54,8 @@ DataAttributeOut::DataAttributeOut(const DataAttributeIn& other):
 void DataAttributeOut::swap(DataAttributeOut& other)
 {
     DataAttribute::swap(other);
-    std::swap(newIndex, other.newIndex);
-    std::swap(seqManaging, other.seqManaging);
+//    std::swap(newIndex, other.newIndex);
+//    std::swap(seqManaging, other.seqManaging);
 }
 
 DataAttributeOut& DataAttributeOut::operator =(const DataAttributeIn& other)
@@ -74,28 +74,29 @@ DataAttributeOut& DataAttributeOut::operator =(const DataAttributeOut& other)
 
 DataAttributeOut& DataAttributeOut::operator ++()
 {
-    // verify that a sequence is running
-    if (!seqManaging)
-        throw Poco::NotImplementedException("DataAttributeOut++",
-                "not part of a sequence generation...");
-
     // remove previous index, add a new one.
     if (newIndex) // verify who last produced the index: importing, or generating.
         indexes.erase(newIndex);
 
     appendNewIndex();
 
-    // update sequence info
-    size_t currentSeq = allSequences.back();
-
-    if (startingSequences.back() == currentSeq)
-        startingSequences.pop_back();
-
-    if (endingSequences.back() == currentSeq)
+    if (seqManaging)
     {
-        endingSequences.pop_back();
-        allSequences.pop_back();
-        seqManaging--;
+        if (allSequences.empty())
+            poco_bugcheck_msg("seqManaging is set but allSequences is empty");
+
+        // update sequence info
+        size_t currentSeq = allSequences.back();
+
+        if (!startingSequences.empty() && (startingSequences.back() == currentSeq))
+            startingSequences.pop_back();
+
+        if (!endingSequences.empty() && (endingSequences.back() == currentSeq))
+        {
+            endingSequences.pop_back();
+            allSequences.pop_back();
+            seqManaging--;
+        }
     }
 
     return *this;

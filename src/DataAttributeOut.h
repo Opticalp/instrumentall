@@ -75,9 +75,6 @@ public:
 
 	/**
 	 * Copy constructor
-	 *
-	 * Used to export data, e.g. via notifyReady
-	 * remove newIndex and seqManaging info
 	 */
     DataAttributeOut(const DataAttributeOut& other);
 

@@ -94,7 +94,7 @@ public:
      * Clean the present DataAttribute from the sequence info
      * that should have been used here.
      */
-    DataAttribute cleaned();
+    DataAttribute cleaned() const;
 
     /**
      * Check if the InPort is concerned by a startSequence

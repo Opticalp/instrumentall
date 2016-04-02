@@ -42,7 +42,7 @@ void DataAttributeIn::swap(DataAttributeIn& other)
     std::swap(mParent, other.mParent);
 }
 
-DataAttribute DataAttributeIn::cleaned()
+DataAttribute DataAttributeIn::cleaned() const
 {
     DataAttributeIn retAttr(*this);
 
@@ -55,10 +55,12 @@ DataAttribute DataAttributeIn::cleaned()
         size_t currentSeq = retAttr.allSequences.back();
         retAttr.allSequences.pop_back();
 
-        if (retAttr.startingSequences.back() == currentSeq)
+        if (!retAttr.startingSequences.empty()
+                && (retAttr.startingSequences.back() == currentSeq) )
             retAttr.startingSequences.pop_back();
 
-        if (retAttr.endingSequences.back() == currentSeq)
+        if (!retAttr.endingSequences.empty()
+                && (retAttr.endingSequences.back() == currentSeq) )
             retAttr.endingSequences.pop_back();
 
         // some safety cleaning:
@@ -113,7 +115,7 @@ bool DataAttributeIn::isEndSequence(size_t& seqIndex)
     // seqIndex should be != 0 since isInSequence should have been
     // already called and returned true
 
-    if (seqIndex == endingSequences.back())
+    if (!endingSequences.empty() && (seqIndex == endingSequences.back()))
     {
         seqIndex = 0;
         return true;

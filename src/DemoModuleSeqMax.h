@@ -75,6 +75,7 @@ private:
         outPortCnt
     };
 
+    size_t seqIndex;
     int tmpMax;
 };
 
