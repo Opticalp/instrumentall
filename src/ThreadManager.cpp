@@ -89,15 +89,15 @@ void ThreadManager::waitAll()
     // We use an event instead.
     while (count())
     {
-        Poco::TaskManager::TaskList list = taskManager.taskList();
-        std::string nameList("\n");
-        for (Poco::TaskManager::TaskList::iterator it = list.begin(),
-                ite = list.end(); it != ite; it++)
-            nameList += " - " + (*it)->name() + "\n";
+        //Poco::TaskManager::TaskList list = taskManager.taskList();
+        //std::string nameList("\n");
+        //for (Poco::TaskManager::TaskList::iterator it = list.begin(),
+        //        ite = list.end(); it != ite; it++)
+        //    nameList += " - " + (*it)->name() + "\n";
 
-        nameList.erase(nameList.end()-1);
+        //nameList.erase(nameList.end()-1);
 
-        poco_information(logger(), "active threads are : " + nameList);
+        //poco_information(logger(), "active threads are : " + nameList);
 
         Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
     }

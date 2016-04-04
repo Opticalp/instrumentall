@@ -49,17 +49,3 @@ ModuleFactoryBranch* DaqDeviceFactory::newChildFactory(
         throw Poco::BugcheckException();
     }
 }
-
-std::string DaqDeviceFactory::validateSelector(std::string selector)
-{
-    std::vector<std::string> selectors = selectValueList();
-
-    for (std::vector<std::string>::iterator it=selectors.begin(),ite=selectors.end();
-            it != ite; it++)
-    {
-        if (selector.compare(*it)==0)
-            return selector;
-    }
-
-    throw ModuleFactoryException("Unrecognized selector: " + selector);
-}

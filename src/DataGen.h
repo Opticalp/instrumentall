@@ -1,12 +1,7 @@
 /**
- * detailed comment
- * 
- * @file	/Instrumentall-Debug@instru-git-debug/[Source directory]/src/DataGen.h
- * @brief	short comment
- * @date	26 mars 2016
+ * @file	src/DataGen.h
+ * @date	Mar 2016
  * @author	PhRG - opticalp.fr
- *
- * $Id$
  */
 
 /*
@@ -57,6 +52,8 @@ public:
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name
 
+    DataAttributeOut attr;
+
     int mDataType;
 
     /// Indexes of the output ports
@@ -70,7 +67,6 @@ private:
     {
         paramValue,
         paramSeqStart,
-        paramSeqCont,
         paramSeqEnd,
         paramCnt
     };
@@ -78,9 +74,8 @@ private:
     long iPar; ///< storage for integer parameter
     double fPar; ///< storage for float parameter
     std::string sPar; ///< storage for char string parameter
-    bool seqStart;
-    bool seqCont;
-    bool seqEnd;
+    long seqStart;
+    long seqEnd;
 
     Poco::RWLock dataLock;
 

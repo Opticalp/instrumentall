@@ -164,6 +164,12 @@ void DataItem::releaseNewData()
             .newData(this);
 }
 
+void DataItem::releaseBrokenData()
+{
+    expired = true;
+    releaseData();
+}
+
 void DataItem::registerLogger(DataLogger* logger)
 {
     loggersLock.writeLock();
@@ -250,7 +256,7 @@ int DataItem::getTypeFromShortStr(std::string typeName)
     int retType = 0;
     std::string tmp(typeName);
 
-    int pos = tmp.rfind("Vect");
+    size_t pos = tmp.rfind("Vect");
     // container?
     if (pos != std::string::npos)
     {

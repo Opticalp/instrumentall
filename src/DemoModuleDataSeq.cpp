@@ -61,6 +61,10 @@ void DemoModuleDataSeq::process(InPortLockUnlock& inPortsAccess,
         OutPortLockUnlock& outPortsAccess)
 {
     // --- process ---
+    DataAttributeOut attr;
+
+    attr.startSequence();
+
     for (int index = 0; index < MAX_INDEX + 1; index++)
     {
         int *pData;
@@ -81,17 +85,11 @@ void DemoModuleDataSeq::process(InPortLockUnlock& inPortsAccess,
             }
         }
 
-        DataAttributeOut attr = DataAttributeOut::newDataAttribute();
-
-        if (index==0)
-            attr.startSequence(); // set start sequence to the attribute
-        else if (index==MAX_INDEX)
+        if (index==MAX_INDEX)
             attr.endSequence(); // set end sequence to the attribute
-        else
-            attr.continueSequence(); // set continue sequence to the attribute
 
         *pData = index;
-        outPortsAccess.notifyReady(outPortA, attr);
+        outPortsAccess.notifyReady(outPortA, attr++);
 
         poco_information(logger(), "DemoModuleDataSeq::runTask(): sent "
                 + Poco::NumberFormatter::format(index));

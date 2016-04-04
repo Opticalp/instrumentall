@@ -178,7 +178,7 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
     checkInit();
 
     Poco::Path stdPath("python");
-    stdPath.pushDirectory("scripts");
+    stdPath.append("scripts");
 
     // first check in python/scripts if the script is present
     if (scriptFile.isRelative())

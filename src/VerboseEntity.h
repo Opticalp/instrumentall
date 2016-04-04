@@ -74,8 +74,7 @@ public:
      * Should not be used in implementations.
      * Use VerboseEntity(Poco::Logger& logger) instead
      */
-	VerboseEntity():
-	    pLogger(&Poco::Logger::get("zombieVerboseEntity")) {  }
+	VerboseEntity(): pLogger(NULL) { }
 
 	/**
 	 * Default destructor

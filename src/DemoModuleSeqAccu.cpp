@@ -40,6 +40,7 @@ size_t DemoModuleSeqAccu::refCount = 0;
 
 DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customName):
     Module(parent, customName),
+    seqIndex(0),
     accumulator(0)
 {
     // poco_information(logger(),"Creating a new DemoModuleSeqAccu");
@@ -86,22 +87,19 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
 
     inPortsAccess.processing();
 
-    if (attr.isStartSequence())
+    if (attr.isStartSequence(seqIndex))
     {
+        poco_information(logger(), "DemoModuleSeqAccu::runTask(): sequence starting");
         accumulator.clear();
         accumulator.push_back(*pData);
-        inPortsAccess.releaseData(inPortA);
     }
-    else
+    else if (attr.isInSequence(seqIndex))
     {
         accumulator.push_back(*pData);
 
-        if (!attr.isEndSequence())
+        if (attr.isEndSequence(seqIndex))
         {
-            return; // release input port data
-        }
-        else
-        {
+            poco_information(logger(), "DemoModuleSeqAccu::runTask(): sequence ending");
             DataAttributeOut outAttr = attr;
             inPortsAccess.releaseData(inPortA);
 
@@ -126,4 +124,7 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
             outPortsAccess.notifyReady(outPortA, outAttr);
         }
     }
+    else
+        throw Poco::RuntimeException("DemoModuleSeqAccu::process",
+                "not able to process data out of a sequence...");
 }
