@@ -337,6 +337,10 @@ void Module::runTask()
     }
     catch (Poco::Exception& e)
     {
+        // release input ports data -- even if new --,
+        // since the module task exited on error
+        inPortAccess.processing();
+
         runTaskMutex.unlock();
         e.rethrow();
     }
