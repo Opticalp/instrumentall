@@ -244,9 +244,10 @@ pythonDispatchBind(PyObject* self, PyObject* args)
 
     try
     {
-        Poco::Util::Application::instance()
-            .getSubsystem<Dispatcher>()
-            .bind(*pyOutPort->outPort,*pyInPort->inPort);
+        poco_bugcheck_msg("fixme");
+//        Poco::Util::Application::instance()
+//            .getSubsystem<Dispatcher>()
+//            .bind(*pyOutPort->outPort,*pyInPort->inPort);
     }
     catch (DispatcherException& e)
     {
@@ -278,9 +279,10 @@ pythonDispatchUnbind(PyObject* self, PyObject* args)
 
     InPortMembers* pyPort = reinterpret_cast<InPortMembers*>(pyObj);
 
-    Poco::Util::Application::instance()
-        .getSubsystem<Dispatcher>()
-        .unbind(*pyPort->inPort);
+    poco_bugcheck_msg("fixme");
+//    Poco::Util::Application::instance()
+//        .getSubsystem<Dispatcher>()
+//        .unbind(*pyPort->inPort);
 
     return Py_BuildValue("");
 }

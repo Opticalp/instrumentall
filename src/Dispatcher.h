@@ -31,7 +31,9 @@
 
 #include "VerboseEntity.h"
 
+#include "InPort.h"
 #include "InDataPort.h"
+#include "TrigPort.h"
 #include "OutPort.h"
 
 #include "Poco/Util/Subsystem.h"
@@ -107,7 +109,7 @@ public:
      /**
       * Get the shared pointer corresponding to the given input port
       */
-     SharedPtr<InDataPort*> getInPort(InDataPort* port);
+     SharedPtr<InPort*> getInPort(InPort* port);
 
      /**
       * Get the shared pointer corresponding to the given output port
@@ -133,14 +135,14 @@ public:
       * @note If the target port expired during the binding,
       * no exception is thrown, but the binding is not made.
       */
-     void bind (SharedPtr<OutPort*> source, SharedPtr<InDataPort*> target);
+     void bind (SharedPtr<OutPort*> source, SharedPtr<InPort*> target);
 
      /**
       * Remove a connection between two ports
       *
       * No exception is thrown
       */
-     void unbind(SharedPtr<InDataPort*> target);
+     void unbind(SharedPtr<InPort*> target);
 
      /**
       * Create a sequence combination connection between two ports
@@ -188,7 +190,7 @@ private:
       *
       * No exception raising.
       */
-     void removeInPort(InDataPort* port);
+     void removeInPort(InPort* port);
 
      /**
       * Add a port to the allInPorts list
@@ -196,7 +198,7 @@ private:
       * inPortsLock has to be locked from outside this function.
       * @see removeInPort discussion
       */
-     void addInPort(InDataPort* port);
+     void addInPort(InPort* port);
 
      /**
       * Remove a port from the allInPorts list
@@ -213,7 +215,7 @@ private:
      void addOutPort(OutPort* port);
 
      /// input ports to be used as targets for output ports
-     std::vector< SharedPtr<InDataPort*> > allInPorts;
+     std::vector< SharedPtr<InPort*> > allInPorts;
      RWLock inPortsLock; ///< lock for the transactions on allInPorts
 
      /// output ports to be used as sources for input ports
@@ -225,6 +227,8 @@ private:
 
      /// empty input port to be used when an input port is deleted
      InDataPort emptyInPort;
+     /// empty input port to be used when an input port is deleted
+     TrigPort emptyTrigPort;
      /// empty output port to be used when an output port is deleted
      OutPort emptyOutPort;
 };

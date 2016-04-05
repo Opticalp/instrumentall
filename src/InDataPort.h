@@ -29,7 +29,7 @@
 #ifndef SRC_INDATAPORT_H_
 #define SRC_INDATAPORT_H_
 
-#include "Port.h"
+#include "InPort.h"
 
 #include "Poco/RWLock.h"
 #include "Poco/SharedPtr.h"
@@ -37,7 +37,6 @@
 using Poco::SharedPtr;
 
 class Dispatcher;
-class OutPort;
 class DataAttributeIn;
 
 /**
@@ -46,7 +45,7 @@ class DataAttributeIn;
  * Data input module port.
  * Contain link to the source port.
  */
-class InDataPort: public Port
+class InDataPort: public InPort
 {
 public:
     InDataPort(Module* parent,
@@ -72,9 +71,6 @@ public:
      */
     virtual ~InDataPort() { }
 
-    /// Retrieve the source port
-    SharedPtr<OutPort*> getSourcePort();
-
     /// Retrieve the data sequence source port
     SharedPtr<OutPort*> getSeqSourcePort();
 
@@ -94,7 +90,7 @@ public:
      * release the corresponding locks, notify that the data is not new
      * any more, set expiration information...
      */
-    void releaseData();
+    void release();
 
     /**
      * Request to hold the data that came to this port
@@ -103,30 +99,7 @@ public:
      */
     void hold(bool status = true) { held = status; }
 
-    bool isNew() { return !used; }
-
 private:
-    /**
-     * Set the source port
-     *
-     * This function should only be called by the dispatcher.
-     *
-     * If the source port was not the empty port,
-     * the port that was previously bound is notified
-     */
-    void setSourcePort(SharedPtr<OutPort*> port);
-
-    /**
-     * Release the source port
-     *
-     * And replace it by the empty port.
-     * If the source port was not the empty port,
-     * the port that was previously bound is notified
-     */
-    void releaseSourcePort();
-
-    SharedPtr<OutPort*> mSourcePort;
-
     /**
      * Set the data sequence source port
      *
@@ -149,13 +122,6 @@ private:
     SharedPtr<OutPort*> mSeqSourcePort;
 
     /**
-     * To be called by the dispatcher
-     *
-     * when new data is available, just before the push.
-     */
-    void setNew(bool value = true);
-
-    /**
      * Determine if the data of this port are up to date
      *
      * To be used before getting the data to be sure not to retrieve
@@ -163,7 +129,6 @@ private:
      */
     bool isUpToDate();
 
-    bool used;
     bool held;
 
     friend class Dispatcher;

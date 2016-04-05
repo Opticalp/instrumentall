@@ -98,7 +98,7 @@ void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess,
         if (attr.isEndSequence(seqIndex))
         {
             DataAttributeOut outAttr = attr;
-            inPortsAccess.releaseData(inPortA);
+            inPortsAccess.release(inPortA);
 
             int* pOutData;
 

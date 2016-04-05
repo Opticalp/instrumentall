@@ -41,6 +41,7 @@ using Poco::RWLock;
 using Poco::SharedPtr;
 
 class InDataPort;
+class InPort;
 
 /**
  * OutPort
@@ -77,12 +78,12 @@ public:
     /**
      * Retrieve the target ports
      */
-    std::vector< SharedPtr<InDataPort*> > getTargetPorts();
+    std::vector< SharedPtr<InPort*> > getTargetPorts();
 
     /**
      * Retrieve the data sequence target ports
      */
-    std::vector< SharedPtr<InDataPort*> > getSeqTargetPorts();
+    std::vector< SharedPtr<InPort*> > getSeqTargetPorts();
 
     /**
      * Try to retrieve a pointer on the data to be written
@@ -127,7 +128,7 @@ private:
      * The Dispatcher is requested to get the shared pointer
      * on the InPort.
      */
-    void addTargetPort(InDataPort* port);
+    void addTargetPort(InPort* port);
 
     /**
      * Remove a target port
@@ -135,18 +136,18 @@ private:
      * Should not throw an exception if the port is not present
      * in the targetPorts
      */
-    void removeTargetPort(InDataPort* port);
+    void removeTargetPort(InPort* port);
 
-    std::vector< SharedPtr<InDataPort*> > targetPorts;
+    std::vector< SharedPtr<InPort*> > targetPorts;
     RWLock targetPortsLock; ///< lock for targetPorts operations
 
     /**
      * Add a sequence re-combiner target port
      *
-     * This function should only be called by the seq target InPort.
+     * This function should only be called by the seq target InDataPort.
      *
      * The Dispatcher is requested to get the shared pointer
-     * on the InPort.
+     * on the InDataPort.
      */
     void addSeqTargetPort(InDataPort* port);
 
@@ -159,9 +160,10 @@ private:
     void removeSeqTargetPort(InDataPort* port);
 
     /// list of target ports for data sequence re-combination
-    std::vector< SharedPtr<InDataPort*> > seqTargetPorts;
+    std::vector< SharedPtr<InPort*> > seqTargetPorts;
     RWLock seqTargetPortsLock; ///< lock for seqTargetPorts operations
 
+    friend class InPort;
     friend class InDataPort;
 
     DataItem data;

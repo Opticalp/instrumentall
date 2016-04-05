@@ -1,6 +1,6 @@
 /**
- * @file	src/InDataPort.cpp
- * @date	fev. 2016
+ * @file	src/InPort.cpp
+ * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,42 +26,61 @@
  THE SOFTWARE.
  */
 
-#include "InDataPort.h"
+#include "InPort.h"
 
-#include "ModuleManager.h"
-#include "Dispatcher.h"
 #include "OutPort.h"
+#include "Dispatcher.h"
+#include "ModuleManager.h"
 
-InDataPort::InDataPort(Module* parent,
-        std::string name,
-        std::string description,
-        int datatype,
-        size_t index):
-    InPort(parent, name, description, datatype, index),
-    held(false)
+#include "Poco/Util/Application.h"
+
+InPort::InPort(Module* parent, std::string name, std::string description,
+        int datatype, size_t index, bool trig):
+        Port(parent, name, description, datatype, index),
+        used(false), isTrigFlag(trig)
 {
-    mSeqSourcePort = getSourcePort();
+    mSourcePort = SharedPtr<OutPort*>(
+            new (OutPort*)( Poco::Util::Application::instance()
+                                    .getSubsystem<Dispatcher>()
+                                    .getEmptyOutPort()       ) );
 }
 
-InDataPort::InDataPort(OutPort* emptySourcePort):
-        InPort( emptySourcePort,
-                "emptyIn", "replace an expired port"),
-        held(false)
+InPort::InPort(OutPort* emptySourcePort, std::string name,
+        std::string description, bool trig):
+                Port(Poco::Util::Application::instance()
+                    .getSubsystem<ModuleManager>()
+                    .getEmptyModule(), name, description,
+                    DataItem::typeUndefined, 0),
+                used(false), isTrigFlag(trig)
 {
-    mSeqSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
+    mSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
 }
 
-void InDataPort::setSeqSourcePort(SharedPtr<OutPort*> port)
+void InPort::setNew(bool value)
 {
-    (*mSeqSourcePort)->removeSeqTargetPort(this);
-    mSeqSourcePort = port;
+    if (value)
+        (*getSourcePort())->dataItem()->readLock();
+
+    used = !value;
+}
+
+void InPort::release()
+{
+    setNew(false);
+    (*getSourcePort())->dataItem()->releaseData();
+}
+
+void InPort::setSourcePort(SharedPtr<OutPort*> port)
+{
+    (*mSourcePort)->removeTargetPort(this);
+    mSourcePort = port;
     try
     {
-        (*mSeqSourcePort)->addSeqTargetPort(this);
+        (*mSourcePort)->addTargetPort(this);
     }
     catch (DispatcherException& e)
     {
-        mSeqSourcePort = SharedPtr<OutPort*>(
+        mSourcePort = SharedPtr<OutPort*>(
                 new (OutPort*)( Poco::Util::Application::instance()
                                         .getSubsystem<Dispatcher>()
                                         .getEmptyOutPort()       ) );
@@ -69,33 +88,11 @@ void InDataPort::setSeqSourcePort(SharedPtr<OutPort*> port)
     }
 }
 
-void InDataPort::releaseSeqSourcePort()
+void InPort::releaseSourcePort()
 {
-    (*mSeqSourcePort)->removeSeqTargetPort(this);
-    mSeqSourcePort = SharedPtr<OutPort*>(
+    (*mSourcePort)->removeTargetPort(this);
+    mSourcePort = SharedPtr<OutPort*>(
             new (OutPort*)( Poco::Util::Application::instance()
                                     .getSubsystem<Dispatcher>()
                                     .getEmptyOutPort()       ) );
-}
-
-SharedPtr<OutPort*> InDataPort::getSeqSourcePort()
-{
-    return mSeqSourcePort;
-}
-
-void InDataPort::release()
-{
-    InPort::release();
-
-    // TODO: update expiration information?
-}
-
-bool InDataPort::isUpToDate()
-{
-	// TODO: should check if the input data is in a sequence?
-	// inside a sequence, the holding should be impossible?
-	if (!held)
-		return false;
-	else
-		return (!(*getSourcePort())->dataItem()->isExpired());
 }

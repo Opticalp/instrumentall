@@ -30,6 +30,7 @@
 #include "ModuleFactory.h"
 #include "ModuleManager.h"
 
+#include "TrigPort.h"
 #include "InDataPort.h"
 #include "OutPort.h"
 
@@ -61,7 +62,7 @@ Module::~Module()
     }
 
     // delete ports
-    for (std::vector<InDataPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
+    for (std::vector<InPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
             it!=ite; it++)
         delete *it;
 
@@ -142,6 +143,16 @@ void Module::addInPort(std::string name, std::string description,
         inPorts[index] = new InDataPort(this, name, description, dataType, index);
     else
         poco_bugcheck_msg(("addInPort: wrong index "
+                + Poco::NumberFormatter::format(index)).c_str());
+}
+
+void Module::addTrigPort(std::string name, std::string description,
+        size_t index)
+{
+    if (index<inPorts.size())
+        inPorts[index] = new TrigPort(this, name, description, index);
+    else
+        poco_bugcheck_msg(("addTrigPort: wrong index "
                 + Poco::NumberFormatter::format(index)).c_str());
 }
 
@@ -288,9 +299,9 @@ ParamItem::ParamType Module::getParameterType(std::string paramName)
     return paramSet[getParameterIndex(paramName)].datatype;
 }
 
-InDataPort* Module::getInPort(std::string portName)
+InPort* Module::getInPort(std::string portName)
 {
-    for (std::vector<InDataPort*>::iterator it = inPorts.begin(),
+    for (std::vector<InPort*>::iterator it = inPorts.begin(),
             ite = inPorts.end(); it != ite; it++)
     {
         if (portName.compare((*it)->name()) == 0)

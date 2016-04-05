@@ -101,7 +101,7 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
         {
             poco_information(logger(), "DemoModuleSeqAccu::runTask(): sequence ending");
             DataAttributeOut outAttr = attr;
-            inPortsAccess.releaseData(inPortA);
+            inPortsAccess.release(inPortA);
 
             std::vector<Poco::Int32>* pOutData;
 

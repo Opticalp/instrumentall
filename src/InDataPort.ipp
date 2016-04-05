@@ -32,8 +32,6 @@ THE SOFTWARE.
 
 template<typename T> inline bool InDataPort::tryData(T*& pData, DataAttributeIn* pAttr)
 {
-    // TODO: this function may be in an .ipp file.
-
     if (!isNew())
     {
         // try to get the lock

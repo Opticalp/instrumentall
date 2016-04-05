@@ -85,7 +85,7 @@ void DemoModuleForwarder::process(InPortLockUnlock& inPortsAccess,
     int tmpData = *pData;
     DataAttributeOut outAttr = attr;
 
-    inPortsAccess.releaseData(inPortA);
+    inPortsAccess.release(inPortA);
 
     int* pOutData;
 

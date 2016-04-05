@@ -137,11 +137,12 @@ PyObject* pyOutPortParent(OutPortMembers* self)
 
 #include "Dispatcher.h"
 #include "InDataPort.h"
+#include "InPort.h"
 #include "PythonInPort.h"
 
 PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
 {
-    std::vector< Poco::SharedPtr<InDataPort*> > targets;
+    std::vector< Poco::SharedPtr<InPort*> > targets;
 
     targets = (**self->outPort)->getTargetPorts();
 
@@ -157,9 +158,15 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
     }
 
 
-    for ( std::vector< Poco::SharedPtr<InDataPort*> >::iterator it = targets.begin(),
+    for ( std::vector< Poco::SharedPtr<InPort*> >::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     {
+        // FIXME
+        // if *it is InDataPort
+        //     create python InPort
+        // else
+        //     create python TrigPort
+
         // create the python object
         InPortMembers* pyPort =
             (InPortMembers*)(pyInPortNew((PyTypeObject*)&PythonInPort, NULL, NULL) );
@@ -176,8 +183,8 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
         pyPort->description = PyString_FromString((**it)->description().c_str());
         Py_XDECREF(tmp);
 
-        // set ModuleFactory reference
-        *(pyPort->inPort) = *it;
+//        // set ModuleFactory reference
+//        *(pyPort->inPort) = *it;
 
         // create the dict entry
         if (0 > PyList_Append(
@@ -199,7 +206,8 @@ PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
 {
     std::vector< Poco::SharedPtr<InDataPort*> > targets;
 
-    targets = (**self->outPort)->getSeqTargetPorts();
+    poco_bugcheck_msg("fixme");
+    //targets = (**self->outPort)->getSeqTargetPorts();
 
     // prepare python list
     PyObject* pyPorts = PyList_New(0);
