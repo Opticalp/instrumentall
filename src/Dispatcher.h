@@ -153,14 +153,14 @@ public:
       * @note If the target port expired during the binding,
       * no exception is thrown, but the binding is not made.
       */
-     void seqBind (SharedPtr<OutPort*> source, SharedPtr<InDataPort*> target);
+     void seqBind (SharedPtr<OutPort*> source, SharedPtr<InPort*> target);
 
      /**
       * Remove a seq combination connection between two ports
       *
       * No exception is thrown
       */
-     void seqUnbind(SharedPtr<InDataPort*> target);
+     void seqUnbind(SharedPtr<InPort*> target);
 
      /**
       * Function to be called when new data is ready on an OutPort

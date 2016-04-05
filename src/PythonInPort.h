@@ -39,7 +39,7 @@ THE SOFTWARE.
 
 #include "Poco/SharedPtr.h"
 
-#include "InDataPort.h"
+#include "InPort.h"
 
 // -----------------------------------------------------------------------
 // Variables
@@ -51,7 +51,7 @@ typedef struct
     PyObject_HEAD ///< a refcount and a pointer to a type object (convenience python/C API macro)
     PyObject* name;  ///< name attribute
     PyObject* description;  ///< description attribute
-    Poco::SharedPtr<InDataPort*>* inPort; ///< pointer to the C++ internal InPort object
+    Poco::SharedPtr<InPort*>* inPort; ///< pointer to the C++ internal InPort object
 } InPortMembers;
 
 /// Description of the InPortMembers structure
@@ -131,6 +131,17 @@ static PyMethodDef pyMethodInPortHoldData =
     "holdData(\"off\"): release the data holding. "
 };
 
+/// python wrapper to hold the data coming from this port
+extern "C" PyObject* pyInPortIsTrig(InPortMembers *self);
+
+static PyMethodDef pyMethodInPortIsTrig =
+{
+    "isTrig",
+    (PyCFunction)pyInPortIsTrig,
+    METH_NOARGS,
+    "Return true if the port is a trig port"
+};
+
 /// exported methods
 static PyMethodDef pyInPortMethods[] = {
         pyMethodInPortParent,
@@ -139,6 +150,8 @@ static PyMethodDef pyInPortMethods[] = {
         pyMethodInPortGetSeqSourcePort,
 
 		pyMethodInPortHoldData,
+
+		pyMethodInPortIsTrig,
 
         {NULL} // sentinel
 };

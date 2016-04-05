@@ -181,12 +181,11 @@ PyObject* pyModParent(ModMembers* self)
 
 PyObject* pyModInPorts(ModMembers* self)
 {
-    std::vector<InDataPort*> ports;
+    std::vector<InPort*> ports;
     Dispatcher& dispatcher = Poco::Util::Application::instance()
                                         .getSubsystem<Dispatcher>();
 
-    poco_bugcheck_msg("fixme");
-//    ports = (**self->module)->getInPorts();
+    ports = (**self->module)->getInPorts();
 
     // prepare python list
     PyObject* pyPorts = PyList_New(0);
@@ -201,12 +200,11 @@ PyObject* pyModInPorts(ModMembers* self)
 
     try
     {
-        for (std::vector<InDataPort*>::iterator it = ports.begin(),
+        for (std::vector<InPort*>::iterator it = ports.begin(),
                 ite = ports.end(); it != ite; it++ )
         {
-            Poco::SharedPtr<InDataPort*> sharedPort;
-            poco_bugcheck_msg("fixme");
-//            sharedPort = dispatcher.getInPort(*it);
+            Poco::SharedPtr<InPort*> sharedPort;
+            sharedPort = dispatcher.getInPort(*it);
 
             // create the python object
             InPortMembers* pyPort =
@@ -258,13 +256,12 @@ PyObject* pyModInPort(ModMembers* self, PyObject *args)
 
     std::string portName(portNameChar);
 
-    SharedPtr<InDataPort*> sharedPort;
+    SharedPtr<InPort*> sharedPort;
     try
     {
-        poco_bugcheck_msg("fixme");
-//        sharedPort = Poco::Util::Application::instance()
-//                        .getSubsystem<Dispatcher>()
-//                        .getInPort((**self->module)->getInPort(portName));
+        sharedPort = Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .getInPort((**self->module)->getInPort(portName));
     }
     catch (Poco::Exception& e)
     {

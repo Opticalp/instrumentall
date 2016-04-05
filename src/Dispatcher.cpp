@@ -309,14 +309,24 @@ void Dispatcher::unbind(SharedPtr<InPort*> target)
     (*target)->releaseSourcePort();
 }
 
-void Dispatcher::seqBind(SharedPtr<OutPort*> source, SharedPtr<InDataPort*> target)
+void Dispatcher::seqBind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
 {
-    (*target)->setSeqSourcePort(source);
+    if ((*target)->isTrig())
+        throw Poco::RuntimeException("seqBind",
+                "The target port is a trig port. "
+                "A data sequence can not be bound to a trig port");
+
+    reinterpret_cast<InDataPort*>(*target)->setSeqSourcePort(source);
 }
 
-void Dispatcher::seqUnbind(SharedPtr<InDataPort*> target)
+void Dispatcher::seqUnbind(SharedPtr<InPort*> target)
 {
-    (*target)->releaseSeqSourcePort();
+    if ((*target)->isTrig())
+        throw Poco::RuntimeException("seqBind",
+                "The target port is a trig port. "
+                "A data sequence can not be bound to a trig port");
+
+    reinterpret_cast<InDataPort*>(*target)->releaseSeqSourcePort();
 }
 
 void Dispatcher::setOutPortDataReady(OutPort* port)
