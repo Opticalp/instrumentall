@@ -31,6 +31,8 @@
 #include "OutPort.h"
 #include "DataAttributeOut.h"
 
+#include "TrigPort.h"
+
 #include "Poco/NumberFormatter.h"
 
 size_t DataGen::refCount = 0;
@@ -46,6 +48,9 @@ DataGen::DataGen(ModuleFactory* parent, std::string customName, int dataType):
 						+ Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
     setLogger("module." + name());
+
+    setInPortCount(inPortCnt);
+    addTrigPort("trig", "Launch the data generation", trigPort);
 
     setOutPortCount(outPortCnt);
     addOutPort("data", "Output the data defined in the parameter", mDataType, outPortData);
@@ -105,7 +110,23 @@ std::string DataGen::description()
 
 void DataGen::runTask()
 {
-	dataLock.writeLock(); // write since the seq flags can be changed
+    dataLock.writeLock(); // write since the seq flags can be changed
+
+    DataAttribute inAttr;
+
+    bool trigged = false;
+
+    if (reinterpret_cast<TrigPort*>(getInPorts()[trigPort])->tryDataAttribute(&inAttr))
+    {
+        poco_information(logger(),"trigged ------------------------------");
+        trigged = true;
+        (getInPorts()[trigPort])->release();
+
+        if (attr.isSettingSequence())
+            throw Poco::RuntimeException("DatGen",
+                    "Concurrence between trig attribute "
+                    "and modulesequence parameters. ");
+    }
 
     // try to acquire the output data lock
     while (!tryData())
@@ -124,16 +145,23 @@ void DataGen::runTask()
         }
     }
 
-    for (; seqStart > 0; seqStart--)
-    	attr.startSequence();
+    if (!trigged)
+    {
+        for (; seqStart > 0; seqStart--)
+            attr.startSequence();
 
-    // FIXME: should check that they are not sent more end sequence
-    // than start sequence.
-    for (; seqEnd > 0; seqEnd--)
-    	attr.endSequence();
+        // FIXME: should check that they are not sent more end sequence
+        // than start sequence.
+        for (; seqEnd > 0; seqEnd--)
+            attr.endSequence();
+    }
 
     setData();
-    getOutPorts()[outPortData]->notifyReady(attr++);
+
+    if (!trigged)
+        getOutPorts()[outPortData]->notifyReady(attr++);
+    else
+        getOutPorts()[outPortData]->notifyReady(DataAttributeOut(inAttr));
 
 	poco_information(logger(), "DataGen : data sent");
 

@@ -94,7 +94,7 @@ void OutPort::removeTargetPort(InPort* port)
     }
 }
 
-void OutPort::addSeqTargetPort(InPort* port)
+void OutPort::addSeqTargetPort(InDataPort* port)
 {
     Poco::ScopedRWLock lock(seqTargetPortsLock, true);
 
@@ -105,7 +105,7 @@ void OutPort::addSeqTargetPort(InPort* port)
         seqTargetPorts.push_back(sharedPort);
 }
 
-void OutPort::removeSeqTargetPort(InPort* port)
+void OutPort::removeSeqTargetPort(InDataPort* port)
 {
     Poco::ScopedRWLock lock(seqTargetPortsLock, true);
 
@@ -144,7 +144,7 @@ void OutPort::notifyReady(DataAttributeOut attribute)
 
         for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
                 ite = seqTargetPorts.end(); it != ite; it++ )
-            attribute.appendSeqPortTarget(**it);
+            attribute.appendSeqPortTarget(reinterpret_cast<InDataPort*>(**it));
 
         seqTargetPortsLock.unlock();
     }

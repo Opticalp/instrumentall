@@ -83,8 +83,14 @@ public:
      */
     DataAttributeOut(const DataAttributeIn& other);
 
+    /**
+     * Constructor importing a DataAttribute
+     */
+    DataAttributeOut(const DataAttribute& other);
+
 	virtual ~DataAttributeOut() { }
 
+    DataAttributeOut& operator =(const DataAttribute& other);
     DataAttributeOut& operator =(const DataAttributeIn& other);
 	DataAttributeOut& operator =(const DataAttributeOut& other);
 

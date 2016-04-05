@@ -30,7 +30,8 @@
 #include "ModuleFactory.h"
 #include "ModuleManager.h"
 
-#include "InPort.h"
+#include "TrigPort.h"
+#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"
@@ -139,9 +140,19 @@ void Module::addInPort(std::string name, std::string description,
         int dataType, size_t index)
 {
     if (index<inPorts.size())
-        inPorts[index] = new InPort(this, name, description, dataType, index);
+        inPorts[index] = new InDataPort(this, name, description, dataType, index);
     else
         poco_bugcheck_msg(("addInPort: wrong index "
+                + Poco::NumberFormatter::format(index)).c_str());
+}
+
+void Module::addTrigPort(std::string name, std::string description,
+        size_t index)
+{
+    if (index<inPorts.size())
+        inPorts[index] = new TrigPort(this, name, description, index);
+    else
+        poco_bugcheck_msg(("addTrigPort: wrong index "
                 + Poco::NumberFormatter::format(index)).c_str());
 }
 
@@ -337,6 +348,10 @@ void Module::runTask()
     }
     catch (Poco::Exception& e)
     {
+        // release input ports data -- even if new --,
+        // since the module task exited on error
+        inPortAccess.processing();
+
         runTaskMutex.unlock();
         e.rethrow();
     }

@@ -44,7 +44,7 @@
 
 #include <map>
 
-class InPort;
+class InDataPort;
 class OutPort;
 class ModuleFactory;
 
@@ -274,6 +274,18 @@ protected:
 	        std::string name, std::string description,
 	        int dataType,
 	        size_t index );
+    /**
+     * Add trig port
+     *
+     * To trig the running of the module
+     * @param name name of the port
+     * @param description description of the port
+     * @param index index of the port in the inPorts list. It allows
+     * to use enums to access the ports.
+     */
+	void addTrigPort(
+            std::string name, std::string description,
+            size_t index );
 
     /**
      * Set the outPorts list size
@@ -397,7 +409,7 @@ private:
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
 
-	std::vector<InPort*> inPorts; ///< list of input data ports
+	std::vector<InPort*> inPorts; ///< list of input ports
 	std::vector<OutPort*> outPorts; ///< list of output data ports
 
 	static std::vector<std::string> names; ///< list of names of all modules

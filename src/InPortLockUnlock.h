@@ -29,7 +29,9 @@
 #ifndef SRC_INPORTLOCKUNLOCK_H_
 #define SRC_INPORTLOCKUNLOCK_H_
 
-#include "InPort.h"
+#include "InDataPort.h"
+#include "TrigPort.h"
+
 #include "Poco/Exception.h"
 
 /**
@@ -59,9 +61,14 @@ public:
     bool tryData(size_t portIndex, T*& pData, DataAttributeIn* pAttr);
 
     /**
-     * Forward releaseData to the given port
+     * Forward tryDataAttribute to the given port
      */
-    void releaseData(size_t portIndex);
+    bool tryDataAttribute(size_t portIndex, DataAttributeIn* pAttr);
+
+    /**
+     * Forward release to the given port
+     */
+    void release(size_t portIndex);
 
     /**
      * Input port data is being processed.
@@ -86,7 +93,10 @@ template<typename T>
 inline bool InPortLockUnlock::tryData(size_t portIndex, T*& pData,
         DataAttributeIn* pAttr)
 {
-    InPort* inPort = inPorts.at(portIndex);
+    if (inPorts.at(portIndex)->isTrig())
+        poco_bugcheck_msg("The port at the given index is a trig port");
+
+    InDataPort* inPort = reinterpret_cast<InDataPort*>(inPorts[portIndex]);
 
     if (lockFlags[portIndex])
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
@@ -100,19 +110,40 @@ inline bool InPortLockUnlock::tryData(size_t portIndex, T*& pData,
     return retValue;
 }
 
+inline bool InPortLockUnlock::tryDataAttribute(size_t portIndex,
+        DataAttributeIn* pAttr)
+{
+    if (!inPorts.at(portIndex)->isTrig())
+        poco_bugcheck_msg("The port at the given index is a data port");
+
+    TrigPort* trigPort = reinterpret_cast<TrigPort*>(inPorts[portIndex]);
+
+    if (lockFlags[portIndex])
+        poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
+
+
+    bool retValue = trigPort->tryDataAttribute(pAttr);
+
+    if (retValue)
+        lockFlags[portIndex] = true;
+
+    return retValue;
+}
+
 inline InPortLockUnlock::~InPortLockUnlock()
 {
     for (size_t portIndex = 0; portIndex < inPorts.size(); portIndex++)
     {
-        if (lockFlags[portIndex] && (!inPorts[portIndex]->isNew() || allAcquired) )
-            inPorts[portIndex]->releaseData();
+        if (lockFlags[portIndex] &&
+                (inPorts[portIndex]->isTrig() || !inPorts[portIndex]->isNew() || allAcquired) )
+            inPorts[portIndex]->release();
     }
 }
 
-inline void InPortLockUnlock::releaseData(size_t portIndex)
+inline void InPortLockUnlock::release(size_t portIndex)
 {
     if (lockFlags[portIndex])
-        inPorts[portIndex]->releaseData();
+        inPorts[portIndex]->release();
 
     lockFlags[portIndex] = false;
 }

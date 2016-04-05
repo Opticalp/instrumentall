@@ -33,6 +33,7 @@
 #include "Module.h"
 
 #include "InPort.h"
+#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"
@@ -44,7 +45,8 @@ Dispatcher::Dispatcher():
     VerboseEntity(name()),
     initialized(false),
     emptyOutPort(),
-    emptyInPort(&emptyOutPort)
+    emptyInPort(&emptyOutPort),
+    emptyTrigPort(&emptyOutPort)
 {
     // nothing else to do
 }
@@ -228,7 +230,15 @@ void Dispatcher::removeInPort(InPort* port)
         {
             (**it)->releaseSourcePort(); // break the connection
 
-            **it = &emptyInPort; // replace the pointed factory by something throwing exceptions
+            // replace the pointed factory by something throwing exceptions
+            if ((**it)->isTrig())
+                **it = &emptyTrigPort;
+            else
+            {
+                reinterpret_cast<InDataPort*>(**it)->releaseSeqSourcePort();
+                **it = &emptyInPort;
+            }
+
             allInPorts.erase((it+1).base());
             // poco_information(logger(),
             //         port->name() + " input port from module "
@@ -261,10 +271,17 @@ void Dispatcher::removeOutPort(OutPort* port)
             // release connections (find targets and act on targets)
             // nb: this is a simple precaution, since all the connections
             // should already be broken by the deletion of the inPorts.
-            std::vector< SharedPtr<InPort*> > sources(port->getTargetPorts());
-            for (std::vector< SharedPtr<InPort*> >::iterator srcIt = sources.begin(),
-                    srcIte = sources.end() ; srcIt != srcIte ; srcIt++)
-                (**srcIt)->releaseSourcePort();
+            std::vector< SharedPtr<InPort*> > targets;
+
+            targets = port->getTargetPorts();
+            for (std::vector< SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
+                    tgtIte = targets.end() ; tgtIt != tgtIte ; tgtIt++)
+                (**tgtIt)->releaseSourcePort();
+
+            targets = port->getSeqTargetPorts();
+            for (std::vector< SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
+                    tgtIte = targets.end() ; tgtIt != tgtIte ; tgtIt++)
+                reinterpret_cast<InDataPort*>(**tgtIt)->releaseSeqSourcePort();
 
             **it = &emptyOutPort; // replace the pointed factory by something throwing exceptions
             allOutPorts.erase((it+1).base());
@@ -289,7 +306,8 @@ void Dispatcher::addOutPort(OutPort* port)
 
 void Dispatcher::bind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
 {
-    if ((*target)->dataType() != (*source)->dataType())
+    if (!(*target)->isTrig()
+            && (*target)->dataType() != (*source)->dataType())
         throw DispatcherException("bind",
                 "The source and target port data types must fit");
 
@@ -303,12 +321,22 @@ void Dispatcher::unbind(SharedPtr<InPort*> target)
 
 void Dispatcher::seqBind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
 {
-    (*target)->setSeqSourcePort(source);
+    if ((*target)->isTrig())
+        throw Poco::RuntimeException("seqBind",
+                "The target port is a trig port. "
+                "A data sequence can not be bound to a trig port");
+
+    reinterpret_cast<InDataPort*>(*target)->setSeqSourcePort(source);
 }
 
 void Dispatcher::seqUnbind(SharedPtr<InPort*> target)
 {
-    (*target)->releaseSeqSourcePort();
+    if ((*target)->isTrig())
+        throw Poco::RuntimeException("seqBind",
+                "The target port is a trig port. "
+                "A data sequence can not be bound to a trig port");
+
+    reinterpret_cast<InDataPort*>(*target)->releaseSeqSourcePort();
 }
 
 void Dispatcher::setOutPortDataReady(OutPort* port)

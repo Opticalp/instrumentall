@@ -56,6 +56,13 @@ private:
 
     int mDataType;
 
+    /// Indexes of the input ports
+    enum inPorts
+    {
+        trigPort,
+        inPortCnt
+    };
+
     /// Indexes of the output ports
     enum outPorts
     {

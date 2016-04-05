@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #ifdef HAVE_PYTHON27
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "Module.h"
 #include "ModuleManager.h"
 #include "PythonInPort.h"
@@ -182,9 +182,12 @@ PyObject* pyInPortGetSourcePort(InPortMembers* self)
 
 PyObject* pyInPortGetSeqSourcePort(InPortMembers* self)
 {
+    if ((**self->inPort)->isTrig())
+        Py_RETURN_NONE;
+
     Poco::SharedPtr<OutPort*> sharedSource;
 
-    sharedSource = (**self->inPort)->getSeqSourcePort();
+    sharedSource = reinterpret_cast<InDataPort*>(**self->inPort)->getSeqSourcePort();
 
     // check if connected
     if ( *sharedSource == Poco::Util::Application::instance()
@@ -228,6 +231,13 @@ PyObject* pyInPortGetSeqSourcePort(InPortMembers* self)
 
 PyObject* pyInPortHoldData(InPortMembers *self, PyObject* args)
 {
+    if ((**self->inPort)->isTrig())
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                "This port is a trig port. Data can not be hold");
+        return NULL;
+    }
+
     char* commandChar;
 
     if (!PyArg_ParseTuple(args, "s:holdData", &commandChar))
@@ -236,9 +246,9 @@ PyObject* pyInPortHoldData(InPortMembers *self, PyObject* args)
     std::string command(commandChar);
 
     if (command.compare("on") == 0)
-    	(**self->inPort)->hold(true);
+        reinterpret_cast<InDataPort*>(**self->inPort)->hold(true);
     else if (command.compare("off") == 0)
-    	(**self->inPort)->hold(false);
+        reinterpret_cast<InDataPort*>(**self->inPort)->hold(false);
     else
     {
         PyErr_SetString(PyExc_RuntimeError,
@@ -246,8 +256,15 @@ PyObject* pyInPortHoldData(InPortMembers *self, PyObject* args)
         return NULL;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
+}
+
+PyObject* pyInPortIsTrig(InPortMembers *self)
+{
+    if ((**self->inPort)->isTrig())
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
 }
 
 #endif /* HAVE_PYTHON27 */

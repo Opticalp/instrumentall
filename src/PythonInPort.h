@@ -131,6 +131,17 @@ static PyMethodDef pyMethodInPortHoldData =
     "holdData(\"off\"): release the data holding. "
 };
 
+/// python wrapper to hold the data coming from this port
+extern "C" PyObject* pyInPortIsTrig(InPortMembers *self);
+
+static PyMethodDef pyMethodInPortIsTrig =
+{
+    "isTrig",
+    (PyCFunction)pyInPortIsTrig,
+    METH_NOARGS,
+    "Return true if the port is a trig port"
+};
+
 /// exported methods
 static PyMethodDef pyInPortMethods[] = {
         pyMethodInPortParent,
@@ -139,6 +150,8 @@ static PyMethodDef pyInPortMethods[] = {
         pyMethodInPortGetSeqSourcePort,
 
 		pyMethodInPortHoldData,
+
+		pyMethodInPortIsTrig,
 
         {NULL} // sentinel
 };

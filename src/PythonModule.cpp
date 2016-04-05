@@ -176,7 +176,7 @@ PyObject* pyModParent(ModMembers* self)
 }
 
 #include "Dispatcher.h"
-#include "InPort.h"
+#include "InDataPort.h"
 #include "PythonInPort.h"
 
 PyObject* pyModInPorts(ModMembers* self)

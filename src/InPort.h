@@ -1,6 +1,6 @@
 /**
  * @file	src/InPort.h
- * @date	feb. 2016
+ * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -31,20 +31,13 @@
 
 #include "Port.h"
 
-#include "Poco/RWLock.h"
-#include "Poco/SharedPtr.h"
-
-using Poco::SharedPtr;
-
-class Dispatcher;
 class OutPort;
-class DataAttributeIn;
+class Dispatcher;
 
 /**
  * InPort
  *
- * Data input module port.
- * Contain link to the source port.
+ * Parent class for InDataPort and TrigPort
  */
 class InPort: public Port
 {
@@ -53,59 +46,44 @@ public:
             std::string name,
             std::string description,
             int datatype,
-            size_t index);
+            size_t index, bool trig = false);
 
     /**
-     * Special constructor for the empty InPort
-     */
-    InPort(OutPort* emptySourcePort);
-
-    /**
-     * Destructor
+     * Constructor to be used to create empty input ports
      *
-     * Do not need to call releaseSourcePort.
-     * Indeed, this destructor is called when the parent module
-     * is deleted. On Module deletion, the ModuleManager::removeModule
-     * is called, then the Dispatcher::removeModule is called,
-     * then this input port is deleted from Dispatcher::allInPorts
-     * after this releaseSourcePort has been called.
+     * Either empty TrigPort or empty InDataPort
      */
+    InPort(OutPort* emptySourcePort,
+            std::string name,
+            std::string description, bool trig = false);
+
     virtual ~InPort() { }
 
     /// Retrieve the source port
-    SharedPtr<OutPort*> getSourcePort();
-
-    /// Retrieve the data sequence source port
-    SharedPtr<OutPort*> getSeqSourcePort();
+    SharedPtr<OutPort*> getSourcePort()
+        { return mSourcePort; }
 
     /**
-     * Try to acquire the data and its attribute
+     * Store that the data has been used and can be released.
      *
-     * call isUpToDate() to check if the data is valid
-     *
-     * @return false if the lock can not be acquired or if the data
-     * is not up to date
+     * Release the corresponding locks, record that the data is not new
+     * any more
      */
-    template<typename T> bool tryData(T*& pData, DataAttributeIn* pAttr);
-
-    /**
-     * Notify that the data has been used and can be released.
-     *
-     * release the corresponding locks, notify that the data is not new
-     * any more, set expiration information...
-     */
-    void releaseData();
-
-    /**
-     * Request to hold the data that came to this port
-     *
-     * The port will re-use the previous data if it is not expired.
-     */
-    void hold(bool status = true) { held = status; }
+    virtual void release();
 
     bool isNew() { return !used; }
 
-private:
+    /**
+     * Convenience function
+     *
+     * Allow not to check a dynamic_cast result.
+     * Faster, simplier.
+     */
+    bool isTrig() { return isTrigFlag; }
+
+    bool isPlugged() { return plugged; }
+
+protected:
     /**
      * Set the source port
      *
@@ -125,29 +103,6 @@ private:
      */
     void releaseSourcePort();
 
-    SharedPtr<OutPort*> mSourcePort;
-
-    /**
-     * Set the data sequence source port
-     *
-     * This function should only be called by the dispatcher.
-     *
-     * If the source port was not the empty port,
-     * the port that was previously bound is notified
-     */
-    void setSeqSourcePort(SharedPtr<OutPort*> port);
-
-    /**
-     * Release the data sequence source port
-     *
-     * And replace it by the empty port.
-     * If the source port was not the empty port,
-     * the port that was previously bound is notified
-     */
-    void releaseSeqSourcePort();
-
-    SharedPtr<OutPort*> mSeqSourcePort;
-
     /**
      * To be called by the dispatcher
      *
@@ -155,20 +110,15 @@ private:
      */
     void setNew(bool value = true);
 
-    /**
-     * Determine if the data of this port are up to date
-     *
-     * To be used before getting the data to be sure not to retrieve
-     * expired data.
-     */
-    bool isUpToDate();
+private:
+    SharedPtr<OutPort*> mSourcePort;
 
     bool used;
-    bool held;
+    bool isTrigFlag;
+
+    bool plugged;
 
     friend class Dispatcher;
 };
-
-#include "InPort.ipp"
 
 #endif /* SRC_INPORT_H_ */

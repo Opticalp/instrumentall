@@ -31,7 +31,7 @@
 #include "DataAttributeIn.h"
 #include "DataAttribute.h"
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"
@@ -89,7 +89,8 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
 
     if (attr.isStartSequence(seqIndex))
     {
-        poco_information(logger(), "DemoModuleSeqAccu::runTask(): sequence starting");
+        poco_information(logger(), "DemoModuleSeqAccu::runTask(): sequence starting with "
+                + Poco::NumberFormatter::format(*pData));
         accumulator.clear();
         accumulator.push_back(*pData);
     }
@@ -101,7 +102,7 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
         {
             poco_information(logger(), "DemoModuleSeqAccu::runTask(): sequence ending");
             DataAttributeOut outAttr = attr;
-            inPortsAccess.releaseData(inPortA);
+            inPortsAccess.release(inPortA);
 
             std::vector<Poco::Int32>* pOutData;
 

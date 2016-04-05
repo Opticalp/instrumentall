@@ -136,6 +136,7 @@ PyObject* pyOutPortParent(OutPortMembers* self)
 }
 
 #include "Dispatcher.h"
+#include "InDataPort.h"
 #include "InPort.h"
 #include "PythonInPort.h"
 
@@ -189,7 +190,6 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
                     "Not able to build the return list");
             return NULL;
         }
-
     }
 
     return pyPorts;

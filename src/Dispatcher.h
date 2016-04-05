@@ -32,6 +32,8 @@
 #include "VerboseEntity.h"
 
 #include "InPort.h"
+#include "InDataPort.h"
+#include "TrigPort.h"
 #include "OutPort.h"
 
 #include "Poco/Util/Subsystem.h"
@@ -117,7 +119,7 @@ public:
 //     /**
 //      * Return the address of the empty inPort
 //      */
-//     InPort* getEmptyInPort() { return &emptyInPort; }
+//     InDataPort* getEmptyInPort() { return &emptyInPort; }
 
      /**
       * Return the address of the empty outPort
@@ -224,7 +226,9 @@ private:
      bool initialized;
 
      /// empty input port to be used when an input port is deleted
-     InPort emptyInPort;
+     InDataPort emptyInPort;
+     /// empty input port to be used when an input port is deleted
+     TrigPort emptyTrigPort;
      /// empty output port to be used when an output port is deleted
      OutPort emptyOutPort;
 };

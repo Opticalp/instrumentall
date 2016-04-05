@@ -1,5 +1,5 @@
 /**
- * @file	src/InPort.ipp
+ * @file	src/InDataPort.ipp
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
@@ -26,13 +26,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "OutPort.h"
 #include "DataAttributeIn.h"
 
-template<typename T> inline bool InPort::tryData(T*& pData, DataAttributeIn* pAttr)
+template<typename T> inline bool InDataPort::tryData(T*& pData, DataAttributeIn* pAttr)
 {
-    // TODO: this function may be in an .ipp file.
+    if (!isPlugged())
+        throw Poco::RuntimeException("InPort",
+                "The port is not plugged. Not able to get data. ");
 
     if (!isNew())
     {

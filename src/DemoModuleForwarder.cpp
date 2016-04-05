@@ -31,7 +31,7 @@
 #include "DataAttributeIn.h"
 #include "DataAttribute.h"
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"
@@ -85,7 +85,7 @@ void DemoModuleForwarder::process(InPortLockUnlock& inPortsAccess,
     int tmpData = *pData;
     DataAttributeOut outAttr = attr;
 
-    inPortsAccess.releaseData(inPortA);
+    inPortsAccess.release(inPortA);
 
     int* pOutData;
 

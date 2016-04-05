@@ -31,7 +31,7 @@
 #include "DataAttributeIn.h"
 #include "DataAttribute.h"
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"
@@ -98,7 +98,7 @@ void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess,
         if (attr.isEndSequence(seqIndex))
         {
             DataAttributeOut outAttr = attr;
-            inPortsAccess.releaseData(inPortA);
+            inPortsAccess.release(inPortA);
 
             int* pOutData;
 

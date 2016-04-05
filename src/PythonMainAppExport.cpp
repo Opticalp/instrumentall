@@ -254,7 +254,7 @@ pythonDispatchBind(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 extern "C" PyObject*
@@ -282,7 +282,7 @@ pythonDispatchUnbind(PyObject* self, PyObject* args)
         .getSubsystem<Dispatcher>()
         .unbind(*pyPort->inPort);
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 extern "C" PyObject*
@@ -327,7 +327,7 @@ pythonDispatchSeqBind(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 extern "C" PyObject*
@@ -355,7 +355,7 @@ pythonDispatchSeqUnbind(PyObject* self, PyObject* args)
         .getSubsystem<Dispatcher>()
         .seqUnbind(*pyPort->inPort);
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 extern "C" PyObject*
@@ -383,7 +383,7 @@ pythonDispatchRunModule(PyObject *self, PyObject *args)
         .getSubsystem<Dispatcher>()
         .runModule(*pyMod->module);
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 #include "ThreadManager.h"
@@ -395,7 +395,7 @@ pythonThreadManWaitAll(PyObject *self, PyObject *args)
             .getSubsystem<ThreadManager>()
             .waitAll();
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 #include "DataManager.h"
@@ -538,7 +538,7 @@ pythonDataManRemoveDataLogger(PyObject *self, PyObject *args)
                             .getSubsystem<DataManager>()
                             .removeDataLogger(*pyLogger->logger);
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 #endif /* HAVE_PYTHON27 */
