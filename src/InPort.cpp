@@ -74,7 +74,9 @@ void InPort::release()
 
 void InPort::setSourcePort(SharedPtr<OutPort*> port)
 {
-    (*mSourcePort)->removeTargetPort(this);
+    if (!plugged)
+        (*mSourcePort)->removeTargetPort(this);
+
     mSourcePort = port;
     try
     {
@@ -93,6 +95,9 @@ void InPort::setSourcePort(SharedPtr<OutPort*> port)
 
 void InPort::releaseSourcePort()
 {
+    if (!plugged)
+        return;
+
     (*mSourcePort)->removeTargetPort(this);
     mSourcePort = SharedPtr<OutPort*>(
             new (OutPort*)( Poco::Util::Application::instance()
