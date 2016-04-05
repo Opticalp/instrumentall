@@ -32,6 +32,10 @@ THE SOFTWARE.
 
 template<typename T> inline bool InDataPort::tryData(T*& pData, DataAttributeIn* pAttr)
 {
+    if (!isPlugged())
+        throw Poco::RuntimeException("InPort",
+                "The port is not plugged. Not able to get data. ");
+
     if (!isNew())
     {
         // try to get the lock

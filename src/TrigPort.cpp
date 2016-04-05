@@ -1,12 +1,7 @@
 /**
- * detailed description
- * 
- * @file	TrigPort.cpp
- * @brief	brief description
- * @date	5 avr. 2016
+ * @file	src/TrigPort.cpp
+ * @date	apr. 2016
  * @author	PhRG - opticalp.fr
- *
- * $Id$
  */
 
 /*
@@ -49,6 +44,9 @@ TrigPort::TrigPort(OutPort* emptySourcePort):
 
 bool TrigPort::tryDataAttribute(DataAttribute* pAttr)
 {
+    if (!isPlugged())
+        return false;
+
     if (!isNew())
         return false;
 

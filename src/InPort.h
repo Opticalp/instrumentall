@@ -81,6 +81,8 @@ public:
      */
     bool isTrig() { return isTrigFlag; }
 
+    bool isPlugged() { return plugged; }
+
 protected:
     /**
      * Set the source port
@@ -113,6 +115,8 @@ private:
 
     bool used;
     bool isTrigFlag;
+
+    bool plugged;
 
     friend class Dispatcher;
 };

@@ -37,7 +37,8 @@
 InPort::InPort(Module* parent, std::string name, std::string description,
         int datatype, size_t index, bool trig):
         Port(parent, name, description, datatype, index),
-        used(false), isTrigFlag(trig)
+        used(false), plugged(false),
+        isTrigFlag(trig)
 {
     mSourcePort = SharedPtr<OutPort*>(
             new (OutPort*)( Poco::Util::Application::instance()
@@ -51,7 +52,8 @@ InPort::InPort(OutPort* emptySourcePort, std::string name,
                     .getSubsystem<ModuleManager>()
                     .getEmptyModule(), name, description,
                     DataItem::typeUndefined, 0),
-                used(false), isTrigFlag(trig)
+                used(false), plugged(false),
+                isTrigFlag(trig)
 {
     mSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
 }
@@ -77,6 +79,7 @@ void InPort::setSourcePort(SharedPtr<OutPort*> port)
     try
     {
         (*mSourcePort)->addTargetPort(this);
+        plugged = true;
     }
     catch (DispatcherException& e)
     {
@@ -95,4 +98,5 @@ void InPort::releaseSourcePort()
             new (OutPort*)( Poco::Util::Application::instance()
                                     .getSubsystem<Dispatcher>()
                                     .getEmptyOutPort()       ) );
+    plugged = false;
 }

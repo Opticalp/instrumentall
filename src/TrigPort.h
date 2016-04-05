@@ -1,12 +1,7 @@
 /**
- * detailed description
- * 
- * @file	TrigPort.h
- * @brief	brief description
- * @date	5 avr. 2016
+ * @file	src/TrigPort.h
+ * @date	apr. 2016
  * @author	PhRG - opticalp.fr
- *
- * $Id$
  */
 
 /*

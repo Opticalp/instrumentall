@@ -89,7 +89,8 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
 
     if (attr.isStartSequence(seqIndex))
     {
-        poco_information(logger(), "DemoModuleSeqAccu::runTask(): sequence starting");
+        poco_information(logger(), "DemoModuleSeqAccu::runTask(): sequence starting with "
+                + Poco::NumberFormatter::format(*pData));
         accumulator.clear();
         accumulator.push_back(*pData);
     }

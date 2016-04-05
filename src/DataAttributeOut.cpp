@@ -51,11 +51,25 @@ DataAttributeOut::DataAttributeOut(const DataAttributeIn& other):
     // nothing to do
 }
 
+DataAttributeOut::DataAttributeOut(const DataAttribute& other):
+        DataAttribute(other),
+        newIndex(0), seqManaging(0)
+{
+    // nothing to do
+}
+
 void DataAttributeOut::swap(DataAttributeOut& other)
 {
     DataAttribute::swap(other);
 //    std::swap(newIndex, other.newIndex);
 //    std::swap(seqManaging, other.seqManaging);
+}
+
+DataAttributeOut& DataAttributeOut::operator =(const DataAttribute& other)
+{
+    DataAttributeOut tmp(other);
+    swap(tmp);
+    return *this;
 }
 
 DataAttributeOut& DataAttributeOut::operator =(const DataAttributeIn& other)
