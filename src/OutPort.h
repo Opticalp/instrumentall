@@ -40,7 +40,7 @@
 using Poco::RWLock;
 using Poco::SharedPtr;
 
-class InPort;
+class InDataPort;
 
 /**
  * OutPort
@@ -77,12 +77,12 @@ public:
     /**
      * Retrieve the target ports
      */
-    std::vector< SharedPtr<InPort*> > getTargetPorts();
+    std::vector< SharedPtr<InDataPort*> > getTargetPorts();
 
     /**
      * Retrieve the data sequence target ports
      */
-    std::vector< SharedPtr<InPort*> > getSeqTargetPorts();
+    std::vector< SharedPtr<InDataPort*> > getSeqTargetPorts();
 
     /**
      * Try to retrieve a pointer on the data to be written
@@ -127,7 +127,7 @@ private:
      * The Dispatcher is requested to get the shared pointer
      * on the InPort.
      */
-    void addTargetPort(InPort* port);
+    void addTargetPort(InDataPort* port);
 
     /**
      * Remove a target port
@@ -135,9 +135,9 @@ private:
      * Should not throw an exception if the port is not present
      * in the targetPorts
      */
-    void removeTargetPort(InPort* port);
+    void removeTargetPort(InDataPort* port);
 
-    std::vector< SharedPtr<InPort*> > targetPorts;
+    std::vector< SharedPtr<InDataPort*> > targetPorts;
     RWLock targetPortsLock; ///< lock for targetPorts operations
 
     /**
@@ -148,7 +148,7 @@ private:
      * The Dispatcher is requested to get the shared pointer
      * on the InPort.
      */
-    void addSeqTargetPort(InPort* port);
+    void addSeqTargetPort(InDataPort* port);
 
     /**
      * Remove a sequence re-combiner target port
@@ -156,13 +156,13 @@ private:
      * Should not throw an exception if the port is not present
      * in the seqTargetPorts
      */
-    void removeSeqTargetPort(InPort* port);
+    void removeSeqTargetPort(InDataPort* port);
 
     /// list of target ports for data sequence re-combination
-    std::vector< SharedPtr<InPort*> > seqTargetPorts;
+    std::vector< SharedPtr<InDataPort*> > seqTargetPorts;
     RWLock seqTargetPortsLock; ///< lock for seqTargetPorts operations
 
-    friend class InPort;
+    friend class InDataPort;
 
     DataItem data;
 };

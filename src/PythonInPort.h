@@ -39,7 +39,7 @@ THE SOFTWARE.
 
 #include "Poco/SharedPtr.h"
 
-#include "InPort.h"
+#include "InDataPort.h"
 
 // -----------------------------------------------------------------------
 // Variables
@@ -51,7 +51,7 @@ typedef struct
     PyObject_HEAD ///< a refcount and a pointer to a type object (convenience python/C API macro)
     PyObject* name;  ///< name attribute
     PyObject* description;  ///< description attribute
-    Poco::SharedPtr<InPort*>* inPort; ///< pointer to the C++ internal InPort object
+    Poco::SharedPtr<InDataPort*>* inPort; ///< pointer to the C++ internal InPort object
 } InPortMembers;
 
 /// Description of the InPortMembers structure

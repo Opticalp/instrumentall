@@ -31,7 +31,7 @@
 
 #include "VerboseEntity.h"
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/Util/Subsystem.h"
@@ -107,7 +107,7 @@ public:
      /**
       * Get the shared pointer corresponding to the given input port
       */
-     SharedPtr<InPort*> getInPort(InPort* port);
+     SharedPtr<InDataPort*> getInPort(InDataPort* port);
 
      /**
       * Get the shared pointer corresponding to the given output port
@@ -117,7 +117,7 @@ public:
 //     /**
 //      * Return the address of the empty inPort
 //      */
-//     InPort* getEmptyInPort() { return &emptyInPort; }
+//     InDataPort* getEmptyInPort() { return &emptyInPort; }
 
      /**
       * Return the address of the empty outPort
@@ -133,14 +133,14 @@ public:
       * @note If the target port expired during the binding,
       * no exception is thrown, but the binding is not made.
       */
-     void bind (SharedPtr<OutPort*> source, SharedPtr<InPort*> target);
+     void bind (SharedPtr<OutPort*> source, SharedPtr<InDataPort*> target);
 
      /**
       * Remove a connection between two ports
       *
       * No exception is thrown
       */
-     void unbind(SharedPtr<InPort*> target);
+     void unbind(SharedPtr<InDataPort*> target);
 
      /**
       * Create a sequence combination connection between two ports
@@ -151,14 +151,14 @@ public:
       * @note If the target port expired during the binding,
       * no exception is thrown, but the binding is not made.
       */
-     void seqBind (SharedPtr<OutPort*> source, SharedPtr<InPort*> target);
+     void seqBind (SharedPtr<OutPort*> source, SharedPtr<InDataPort*> target);
 
      /**
       * Remove a seq combination connection between two ports
       *
       * No exception is thrown
       */
-     void seqUnbind(SharedPtr<InPort*> target);
+     void seqUnbind(SharedPtr<InDataPort*> target);
 
      /**
       * Function to be called when new data is ready on an OutPort
@@ -188,7 +188,7 @@ private:
       *
       * No exception raising.
       */
-     void removeInPort(InPort* port);
+     void removeInPort(InDataPort* port);
 
      /**
       * Add a port to the allInPorts list
@@ -196,7 +196,7 @@ private:
       * inPortsLock has to be locked from outside this function.
       * @see removeInPort discussion
       */
-     void addInPort(InPort* port);
+     void addInPort(InDataPort* port);
 
      /**
       * Remove a port from the allInPorts list
@@ -213,7 +213,7 @@ private:
      void addOutPort(OutPort* port);
 
      /// input ports to be used as targets for output ports
-     std::vector< SharedPtr<InPort*> > allInPorts;
+     std::vector< SharedPtr<InDataPort*> > allInPorts;
      RWLock inPortsLock; ///< lock for the transactions on allInPorts
 
      /// output ports to be used as sources for input ports
@@ -224,7 +224,7 @@ private:
      bool initialized;
 
      /// empty input port to be used when an input port is deleted
-     InPort emptyInPort;
+     InDataPort emptyInPort;
      /// empty output port to be used when an output port is deleted
      OutPort emptyOutPort;
 };

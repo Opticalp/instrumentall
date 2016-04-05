@@ -31,7 +31,7 @@
 #include "DataAttributeIn.h"
 #include "DataAttribute.h"
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"

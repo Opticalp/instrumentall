@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #ifdef HAVE_PYTHON27
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "Module.h"
 #include "ModuleManager.h"
 #include "PythonInPort.h"
@@ -67,7 +67,7 @@ extern "C" PyObject* pyInPortNew(PyTypeObject* type, PyObject* args, PyObject* k
             return NULL;
           }
 
-        self->inPort = new Poco::SharedPtr<InPort*>;
+        self->inPort = new Poco::SharedPtr<InDataPort*>;
       }
 
     return (PyObject *) self;

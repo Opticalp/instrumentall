@@ -1,5 +1,5 @@
 /**
- * @file	src/InPort.cpp
+ * @file	src/InDataPort.cpp
  * @date	fev. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -26,13 +26,13 @@
  THE SOFTWARE.
  */
 
-#include "InPort.h"
+#include "InDataPort.h"
 
 #include "ModuleManager.h"
 #include "Dispatcher.h"
 #include "OutPort.h"
 
-InPort::InPort(Module* parent,
+InDataPort::InDataPort(Module* parent,
         std::string name,
         std::string description,
         int datatype,
@@ -47,7 +47,7 @@ InPort::InPort(Module* parent,
     mSeqSourcePort = mSourcePort;
 }
 
-InPort::InPort(OutPort* emptySourcePort):
+InDataPort::InDataPort(OutPort* emptySourcePort):
         Port(Poco::Util::Application::instance()
                     .getSubsystem<ModuleManager>()
                     .getEmptyModule(),
@@ -59,7 +59,7 @@ InPort::InPort(OutPort* emptySourcePort):
     mSeqSourcePort = mSourcePort;
 }
 
-void InPort::setSourcePort(SharedPtr<OutPort*> port)
+void InDataPort::setSourcePort(SharedPtr<OutPort*> port)
 {
     (*mSourcePort)->removeTargetPort(this);
     mSourcePort = port;
@@ -77,7 +77,7 @@ void InPort::setSourcePort(SharedPtr<OutPort*> port)
     }
 }
 
-void InPort::releaseSourcePort()
+void InDataPort::releaseSourcePort()
 {
     (*mSourcePort)->removeTargetPort(this);
     mSourcePort = SharedPtr<OutPort*>(
@@ -86,12 +86,12 @@ void InPort::releaseSourcePort()
                                     .getEmptyOutPort()       ) );
 }
 
-SharedPtr<OutPort*> InPort::getSourcePort()
+SharedPtr<OutPort*> InDataPort::getSourcePort()
 {
     return mSourcePort;
 }
 
-void InPort::setSeqSourcePort(SharedPtr<OutPort*> port)
+void InDataPort::setSeqSourcePort(SharedPtr<OutPort*> port)
 {
     (*mSeqSourcePort)->removeSeqTargetPort(this);
     mSeqSourcePort = port;
@@ -109,7 +109,7 @@ void InPort::setSeqSourcePort(SharedPtr<OutPort*> port)
     }
 }
 
-void InPort::releaseSeqSourcePort()
+void InDataPort::releaseSeqSourcePort()
 {
     (*mSeqSourcePort)->removeSeqTargetPort(this);
     mSeqSourcePort = SharedPtr<OutPort*>(
@@ -118,12 +118,12 @@ void InPort::releaseSeqSourcePort()
                                     .getEmptyOutPort()       ) );
 }
 
-SharedPtr<OutPort*> InPort::getSeqSourcePort()
+SharedPtr<OutPort*> InDataPort::getSeqSourcePort()
 {
     return mSeqSourcePort;
 }
 
-void InPort::releaseData()
+void InDataPort::releaseData()
 {
     setNew(false);
     (*getSourcePort())->dataItem()->releaseData();
@@ -131,7 +131,7 @@ void InPort::releaseData()
     // TODO: update expiration information?
 }
 
-void InPort::setNew(bool value)
+void InDataPort::setNew(bool value)
 {
     if (value)
     {
@@ -142,7 +142,7 @@ void InPort::setNew(bool value)
     used = !value;
 }
 
-bool InPort::isUpToDate()
+bool InDataPort::isUpToDate()
 {
 	// TODO: should check if the input data is in a sequence?
 	// inside a sequence, the holding should be impossible?

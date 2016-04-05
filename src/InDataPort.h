@@ -1,5 +1,5 @@
 /**
- * @file	src/InPort.h
+ * @file	src/InDataPort.h
  * @date	feb. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -26,8 +26,8 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_INPORT_H_
-#define SRC_INPORT_H_
+#ifndef SRC_INDATAPORT_H_
+#define SRC_INDATAPORT_H_
 
 #include "Port.h"
 
@@ -41,24 +41,24 @@ class OutPort;
 class DataAttributeIn;
 
 /**
- * InPort
+ * InDataPort
  *
  * Data input module port.
  * Contain link to the source port.
  */
-class InPort: public Port
+class InDataPort: public Port
 {
 public:
-    InPort(Module* parent,
+    InDataPort(Module* parent,
             std::string name,
             std::string description,
             int datatype,
             size_t index);
 
     /**
-     * Special constructor for the empty InPort
+     * Special constructor for the empty InDataPort
      */
-    InPort(OutPort* emptySourcePort);
+    InDataPort(OutPort* emptySourcePort);
 
     /**
      * Destructor
@@ -67,10 +67,10 @@ public:
      * Indeed, this destructor is called when the parent module
      * is deleted. On Module deletion, the ModuleManager::removeModule
      * is called, then the Dispatcher::removeModule is called,
-     * then this input port is deleted from Dispatcher::allInPorts
+     * then this input port is deleted from Dispatcher::allInDataPorts
      * after this releaseSourcePort has been called.
      */
-    virtual ~InPort() { }
+    virtual ~InDataPort() { }
 
     /// Retrieve the source port
     SharedPtr<OutPort*> getSourcePort();
@@ -169,6 +169,6 @@ private:
     friend class Dispatcher;
 };
 
-#include "InPort.ipp"
+#include "InDataPort.ipp"
 
-#endif /* SRC_INPORT_H_ */
+#endif /* SRC_INDATAPORT_H_ */

@@ -78,7 +78,7 @@
 class DataAttributeIn: public DataAttribute
 {
 public:
-    DataAttributeIn(DataAttribute attribute, InPort* parent):
+    DataAttributeIn(DataAttribute attribute, InDataPort* parent):
         DataAttribute(attribute), mParent(parent) { }
 
     DataAttributeIn(const DataAttributeIn& other):
@@ -97,7 +97,7 @@ public:
     DataAttribute cleaned() const;
 
     /**
-     * Check if the InPort is concerned by a startSequence
+     * Check if the InDataPort is concerned by a startSequence
      *
      * Perform check and modification in seqIndex
      */
@@ -122,7 +122,7 @@ private:
      */
     void checkSequence(size_t seqIndex);
 
-    InPort* mParent;
+    InDataPort* mParent;
 };
 
 #endif /* SRC_DATAATTRIBUTEIN_H_ */

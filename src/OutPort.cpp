@@ -46,9 +46,9 @@ OutPort::OutPort(Module* parent,
                             .addOutPort(this);
 }
 
-std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
+std::vector<SharedPtr<InDataPort*> > OutPort::getTargetPorts()
 {
-    std::vector<SharedPtr<InPort*> > list;
+    std::vector<SharedPtr<InDataPort*> > list;
 
     targetPortsLock.readLock();
     list = targetPorts;
@@ -57,9 +57,9 @@ std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
     return list;
 }
 
-std::vector<SharedPtr<InPort*> > OutPort::getSeqTargetPorts()
+std::vector<SharedPtr<InDataPort*> > OutPort::getSeqTargetPorts()
 {
-    std::vector<SharedPtr<InPort*> > list;
+    std::vector<SharedPtr<InDataPort*> > list;
 
     seqTargetPortsLock.readLock();
     list = seqTargetPorts;
@@ -68,22 +68,22 @@ std::vector<SharedPtr<InPort*> > OutPort::getSeqTargetPorts()
     return list;
 }
 
-void OutPort::addTargetPort(InPort* port)
+void OutPort::addTargetPort(InDataPort* port)
 {
     Poco::ScopedRWLock lock(targetPortsLock, true);
 
-    SharedPtr<InPort*> sharedPort =
+    SharedPtr<InDataPort*> sharedPort =
         Poco::Util::Application::instance()
                     .getSubsystem<Dispatcher>()
                     .getInPort(port);
     targetPorts.push_back(sharedPort);
 }
 
-void OutPort::removeTargetPort(InPort* port)
+void OutPort::removeTargetPort(InDataPort* port)
 {
     Poco::ScopedRWLock lock(targetPortsLock, true);
 
-    for (std::vector< SharedPtr<InPort*> >::iterator it=targetPorts.begin(),
+    for (std::vector< SharedPtr<InDataPort*> >::iterator it=targetPorts.begin(),
             ite=targetPorts.end(); it != ite; it++ )
     {
         if (**it==port)
@@ -94,22 +94,22 @@ void OutPort::removeTargetPort(InPort* port)
     }
 }
 
-void OutPort::addSeqTargetPort(InPort* port)
+void OutPort::addSeqTargetPort(InDataPort* port)
 {
     Poco::ScopedRWLock lock(seqTargetPortsLock, true);
 
-    SharedPtr<InPort*> sharedPort =
+    SharedPtr<InDataPort*> sharedPort =
         Poco::Util::Application::instance()
                     .getSubsystem<Dispatcher>()
                     .getInPort(port);
         seqTargetPorts.push_back(sharedPort);
 }
 
-void OutPort::removeSeqTargetPort(InPort* port)
+void OutPort::removeSeqTargetPort(InDataPort* port)
 {
     Poco::ScopedRWLock lock(seqTargetPortsLock, true);
 
-    for (std::vector< SharedPtr<InPort*> >::iterator it=seqTargetPorts.begin(),
+    for (std::vector< SharedPtr<InDataPort*> >::iterator it=seqTargetPorts.begin(),
             ite=seqTargetPorts.end(); it != ite; it++ )
     {
         if (**it==port)
@@ -142,7 +142,7 @@ void OutPort::notifyReady(DataAttributeOut attribute)
     {
         seqTargetPortsLock.readLock();
 
-        for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
+        for( std::vector< SharedPtr<InDataPort*> >::iterator it = seqTargetPorts.begin(),
                 ite = seqTargetPorts.end(); it != ite; it++ )
             attribute.appendSeqPortTarget(**it);
 
@@ -165,7 +165,7 @@ void OutPort::expire()
 	// forward the expiration
     seqTargetPortsLock.readLock();
 
-    for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
+    for( std::vector< SharedPtr<InDataPort*> >::iterator it = seqTargetPorts.begin(),
             ite = seqTargetPorts.end(); it != ite; it++ )
         (**it)->parent()->expireOutData();
 

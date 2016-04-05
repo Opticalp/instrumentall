@@ -29,7 +29,7 @@
 #ifndef SRC_INPORTLOCKUNLOCK_H_
 #define SRC_INPORTLOCKUNLOCK_H_
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "Poco/Exception.h"
 
 /**
@@ -43,7 +43,7 @@
 class InPortLockUnlock
 {
 public:
-    InPortLockUnlock(std::vector<InPort*> inputPorts):
+    InPortLockUnlock(std::vector<InDataPort*> inputPorts):
         inPorts(inputPorts), allAcquired(false)
     { lockFlags.assign(inputPorts.size(), false); }
 
@@ -72,7 +72,7 @@ public:
     void processing() { allAcquired = true; }
 
 private:
-    std::vector<InPort*> inPorts;
+    std::vector<InDataPort*> inPorts;
 
     /**
      * Flag array to store which input was locked using this class
@@ -86,7 +86,7 @@ template<typename T>
 inline bool InPortLockUnlock::tryData(size_t portIndex, T*& pData,
         DataAttributeIn* pAttr)
 {
-    InPort* inPort = inPorts.at(portIndex);
+    InDataPort* inPort = inPorts.at(portIndex);
 
     if (lockFlags[portIndex])
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");

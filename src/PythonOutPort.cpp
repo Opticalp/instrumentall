@@ -136,12 +136,12 @@ PyObject* pyOutPortParent(OutPortMembers* self)
 }
 
 #include "Dispatcher.h"
-#include "InPort.h"
+#include "InDataPort.h"
 #include "PythonInPort.h"
 
 PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
 {
-    std::vector< Poco::SharedPtr<InPort*> > targets;
+    std::vector< Poco::SharedPtr<InDataPort*> > targets;
 
     targets = (**self->outPort)->getTargetPorts();
 
@@ -157,7 +157,7 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
     }
 
 
-    for ( std::vector< Poco::SharedPtr<InPort*> >::iterator it = targets.begin(),
+    for ( std::vector< Poco::SharedPtr<InDataPort*> >::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     {
         // create the python object
@@ -197,7 +197,7 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
 
 PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
 {
-    std::vector< Poco::SharedPtr<InPort*> > targets;
+    std::vector< Poco::SharedPtr<InDataPort*> > targets;
 
     targets = (**self->outPort)->getSeqTargetPorts();
 
@@ -213,7 +213,7 @@ PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
     }
 
 
-    for ( std::vector< Poco::SharedPtr<InPort*> >::iterator it = targets.begin(),
+    for ( std::vector< Poco::SharedPtr<InDataPort*> >::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     {
         // create the python object

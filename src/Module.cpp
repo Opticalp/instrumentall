@@ -30,7 +30,7 @@
 #include "ModuleFactory.h"
 #include "ModuleManager.h"
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"
@@ -61,7 +61,7 @@ Module::~Module()
     }
 
     // delete ports
-    for (std::vector<InPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
+    for (std::vector<InDataPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
             it!=ite; it++)
         delete *it;
 
@@ -139,7 +139,7 @@ void Module::addInPort(std::string name, std::string description,
         int dataType, size_t index)
 {
     if (index<inPorts.size())
-        inPorts[index] = new InPort(this, name, description, dataType, index);
+        inPorts[index] = new InDataPort(this, name, description, dataType, index);
     else
         poco_bugcheck_msg(("addInPort: wrong index "
                 + Poco::NumberFormatter::format(index)).c_str());
@@ -288,9 +288,9 @@ ParamItem::ParamType Module::getParameterType(std::string paramName)
     return paramSet[getParameterIndex(paramName)].datatype;
 }
 
-InPort* Module::getInPort(std::string portName)
+InDataPort* Module::getInPort(std::string portName)
 {
-    for (std::vector<InPort*>::iterator it = inPorts.begin(),
+    for (std::vector<InDataPort*>::iterator it = inPorts.begin(),
             ite = inPorts.end(); it != ite; it++)
     {
         if (portName.compare((*it)->name()) == 0)

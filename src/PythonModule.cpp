@@ -176,12 +176,12 @@ PyObject* pyModParent(ModMembers* self)
 }
 
 #include "Dispatcher.h"
-#include "InPort.h"
+#include "InDataPort.h"
 #include "PythonInPort.h"
 
 PyObject* pyModInPorts(ModMembers* self)
 {
-    std::vector<InPort*> ports;
+    std::vector<InDataPort*> ports;
     Dispatcher& dispatcher = Poco::Util::Application::instance()
                                         .getSubsystem<Dispatcher>();
 
@@ -200,10 +200,10 @@ PyObject* pyModInPorts(ModMembers* self)
 
     try
     {
-        for (std::vector<InPort*>::iterator it = ports.begin(),
+        for (std::vector<InDataPort*>::iterator it = ports.begin(),
                 ite = ports.end(); it != ite; it++ )
         {
-            Poco::SharedPtr<InPort*> sharedPort;
+            Poco::SharedPtr<InDataPort*> sharedPort;
             sharedPort = dispatcher.getInPort(*it);
 
             // create the python object
@@ -256,7 +256,7 @@ PyObject* pyModInPort(ModMembers* self, PyObject *args)
 
     std::string portName(portNameChar);
 
-    SharedPtr<InPort*> sharedPort;
+    SharedPtr<InDataPort*> sharedPort;
     try
     {
         sharedPort = Poco::Util::Application::instance()

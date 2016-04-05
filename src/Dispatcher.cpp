@@ -32,7 +32,7 @@
 #include "ThreadManager.h"
 #include "Module.h"
 
-#include "InPort.h"
+#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"
@@ -128,10 +128,10 @@ void Dispatcher::addModule(SharedPtr<Module*> module)
     inPortsLock.writeLock();
     outPortsLock.writeLock();
 
-    std::vector<InPort*> inPorts((*module)->getInPorts());
+    std::vector<InDataPort*> inPorts((*module)->getInPorts());
     std::vector<OutPort*> outPorts((*module)->getOutPorts());
 
-    for (std::vector<InPort*>::iterator it = inPorts.begin(),
+    for (std::vector<InDataPort*>::iterator it = inPorts.begin(),
             ite = inPorts.end() ; it != ite ; it++)
         addInPort(*it);
     for (std::vector<OutPort*>::iterator it = outPorts.begin(),
@@ -158,11 +158,11 @@ void Dispatcher::removeModule(SharedPtr<Module*> module)
     inPortsLock.writeLock();
     outPortsLock.writeLock();
 
-    std::vector<InPort*> inPorts((*module)->getInPorts());
+    std::vector<InDataPort*> inPorts((*module)->getInPorts());
     std::vector<OutPort*> outPorts((*module)->getOutPorts());
 
     // remove the input ports first in order to break the connections
-    for (std::vector<InPort*>::reverse_iterator it = inPorts.rbegin(),
+    for (std::vector<InDataPort*>::reverse_iterator it = inPorts.rbegin(),
             ite = inPorts.rend() ; it != ite ; it++)
         removeInPort(*it);
     for (std::vector<OutPort*>::reverse_iterator it = outPorts.rbegin(),
@@ -173,14 +173,14 @@ void Dispatcher::removeModule(SharedPtr<Module*> module)
     outPortsLock.unlock();
 }
 
-SharedPtr<InPort*> Dispatcher::getInPort(InPort* port)
+SharedPtr<InDataPort*> Dispatcher::getInPort(InDataPort* port)
 {
     if (!initialized)
         throw DispatcherException("getInPort",
                 "The dispatcher is not initialized");
 
     inPortsLock.readLock();
-    for (std::vector< SharedPtr<InPort*> >::iterator it=allInPorts.begin(), ite=allInPorts.end();
+    for (std::vector< SharedPtr<InDataPort*> >::iterator it=allInPorts.begin(), ite=allInPorts.end();
             it!=ite; it++)
     {
         if (port==**it)
@@ -217,11 +217,11 @@ SharedPtr<OutPort*> Dispatcher::getOutPort(OutPort* port)
             "Should have been deleted during the query");
 }
 
-void Dispatcher::removeInPort(InPort* port)
+void Dispatcher::removeInPort(InDataPort* port)
 {
     // using a reverse iterator to improve performance when called
     // from the uninitializer
-    for (std::vector< SharedPtr<InPort*> >::reverse_iterator it = allInPorts.rbegin(),
+    for (std::vector< SharedPtr<InDataPort*> >::reverse_iterator it = allInPorts.rbegin(),
             ite = allInPorts.rend(); it!=ite; it++)
     {
         if (port == **it)
@@ -242,11 +242,11 @@ void Dispatcher::removeInPort(InPort* port)
             "the port was not found");
 }
 
-void Dispatcher::addInPort(InPort* port)
+void Dispatcher::addInPort(InDataPort* port)
 {
     // poco_information(logger(),"adding port " + port->name()
     //         + " from module " + port->parent()->name());
-    allInPorts.push_back(SharedPtr<InPort*>(new (InPort*)(port)));
+    allInPorts.push_back(SharedPtr<InDataPort*>(new (InDataPort*)(port)));
 }
 
 void Dispatcher::removeOutPort(OutPort* port)
@@ -261,8 +261,8 @@ void Dispatcher::removeOutPort(OutPort* port)
             // release connections (find targets and act on targets)
             // nb: this is a simple precaution, since all the connections
             // should already be broken by the deletion of the inPorts.
-            std::vector< SharedPtr<InPort*> > sources(port->getTargetPorts());
-            for (std::vector< SharedPtr<InPort*> >::iterator srcIt = sources.begin(),
+            std::vector< SharedPtr<InDataPort*> > sources(port->getTargetPorts());
+            for (std::vector< SharedPtr<InDataPort*> >::iterator srcIt = sources.begin(),
                     srcIte = sources.end() ; srcIt != srcIte ; srcIt++)
                 (**srcIt)->releaseSourcePort();
 
@@ -287,7 +287,7 @@ void Dispatcher::addOutPort(OutPort* port)
     allOutPorts.push_back(SharedPtr<OutPort*>(new (OutPort*)(port)));
 }
 
-void Dispatcher::bind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
+void Dispatcher::bind(SharedPtr<OutPort*> source, SharedPtr<InDataPort*> target)
 {
     if ((*target)->dataType() != (*source)->dataType())
         throw DispatcherException("bind",
@@ -296,17 +296,17 @@ void Dispatcher::bind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
     (*target)->setSourcePort(source);
 }
 
-void Dispatcher::unbind(SharedPtr<InPort*> target)
+void Dispatcher::unbind(SharedPtr<InDataPort*> target)
 {
     (*target)->releaseSourcePort();
 }
 
-void Dispatcher::seqBind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
+void Dispatcher::seqBind(SharedPtr<OutPort*> source, SharedPtr<InDataPort*> target)
 {
     (*target)->setSeqSourcePort(source);
 }
 
-void Dispatcher::seqUnbind(SharedPtr<InPort*> target)
+void Dispatcher::seqUnbind(SharedPtr<InDataPort*> target)
 {
     (*target)->releaseSeqSourcePort();
 }
@@ -317,8 +317,8 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
 
     // poco_information(logger(), port->name() + " data ready");
 
-    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
-    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+    std::vector< SharedPtr<InDataPort*> > targetPorts = port->getTargetPorts();
+    for ( std::vector< SharedPtr<InDataPort*> >::iterator it = targetPorts.begin(),
             ite = targetPorts.end(); it != ite; it++ )
     {
         (**it)->setNew();

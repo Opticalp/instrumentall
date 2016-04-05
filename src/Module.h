@@ -44,7 +44,7 @@
 
 #include <map>
 
-class InPort;
+class InDataPort;
 class OutPort;
 class ModuleFactory;
 
@@ -145,8 +145,8 @@ public:
 	 * on the port items
 	 * @return a copy of the input ports list
 	 */
-	std::vector<InPort*> getInPorts() { return inPorts; }
-	InPort* getInPort(std::string portName);
+	std::vector<InDataPort*> getInPorts() { return inPorts; }
+	InDataPort* getInPort(std::string portName);
 
 	/**
 	 * Get output ports
@@ -397,7 +397,7 @@ private:
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
 
-	std::vector<InPort*> inPorts; ///< list of input data ports
+	std::vector<InDataPort*> inPorts; ///< list of input data ports
 	std::vector<OutPort*> outPorts; ///< list of output data ports
 
 	static std::vector<std::string> names; ///< list of names of all modules
