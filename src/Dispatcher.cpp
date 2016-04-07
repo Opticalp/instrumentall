@@ -361,6 +361,9 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
                                         .getSubsystem<ModuleManager>()
                                         .getModule(*it);
 
+        poco_information(logger(),port->parent()->name() + " port " + port->name()
+                + " STARTS " + (*it)->name() );
+
                 // launch task
         Poco::Util::Application::instance()
                  .getSubsystem<ThreadManager>()
