@@ -97,3 +97,23 @@ DataItem* DataLogger::data()
 
     return tmp;
 }
+
+void DataLogger::runTask()
+{
+    Poco::Mutex::ScopedLock localLock(dataLock);
+
+    if (data() == NULL)
+        return;
+
+    try
+    {
+        log();
+    }
+    catch (Poco::Exception& e)
+    {
+        data()->releaseData();
+        e.rethrow();
+    }
+
+    data()->releaseData();
+}

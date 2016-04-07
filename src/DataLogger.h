@@ -90,7 +90,16 @@ public:
      * Log the data.
      * The implementation must release the data lock.
      */
-    virtual void runTask() = 0;
+    virtual void runTask();
+
+    /**
+     * Log the data
+     *
+     * Function to override in implementations.
+     * This function is called by runTask() if
+     * runTask is not overridden.
+     */
+    virtual void log() { }
 
 protected:
     /**

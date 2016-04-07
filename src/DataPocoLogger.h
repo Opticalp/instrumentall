@@ -52,7 +52,7 @@ public:
     static std::string description()
         { return "Output data into a Poco::Logger"; }
 
-    void runTask();
+    void log();
 
 private:
     /**

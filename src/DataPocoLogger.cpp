@@ -30,13 +30,8 @@
 
 #include "Poco/NumberFormatter.h"
 
-void DataPocoLogger::runTask()
+void DataPocoLogger::log()
 {
-    // TODO: lock main mutex?
-
-    if (data() == NULL)
-        return;
-
     int dataType = data()->dataType();
 
     if (DataItem::isVector(dataType))
@@ -80,8 +75,6 @@ void DataPocoLogger::runTask()
                     "data type not implemented");
         }
     }
-
-    data()->releaseData();
 }
 
 void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
