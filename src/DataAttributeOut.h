@@ -107,7 +107,7 @@ public:
 	void startSequence();
 	void endSequence();
 
-	bool isSettingSequence() { return seqManaging; }
+	bool isSettingSequence() { return seqManaging != 0; }
 
 private:
     static size_t nextToBeUsedIndex; ///< next available data index
