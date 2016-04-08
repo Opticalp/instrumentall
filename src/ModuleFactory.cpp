@@ -176,13 +176,15 @@ Module* ModuleFactory::create(std::string customName)
                 it++)
         {
             if ((*it)->countRemain())
+			{
                 childFactLock.unlock();
                 return (*it)->create(customName);
+			}
         }
 
         childFactLock.unlock();
         throw ModuleFactoryException("create()",
-                "countRemain() is null! ");
+                "ChildFact countRemain() is null! ");
     }
     else if (countRemain())
     {
@@ -201,6 +203,9 @@ Module* ModuleFactory::create(std::string customName)
 
 size_t ModuleFactory::countRemain()
 {
+	if (isLeaf())
+		throw Poco::NotImplementedException(name() + "::countRemain");
+
     size_t count=0;
 
     childFactLock.readLock();
