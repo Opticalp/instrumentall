@@ -58,6 +58,13 @@ void DataLogger::registerData(DataItem* data)
 
     dataLock.lock();
 
+    if (!isSupportedDataType(data->dataType()))
+    {
+        dataLock.unlock();
+        throw Poco::RuntimeException("registerLogger",
+                "This logger do not support this data type");
+    }
+
     // deregister previous parent
     detachNoLock();
 

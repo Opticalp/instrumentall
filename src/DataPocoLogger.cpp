@@ -70,10 +70,26 @@ void DataPocoLogger::log()
             poco_information(logger(), *(data()->getDataToRead<std::string>()));
             break;
         default:
-            data()->releaseData();
             throw Poco::NotImplementedException("DataPocoLogger",
                     "data type not implemented");
         }
+    }
+}
+
+bool DataPocoLogger::isSupportedDataType(int datatype)
+{
+    switch (DataItem::noContainerDataType(datatype))
+    {
+    case DataItem::typeInt32:
+    case DataItem::typeUInt32:
+    case DataItem::typeInt64:
+    case DataItem::typeUInt64:
+    case DataItem::typeFloat:
+    case DataItem::typeDblFloat:
+    case DataItem::typeString:
+        return true;
+    default:
+        return false;
     }
 }
 

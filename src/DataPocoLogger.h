@@ -55,6 +55,8 @@ public:
     void log();
 
 private:
+    bool isSupportedDataType(int datatype);
+
     /**
      * Set the local logger
      */

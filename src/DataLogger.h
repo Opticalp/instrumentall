@@ -113,6 +113,14 @@ protected:
     void registerData(DataItem* data);
 
     /**
+     * Check if the given data type is supported
+     *
+     * To be overridden in the implementations
+     * @see DataItem for the data type definitions
+     */
+    virtual bool isSupportedDataType(int dataType) = 0;
+
+    /**
      * Detach the data logger from its data
      *
      * Without locking the dataLock.
