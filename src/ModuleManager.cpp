@@ -31,6 +31,9 @@
 
 #include "DemoRootFactory.h"
 #include "DataGenFactory.h"
+#include "SignalProcFactory.h"
+#include "ImageProcFactory.h"
+#include "DeviceFactory.h"
 
 ModuleManager::ModuleManager():
 	VerboseEntity(name())
@@ -39,6 +42,9 @@ ModuleManager::ModuleManager():
     // Their constructor explicitly calls ModuleFactory(false)
     addFactory(new DemoRootFactory);
     addFactory(new DataGenFactory);
+    addFactory(new SignalProcFactory);
+    addFactory(new ImageProcFactory);
+    addFactory(new DeviceFactory);
 }
 
 ModuleManager::~ModuleManager()
