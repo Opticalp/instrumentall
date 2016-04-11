@@ -123,12 +123,49 @@ void DataGen::runTask()
         (getInPorts()[trigPort])->release();
 
         if (attr.isSettingSequence())
-            throw Poco::RuntimeException("DatGen",
+        {
+            dataLock.unlock();
+            throw Poco::RuntimeException("DataGen",
                     "Concurrence between trig attribute "
-                    "and modulesequence parameters. ");
+                    "and module sequence parameters. ");
+        }
     }
 
+    if (!trigged)
+    {
+        for (; seqStart > 0; seqStart--)
+        {
+            poco_information(logger(),name()+":startSeq");
+            attr.startSequence();
+        }
+
+        // FIXME: should check that they are not sent more end sequence
+        // than start sequence.
+        for (; seqEnd > 0; seqEnd--)
+        {
+            poco_information(logger(),name()+":endSeq");
+            attr.endSequence();
+        }
+    }
+
+    if (!trigged)
+        enqueue(attr++);
+    else
+        enqueue(inAttr);
+
+
+    // unstack just 1 element (fifo).
+
+    poco_information(logger(),"queue size: "
+            + Poco::NumberFormatter::format(attrQueue.size()));
+    poco_information(logger(),"iQueue front: "
+            + Poco::NumberFormatter::format(iQueue.front()));
+
+    dataLock.unlock();
+
     // try to acquire the output data lock
+    runTaskMutex.lock();
+
     while (!tryData())
     {
         poco_information(logger(),
@@ -137,35 +174,30 @@ void DataGen::runTask()
                 "Wait " + Poco::NumberFormatter::format(TIME_LAPSE)
                 + " ms now and retry. ");
 
+        // the data lock is unlocked, data can be stacked on the queue
+        // during sleep time,
+        // but the main lock avoid another thread to acquire the output
+        // port lock.
+
         if (sleep(TIME_LAPSE))
         {
+            runTaskMutex.unlock();
             poco_notice(logger(), "DataGen::runTask(): cancelled!" );
-        	dataLock.unlock();
             return;
         }
     }
 
-    if (!trigged)
-    {
-        for (; seqStart > 0; seqStart--)
-            attr.startSequence();
 
-        // FIXME: should check that they are not sent more end sequence
-        // than start sequence.
-        for (; seqEnd > 0; seqEnd--)
-            attr.endSequence();
-    }
+    sendData();
+    runTaskMutex.unlock();
+}
 
-    setData();
-
-    if (!trigged)
-        getOutPorts()[outPortData]->notifyReady(attr++);
-    else
-        getOutPorts()[outPortData]->notifyReady(DataAttributeOut(inAttr));
-
-	poco_information(logger(), "DataGen : data sent");
-
-	dataLock.unlock();
+void DataGen::enqueue(DataAttributeOut attrOut)
+{
+    iQueue.push(iPar);
+    fQueue.push(fPar);
+    sQueue.push(sPar);
+    attrQueue.push(attrOut);
 }
 
 bool DataGen::tryData()
@@ -193,36 +225,62 @@ bool DataGen::tryData()
 	}
 }
 
-void DataGen::setData()
+void DataGen::sendData()
 {
-	switch(mDataType)
-	{
-	case DataItem::typeInt32:
-		*pInt32 = static_cast<Poco::Int32>(iPar);
-		break;
-	case DataItem::typeUInt32:
-		*pUInt32 = static_cast<Poco::UInt32>(iPar);
-		break;
-	case DataItem::typeInt64:
-		*pInt64 = static_cast<Poco::Int64>(iPar);
-		break;
-	case DataItem::typeUInt64:
-		*pUInt64 = static_cast<Poco::UInt64>(iPar);
-		break;
-	case DataItem::typeFloat:
-		*pFloat = static_cast<float>(fPar);
-		break;
-	case DataItem::typeDblFloat:
-		*pDblFloat = fPar;
-		break;
-	case DataItem::typeString:
-		*pString = sPar;
-		break;
-	default:
-		// already verified in constructor!
-    	poco_bugcheck_msg("DataGen::setData >> data type not supported");
-    	throw Poco::BugcheckException();
-	}
+    dataLock.writeLock();
+
+    poco_information(logger(),"sendData, queue size: "
+            + Poco::NumberFormatter::format(attrQueue.size()));
+
+    if (attrQueue.size() == 0)
+    {
+        poco_warning(logger(),"data queue is empty?!");
+        dataLock.unlock();
+        return;
+    }
+
+    switch(mDataType)
+    {
+    case DataItem::typeInt32:
+        *pInt32 = static_cast<Poco::Int32>(iQueue.front());
+        break;
+    case DataItem::typeUInt32:
+        *pUInt32 = static_cast<Poco::UInt32>(iQueue.front());
+        break;
+    case DataItem::typeInt64:
+        *pInt64 = static_cast<Poco::Int64>(iQueue.front());
+        break;
+    case DataItem::typeUInt64:
+        *pUInt64 = static_cast<Poco::UInt64>(iQueue.front());
+        break;
+    case DataItem::typeFloat:
+        *pFloat = static_cast<float>(fQueue.front());
+        break;
+    case DataItem::typeDblFloat:
+        *pDblFloat = fQueue.front();
+        break;
+    case DataItem::typeString:
+        *pString = sQueue.front();
+        break;
+    default:
+        // already verified in constructor!
+        poco_bugcheck_msg("DataGen::sendData >> data type not supported");
+        throw Poco::BugcheckException();
+    }
+
+    DataAttributeOut attrOut(attrQueue.front());
+
+    iQueue.pop();
+    fQueue.pop();
+    sQueue.pop();
+    attrQueue.pop();
+
+    // done with the module data
+	dataLock.unlock();
+
+	getOutPorts()[outPortData]->notifyReady(attrOut);
+
+	poco_information(logger(),"DataGen: data sent");
 }
 
 long DataGen::getIntParameterValue(size_t paramIndex)
@@ -276,6 +334,7 @@ void DataGen::setIntParameterValue(size_t paramIndex, long value)
 	switch (paramIndex)
 	{
 	case paramValue:
+	    poco_information(logger(),"write " + Poco::NumberFormatter::format(value));
 		iPar = value;
 		break;
 	case paramSeqStart:

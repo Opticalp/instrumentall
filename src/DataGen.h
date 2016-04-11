@@ -34,6 +34,8 @@
 
 #include "Poco/RWLock.h"
 
+#include <queue>
+
 /**
  * DataGen
  *
@@ -84,7 +86,12 @@ private:
     long seqStart;
     long seqEnd;
 
-    Poco::RWLock dataLock;
+    std::queue<long> iQueue;
+    std::queue<double> fQueue;
+    std::queue<std::string> sQueue;
+    std::queue<DataAttributeOut> attrQueue;
+
+    Poco::RWLock dataLock; ///< general lock for any data of this module
 
     long getIntParameterValue(size_t paramIndex);
     double getFloatParameterValue(size_t paramIndex);
@@ -94,10 +101,20 @@ private:
     void setFloatParameterValue(size_t paramIndex, double value);
     void setStrParameterValue(size_t paramIndex, std::string value);
 
+    /**
+     * Place a new value in the queue
+     *
+     * The dataLock is write-locked by the caller
+     */
+    void enqueue(DataAttributeOut attrOut);
     /// Try to acquire the output port data lock
     bool tryData();
-    /// Set the data to the output port
-    void setData();
+    /**
+     * Set the data to the output port
+     *
+     * acquire the datalock and release it
+     */
+    void sendData();
 
     Poco::Int32* pInt32;
     Poco::UInt32* pUInt32;

@@ -82,14 +82,21 @@ def myMain():
     bind(mod1.outPort("data"), seqAccu.inPorts()[0])
     seqBind(mod1.outPort("data"), seqAccu.inPorts()[0])
 
-    mod1.setParameterValue("value", 1)
+    print 'setParameterValue("value", 50)'
+    mod1.setParameterValue("value", 50)
+    print 'setParameterValue("seqStart", 1)'
     mod1.setParameterValue("seqStart", 1)
+    print "runModule many times... Once, and then in a 'for' loop"
     runModule(mod1)
-    runModule(mod1)
-    runModule(mod1)
+    
+    for value in range(10):
+        mod1.setParameterValue("value", value)
+        runModule(mod1)
+
+    print "wait for all threads to terminate"
     waitAll()
     mod1.setParameterValue("seqEnd", 1)
-    mod1.setParameterValue("value", 10)
+    mod1.setParameterValue("value", 100)
 
     runModule(mod1)
     waitAll()

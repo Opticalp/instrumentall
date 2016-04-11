@@ -93,10 +93,26 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
                 + Poco::NumberFormatter::format(*pData));
         accumulator.clear();
         accumulator.push_back(*pData);
+
+//        // emulate a long task
+//        if (sleep(10*TIME_LAPSE))
+//        {
+//            poco_notice(logger(),
+//                    "DemoModuleSeqMax::runTask(): cancelled!");
+//            return;
+//        }
     }
     else if (attr.isInSequence(seqIndex))
     {
         accumulator.push_back(*pData);
+
+//        // emulate a long task
+//        if (sleep(10*TIME_LAPSE))
+//        {
+//            poco_notice(logger(),
+//                    "DemoModuleSeqMax::runTask(): cancelled!");
+//            return;
+//        }
 
         if (attr.isEndSequence(seqIndex))
         {
