@@ -132,13 +132,7 @@ PyObject* pyModParent(ModMembers* self)
                           .getSubsystem<ModuleManager>()
                           .getFactory( (**self->module)->parent() );
     }
-    catch (ModuleFactoryException& e)
-    {
-        PyErr_SetString(PyExc_RuntimeError,
-                e.displayText().c_str());
-        return NULL;
-    }
-    catch (ModuleException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());

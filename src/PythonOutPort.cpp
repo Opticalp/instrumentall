@@ -94,7 +94,7 @@ PyObject* pyOutPortParent(OutPortMembers* self)
                           .getSubsystem<ModuleManager>()
                           .getModule( (**self->outPort)->parent() );
     }
-    catch (ModuleException& e) // from getModule
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());

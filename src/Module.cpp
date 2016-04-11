@@ -37,9 +37,6 @@
 #include "Poco/NumberFormatter.h"
 #include "Poco/NumberParser.h"
 
-#include <typeinfo>
-POCO_IMPLEMENT_EXCEPTION( ModuleException, Poco::Exception, "Module error")
-
 std::vector<std::string> Module::names;
 Poco::RWLock Module::namesLock;
 
@@ -132,7 +129,7 @@ ModuleFactory* Module::parent()
     if (mParent)
         return mParent;
     else
-        throw ModuleException("parent",
+        throw Poco::InvalidAccessException("parent",
                 "This module has no valid parent factory");
 }
 

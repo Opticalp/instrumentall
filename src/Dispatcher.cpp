@@ -193,7 +193,7 @@ SharedPtr<InPort*> Dispatcher::getInPort(InPort* port)
     }
 
     inPortsLock.unlock();
-    throw ModuleException("getInPort", "port not found: "
+    throw Poco::NotFoundException("getInPort", "port not found: "
             "Should have been deleted during the query");
 }
 
@@ -215,7 +215,7 @@ SharedPtr<OutPort*> Dispatcher::getOutPort(OutPort* port)
     }
 
     outPortsLock.unlock();
-    throw ModuleException("getOutPort", "port not found: "
+    throw Poco::NotFoundException("getOutPort", "port not found: "
             "Should have been deleted during the query");
 }
 

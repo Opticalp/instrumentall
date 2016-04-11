@@ -143,7 +143,7 @@ SharedPtr<Module*> ModuleManager::getModule(Module* pModule)
     }
 
     modulesLock.unlock();
-    throw ModuleException("getModule", "module not found: "
+    throw Poco::NotFoundException("getModule", "module not found: "
             "Should have been deleted during the query");
 }
 
@@ -162,7 +162,7 @@ SharedPtr<Module*> ModuleManager::getModule(std::string modName)
     }
 
     modulesLock.unlock();
-    throw ModuleException("getModule",
+    throw Poco::NotFoundException("getModule",
             "module " + modName + " not found");
 }
 
