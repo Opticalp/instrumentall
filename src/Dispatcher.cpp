@@ -38,9 +38,6 @@
 
 #include "Poco/NumberFormatter.h"
 
-#include <typeinfo>
-POCO_IMPLEMENT_EXCEPTION( DispatcherException, Poco::Exception, "Dispatcher error")
-
 Dispatcher::Dispatcher():
     VerboseEntity(name()),
     initialized(false),
@@ -178,7 +175,7 @@ void Dispatcher::removeModule(SharedPtr<Module*> module)
 SharedPtr<InPort*> Dispatcher::getInPort(InPort* port)
 {
     if (!initialized)
-        throw DispatcherException("getInPort",
+        throw Poco::RuntimeException("getInPort",
                 "The dispatcher is not initialized");
 
     inPortsLock.readLock();
@@ -200,7 +197,7 @@ SharedPtr<InPort*> Dispatcher::getInPort(InPort* port)
 SharedPtr<OutPort*> Dispatcher::getOutPort(OutPort* port)
 {
     if (!initialized)
-        throw DispatcherException("getInPort",
+        throw Poco::RuntimeException("getInPort",
                 "The dispatcher is not initialized");
 
     outPortsLock.readLock();
@@ -308,7 +305,7 @@ void Dispatcher::bind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
 {
     if (!(*target)->isTrig()
             && (*target)->dataType() != (*source)->dataType())
-        throw DispatcherException("bind",
+        throw Poco::DataFormatException("bind",
                 "The source and target port data types must fit");
 
     (*target)->setSourcePort(source);

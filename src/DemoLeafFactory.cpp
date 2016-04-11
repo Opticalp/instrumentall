@@ -62,5 +62,5 @@ Module* DemoLeafFactory::newChildModule(std::string customName)
     if (getSelector().compare("leafParam")==0)
         return new DemoModuleParam(this, customName);
 
-    throw ModuleFactoryException("newChildModule","Impossible selector value");
+    throw Poco::InvalidArgumentException("newChildModule","Impossible selector value");
 }

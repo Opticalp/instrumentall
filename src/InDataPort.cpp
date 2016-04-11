@@ -59,7 +59,7 @@ void InDataPort::setSeqSourcePort(SharedPtr<OutPort*> port)
     {
         (*mSeqSourcePort)->addSeqTargetPort(this);
     }
-    catch (DispatcherException& e)
+    catch (Poco::Exception& e)
     {
         mSeqSourcePort = SharedPtr<OutPort*>(
                 new (OutPort*)( Poco::Util::Application::instance()

@@ -48,8 +48,6 @@ using Poco::SharedPtr;
 
 class Module;
 
-POCO_DECLARE_EXCEPTION( , DispatcherException, Poco::Exception)
-
 /**
  * Dispatcher
  *
@@ -129,7 +127,7 @@ public:
      /**
       * Create a connection between two ports
       *
-      * @throw DispatcherException that is forwarded
+      * @throw Poco::Exception that is forwarded
       * from @ref getInPort. It is issued if the port is deleted
       * during the binding.
       * @note If the target port expired during the binding,
@@ -147,7 +145,7 @@ public:
      /**
       * Create a sequence combination connection between two ports
       *
-      * @throw DispatcherException that is forwarded
+      * @throw Poco::Exception that is forwarded
       * from @ref getInPort. It is issued if the port is deleted
       * during the binding.
       * @note If the target port expired during the binding,

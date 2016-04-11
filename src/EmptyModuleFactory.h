@@ -51,26 +51,19 @@ public:
 
     std::string selectDescription()
     {
-        throw ModuleFactoryException("selectDescription()",
+        throw Poco::NotImplementedException("selectDescription()",
                 "Empty factory ");
     }
 
     std::vector<std::string> selectValueList()
     {
-        throw ModuleFactoryException("selectDescription()",
+        throw Poco::NotImplementedException("selectValueList()",
                 "Empty factory ");
     }
 
-private:
-    ModuleFactoryBranch* newChildFactory(std::string selector)
+    size_t countRemain()
     {
-        throw ModuleFactoryException("selectDescription()",
-                "Empty factory ");
-    }
-
-    Module* newChildModule(std::string customName)
-    {
-        throw ModuleFactoryException("selectDescription()",
+        throw Poco::NotImplementedException("countRemain()",
                 "Empty factory ");
     }
 };

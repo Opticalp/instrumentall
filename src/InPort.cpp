@@ -83,7 +83,7 @@ void InPort::setSourcePort(SharedPtr<OutPort*> port)
         (*mSourcePort)->addTargetPort(this);
         plugged = true;
     }
-    catch (DispatcherException& e)
+    catch (Poco::Exception& e)
     {
         mSourcePort = SharedPtr<OutPort*>(
                 new (OutPort*)( Poco::Util::Application::instance()

@@ -98,7 +98,7 @@ extern "C" int pyModInit(ModMembers* self, PyObject *args, PyObject *kwds)
         *self->module =
                 Poco::Util::Application::instance().getSubsystem<ModuleManager>().getModule(name);
     }
-    catch (ModuleFactoryException& e)
+    catch (Poco::Exception& e)
     {
         std::string errMsg = "Not able to initialize the module: "
                 + e.displayText();
@@ -231,7 +231,7 @@ PyObject* pyModInPorts(ModMembers* self)
             }
         }
     }
-    catch (DispatcherException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());
@@ -355,7 +355,7 @@ PyObject* pyModOutPorts(ModMembers* self)
             }
         }
     }
-    catch (DispatcherException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());

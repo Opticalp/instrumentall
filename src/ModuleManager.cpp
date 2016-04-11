@@ -239,7 +239,7 @@ SharedPtr<ModuleFactory*> ModuleManager::getRootFactory(std::string name)
         }
     }
 
-    throw ModuleFactoryException("getRootFactory",
+    throw Poco::NotFoundException("getRootFactory",
             "factory " + name + " not found among the root factories. ");
 }
 
@@ -257,6 +257,6 @@ SharedPtr<ModuleFactory*> ModuleManager::getFactory(ModuleFactory* pFactory)
     }
 
     factoriesLock.unlock();
-    throw ModuleFactoryException("getFactory", "factory not found: "
+    throw Poco::NotFoundException("getFactory", "factory not found: "
             "Should have been deleted during the query");
 }
