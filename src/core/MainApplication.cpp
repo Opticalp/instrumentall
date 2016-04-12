@@ -37,6 +37,7 @@
 #include "DepPoco.h"
 #include "UI/python/DepPython.h"
 #include "DepOpenCv.h"
+#include "UI/GUI/DepWxWidgets.h"
 
 #include "UI/PythonManager.h"
 #include "Dispatcher.h"
@@ -58,6 +59,9 @@ MainApplication::MainApplication(): _helpRequested(false)
     deps.push_back(new DepPoco);
 #ifdef HAVE_OPENCV
     deps.push_back(new DepOpenCv);
+#endif
+#ifdef HAVE_WXWIDGETS
+    deps.push_back(new DepWxWidgets);
 #endif
 
     Application::instance().addSubsystem(new ModuleManager);

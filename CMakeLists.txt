@@ -3,9 +3,9 @@
 # @author   PhRG / opticalp.fr
 # @license  MIT
 
-# minimalist cmake file
-#  - create a very simple project
-#  - look for Poco dependencies
+# main cmake file
+#  - create a simple project
+#  - look for dependencies
 #  - link to those dependencies
 
 cmake_minimum_required (VERSION 2.8.8)
@@ -16,6 +16,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 option (no-opencv
     "if specified, don't try to use the OpenCV libraries"    )
+option (no-wxwidgets
+    "if specified, don't try to import the wxWidgets libraries to build the graphical interface"   )
 
 # main sources
 # custom parameters
@@ -89,6 +91,22 @@ if ( NOT no-opencv )
     add_definitions ( -DHAVE_OPENCV )
     target_link_libraries( instrumentall ${OpenCV_LIBS} )
 endif ( NOT no-opencv ) 
+
+# find wxWidgets
+if ( NOT no-wxwidgets )
+    # Note that for MinGW users the order of libs is important!
+    find_package(wxWidgets COMPONENTS xrc core base)
+    if(wxWidgets_FOUND)
+        message ( STATUS "wxWidgets found: ${wxWidgets_LIBRARIES}")
+        include(${wxWidgets_USE_FILE})
+    
+        message ( STATUS "find_package(wxwidgets) added the definitions: ${wxWidgets_DEFINITIONS}" )
+        add_definitions ( -DHAVE_WXWIDGETS )
+        target_link_libraries( instrumentall ${wxWidgets_LIBRARIES})
+    else (wxWidgets_FOUND)
+        message ( WARNING "wxWidgets not found" )
+    endif (wxWidgets_FOUND)
+endif ( NOT no-wxwidgets )
 
 ## generate build info
 
