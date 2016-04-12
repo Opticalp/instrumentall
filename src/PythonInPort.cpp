@@ -89,7 +89,7 @@ PyObject* pyInPortParent(InPortMembers* self)
                           .getSubsystem<ModuleManager>()
                           .getModule( (**self->inPort)->parent() );
     }
-    catch (ModuleException& e) // from getModule
+    catch (Poco::Exception& e) // from getModule
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());

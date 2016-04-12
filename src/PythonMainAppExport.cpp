@@ -248,7 +248,7 @@ pythonDispatchBind(PyObject* self, PyObject* args)
             .getSubsystem<Dispatcher>()
             .bind(*pyOutPort->outPort,*pyInPort->inPort);
     }
-    catch (DispatcherException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
         return NULL;
@@ -321,7 +321,7 @@ pythonDispatchSeqBind(PyObject* self, PyObject* args)
             .getSubsystem<Dispatcher>()
             .seqBind(*pyOutPort->outPort,*pyInPort->inPort);
     }
-    catch (DispatcherException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
         return NULL;

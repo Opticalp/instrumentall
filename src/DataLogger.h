@@ -90,7 +90,16 @@ public:
      * Log the data.
      * The implementation must release the data lock.
      */
-    virtual void runTask() = 0;
+    virtual void runTask();
+
+    /**
+     * Log the data
+     *
+     * Function to override in implementations.
+     * This function is called by runTask() if
+     * runTask is not overridden.
+     */
+    virtual void log() { }
 
 protected:
     /**
@@ -102,6 +111,14 @@ protected:
      * Bind the logger to its data item
      */
     void registerData(DataItem* data);
+
+    /**
+     * Check if the given data type is supported
+     *
+     * To be overridden in the implementations
+     * @see DataItem for the data type definitions
+     */
+    virtual bool isSupportedDataType(int dataType) = 0;
 
     /**
      * Detach the data logger from its data

@@ -30,9 +30,6 @@
 #include "ModuleFactory.h"
 #include "ModuleFactoryBranch.h"
 
-#include <typeinfo>
-POCO_IMPLEMENT_EXCEPTION( ModuleFactoryException, Poco::Exception, "ModuleFactory error")
-
 ModuleFactory::ModuleFactory(bool leaf, bool root):
     bRoot(root), bLeaf(leaf),
     deletingChildFact(NULL),
@@ -88,13 +85,13 @@ std::string ModuleFactory::validateSelector(std::string selector)
             return selector;
     }
 
-    throw ModuleFactoryException("Unrecognized selector: " + selector);
+    throw Poco::InvalidArgumentException("Unrecognized selector: " + selector);
 }
 
 void ModuleFactory::deleteChildFactory(std::string property)
 {
     if (isLeaf())
-        throw ModuleFactoryException("deleteChildFactory",
+        throw Poco::RuntimeException(name() + "::deleteChildFactory",
                 "No child: this factory is a leaf");
 
     std::string validated(validateSelector(property));
@@ -116,7 +113,7 @@ void ModuleFactory::deleteChildFactory(std::string property)
     }
 
     childFactLock.unlock();
-    throw ModuleFactoryException("deleteChildFactory",
+    throw Poco::RuntimeException(name() + "deleteChildFactory",
             "Child factory not found");
 }
 
@@ -176,13 +173,15 @@ Module* ModuleFactory::create(std::string customName)
                 it++)
         {
             if ((*it)->countRemain())
+			{
                 childFactLock.unlock();
                 return (*it)->create(customName);
+			}
         }
 
         childFactLock.unlock();
-        throw ModuleFactoryException("create()",
-                "countRemain() is null! ");
+        throw Poco::RuntimeException(name() + "::create()",
+                "ChildFact countRemain() is null! ");
     }
     else if (countRemain())
     {
@@ -194,13 +193,16 @@ Module* ModuleFactory::create(std::string customName)
     }
     else
     {
-        throw ModuleFactoryException("create()",
+        throw Poco::RuntimeException(name() + "::create()",
                 "countRemain() is null! ");
     }
 }
 
 size_t ModuleFactory::countRemain()
 {
+	if (isLeaf())
+		throw Poco::NotImplementedException(name() + "::countRemain");
+
     size_t count=0;
 
     childFactLock.readLock();

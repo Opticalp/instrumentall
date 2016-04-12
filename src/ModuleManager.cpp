@@ -31,6 +31,9 @@
 
 #include "DemoRootFactory.h"
 #include "DataGenFactory.h"
+#include "SignalProcFactory.h"
+#include "ImageProcFactory.h"
+#include "DeviceFactory.h"
 
 ModuleManager::ModuleManager():
 	VerboseEntity(name())
@@ -39,6 +42,9 @@ ModuleManager::ModuleManager():
     // Their constructor explicitly calls ModuleFactory(false)
     addFactory(new DemoRootFactory);
     addFactory(new DataGenFactory);
+    addFactory(new SignalProcFactory);
+    addFactory(new ImageProcFactory);
+    addFactory(new DeviceFactory);
 }
 
 ModuleManager::~ModuleManager()
@@ -137,7 +143,7 @@ SharedPtr<Module*> ModuleManager::getModule(Module* pModule)
     }
 
     modulesLock.unlock();
-    throw ModuleException("getModule", "module not found: "
+    throw Poco::NotFoundException("getModule", "module not found: "
             "Should have been deleted during the query");
 }
 
@@ -156,7 +162,7 @@ SharedPtr<Module*> ModuleManager::getModule(std::string modName)
     }
 
     modulesLock.unlock();
-    throw ModuleException("getModule",
+    throw Poco::NotFoundException("getModule",
             "module " + modName + " not found");
 }
 
@@ -233,7 +239,7 @@ SharedPtr<ModuleFactory*> ModuleManager::getRootFactory(std::string name)
         }
     }
 
-    throw ModuleFactoryException("getRootFactory",
+    throw Poco::NotFoundException("getRootFactory",
             "factory " + name + " not found among the root factories. ");
 }
 
@@ -251,6 +257,6 @@ SharedPtr<ModuleFactory*> ModuleManager::getFactory(ModuleFactory* pFactory)
     }
 
     factoriesLock.unlock();
-    throw ModuleFactoryException("getFactory", "factory not found: "
+    throw Poco::NotFoundException("getFactory", "factory not found: "
             "Should have been deleted during the query");
 }

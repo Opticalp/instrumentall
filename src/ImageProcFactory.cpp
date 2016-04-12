@@ -1,6 +1,6 @@
 /**
- * @file	src/DataPocoLogger.h
- * @date	Mar 2016
+ * @file	src/ImageProcFactory.cpp
+ * @date	Apr 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,62 +26,26 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DATAPOCOLOGGER_H_
-#define SRC_DATAPOCOLOGGER_H_
+#include "ImageProcFactory.h"
 
-#include "DataLogger.h"
+// #include "ImproveThings.h"
 
-#include "DataItem.h"
-
-#include "Poco/Logger.h"
-
-/**
- * DataPocoLogger
- *
- * Very simple data logger that ouputs data into a Poco::Logger
- */
-class DataPocoLogger: public DataLogger
+std::vector<std::string> ImageProcFactory::selectValueList()
 {
-public:
-    DataPocoLogger();
+    std::vector<std::string> list;
+//    list.push_back("improveThings");
+    return list;
+}
 
-    virtual ~DataPocoLogger() { }
-
-    std::string name() { return "DataPocoLogger"; }
-
-    static std::string description()
-        { return "Output data into a Poco::Logger"; }
-
-    void log();
-
-private:
-    bool isSupportedDataType(int datatype);
-
-    /**
-     * Set the local logger
-     */
-    void setLogger(std::string loggerName)
-    {
-        pLogger = &Poco::Logger::get(loggerName);
-    }
-
-    /**
-     * Get the local logger
-     */
-    Poco::Logger& logger()
-    {
-        poco_check_ptr(pLogger);
-        return *pLogger;
-    }
-
-    Poco::Logger* pLogger;
-
-    /**
-     * Log a vector
-     *
-     * called by runTask()
-     */
-    void logVectorValue(DataItem::DataTypeEnum dataType);
-};
-
-#endif /* SRC_DATAPOCOLOGGER_H_ */
+ModuleFactoryBranch* ImageProcFactory::newChildFactory(std::string selector)
+{
+//	if (selector.compare("improveThings") == 0)
+//	{
+//		return new ImproveThings(this, selector);
+//	}
+//	else
+	{
+		poco_bugcheck_msg("Create: unknown selector");
+		throw Poco::BugcheckException();
+	}
+}

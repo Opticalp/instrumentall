@@ -89,7 +89,7 @@ extern "C" int pyModFactInit(ModFactMembers* self, PyObject *args, PyObject *kwd
         *self->moduleFactory =
                 Poco::Util::Application::instance().getSubsystem<ModuleManager>().getRootFactory(name);
     }
-    catch (ModuleFactoryException& e)
+    catch (Poco::Exception& e)
     {
         std::string errMsg = "Not able to initialize the factory: "
                 + e.displayText();
@@ -127,7 +127,7 @@ PyObject* pyModFactSelect(ModFactMembers* self, PyObject* args)
                               reinterpret_cast<ModuleFactory*>(
                                       &(**self->moduleFactory)->select(paramName)) );
     }
-    catch (ModuleFactoryException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());
@@ -168,7 +168,7 @@ PyObject* pyModFactSelectDescription(ModFactMembers* self)
     {
         return PyString_FromString((**self->moduleFactory)->selectDescription().c_str());
     }
-    catch (ModuleFactoryException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());
@@ -184,7 +184,7 @@ PyObject* pyModFactSelectValueList(ModFactMembers* self)
     {
         strValues = (**self->moduleFactory)->selectValueList();
     }
-    catch (ModuleFactoryException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());
@@ -220,7 +220,7 @@ PyObject* pyModFactCountRemain(ModFactMembers* self)
     {
         cnt = (**self->moduleFactory)->countRemain();
     }
-    catch (ModuleFactoryException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());

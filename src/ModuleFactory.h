@@ -37,8 +37,6 @@
 
 class ModuleFactoryBranch;
 
-POCO_DECLARE_EXCEPTION( , ModuleFactoryException, Poco::Exception)
-
 /**
  * ModuleFactory
  *
@@ -124,7 +122,7 @@ public:
      */
     virtual std::string selectDescription()
     {
-        throw ModuleFactoryException("selectDescription()",
+        throw Poco::NotImplementedException(name() + "::selectDescription()",
                 "This factory is probably a leaf. ");
     }
 
@@ -139,7 +137,7 @@ public:
      */
     virtual std::vector<std::string> selectValueList()
     {
-        throw ModuleFactoryException("selectValueList()",
+        throw Poco::NotImplementedException(name() + "::selectValueList()",
                 "This factory is probably a leaf. ");
     }
 
@@ -249,7 +247,7 @@ protected:
      */
     virtual ModuleFactoryBranch* newChildFactory(std::string selector)
     {
-        throw ModuleFactoryException("select()",
+        throw Poco::NotImplementedException(name() + "::select()",
                 "This factory is probably a leaf. ");
     }
 
@@ -272,7 +270,7 @@ protected:
      */
     virtual Module* newChildModule(std::string customName)
     {
-        throw ModuleFactoryException("select()",
+        throw Poco::NotImplementedException(name() + "::create()",
                 "This factory is not able to create a new child module. ");
     }
 

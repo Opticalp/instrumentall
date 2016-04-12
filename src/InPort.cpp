@@ -37,7 +37,7 @@
 InPort::InPort(Module* parent, std::string name, std::string description,
         int datatype, size_t index, bool trig):
         Port(parent, name, description, datatype, index),
-        used(false), plugged(false),
+        used(true), plugged(false),
         isTrigFlag(trig)
 {
     mSourcePort = SharedPtr<OutPort*>(
@@ -83,7 +83,7 @@ void InPort::setSourcePort(SharedPtr<OutPort*> port)
         (*mSourcePort)->addTargetPort(this);
         plugged = true;
     }
-    catch (DispatcherException& e)
+    catch (Poco::Exception& e)
     {
         mSourcePort = SharedPtr<OutPort*>(
                 new (OutPort*)( Poco::Util::Application::instance()

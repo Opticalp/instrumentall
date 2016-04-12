@@ -1,6 +1,6 @@
 /**
- * @file	src/DataPocoLogger.h
- * @date	Mar 2016
+ * @file	src/ImageProcFactory.h
+ * @date	Apr 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,62 +26,39 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DATAPOCOLOGGER_H_
-#define SRC_DATAPOCOLOGGER_H_
+#ifndef SRC_IMAGEPROCFACTORY_H_
+#define SRC_IMAGEPROCFACTORY_H_
 
-#include "DataLogger.h"
-
-#include "DataItem.h"
-
-#include "Poco/Logger.h"
+#include "ModuleFactory.h"
 
 /**
- * DataPocoLogger
+ * ImageProcFactory
  *
- * Very simple data logger that ouputs data into a Poco::Logger
+ * Root factory for any image processing module
  */
-class DataPocoLogger: public DataLogger
+class ImageProcFactory: public ModuleFactory
 {
 public:
-    DataPocoLogger();
+    ImageProcFactory(): ModuleFactory(false) // is not a leaf, is root.
+		{ setLogger(name()); }
 
-    virtual ~DataPocoLogger() { }
+    virtual ~ImageProcFactory() { }
 
-    std::string name() { return "DataPocoLogger"; }
+    std::string name() { return "ImageProcFactory"; }
+    std::string description()
+    {
+        return "Factory for image processing modules";
+    }
 
-    static std::string description()
-        { return "Output data into a Poco::Logger"; }
+    std::string selectDescription()
+    {
+        return "Select the processing";
+    }
 
-    void log();
+    std::vector<std::string> selectValueList();
 
 private:
-    bool isSupportedDataType(int datatype);
-
-    /**
-     * Set the local logger
-     */
-    void setLogger(std::string loggerName)
-    {
-        pLogger = &Poco::Logger::get(loggerName);
-    }
-
-    /**
-     * Get the local logger
-     */
-    Poco::Logger& logger()
-    {
-        poco_check_ptr(pLogger);
-        return *pLogger;
-    }
-
-    Poco::Logger* pLogger;
-
-    /**
-     * Log a vector
-     *
-     * called by runTask()
-     */
-    void logVectorValue(DataItem::DataTypeEnum dataType);
+    ModuleFactoryBranch* newChildFactory(std::string selector);
 };
 
-#endif /* SRC_DATAPOCOLOGGER_H_ */
+#endif /* SRC_IMAGEPROCFACTORY_H_ */
