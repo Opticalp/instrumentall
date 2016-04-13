@@ -374,3 +374,10 @@ void Dispatcher::runModule(SharedPtr<Module*> module)
              .getSubsystem<ThreadManager>()
              .start(*module);
 }
+
+void Dispatcher::runModule(Module* module)
+{
+    Poco::Util::Application::instance()
+             .getSubsystem<ThreadManager>()
+             .start(module);
+}
