@@ -83,9 +83,12 @@ bool DataAttributeIn::isStartSequence(size_t& seqIndex)
     if (seqTargets.count(mParent) == 0)
         return false;
 
+	if (startingSequences.size() == 0)
+		return false;
+
     size_t currentSeq;
     currentSeq = allSequences.back();
-    if (currentSeq == startingSequences.back())
+	if (currentSeq == startingSequences.back())
     {
         seqIndex = currentSeq;
         return true;
