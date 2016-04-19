@@ -123,6 +123,25 @@ private:
     float* pFloat;
     double* pDblFloat;
     std::string* pString;
+
+    std::vector<Poco::Int32>* pVectInt32;
+    std::vector<Poco::UInt32>* pVectUInt32;
+    std::vector<Poco::Int64>* pVectInt64;
+    std::vector<Poco::UInt64>* pVectUInt64;
+    std::vector<float>* pVectFloat;
+    std::vector<double>* pVectDblFloat;
+    std::vector<std::string>* pVectString;
+
+    /// Convenience function to fill out the output vector
+    template <typename T>
+    std::vector<T> fillOutIntVect(int dataType);
+
+    template <typename T>
+    std::vector<T> fillOutFloatVect(int dataType);
+
+    std::vector<std::string> fillOutStrVect();
 };
+
+#include "DataGen.ipp"
 
 #endif /* SRC_DATAGEN_H_ */

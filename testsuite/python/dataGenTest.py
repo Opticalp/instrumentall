@@ -104,7 +104,17 @@ def myMain():
     runModule(mod1)
     waitAll()
     print "Return value is: " + str(seqAccu.outPorts()[0].getDataValue())
+    
+    print "Test the vector generation"
+    mod1 = fac.select("dblFloatVect").create("vectGen")
+    
+    for value in range(10):
+        mod1.setParameterValue("value", value)
 
+    runModule(mod1)
+    waitAll() # mandatory!! If not done, there is no way to know where multiple calls are splited 
+    print "Return value is: " + str(mod1.outPort("data").getDataValue())
+    
     print "End of script dataGenTest.py"
     
 # main body    

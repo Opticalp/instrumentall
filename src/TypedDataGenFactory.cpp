@@ -44,8 +44,5 @@ Module* TypedDataGenFactory::newChildModule(std::string customName)
 {
 	int datatype = DataItem::getTypeFromShortStr(getSelector());
 
-	if (DataItem::isVector(datatype))
-		throw Poco::NotImplementedException("create");
-
 	return new DataGen(this, customName, datatype);
 }

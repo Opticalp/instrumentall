@@ -60,7 +60,7 @@ DataGen::DataGen(ModuleFactory* parent, std::string customName, int dataType):
 
     ParamItem::ParamType paramType;
 
-    switch (mDataType)
+    switch (DataItem::noContainerDataType(mDataType))
     {
     case DataItem::typeInt32:
     case DataItem::typeUInt32:
@@ -213,7 +213,23 @@ bool DataGen::tryData()
 		return getOutPorts()[outPortData]->tryData<double>(pDblFloat);
 	case DataItem::typeString:
 		return getOutPorts()[outPortData]->tryData<std::string>(pString);
-	default:
+
+    case DataItem::typeInt32 | DataItem::contVector:
+        return getOutPorts()[outPortData]->tryData< std::vector<Poco::Int32> >(pVectInt32);
+    case DataItem::typeUInt32 | DataItem::contVector:
+        return getOutPorts()[outPortData]->tryData< std::vector<Poco::UInt32> >(pVectUInt32);
+    case DataItem::typeInt64 | DataItem::contVector:
+        return getOutPorts()[outPortData]->tryData< std::vector<Poco::Int64> >(pVectInt64);
+    case DataItem::typeUInt64 | DataItem::contVector:
+        return getOutPorts()[outPortData]->tryData< std::vector<Poco::UInt64> >(pVectUInt64);
+    case DataItem::typeFloat | DataItem::contVector:
+        return getOutPorts()[outPortData]->tryData< std::vector<float> >(pVectFloat);
+    case DataItem::typeDblFloat | DataItem::contVector:
+        return getOutPorts()[outPortData]->tryData< std::vector<double> >(pVectDblFloat);
+    case DataItem::typeString | DataItem::contVector:
+        return getOutPorts()[outPortData]->tryData< std::vector<std::string> >(pVectString);
+
+    default:
 		// already verified in constructor!
     	poco_bugcheck_msg("DataGen::tryData >> data type not supported");
     	throw Poco::BugcheckException();
@@ -267,6 +283,29 @@ void DataGen::sendData()
         *pString = sQueue.front();
         sQueue.pop();
         break;
+
+    case DataItem::typeInt32 | DataItem::contVector:
+        *pVectInt32 = fillOutIntVect<Poco::Int32>(DataItem::typeInt32);
+        break;
+    case DataItem::typeUInt32 | DataItem::contVector:
+        *pVectUInt32 = fillOutIntVect<Poco::UInt32>(DataItem::typeUInt32);
+        break;
+    case DataItem::typeInt64 | DataItem::contVector:
+        *pVectInt64 = fillOutIntVect<Poco::Int64>(DataItem::typeInt64);
+        break;
+    case DataItem::typeUInt64 | DataItem::contVector:
+        *pVectUInt64 = fillOutIntVect<Poco::UInt64>(DataItem::typeUInt64);
+        break;
+    case DataItem::typeFloat | DataItem::contVector:
+        *pVectFloat = fillOutFloatVect<float>(DataItem::typeFloat);
+        break;
+    case DataItem::typeDblFloat | DataItem::contVector:
+        *pVectDblFloat = fillOutFloatVect<double>(DataItem::typeDblFloat);
+        break;
+    case DataItem::typeString | DataItem::contVector:
+        *pVectString = fillOutStrVect();
+        break;
+
     default:
         // already verified in constructor!
         poco_bugcheck_msg("DataGen::sendData >> data type not supported");

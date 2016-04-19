@@ -45,9 +45,5 @@ std::vector<std::string> DataGenFactory::selectValueList()
 
 ModuleFactoryBranch* DataGenFactory::newChildFactory(std::string selector)
 {
-	if (DataItem::isVector(DataItem::getTypeFromShortStr(selector)))
-		 throw Poco::NotImplementedException("DataGenFactory::create",
-				 "vector containers are not supported now");
-
 	return new TypedDataGenFactory(this, selector);
 }
