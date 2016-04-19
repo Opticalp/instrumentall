@@ -40,7 +40,7 @@ size_t DataGen::refCount = 0;
 DataGen::DataGen(ModuleFactory* parent, std::string customName, int dataType):
 	Module(parent, customName),
 	mDataType(dataType),
-	iPar(0), fPar(0),
+	iPar(-1), fPar(-1),
 	seqStart(false), seqEnd(false)
 {
 	setInternalName(DataItem::dataTypeShortStr(mDataType)
@@ -82,7 +82,8 @@ DataGen::DataGen(ModuleFactory* parent, std::string customName, int dataType):
 
     addParameter(paramValue,
     		"value",
-    		"value that will be exported on the data output port",
+    		"value that will be exported on the data output port. "
+    		"This parameter is stacked (fifo). ",
     		paramType);
 
     addParameter(paramSeqStart,
@@ -91,7 +92,9 @@ DataGen::DataGen(ModuleFactory* parent, std::string customName, int dataType):
     		ParamItem::typeInteger);
     addParameter(paramSeqEnd,
     		"seqEnd",
-    		"define if the data to be sent is a end sequence",
+    		"define if the data to be sent is a end sequence. "
+    		"You should wait for the end of the execution of this module, "
+    		"before setting it, or it could be applied to the wrong value. ",
     		ParamItem::typeInteger);
 
     notifyCreation();
@@ -104,7 +107,8 @@ std::string DataGen::description()
 {
 	std::string descr = DataItem::dataTypeStr(mDataType);
 	descr += " data generator Module. "
-			"The parameter sets the value that will be sent. ";
+			"The parameter sets the value that will be sent. "
+			"The \"value\" parameter is stacked (fifo)! ";
 	return descr;
 }
 
@@ -149,16 +153,16 @@ void DataGen::runTask()
     }
 
     if (!trigged)
-        enqueue(attr++);
+        attrQueue.push(attr++);
     else
-        enqueue(inAttr);
+        attrQueue.push(inAttr);
 
-
-    // unstack just 1 element (fifo).
-
+    // unstack and send just 1 element (fifo).
     poco_information(logger(),"queue size: "
             + Poco::NumberFormatter::format(attrQueue.size()));
-    poco_information(logger(),"iQueue front: "
+
+    if (iQueue.size())
+        poco_information(logger(),"iQueue front: "
             + Poco::NumberFormatter::format(iQueue.front()));
 
     dataLock.unlock();
@@ -187,17 +191,8 @@ void DataGen::runTask()
         }
     }
 
-
     sendData();
     runTaskMutex.unlock();
-}
-
-void DataGen::enqueue(DataAttributeOut attrOut)
-{
-    iQueue.push(iPar);
-    fQueue.push(fPar);
-    sQueue.push(sPar);
-    attrQueue.push(attrOut);
 }
 
 bool DataGen::tryData()
@@ -233,34 +228,44 @@ void DataGen::sendData()
             + Poco::NumberFormatter::format(attrQueue.size()));
 
     if (attrQueue.size() == 0)
-    {
-        poco_warning(logger(),"data queue is empty?!");
-        dataLock.unlock();
-        return;
-    }
+        poco_bugcheck_msg("data queue is empty?!");
+
+    if (iQueue.size() == 0)
+        iQueue.push(iPar);
+    if (fQueue.size() == 0)
+        fQueue.push(fPar);
+    if (sQueue.size() == 0)
+        sQueue.push(sPar);
 
     switch(mDataType)
     {
     case DataItem::typeInt32:
         *pInt32 = static_cast<Poco::Int32>(iQueue.front());
+        iQueue.pop();
         break;
     case DataItem::typeUInt32:
         *pUInt32 = static_cast<Poco::UInt32>(iQueue.front());
+        iQueue.pop();
         break;
     case DataItem::typeInt64:
         *pInt64 = static_cast<Poco::Int64>(iQueue.front());
+        iQueue.pop();
         break;
     case DataItem::typeUInt64:
         *pUInt64 = static_cast<Poco::UInt64>(iQueue.front());
+        iQueue.pop();
         break;
     case DataItem::typeFloat:
         *pFloat = static_cast<float>(fQueue.front());
+        fQueue.pop();
         break;
     case DataItem::typeDblFloat:
         *pDblFloat = fQueue.front();
+        fQueue.pop();
         break;
     case DataItem::typeString:
         *pString = sQueue.front();
+        sQueue.pop();
         break;
     default:
         // already verified in constructor!
@@ -269,10 +274,6 @@ void DataGen::sendData()
     }
 
     DataAttributeOut attrOut(attrQueue.front());
-
-    iQueue.pop();
-    fQueue.pop();
-    sQueue.pop();
     attrQueue.pop();
 
     // done with the module data
@@ -334,8 +335,8 @@ void DataGen::setIntParameterValue(size_t paramIndex, long value)
 	switch (paramIndex)
 	{
 	case paramValue:
-	    poco_information(logger(),"write " + Poco::NumberFormatter::format(value));
-		iPar = value;
+	    iQueue.push(value);
+	    iPar = value;
 		break;
 	case paramSeqStart:
 		seqStart = value;
@@ -356,7 +357,8 @@ void DataGen::setFloatParameterValue(size_t paramIndex, double value)
 {
 	poco_assert(paramIndex == paramValue);
 	dataLock.writeLock();
-	fPar = value;
+    fQueue.push(value);
+    fPar = value;
 	dataLock.unlock();
 }
 
@@ -364,7 +366,8 @@ void DataGen::setStrParameterValue(size_t paramIndex, std::string value)
 {
 	poco_assert(paramIndex == paramValue);
 	dataLock.writeLock();
-	sPar = value;
+    sQueue.push(value);
+    sPar = value;
 	dataLock.unlock();
 }
 

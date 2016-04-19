@@ -86,15 +86,18 @@ def myMain():
     mod1.setParameterValue("value", 50)
     print 'setParameterValue("seqStart", 1)'
     mod1.setParameterValue("seqStart", 1)
-    print "runModule many times... Once, and then in a 'for' loop"
+    print "runModule many times... Twice, and then in a 'for' loop"
     runModule(mod1)
+    runModule(mod1)
+    waitAll() # if we do not wait here, the data is de-synced because
+            # we did not stack the value again with setParameterValue
     
     for value in range(10):
         mod1.setParameterValue("value", value)
         runModule(mod1)
 
-    print "wait for all threads to terminate"
-    waitAll()
+    print "wait for all threads to terminate, and then set sequence end. "
+    waitAll() # waitAll before any seqEnd
     mod1.setParameterValue("seqEnd", 1)
     mod1.setParameterValue("value", 100)
 

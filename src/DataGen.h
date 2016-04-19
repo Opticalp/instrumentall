@@ -80,11 +80,12 @@ private:
         paramCnt
     };
 
-    long iPar; ///< storage for integer parameter
-    double fPar; ///< storage for float parameter
-    std::string sPar; ///< storage for char string parameter
     long seqStart;
     long seqEnd;
+
+    long iPar;
+    double fPar;
+    std::string sPar;
 
     std::queue<long> iQueue;
     std::queue<double> fQueue;
@@ -102,13 +103,12 @@ private:
     void setStrParameterValue(size_t paramIndex, std::string value);
 
     /**
-     * Place a new value in the queue
+     * Try to acquire the output port data lock
      *
-     * The dataLock is write-locked by the caller
+     * The main mutex is locked by the caller
      */
-    void enqueue(DataAttributeOut attrOut);
-    /// Try to acquire the output port data lock
     bool tryData();
+
     /**
      * Set the data to the output port
      *

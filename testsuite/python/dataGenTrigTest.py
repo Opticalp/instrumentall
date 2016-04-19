@@ -68,11 +68,12 @@ def myMain():
 
     mojo.setParameterValue("seqStart", 1)
     runModule(mojo)
-    waitAll()
+#    waitAll()
+    mod1.setParameterValue("value", 10)
     mod1.setParameterValue("value", 2)
     runModule(mojo)
     runModule(mojo)
-    waitAll()
+    waitAll() # waitAll before any seqEnd
     mod1.setParameterValue("value", 3)
     mojo.setParameterValue("seqEnd", 1)
     runModule(mojo)
