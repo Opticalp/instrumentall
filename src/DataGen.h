@@ -34,6 +34,8 @@
 
 #include "Poco/RWLock.h"
 
+#include <queue>
+
 /**
  * DataGen
  *
@@ -78,13 +80,19 @@ private:
         paramCnt
     };
 
-    long iPar; ///< storage for integer parameter
-    double fPar; ///< storage for float parameter
-    std::string sPar; ///< storage for char string parameter
     long seqStart;
     long seqEnd;
 
-    Poco::RWLock dataLock;
+    long iPar;
+    double fPar;
+    std::string sPar;
+
+    std::queue<long> iQueue;
+    std::queue<double> fQueue;
+    std::queue<std::string> sQueue;
+    std::queue<DataAttributeOut> attrQueue;
+
+    Poco::RWLock dataLock; ///< general lock for any data of this module
 
     long getIntParameterValue(size_t paramIndex);
     double getFloatParameterValue(size_t paramIndex);
@@ -94,10 +102,19 @@ private:
     void setFloatParameterValue(size_t paramIndex, double value);
     void setStrParameterValue(size_t paramIndex, std::string value);
 
-    /// Try to acquire the output port data lock
+    /**
+     * Try to acquire the output port data lock
+     *
+     * The main mutex is locked by the caller
+     */
     bool tryData();
-    /// Set the data to the output port
-    void setData();
+
+    /**
+     * Set the data to the output port
+     *
+     * acquire the datalock and release it
+     */
+    void sendData();
 
     Poco::Int32* pInt32;
     Poco::UInt32* pUInt32;
@@ -106,6 +123,25 @@ private:
     float* pFloat;
     double* pDblFloat;
     std::string* pString;
+
+    std::vector<Poco::Int32>* pVectInt32;
+    std::vector<Poco::UInt32>* pVectUInt32;
+    std::vector<Poco::Int64>* pVectInt64;
+    std::vector<Poco::UInt64>* pVectUInt64;
+    std::vector<float>* pVectFloat;
+    std::vector<double>* pVectDblFloat;
+    std::vector<std::string>* pVectString;
+
+    /// Convenience function to fill out the output vector
+    template <typename T>
+    std::vector<T> fillOutIntVect(int dataType);
+
+    template <typename T>
+    std::vector<T> fillOutFloatVect(int dataType);
+
+    std::vector<std::string> fillOutStrVect();
 };
+
+#include "DataGen.ipp"
 
 #endif /* SRC_DATAGEN_H_ */

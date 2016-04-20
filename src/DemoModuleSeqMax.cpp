@@ -95,6 +95,14 @@ void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess,
         if (*pData > tmpMax)
             tmpMax = *pData;
 
+//        // emulate a long task
+//        if (sleep(10*TIME_LAPSE))
+//        {
+//            poco_notice(logger(),
+//                    "DemoModuleSeqMax::runTask(): cancelled!");
+//            return;
+//        }
+//
         if (attr.isEndSequence(seqIndex))
         {
             DataAttributeOut outAttr = attr;
