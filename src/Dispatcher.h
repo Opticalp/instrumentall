@@ -175,6 +175,13 @@ public:
       */
      void runModule(SharedPtr<Module*> module);
 
+     /**
+      * Launch a module task
+      *
+      * Direct version: to be called by the module itself.
+      */
+     void runModule(Module* module);
+
 private:
      /**
       * Remove a port from the allInPorts list
