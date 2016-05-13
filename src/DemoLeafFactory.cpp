@@ -39,7 +39,18 @@
 Module* DemoLeafFactory::newChildModule(std::string customName)
 {
     if (getSelector().compare("leaf")==0)
+    {
+        poco_trace(logger(), name() + " is logging trace");
+        poco_debug(logger(), name() + " is logging debug");
+        poco_information(logger(), name() + " is logging info");
+        poco_notice(logger(), name() + " is logging notice");
+        poco_warning(logger(), name() + " is logging warning");
+        poco_error(logger(), name() + " is logging error");
+        poco_critical(logger(), name() + " is logging critical");
+        poco_fatal(logger(), name() + " is logging fatal");
+
         return new DemoModule(this, customName);
+    }
 
     if (getSelector().compare("leafA")==0)
         return new DemoModuleA(this, customName);
