@@ -42,6 +42,15 @@ DemoModule::DemoModule(ModuleFactory* parent, std::string customName):
 
     setLogger("module." + name());
 
+    poco_trace(logger(), name() + "'s logger is set (trace)");
+    poco_debug(logger(), name() + "'s logger is set (debug)");
+    poco_information(logger(), name() + "'s logger is set (info)");
+    poco_notice(logger(), name() + "'s logger is set (notice)");
+    poco_warning(logger(), name() + "'s logger is set (warning)");
+    poco_error(logger(), name() + "'s logger is set (error)");
+    poco_critical(logger(), name() + "'s logger is set (critical)");
+    poco_fatal(logger(), name() + "'s logger is set (fatal)");
+
     notifyCreation();
 
     // if nothing failed

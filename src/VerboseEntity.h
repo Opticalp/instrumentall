@@ -83,6 +83,22 @@ public:
 	 */
 	virtual ~VerboseEntity() { }
 
+	/**
+	 * Change logger priority/level
+	 */
+	void setVerbosity(int priority)
+	{
+		logger().setLevel(priority);
+	}
+
+	/**
+	 * Get logger priority/level
+	 */
+	int getVerbosity()
+	{
+		return logger().getLevel();
+	}
+
 protected:
     /**
      * Set the local logger
