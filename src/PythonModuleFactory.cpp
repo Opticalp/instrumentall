@@ -348,4 +348,23 @@ PyObject* pyModFactGetChildModules(ModFactMembers *self)
     return pyModules;
 }
 
+PyObject* pyModFactSetVerbosity(ModFactMembers* self, PyObject* args)
+{
+	int prio;
+
+    if (!PyArg_ParseTuple(args, "i:setVerbosity", &prio))
+        return NULL;
+
+    (**self->moduleFactory)->setVerbosity(prio);
+
+    Py_RETURN_NONE;
+}
+
+PyObject* pyModFactGetVerbosity(ModFactMembers* self, PyObject* args)
+{
+	long prio = (**self->moduleFactory)->getVerbosity();
+
+	return PyInt_FromLong(prio);
+}
+
 #endif /* HAVE_PYTHON27 */

@@ -154,6 +154,30 @@ static PyMethodDef pyMethodModFactGetChildModules =
     "or children of child factories. "
 };
 
+/// ModuleFactory::setVerbosity python wrapper
+extern "C"
+PyObject* pyModFactSetVerbosity(ModFactMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModFactSetVerbosity =
+{
+    "setVerbosity",
+    (PyCFunction)pyModFactSetVerbosity,
+    METH_VARARGS,
+    "getVerbosity: set the module factory logger verbosity (with integer value)"
+};
+
+/// ModuleFactory::getVerbosity python wrapper
+extern "C"
+PyObject* pyModFactGetVerbosity(ModFactMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModFactGetVerbosity =
+{
+    "getVerbosity",
+    (PyCFunction)pyModFactGetVerbosity,
+    METH_NOARGS,
+    "getVerbosity: set the module factory logger verbosity"
+};
+
 /// exported methods
 static PyMethodDef pyModFactMethods[] = {
 
@@ -164,6 +188,9 @@ static PyMethodDef pyModFactMethods[] = {
         pyMethodModFactCountRemain,
         pyMethodModFactCreate,
         pyMethodModFactGetChildModules,
+
+		pyMethodModFactSetVerbosity,
+		pyMethodModFactGetVerbosity,
 
         {NULL} // sentinel
 };

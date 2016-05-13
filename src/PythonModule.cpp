@@ -566,4 +566,23 @@ PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args)
     return Py_BuildValue("");
 }
 
+PyObject* pyModSetVerbosity(ModMembers* self, PyObject* args)
+{
+	int prio;
+
+    if (!PyArg_ParseTuple(args, "i:setVerbosity", &prio))
+        return NULL;
+
+    (**self->module)->setVerbosity(prio);
+
+    Py_RETURN_NONE;
+}
+
+PyObject* pyModGetVerbosity(ModMembers* self, PyObject* args)
+{
+	long prio = (**self->module)->getVerbosity();
+
+	return PyInt_FromLong(prio);
+}
+
 #endif /* HAVE_PYTHON27 */

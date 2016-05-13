@@ -184,20 +184,47 @@ static PyMethodDef pyMethodModSetParameterValue =
     "setParameterValue(paramName, value): set the value of the given parameter"
 };
 
+/// Module::setVerbosity python wrapper
+extern "C"
+PyObject* pyModSetVerbosity(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModSetVerbosity =
+{
+    "setVerbosity",
+    (PyCFunction)pyModSetVerbosity,
+    METH_VARARGS,
+    "getVerbosity: set the module logger verbosity (with integer value)"
+};
+
+/// Module::getVerbosity python wrapper
+extern "C"
+PyObject* pyModGetVerbosity(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModGetVerbosity =
+{
+    "getVerbosity",
+    (PyCFunction)pyModGetVerbosity,
+    METH_NOARGS,
+    "getVerbosity: set the module logger verbosity"
+};
+
 /// exported methods
 static PyMethodDef pyModMethods[] = {
-        pyMethodModParent,
+	pyMethodModParent,
 
-        pyMethodModInPorts,
-        pyMethodModInPort,
-        pyMethodModOutPorts,
-        pyMethodModOutPort,
+	pyMethodModInPorts,
+	pyMethodModInPort,
+	pyMethodModOutPorts,
+	pyMethodModOutPort,
 
-        pyMethodModGetParameterSet,
-        pyMethodModGetParameterValue,
-        pyMethodModSetParameterValue,
+	pyMethodModGetParameterSet,
+	pyMethodModGetParameterValue,
+	pyMethodModSetParameterValue,
 
-        {NULL} // sentinel
+	pyMethodModSetVerbosity,
+	pyMethodModGetVerbosity,
+
+	{NULL} // sentinel
 };
 
 // -----------------------------------------------------------------------
