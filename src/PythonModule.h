@@ -169,7 +169,7 @@ static PyMethodDef pyMethodModGetParameterValue =
     "getParameterValue",
     (PyCFunction)pyModGetParameterValue,
     METH_VARARGS,
-    "GetParameterValue(paramName): get the value of the given parameter"
+    "getParameterValue(paramName): get the value of the given parameter"
 };
 
 /// Module::setParameterValue python wrapper
@@ -181,7 +181,7 @@ static PyMethodDef pyMethodModSetParameterValue =
     "setParameterValue",
     (PyCFunction)pyModSetParameterValue,
     METH_VARARGS,
-    "SetParameterValue(paramName): set the value of the given parameter"
+    "setParameterValue(paramName, value): set the value of the given parameter"
 };
 
 /// exported methods
