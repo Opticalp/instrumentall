@@ -65,6 +65,14 @@ public:
 	 */
 	Module* module() { return coreModule; }
 
+	/**
+	 * Retrieve the triggering input port
+	 *
+	 * The returned value should be transformed into a sharedPtr via
+	 * Dispatcher::getInPort() to be used.
+	 */
+	InPort* trigPort() { return triggingPort; }
+
 private:
 	enum runningStates
 	{

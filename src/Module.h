@@ -44,7 +44,7 @@
 
 #include <map>
 #include <set>
-#include <queue>
+#include <list>
 
 class InDataPort;
 class OutPort;
@@ -252,6 +252,22 @@ protected:
 	void setProgress(float progress);
     bool isCancelled();
     ///}
+
+    /**
+     * Merge the enqueued tasks of the present Module
+     *
+     * given by their triggering inPort index.
+     *
+     *  - The current task can be listed in this set.
+     *  - a test should be made, so that only the inPorts
+     *  giving new data are listed (they should have been
+     *  trigged simultaneously)
+     *  - but a held port can be sent too. a simple warning
+     *  would be emitted.
+     *
+     * @inPortIndexes indexes of the inPorts which data will be used
+     */
+    void mergeTasks(std::set<int> inPortIndexes);
 
     // TODO: method to forward the running state to the runningTask (collectingInData, ... etc)
 
@@ -471,7 +487,7 @@ private:
 
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
 	std::set<ModuleTask*> allTasks;
-	std::queue<ModuleTask*> taskQueue;
+	std::list<ModuleTask*> taskQueue;
 	Poco::FastMutex taskMngtMutex;
 
 	ParameterSet paramSet;

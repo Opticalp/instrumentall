@@ -398,7 +398,7 @@ bool Module::enqueueTask(ModuleTask* task)
 				             .registerNewModuleTask(task);
 
 	allTasks.insert(task);
-	taskQueue.push(task);
+	taskQueue.push_back(task);
 
 	// TODO: FIXME (transitional return value)
 	return true;
@@ -411,7 +411,7 @@ void Module::popTask()
 	ModuleTask* nextTask = taskQueue.front();
 
 	// poco_information(logger(), "poping out the next task: " + nextTask->name());
-	taskQueue.pop();
+	taskQueue.pop_front();
 
 	lock.unlock();
 
@@ -425,7 +425,7 @@ void Module::popTaskSync()
 	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(taskMngtMutex);
 
 	ModuleTask* nextTask = taskQueue.front();
-	taskQueue.pop();
+	taskQueue.pop_front();
 
 	lock.unlock();
 
@@ -439,4 +439,37 @@ void Module::unregisterTask(ModuleTask* task)
 	Poco::FastMutex::ScopedLock lock(taskMngtMutex);
 
 	allTasks.erase(task);
+}
+
+void Module::mergeTasks(std::set<int> inPortIndexes)
+{
+	Poco::FastMutex::ScopedLock lock(taskMngtMutex);
+
+	for (std::set<int>::iterator it = inPortIndexes.begin(),
+			ite = inPortIndexes.end(); it != ite; it++)
+	{
+		InPort* trigPort = inPorts.at(*it);
+
+		if ((*runningTask)->trigPort() == trigPort)
+			continue; // current task
+
+		bool found = false;
+
+		// seek
+		for (std::list<ModuleTask*>::iterator qIt = taskQueue.begin(),
+				qIte = taskQueue.end(); qIt != qIte; qIt++)
+		{
+			if ((*qIt)->trigPort() == trigPort)
+			{
+				found = true;
+				(*runningTask)->merge(*qIt);
+				taskQueue.erase(qIt);
+				break;
+			}
+		}
+
+		if (!found)
+			poco_warning(logger(),
+					"Unable to merge the task for " + trigPort->name());
+	}
 }
