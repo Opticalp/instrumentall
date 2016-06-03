@@ -29,6 +29,8 @@
 #include "Module.h"
 #include "ModuleFactory.h"
 #include "ModuleManager.h"
+#include "ThreadManager.h"
+#include "ModuleTask.h"
 
 #include "TrigPort.h"
 #include "InDataPort.h"
@@ -49,6 +51,8 @@ void Module::notifyCreation()
 
 Module::~Module()
 {
+	// TODO: tasks?
+
     // notify parent factory
     if (mParent)
     {
@@ -324,7 +328,7 @@ OutPort* Module::getOutPort(std::string portName)
             + "in module: " + name());
 }
 
-void Module::runTask()
+void Module::run()
 {
     // try to acquire the mutex
     while (!runTaskMutex.tryLock(TIME_LAPSE))
@@ -358,9 +362,81 @@ void Module::runTask()
     // outPortAccess and inPortAccess are destroyed here...
 }
 
+bool Module::sleep(long Milliseconds)
+{
+	return (*runningTask)->sleep(Milliseconds);
+}
+
+void Module::setProgress(float progress)
+{
+	(*runningTask)->setProgress(progress);
+}
+
+bool Module::isCancelled()
+{
+	return (*runningTask)->isCancelled();
+}
+
 void Module::expireOutData()
 {
     for (std::vector<OutPort*>::iterator it = outPorts.begin(),
             ite = outPorts.end(); it != ite; it++)
         (*it)->expire();
+}
+
+//void Module::registerTask(ModuleTask* task)
+//{
+//	allTasks.insert(task);
+//}
+
+bool Module::enqueueTask(ModuleTask* task)
+{
+	Poco::FastMutex::ScopedLock lock(taskMngtMutex);
+
+	Poco::Util::Application::instance()
+				             .getSubsystem<ThreadManager>()
+				             .registerNewModuleTask(task);
+
+	allTasks.insert(task);
+	taskQueue.push(task);
+
+	// TODO: FIXME (transitional return value)
+	return true;
+}
+
+void Module::popTask()
+{
+	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(taskMngtMutex);
+
+	ModuleTask* nextTask = taskQueue.front();
+
+	// poco_information(logger(), "poping out the next task: " + nextTask->name());
+	taskQueue.pop();
+
+	lock.unlock();
+
+	Poco::Util::Application::instance()
+			             .getSubsystem<ThreadManager>()
+			             .startModuleTask(nextTask);
+}
+
+void Module::popTaskSync()
+{
+	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(taskMngtMutex);
+
+	ModuleTask* nextTask = taskQueue.front();
+	taskQueue.pop();
+
+	lock.unlock();
+
+	Poco::Util::Application::instance()
+			             .getSubsystem<ThreadManager>()
+			             .startSyncModuleTask(nextTask);
+}
+
+void Module::unregisterTask(ModuleTask* task)
+{
+	Poco::FastMutex::ScopedLock lock(taskMngtMutex);
+
+	allTasks.erase(task);
 }

@@ -105,7 +105,7 @@ DataItem* DataLogger::data()
     return tmp;
 }
 
-void DataLogger::runTask()
+void DataLogger::run()
 {
     Poco::Mutex::ScopedLock localLock(dataLock);
 

@@ -31,6 +31,7 @@
 #include "ModuleManager.h"
 #include "ThreadManager.h"
 #include "Module.h"
+#include "ModuleTask.h"
 
 #include "InPort.h"
 #include "InDataPort.h"
@@ -338,8 +339,6 @@ void Dispatcher::seqUnbind(SharedPtr<InPort*> target)
 
 void Dispatcher::setOutPortDataReady(OutPort* port)
 {
-    std::set<Module*> targetModules;
-
     // poco_information(logger(), port->name() + " data ready");
 
     std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
@@ -347,37 +346,38 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
             ite = targetPorts.end(); it != ite; it++ )
     {
         (**it)->setNew();
-        targetModules.insert((**it)->parent());
-    }
 
-    for ( std::set<Module*>::iterator it = targetModules.begin(),
-            ite = targetModules.end(); it != ite; it++ )
-    {
         // get module from module manager
         SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
                                         .getSubsystem<ModuleManager>()
-                                        .getModule(*it);
+                                        .getModule((**it)->parent());
 
         poco_information(logger(),port->parent()->name() + " port " + port->name()
-                + " STARTS " + (*it)->name() );
+                + " STARTS " + (**it)->parent()->name() );
 
-                // launch task
-        Poco::Util::Application::instance()
-                 .getSubsystem<ThreadManager>()
-                 .start(*shdMod);
+        enqueueModuleTask(new ModuleTask(*shdMod, **it));
     }
 }
 
-void Dispatcher::runModule(SharedPtr<Module*> module)
+void Dispatcher::runModule(SharedPtr<Module*> ppModule)
 {
-    Poco::Util::Application::instance()
-             .getSubsystem<ThreadManager>()
-             .start(*module);
+    enqueueModuleTask(new ModuleTask(*ppModule));
 }
 
-void Dispatcher::runModule(Module* module)
+void Dispatcher::runModule(Module* pModule)
 {
-    Poco::Util::Application::instance()
-             .getSubsystem<ThreadManager>()
-             .start(module);
+	enqueueModuleTask(new ModuleTask(pModule));
+}
+
+void Dispatcher::enqueueModuleTask(ModuleTask* pTask)
+{
+	Module* pModule = pTask->module();
+
+	// poco_information(logger(),"enqueueing " + pTask->name());
+
+	if (pModule->enqueueTask(pTask))
+	{
+		// poco_information(logger(),"task enqueued, running the next available task for this module");
+		pModule->popTask();
+	}
 }

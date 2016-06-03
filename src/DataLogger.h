@@ -29,7 +29,7 @@
 #ifndef SRC_DATALOGGER_H_
 #define SRC_DATALOGGER_H_
 
-#include "Poco/Task.h"
+#include "Poco/Runnable.h"
 #include "Poco/Mutex.h"
 
 using Poco::Mutex;
@@ -45,11 +45,11 @@ class DataItem;
  * The derived classes should implement the static methods name() and
  * description().
  */
-class DataLogger: public Poco::Task
+class DataLogger: public Poco::Runnable
 {
 public:
-    DataLogger(std::string name = ""):
-        pData(NULL), Task(name),
+    DataLogger():
+        pData(NULL),
         empty(false) { }
     virtual ~DataLogger();
 
@@ -88,16 +88,16 @@ public:
      * Main logic
      *
      * Log the data.
-     * The implementation must release the data lock.
+     * The default implementation calls the log() method.
+     * A custom implementation shall release the input data lock.
      */
-    virtual void runTask();
+    virtual void run();
 
     /**
      * Log the data
      *
      * Function to override in implementations.
-     * This function is called by runTask() if
-     * runTask is not overridden.
+     * This function is called by the default implementation of run()
      */
     virtual void log() { }
 

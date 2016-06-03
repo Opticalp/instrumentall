@@ -47,6 +47,7 @@ using Poco::RWLock;
 using Poco::SharedPtr;
 
 class Module;
+class ModuleTask;
 
 /**
  * Dispatcher
@@ -172,15 +173,27 @@ public:
 
      /**
       * Launch a module task
+      *
+      * to be called by the UI or by any mean, but without new
+      * input port data.
       */
-     void runModule(SharedPtr<Module*> module);
+     void runModule(SharedPtr<Module*> ppModule);
 
+     // TODO: remove this. Directly go to the thread manager.
      /**
       * Launch a module task
       *
       * Direct version: to be called by the module itself.
       */
-     void runModule(Module* module);
+     void runModule(Module* pModule);
+
+     /**
+      * Enqueue a new module task
+      *
+      * and launch it if possible.
+      * Register the task in the Module
+      */
+     void enqueueModuleTask(ModuleTask* pTask);
 
 private:
      /**

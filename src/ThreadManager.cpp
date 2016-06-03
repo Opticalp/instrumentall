@@ -28,9 +28,13 @@
 
 #include "ThreadManager.h"
 
+#include "DataLogger.h"
+#include "ModuleTask.h"
+
 #include "Poco/Observer.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/ThreadPool.h"
+#include "Poco/AutoPtr.h"
 
 using Poco::Observer;
 
@@ -40,44 +44,100 @@ ThreadManager::ThreadManager():
         taskManager(threadPool)
 {
     taskManager.addObserver(
-            Observer<ThreadManager, Poco::TaskStartedNotification>(
+            Observer<ThreadManager, TaskStartedNotification>(
                     *this, &ThreadManager::onStarted ) );
     taskManager.addObserver(
-            Observer<ThreadManager, Poco::TaskFailedNotification>(
+            Observer<ThreadManager, TaskFailedNotification>(
                     *this, &ThreadManager::onFailed ) );
     taskManager.addObserver(
-                Observer<ThreadManager, Poco::TaskFinishedNotification>(
+                Observer<ThreadManager, TaskFinishedNotification>(
                         *this, &ThreadManager::onFinished ) );
 
     threadPool.addCapacity(32);
 }
 
-void ThreadManager::onStarted(Poco::TaskStartedNotification* pNf)
+void ThreadManager::onStarted(TaskStartedNotification* pNf)
 {
     poco_information(logger(), pNf->task()->name() + " was started");
+
+    // TODO:
+    // - unstack task
+    // - dispatch to a TimedNotificationQueue
 }
 
-void ThreadManager::onFailed(Poco::TaskFailedNotification* pNf)
+void ThreadManager::onFailed(TaskFailedNotification* pNf)
 {
     Poco::Exception e(pNf->reason());
     poco_error(logger(), e.displayText());
+
+    // TODO:
+    // - unstack task
+    // - dispatch to a TimedNotificationQueue
 }
 
-void ThreadManager::onFinished(Poco::TaskFinishedNotification* pNf)
+void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 {
     poco_information(logger(), pNf->task()->name() + " has stopped");
+
+    ModuleTask* modTask = dynamic_cast<ModuleTask*>(pNf->task());
+
+    if (modTask)
+    {
+		// TODO:
+		// - unstack task
+		// - dispatch to a TimedNotificationQueue
+
+		Poco::ScopedWriteRWLock lock(taskListLock);
+
+		Poco::AutoPtr<ModuleTask> taskPtr(modTask, true); // do not take ownership!
+		pendingModTasks.erase(taskPtr);
+    }
+    // else   datalogger task
 }
 
-void ThreadManager::start(Poco::Task* task)
+void ThreadManager::startDataLogger(DataLogger* dataLogger)
 {
-    task->duplicate();
-    taskManager.start(task);
+	try
+	{
+		threadPool.start(*dataLogger);
+	}
+	catch (Poco::NoThreadAvailableException& e)
+	{
+		// FIXME
+
+		poco_error(logger(), dataLogger->name() + " cannot be started, "
+				+ e.displayText());
+	}
+}
+
+void ThreadManager::startModuleTask(ModuleTask* pTask)
+{
+	Poco::AutoPtr<ModuleTask> taskPtr(pTask, true); // do not take ownership!
+
+	// poco_information(logger(), "starting " + taskPtr->name());
+
+	try
+	{
+		taskManager.start(taskPtr);
+	}
+	catch (Poco::NoThreadAvailableException& e)
+	{
+		// FIXME
+
+		poco_error(logger(), pTask->name() + " cannot be started, "
+				+ e.displayText());
+	}
+}
+
+void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
+{
+	Poco::AutoPtr<MergeableTask> taskPtr(pTask, true); // do not take ownership!
+    taskManager.startSync(taskPtr);
 }
 
 int ThreadManager::count()
 {
-    threadPool.collect();
-    return taskManager.count();
+    return pendingModTasks.size();
 }
 
 #define TIME_LAPSE_WAIT_ALL 5
@@ -103,4 +163,12 @@ void ThreadManager::waitAll()
     }
 
     poco_information(logger(), "All threads have stopped. ");
+}
+
+void ThreadManager::registerNewModuleTask(ModuleTask* pTask)
+{
+	Poco::ScopedWriteRWLock lock(taskListLock);
+
+	Poco::AutoPtr<ModuleTask> taskPtr(pTask);
+	pendingModTasks.insert(taskPtr);
 }

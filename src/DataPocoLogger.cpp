@@ -202,8 +202,7 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
     poco_information(logger(), msg);
 }
 
-DataPocoLogger::DataPocoLogger():
-        DataLogger(name())
+DataPocoLogger::DataPocoLogger()
 {
     // FIXME
     setLogger("DataLoggerDebug");

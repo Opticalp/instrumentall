@@ -112,7 +112,7 @@ std::string DataGen::description()
 	return descr;
 }
 
-void DataGen::runTask()
+void DataGen::run()
 {
     dataLock.writeLock(); // write since the seq flags can be changed
 
@@ -170,7 +170,7 @@ void DataGen::runTask()
     // try to acquire the output data lock
     runTaskMutex.lock();
 
-    while (!tryData())
+	while (!tryData())
     {
         poco_information(logger(),
                 "DatGen::runTask(): "

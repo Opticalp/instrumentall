@@ -37,16 +37,19 @@
 #include "InPortLockUnlock.h"
 #include "OutPortLockUnlock.h"
 
-#include "Poco/Task.h"
+#include "Poco/ThreadLocal.h"
 #include "Poco/RWLock.h"
 #include "Poco/Mutex.h"
 #include "Poco/Util/Application.h" // layered configuration
 
 #include <map>
+#include <set>
+#include <queue>
 
 class InDataPort;
 class OutPort;
 class ModuleFactory;
+class ModuleTask;
 
 /// Time lapse in milliseconds between 2 tries in multithread lock case
 #define TIME_LAPSE 10
@@ -65,7 +68,7 @@ class ModuleFactory;
  *  Inherit from Poco::Task to have the Poco::Runnable features
  *  and to be able to control progress and task cancellation.
  */
-class Module: public VerboseEntity, public Poco::Task
+class Module: public VerboseEntity
 {
 public:
 	/**
@@ -86,7 +89,7 @@ public:
 	 * if customName or internalName is already in use.
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
-	      mParent(parent), Poco::Task(name), VerboseEntity() { }
+	      mParent(parent), VerboseEntity() { }
 
 	/**
 	 * Destructor
@@ -95,6 +98,7 @@ public:
 	 *  - parent factory
 	 *  - module manager
 	 *  - dispatcher
+	 *  - tasks
 	 */
 	virtual ~Module();
 
@@ -155,32 +159,6 @@ public:
 	OutPort* getOutPort(std::string portName);
 
 	/**
-	 * Implementation of Poco::Task::runTask()
-	 *
-	 * Lock the runTaskMutex, expire the output data,
-	 * and call process().
-	 *
-	 * The arguments of process allow to automatically release
-	 * the data of the ports when exiting (even on exception thrown)
-	 *
-	 * This function is virtual. it can be overloaded by
-	 * the derived class if the runTaskMutex lock is not wanted.
-	 */
-	virtual void runTask();
-
-	/**
-	 * Main logic called by runTask
-	 *
-	 * with a lock on runTaskMutex.
-	 * inPortsAccess and outPortsAccess should be used to
-	 * access the ports data, since it will handle the
-	 * unlocking of the ports in case of un-clean stop
-	 */
-	virtual void process(InPortLockUnlock& inPortsAccess,
-	        OutPortLockUnlock& outPortsAccess)
-	    { poco_warning(logger(), name() + ": empty task"); }
-
-	/**
 	 * Retrieve a copy of the parameter set of the module
 	 *
 	 * @param pSet reference to a user allocated ParameterSet
@@ -225,7 +203,85 @@ public:
      */
     void expireOutData();
 
+//    /**
+//     * Register a new task for this module
+//     *
+//     * called by the
+//     */
+//    void registerTask(ModuleTask* task);
+
+    /**
+     * Enqueue a new task
+     *
+     * for this module.
+     * To be called by the disptacher.
+     * @return true if the module is not running, and thus,
+     * the new enqueued task should be started.
+     */
+    bool enqueueTask(ModuleTask* task);
+
+    /**
+     * Unregister a task
+     *
+     * called by the task destructor
+     */
+    void unregisterTask(ModuleTask* task);
+
+    /**
+     * Launch the next task of the queue
+     *
+     * and dequeue it.
+     */
+    void popTask();
+
+    /**
+     * Launch the next task of the queue in the current thread
+     *
+     * and dequeue it.
+     */
+    void popTaskSync();
+
 protected:
+    Poco::ThreadLocal<ModuleTask*> runningTask;
+
+    void setRunningTask(ModuleTask* pTask) { *runningTask = pTask; }
+
+    /// @name forwarding methods to thread local: runningTask
+    ///@{
+    bool sleep(long milliseconds);
+	void setProgress(float progress);
+    bool isCancelled();
+    ///}
+
+    // TODO: method to forward the running state to the runningTask (collectingInData, ... etc)
+
+    // TODO: protected, should only be launched by a ModuleTask
+	/**
+	 * Implementation of Poco::Task::runTask()
+	 *
+	 * Lock the runTaskMutex, expire the output data,
+	 * and call process().
+	 *
+	 * The arguments of process allow to automatically release
+	 * the data of the ports when exiting (even on exception thrown)
+	 *
+	 * This function is virtual. it can be overloaded by
+	 * the derived class if the runTaskMutex lock is not wanted.
+	 */
+	virtual void run();
+
+	/**
+	 * Main logic called by runTask
+	 *
+	 * with a lock on runTaskMutex.
+	 * inPortsAccess and outPortsAccess should be used to
+	 * access the ports data, since it will handle the
+	 * unlocking of the ports in case of un-clean stop
+	 */
+	virtual void process(InPortLockUnlock& inPortsAccess,
+	        OutPortLockUnlock& outPortsAccess)
+	    { poco_warning(logger(), name() + ": nothing to be done"); }
+
     /**
      * Set the internal name of the module
      *
@@ -413,6 +469,11 @@ private:
 	static std::vector<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
+	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
+	std::set<ModuleTask*> allTasks;
+	std::queue<ModuleTask*> taskQueue;
+	Poco::FastMutex taskMngtMutex;
+
 	ParameterSet paramSet;
 
 	/**
@@ -441,6 +502,8 @@ private:
      */
     Poco::Util::LayeredConfiguration& appConf()
         { return Poco::Util::Application::instance().config(); }
+
+    friend class ModuleTask; // access to setRunningTask
 };
 
 /// templates implementation
