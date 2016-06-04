@@ -54,6 +54,24 @@ public:
 
     virtual ~TrigPort() { }
 
+    /**
+     * Do not accept held data. Only new data is allowed.
+     *
+     * @see InPort::tryLock
+     */
+    bool tryLock();
+
+    /**
+     * Read the data attribute of the incoming data
+     *
+     * The port shall have been previously locked using
+     * tryLock, with return value == true.
+     */
+    void readDataAttribute(DataAttribute* pAttr);
+
+    /**
+     * tryDataAttribute is tryLock + readDataAttribute
+     */
     bool tryDataAttribute(DataAttribute* pAttr);
 };
 

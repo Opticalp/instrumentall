@@ -30,34 +30,25 @@ THE SOFTWARE.
 #include "OutPort.h"
 #include "DataAttributeIn.h"
 
+
+template<typename T>
+bool InDataPort::readData(T*& pData)
+{
+	pData = (*getSourcePort())->dataItem()->getDataToRead<T>();
+}
+
 template<typename T> inline bool InDataPort::tryData(T*& pData, DataAttributeIn* pAttr)
 {
-    if (!isPlugged())
-        throw Poco::RuntimeException("InPort",
-                "The port is not plugged. Not able to get data. ");
-
-    if (!isNew())
-    {
-        // try to get the lock
-        if (!(*getSourcePort())->dataItem()->tryReadLock())
-            return false;
-
-        // check if the data is up to date
-        if (!isUpToDate())
-        {
-            (*getSourcePort())->dataItem()->releaseData();
-            return false;
-        }
-    }
-    //else: nothing to do, the lock is already activated (by the dispatcher)
-
-    // transform the data attribute into a DataAttributeIn
-    *pAttr = DataAttributeIn(
-        (*getSourcePort())->dataItem()->getDataAttribute(), this);
-
-    pData = (*getSourcePort())->dataItem()->getDataToRead<T>();
-
-    return true;
+	if (tryLock())
+	{
+		readDataAttribute(pAttr);
+		readData(pData);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 

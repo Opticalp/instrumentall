@@ -83,6 +83,36 @@ SharedPtr<OutPort*> InDataPort::getSeqSourcePort()
     return mSeqSourcePort;
 }
 
+bool InDataPort::tryLock()
+{
+    if (!isPlugged())
+        throw Poco::RuntimeException("InPort",
+                "The port is not plugged. Not able to get data. ");
+
+    if (!isNew())
+    {
+        // try to get the lock
+        if (!(*getSourcePort())->dataItem()->tryReadLock())
+            return false;
+
+        // check if the data is up to date
+        if (!isUpToDate())
+        {
+            (*getSourcePort())->dataItem()->releaseData();
+            return false;
+        }
+    }
+    //else: nothing to do, the lock is already activated (by the dispatcher)
+
+    return true;
+}
+
+void InDataPort::readDataAttribute(DataAttributeIn* pAttr)
+{
+	*pAttr = DataAttributeIn(
+		(*getSourcePort())->dataItem()->getDataAttribute(), this);
+}
+
 void InDataPort::release()
 {
     InPort::release();

@@ -75,12 +75,33 @@ public:
     SharedPtr<OutPort*> getSeqSourcePort();
 
     /**
-     * Try to acquire the data and its attribute
+     * Try to lock the input port to read its data and attribute
      *
      * call isUpToDate() to check if the data is valid
      *
      * @return false if the lock can not be acquired or if the data
      * is not up to date
+     */
+    bool tryLock();
+
+    /**
+     * Read the data attribute of the incoming data
+     *
+     * The port shall have been previously locked using
+     * tryLock, with return value == true.
+     */
+    void readDataAttribute(DataAttributeIn* pAttr);
+
+    /**
+     * Read the incoming data
+     *
+     * The port shall have been previously locked using
+     * tryLock, with return value == true.
+     */
+    template<typename T> bool readData(T*& pData);
+
+    /**
+     * Combination of tryLock, readDataAttribute, and readData
      */
     template<typename T> bool tryData(T*& pData, DataAttributeIn* pAttr);
 

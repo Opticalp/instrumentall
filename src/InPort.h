@@ -64,6 +64,13 @@ public:
         { return mSourcePort; }
 
     /**
+     * Try to lock the input port to get the incoming data
+     *
+     * @return true if success
+     */
+    virtual bool tryLock() = 0;
+
+    /**
      * Store that the data has been used and can be released.
      *
      * Release the corresponding locks, record that the data is not new

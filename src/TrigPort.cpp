@@ -42,7 +42,7 @@ TrigPort::TrigPort(OutPort* emptySourcePort):
 {
 }
 
-bool TrigPort::tryDataAttribute(DataAttribute* pAttr)
+bool TrigPort::tryLock()
 {
     if (!isPlugged())
         return false;
@@ -50,6 +50,24 @@ bool TrigPort::tryDataAttribute(DataAttribute* pAttr)
     if (!isNew())
         return false;
 
-    *pAttr = (*getSourcePort())->dataItem()->getDataAttribute();
     return true;
 }
+
+void TrigPort::readDataAttribute(DataAttribute* pAttr)
+{
+	*pAttr = (*getSourcePort())->dataItem()->getDataAttribute();
+}
+
+bool TrigPort::tryDataAttribute(DataAttribute* pAttr)
+{
+	if (tryLock())
+	{
+		readDataAttribute(pAttr);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
