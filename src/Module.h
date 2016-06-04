@@ -65,8 +65,10 @@ class ModuleTask;
  *  - a computing cell: image processing, signal processing,
  *  ...
  *
- *  Inherit from Poco::Task to have the Poco::Runnable features
- *  and to be able to control progress and task cancellation.
+ * The modules are closely bound to their ModuleTask s.
+ * The module lists the tasks to be launched, and even can launch
+ * the tasks when needed. The tasks are the only one to run the
+ * modules (after having set runningTask).
  */
 class Module: public VerboseEntity
 {
@@ -203,13 +205,6 @@ public:
      */
     void expireOutData();
 
-//    /**
-//     * Register a new task for this module
-//     *
-//     * called by the
-//     */
-//    void registerTask(ModuleTask* task);
-
     /**
      * Enqueue a new task
      *
@@ -253,6 +248,8 @@ protected:
     bool isCancelled();
     ///}
 
+    // TODO: method to forward the running state to the runningTask (collectingInData, ... etc)
+
     /**
      * Merge the enqueued tasks of the present Module
      *
@@ -269,9 +266,15 @@ protected:
      */
     void mergeTasks(std::set<int> inPortIndexes);
 
-    // TODO: method to forward the running state to the runningTask (collectingInData, ... etc)
+    /// Start states as to be returned by startCondition
+    enum baseStartStates
+	{
+    	noDataStartState,
+		unknownStartState,
+		allDataStartState,
+		firstUnusedBaseStartState // to be used to extend the start states with another enum
+	};
 
-    // TODO: protected, should only be launched by a ModuleTask
 	/**
 	 * Implementation of Poco::Task::runTask()
 	 *
@@ -293,10 +296,36 @@ protected:
 	 * inPortsAccess and outPortsAccess should be used to
 	 * access the ports data, since it will handle the
 	 * unlocking of the ports in case of un-clean stop
+	 *
+	 * The enqueued tasks trigged by the input data that
+	 * are used here shall be merged.
 	 */
 	virtual void process(InPortLockUnlock& inPortsAccess,
 	        OutPortLockUnlock& outPortsAccess)
 	    { poco_warning(logger(), name() + ": nothing to be done"); }
+
+	/**
+	 * Define a start state regarding the input data
+	 *
+	 * This state is described by an index that should be defined
+	 * as an enumeration in the implementation.
+	 *
+	 *     enum moreStartStates
+	 *     {
+	 *         firstStartState = firstUnusedBaseStartState,
+	 *         secondStartState,
+	 *         lastStartState
+	 *     };
+	 *
+	 * Default implementation:
+	 *  - check if there is input ports. if not, return.
+	 *  - check if the call is issued from incoming data
+	 *    - if it does, wait for all the data to be available
+	 *    - if it does not, check if the data is held. if not at all,
+	 *    return "no data", if partial, return "unknown",
+	 *    if all, return "all data".
+	 */
+	virtual int startCondition(InPortLockUnlock& inPortsAccess);
 
     /**
      * Set the internal name of the module

@@ -328,6 +328,54 @@ OutPort* Module::getOutPort(std::string portName)
             + "in module: " + name());
 }
 
+int Module::startCondition(InPortLockUnlock& inPortsAccess)
+{
+	if (inPorts.size() == 0)
+		return noDataStartState;
+
+	bool nakedCall = false;
+
+	if ((*runningTask)->trigPort() == NULL)
+		nakedCall = true;
+
+	// we would need a mean to check if held data is available without locking it
+	// ... the inPortsAccess should handle that in fact...
+
+	bool allPresent = false;
+	bool zeroPresent = true;
+	while (!allPresent)
+	{
+		allPresent = true;
+		for (size_t port = 0; port < inPorts.size(); port++)
+		{
+			if (inPortsAccess.caught(port))
+				continue;
+
+			if (inPortsAccess.tryLock(port))
+				zeroPresent = false;
+			else
+				allPresent = false;
+		}
+
+		if (nakedCall)
+			break;
+
+		if (!allPresent)
+		{
+			// TODO check isCancelled
+			Poco::Thread::yield();
+		}
+	}
+
+	if (allPresent)
+		return allDataStartState;
+
+	if (zeroPresent)
+		return noDataStartState;
+	else
+		return unknownStartState;
+}
+
 void Module::run()
 {
     // try to acquire the mutex
@@ -383,11 +431,6 @@ void Module::expireOutData()
             ite = outPorts.end(); it != ite; it++)
         (*it)->expire();
 }
-
-//void Module::registerTask(ModuleTask* task)
-//{
-//	allTasks.insert(task);
-//}
 
 bool Module::enqueueTask(ModuleTask* task)
 {

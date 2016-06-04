@@ -55,6 +55,11 @@ public:
     virtual ~InPortLockUnlock();
 
     /**
+     * Forward tryLock for the given port
+     */
+    bool tryLock(size_t portIndex);
+
+    /**
      * Forward tryData for the given port
      */
     template <typename T>
@@ -78,6 +83,11 @@ public:
      */
     void processing() { allAcquired = true; }
 
+    /**
+     * Check if the given port was caught/locked
+     */
+    bool caught(size_t index) { return lockFlags.at(index); }
+
 private:
     std::vector<InPort*> inPorts;
 
@@ -88,6 +98,22 @@ private:
 
     bool allAcquired;
 };
+
+inline bool InPortLockUnlock::tryLock(size_t portIndex)
+{
+    if (lockFlags[portIndex])
+        poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
+
+    if (inPorts[portIndex]->tryLock())
+    {
+    	lockFlags[portIndex] = true;
+    	return true;
+    }
+    else
+    {
+    	return false;
+    }
+}
 
 template<typename T>
 inline bool InPortLockUnlock::tryData(size_t portIndex, T*& pData,
@@ -100,7 +126,6 @@ inline bool InPortLockUnlock::tryData(size_t portIndex, T*& pData,
 
     if (lockFlags[portIndex])
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
-
 
     bool retValue = inPort->tryData<T>(pData, pAttr);
 
