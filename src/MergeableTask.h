@@ -150,6 +150,17 @@ protected:
 	bool sleep(long milliseconds);
 
 	/**
+	 * Yield cpu to other threads
+	 *
+	 * If the task is cancelled while it is suspended,
+	 * yield() will return true. If the tasks resumes
+	 * without being cancelled, the return value is false.
+	 *
+	 * A Task should use this method in favor of Thread::yield().
+	 */
+	bool yield();
+
+	/**
 	 * Set the task's progress.
 	 *
 	 * The value should be between 0.0 (just started)

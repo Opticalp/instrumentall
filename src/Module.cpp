@@ -362,8 +362,8 @@ int Module::startCondition(InPortLockUnlock& inPortsAccess)
 
 		if (!allPresent)
 		{
-			// TODO check isCancelled
-			Poco::Thread::yield();
+			if (yield())
+				return cancelledStartState;
 		}
 	}
 
@@ -413,6 +413,11 @@ void Module::run()
 bool Module::sleep(long Milliseconds)
 {
 	return (*runningTask)->sleep(Milliseconds);
+}
+
+bool Module::yield()
+{
+	return (*runningTask)->yield();
 }
 
 void Module::setProgress(float progress)

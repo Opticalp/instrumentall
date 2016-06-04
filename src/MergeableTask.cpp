@@ -30,6 +30,7 @@
 
 #include "Poco/Exception.h"
 #include "Poco/Format.h"
+#include "Poco/Thread.h"
 
 size_t MergeableTask::nextAvailableIndex = 0;
 
@@ -166,6 +167,12 @@ bool MergeableTask::sleep(long milliseconds)
 	return cancelEvent.tryWait(milliseconds);
 }
 
+bool MergeableTask::yield()
+{
+	Poco::Thread::yield();
+	return isCancelled();
+}
+
 void MergeableTask::setProgress(float taskProgress)
 {
 	Poco::FastMutex::ScopedLock lock(mainMutex);
@@ -209,3 +216,4 @@ void MergeableTask::eraseSlave(MergeableTask* slave)
 	Poco::FastMutex::ScopedLock lock(mainMutex);
 	slavedTasks.erase(slave);
 }
+

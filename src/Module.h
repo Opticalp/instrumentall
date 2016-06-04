@@ -244,6 +244,7 @@ protected:
     /// @name forwarding methods to thread local: runningTask
     ///@{
     bool sleep(long milliseconds);
+    bool yield();
 	void setProgress(float progress);
     bool isCancelled();
     ///}
@@ -269,6 +270,7 @@ protected:
     /// Start states as to be returned by startCondition
     enum baseStartStates
 	{
+    	cancelledStartState = -1,
     	noDataStartState,
 		unknownStartState,
 		allDataStartState,
