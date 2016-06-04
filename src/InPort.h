@@ -31,6 +31,7 @@
 
 #include "Port.h"
 
+class DataAttributeIn;
 class OutPort;
 class Dispatcher;
 
@@ -69,6 +70,14 @@ public:
      * @return true if success
      */
     virtual bool tryLock() = 0;
+
+    /**
+     * Read the data attribute of the incoming data
+     *
+     * The port shall have been previously locked using
+     * tryLock, with return value == true.
+     */
+    void readDataAttribute(DataAttributeIn* pAttr);
 
     /**
      * Store that the data has been used and can be released.

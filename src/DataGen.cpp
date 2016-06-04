@@ -116,7 +116,7 @@ void DataGen::run()
 {
     dataLock.writeLock(); // write since the seq flags can be changed
 
-    DataAttribute inAttr;
+    DataAttributeIn inAttr;
 
     bool trigged = false;
 

@@ -26,8 +26,6 @@
  THE SOFTWARE.
  */
 
-#include "InDataPort.h"
-
 #include "ModuleManager.h"
 #include "Dispatcher.h"
 #include "OutPort.h"
@@ -105,12 +103,6 @@ bool InDataPort::tryLock()
     //else: nothing to do, the lock is already activated (by the dispatcher)
 
     return true;
-}
-
-void InDataPort::readDataAttribute(DataAttributeIn* pAttr)
-{
-	*pAttr = DataAttributeIn(
-		(*getSourcePort())->dataItem()->getDataAttribute(), this);
 }
 
 void InDataPort::release()

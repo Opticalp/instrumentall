@@ -53,12 +53,7 @@ bool TrigPort::tryLock()
     return true;
 }
 
-void TrigPort::readDataAttribute(DataAttribute* pAttr)
-{
-	*pAttr = (*getSourcePort())->dataItem()->getDataAttribute();
-}
-
-bool TrigPort::tryDataAttribute(DataAttribute* pAttr)
+bool TrigPort::tryDataAttribute(DataAttributeIn* pAttr)
 {
 	if (tryLock())
 	{

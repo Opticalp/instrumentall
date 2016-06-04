@@ -28,6 +28,7 @@
 
 #include "InPort.h"
 
+#include "InDataPort.h"
 #include "OutPort.h"
 #include "Dispatcher.h"
 #include "ModuleManager.h"
@@ -64,6 +65,12 @@ void InPort::setNew(bool value)
         (*getSourcePort())->dataItem()->readLock();
 
     used = !value;
+}
+
+void InPort::readDataAttribute(DataAttributeIn* pAttr)
+{
+	*pAttr = DataAttributeIn(
+		(*getSourcePort())->dataItem()->getDataAttribute(), this);
 }
 
 void InPort::release()

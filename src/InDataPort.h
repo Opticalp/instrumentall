@@ -37,7 +37,6 @@
 using Poco::SharedPtr;
 
 class Dispatcher;
-class DataAttributeIn;
 
 /**
  * InDataPort
@@ -83,14 +82,6 @@ public:
      * is not up to date
      */
     bool tryLock();
-
-    /**
-     * Read the data attribute of the incoming data
-     *
-     * The port shall have been previously locked using
-     * tryLock, with return value == true.
-     */
-    void readDataAttribute(DataAttributeIn* pAttr);
 
     /**
      * Read the incoming data
