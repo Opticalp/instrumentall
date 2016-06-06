@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleDataSeq.h
- * @date	Feb. 2016
+ * @file	src/InPortUser.ipp
+ * @date	June 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,46 +26,41 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOMODULEDATASEQ_H_
-#define SRC_DEMOMODULEDATASEQ_H_
+#include "InPortUser.h"
 
-#include "Poco/Mutex.h"
+#include "InDataPort.h"
 
-#include "Module.h"
-
-/**
- * DemoModuleDataSeq
- *
- * Demo module to generate a data sequence at each call to run()
- * It has no input port, but 1 output port.
- */
-class DemoModuleDataSeq: public Module
+template<typename T>
+inline bool InPortUser::tryInPortData(size_t portIndex, T*& pData,
+        DataAttributeIn* pAttr)
 {
-public:
-    DemoModuleDataSeq(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleDataSeq() { }
+    if (inPorts.at(portIndex)->isTrig())
+        poco_bugcheck_msg("The port at the given index is a trig port");
 
-    std::string description()
-    {
-        return "Demo Module to generate a data sequence. ";
-    }
+    InDataPort* inPort = reinterpret_cast<InDataPort*>(inPorts[portIndex]);
 
-private:
-    /**
-     * Main logic
-     *
-     * Generate an integer data sequence {0;1;2;3}
-     */
-    void process(int startCond);
+    if ((*caughts)[portIndex])
+        poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
 
-    static size_t refCount; ///< reference counter to generate a unique internal name
+    bool retValue = inPort->tryData<T>(pData, pAttr);
 
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        outPortA,
-        outPortCnt
-    };
-};
+    if (retValue)
+        (*caughts)[portIndex] = true;
 
-#endif /* SRC_DEMOMODULEDATASEQ_H_ */
+    return retValue;
+}
+
+template<typename T>
+inline void InPortUser::readInPortData(size_t portIndex, T*& pData)
+{
+    if (inPorts.at(portIndex)->isTrig())
+        poco_bugcheck_msg("The port at the given index is a trig port");
+
+    InDataPort* inPort = reinterpret_cast<InDataPort*>(inPorts[portIndex]);
+
+    if (!(*caughts)[portIndex])
+    	poco_bugcheck_msg("try to read an input port that was not previously locked");
+
+    inPort->readData<T>(pData);
+}
+

@@ -34,7 +34,7 @@
 #include "Poco/NumberFormatter.h"
 
 ModuleTask::ModuleTask(Module* module, InPort* inPort):
-	coreModule(module), triggingPort(inPort)
+	coreModule(module), mTriggingPort(inPort)
 {
 	// commented: registered when queued by the dispatcher
 	// coreModule->registerTask(this);
@@ -43,7 +43,7 @@ ModuleTask::ModuleTask(Module* module, InPort* inPort):
 }
 
 ModuleTask::ModuleTask():
-	coreModule(NULL), triggingPort(NULL)
+	coreModule(NULL), mTriggingPort(NULL)
 {
 }
 
@@ -62,5 +62,21 @@ void ModuleTask::runTask()
 		throw Poco::NullPointerException("no more module bound to " + name());
 
 	coreModule->setRunningTask(this);
-	coreModule->run();
+	coreModule->resetInPortLockFlags();
+	coreModule->resetOutPortLockFlags();
+
+	// releaseAllInports is called just in case it was not already done.
+	try
+	{
+		coreModule->run();
+	}
+	catch (...)
+	{
+		coreModule->releaseAllInPorts();
+		coreModule->releaseAllOutPorts();
+		throw;
+	}
+
+	coreModule->releaseAllInPorts();
+	coreModule->releaseAllOutPorts();
 }

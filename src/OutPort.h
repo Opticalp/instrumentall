@@ -86,6 +86,24 @@ public:
     std::vector< SharedPtr<InPort*> > getSeqTargetPorts();
 
     /**
+     * Try to lock the output port to retrieve a pointer on
+     * the data to be written
+     *
+     * @return true if success
+     */
+    bool tryLock()
+    	{ return dataItem()->tryLockToWrite(); }
+
+    /**
+     * Retrieve a pointer on the data to be written
+     *
+     * The port shall have been previously locked using
+     * tryLock, with return value == true.
+     */
+    template<typename T> void getDataToWrite(T*& pData)
+    	{ dataItem()->getDataToWrite(pData); }
+
+    /**
      * Try to retrieve a pointer on the data to be written
      *
      * @return false if the lock cannot be acquired

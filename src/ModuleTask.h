@@ -71,21 +71,35 @@ public:
 	 * The returned value should be transformed into a sharedPtr via
 	 * Dispatcher::getInPort() to be used.
 	 */
-	InPort* trigPort() { return triggingPort; }
+	InPort* triggingPort() { return mTriggingPort; }
 
-private:
-	enum runningStates
+	/**
+	 * Possible states during execution
+	 */
+	enum RunningStates
 	{
-		collectingInData,
-		processing,
-		emittingOutData
+		retrievingInDataLocks,
+		retrievingOutDataLocks,
+		processing
 	};
 
+	RunningStates getRunningState() { return runState; }
+
+protected:
+	/**
+	 * To be called by Module::run and Module::process
+	 * to give information about the current running state of the task
+	 */
+	void setRunningState(RunningStates state) { runState = state; }
+
+private:
 	ModuleTask();
 	Module* coreModule;
-	InPort* triggingPort;
+	InPort* mTriggingPort;
 
 	std::string mName;
+
+	RunningStates runState;
 
 	friend class Module; // access to sleep, setProgress, ...
 };

@@ -48,14 +48,14 @@ public:
         return "Demo Module to forward input onto output. ";
     }
 
+private:
     /**
      * Main logic
      *
      * Forward data and attribute
      */
-    void process(InPortLockUnlock& inPortsAccess, OutPortLockUnlock& outPortsAccess);
+    void process(int startCond);
 
-private:
     static size_t refCount; ///< reference counter to generate a unique internal name
 
     /// Indexes of the input ports

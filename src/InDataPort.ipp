@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 
 template<typename T>
-bool InDataPort::readData(T*& pData)
+void InDataPort::readData(T*& pData)
 {
 	pData = (*getSourcePort())->dataItem()->getDataToRead<T>();
 }

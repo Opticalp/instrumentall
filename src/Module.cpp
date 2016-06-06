@@ -32,8 +32,6 @@
 #include "ThreadManager.h"
 #include "ModuleTask.h"
 
-#include "TrigPort.h"
-#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"
@@ -61,15 +59,6 @@ Module::~Module()
         // notify module manager
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
     }
-
-    // delete ports
-    for (std::vector<InPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
-            it!=ite; it++)
-        delete *it;
-
-    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
-            it!=ite; it++)
-        delete *it;
 }
 
 #include "Poco/Exception.h"
@@ -141,36 +130,6 @@ ModuleFactory* Module::parent()
                 "This module has no valid parent factory");
 }
 
-void Module::addInPort(std::string name, std::string description,
-        int dataType, size_t index)
-{
-    if (index<inPorts.size())
-        inPorts[index] = new InDataPort(this, name, description, dataType, index);
-    else
-        poco_bugcheck_msg(("addInPort: wrong index "
-                + Poco::NumberFormatter::format(index)).c_str());
-}
-
-void Module::addTrigPort(std::string name, std::string description,
-        size_t index)
-{
-    if (index<inPorts.size())
-        inPorts[index] = new TrigPort(this, name, description, index);
-    else
-        poco_bugcheck_msg(("addTrigPort: wrong index "
-                + Poco::NumberFormatter::format(index)).c_str());
-}
-
-void Module::addOutPort(std::string name, std::string description,
-        int dataType, size_t index)
-{
-    if (index<outPorts.size())
-        outPorts[index] = new OutPort(this, name, description, dataType, index);
-    else
-        poco_bugcheck_msg(("addOutPort: wrong index "
-                + Poco::NumberFormatter::format(index)).c_str());
-}
-
 #include "Poco/RegularExpression.h"
 
 Module::NameStatus Module::checkName(std::string newName)
@@ -206,114 +165,35 @@ void Module::freeInternalName()
     }
 }
 
-InPort* Module::getInPort(std::string portName)
-{
-    for (std::vector<InPort*>::iterator it = inPorts.begin(),
-            ite = inPorts.end(); it != ite; it++)
-    {
-        if (portName.compare((*it)->name()) == 0)
-            return *it;
-    }
-
-    throw Poco::NotFoundException("getInPort",
-            "port: " + portName + " not found "
-            + "in module: " + name());
-}
-
-OutPort* Module::getOutPort(std::string portName)
-{
-    for (std::vector<OutPort*>::iterator it = outPorts.begin(),
-            ite = outPorts.end(); it != ite; it++)
-    {
-        if (portName.compare((*it)->name()) == 0)
-            return *it;
-    }
-
-    throw Poco::NotFoundException("getOutPort",
-            "port: " + portName + " not found "
-            + "in module: " + name());
-}
-
-int Module::startCondition(InPortLockUnlock& inPortsAccess)
-{
-	if (inPorts.size() == 0)
-		return noDataStartState;
-
-	bool nakedCall = false;
-
-	if ((*runningTask)->trigPort() == NULL)
-		nakedCall = true;
-
-	// we would need a mean to check if held data is available without locking it
-	// ... the inPortsAccess should handle that in fact...
-
-	bool allPresent = false;
-	bool zeroPresent = true;
-	while (!allPresent)
-	{
-		allPresent = true;
-		for (size_t port = 0; port < inPorts.size(); port++)
-		{
-			if (inPortsAccess.caught(port))
-				continue;
-
-			if (inPortsAccess.tryLock(port))
-				zeroPresent = false;
-			else
-				allPresent = false;
-		}
-
-		if (nakedCall)
-			break;
-
-		if (!allPresent)
-		{
-			if (yield())
-				return cancelledStartState;
-		}
-	}
-
-	if (allPresent)
-		return allDataStartState;
-
-	if (zeroPresent)
-		return noDataStartState;
-	else
-		return unknownStartState;
-}
-
 void Module::run()
 {
     // try to acquire the mutex
-    while (!runTaskMutex.tryLock(TIME_LAPSE))
+    while (!runTaskMutex.tryLock())
     {
-        if (isCancelled())
-            return;
+        if (yield())
+			throw Poco::RuntimeException(name()+"::run",
+					"Task cancellation upon user request");
+//		poco_information(logger(), "Module mutex not caught. Retrying...");
     }
 
 	expireOutData();
 
-	// scoped-lock-like objects for ports
-	InPortLockUnlock inPortAccess(getInPorts());
-	OutPortLockUnlock outPortAccess(getOutPorts());
-
     try
     {
-        process(inPortAccess, outPortAccess);
+    	setRunningState(ModuleTask::retrievingInDataLocks);
+    	int startCond = startCondition();
+
+		mergeTasks(portsWithNewData());
+
+		setRunningState(ModuleTask::processing);
+		process(startCond);
     }
-    catch (Poco::Exception& e)
+    catch (...)
     {
-        // release input ports data -- even if new --,
-        // since the module task exited on error
-        inPortAccess.processing();
-
         runTaskMutex.unlock();
-        e.rethrow();
+        throw;
     }
-
     runTaskMutex.unlock();
-
-    // outPortAccess and inPortAccess are destroyed here...
 }
 
 bool Module::sleep(long Milliseconds)
@@ -336,11 +216,26 @@ bool Module::isCancelled()
 	return (*runningTask)->isCancelled();
 }
 
+InPort* Module::triggingPort()
+{
+	return (*runningTask)->triggingPort();
+}
+
+void Module::setRunningState(ModuleTask::RunningStates state)
+{
+	(*runningTask)->setRunningState(state);
+}
+
+ModuleTask::RunningStates Module::getRunningState()
+{
+	return (*runningTask)->getRunningState();
+}
+
 void Module::expireOutData()
 {
-    for (std::vector<OutPort*>::iterator it = outPorts.begin(),
-            ite = outPorts.end(); it != ite; it++)
-        (*it)->expire();
+    for (size_t portIndex = 0, cnt = getOutPortCount();
+    		portIndex < cnt; portIndex++)
+        getOutPort(portIndex)->expire();
 }
 
 bool Module::enqueueTask(ModuleTask* task)
@@ -395,16 +290,16 @@ void Module::unregisterTask(ModuleTask* task)
 	allTasks.erase(task);
 }
 
-void Module::mergeTasks(std::set<int> inPortIndexes)
+void Module::mergeTasks(std::set<size_t> inPortIndexes)
 {
 	Poco::FastMutex::ScopedLock lock(taskMngtMutex);
 
-	for (std::set<int>::iterator it = inPortIndexes.begin(),
+	for (std::set<size_t>::iterator it = inPortIndexes.begin(),
 			ite = inPortIndexes.end(); it != ite; it++)
 	{
-		InPort* trigPort = inPorts.at(*it);
+		InPort* trigPort = getInPort(*it);
 
-		if ((*runningTask)->trigPort() == trigPort)
+		if (triggingPort() == trigPort)
 			continue; // current task
 
 		bool found = false;
@@ -413,7 +308,7 @@ void Module::mergeTasks(std::set<int> inPortIndexes)
 		for (std::list<ModuleTask*>::iterator qIt = taskQueue.begin(),
 				qIte = taskQueue.end(); qIt != qIte; qIt++)
 		{
-			if ((*qIt)->trigPort() == trigPort)
+			if ((*qIt)->triggingPort() == trigPort)
 			{
 				found = true;
 				(*runningTask)->merge(*qIt);

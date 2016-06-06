@@ -63,28 +63,18 @@ DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName
     refCount++;
 }
 
-void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess,
-        OutPortLockUnlock& outPortsAccess)
+void DemoModuleSeqMax::process(int startCond)
 {
+	if (startCond != allDataStartState)
+	{
+		poco_information(logger(), name() + ": no input data. Exiting. ");
+		return;
+	}
+
     DataAttributeIn attr;
-
     int* pData;
-
-    // try to acquire the data
-    // It should not be a problem since this is the only input data
-    // then, if the task was launched, it is probably that this is due
-    // to a push.
-    if (!inPortsAccess.tryData<int>(inPortA, pData, &attr))
-    {
-        poco_information(logger(),
-                "DemoModuleSeqMax::runTask(): "
-                "failed to acquire the input data lock. "
-                "Data is probably not up to date. ");
-
-        return; // data not up to date
-    }
-
-    inPortsAccess.processing();
+    readInPortData<int>(inPortA, pData);
+    readInPortDataAttribute(inPortA, &attr);
 
     if (attr.isStartSequence(seqIndex))
     {
@@ -106,27 +96,15 @@ void DemoModuleSeqMax::process(InPortLockUnlock& inPortsAccess,
         if (attr.isEndSequence(seqIndex))
         {
             DataAttributeOut outAttr = attr;
-            inPortsAccess.release(inPortA);
+            releaseInPort(inPortA);
+
+            reserveOutPort(outPortA);
 
             int* pOutData;
-
-            // try to acquire the output data lock
-            while (!outPortsAccess.tryData<int>(outPortA, pOutData))
-            {
-                poco_information(logger(),
-                        "DemoModuleSeqMax::runTask(): "
-                        "failed to acquire the output data lock");
-
-                if (sleep(TIME_LAPSE))
-                {
-                    poco_notice(logger(),
-                            "DemoModuleSeqMax::runTask(): cancelled!");
-                    return;
-                }
-            }
+            getDataToWrite<int>(outPortA, pOutData);
 
             *pOutData = tmpMax;
-            outPortsAccess.notifyReady(outPortA, outAttr);
+            notifyOutPortReady(outPortA, outAttr);
 
             poco_information(logger(), "DemoModuleSeqMax::runTask() outputs: "
                     + Poco::NumberFormatter::format(tmpMax));

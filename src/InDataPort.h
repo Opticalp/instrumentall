@@ -89,7 +89,7 @@ public:
      * The port shall have been previously locked using
      * tryLock, with return value == true.
      */
-    template<typename T> bool readData(T*& pData);
+    template<typename T> void readData(T*& pData);
 
     /**
      * Combination of tryLock, readDataAttribute, and readData

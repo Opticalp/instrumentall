@@ -49,6 +49,7 @@ public:
         return "Demo Module to transform a data sequence into a vector. ";
     }
 
+private:
     /**
      * Main logic
      *
@@ -56,9 +57,8 @@ public:
      *  - reinit the accumulator storage at each startSequence
      *  - send the accumulator at each endSequence
      */
-    void process(InPortLockUnlock& inPortsAccess, OutPortLockUnlock& outPortsAccess);
+    void process(int startCond);
 
-private:
     static size_t refCount; ///< reference counter to generate a unique internal name
 
     /// Indexes of the input ports

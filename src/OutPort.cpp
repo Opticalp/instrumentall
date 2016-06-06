@@ -130,12 +130,6 @@ OutPort::OutPort():
     // nothing to do
 }
 
-//template<typename T>
-//bool OutPort::tryData(T*& pData)
-//{
-//    return data.tryGetDataToWrite<T>(pData);
-//}
-
 void OutPort::notifyReady(DataAttributeOut attribute)
 {
     if (attribute.isSettingSequence())

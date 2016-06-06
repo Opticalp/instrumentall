@@ -31,11 +31,9 @@
 
 #include "VerboseEntity.h"
 #include "ParameterizedEntity.h"
-
-#include "Port.h"
-
-#include "InPortLockUnlock.h"
-#include "OutPortLockUnlock.h"
+#include "InPortUser.h"
+#include "OutPortUser.h"
+#include "ModuleTask.h"
 
 #include "Poco/ThreadLocal.h"
 #include "Poco/RWLock.h"
@@ -45,13 +43,7 @@
 #include <set>
 #include <list>
 
-class InDataPort;
-class OutPort;
 class ModuleFactory;
-class ModuleTask;
-
-/// Time lapse in milliseconds between 2 tries in multithread lock case
-#define TIME_LAPSE 10
 
 /**
  * Module
@@ -69,7 +61,9 @@ class ModuleTask;
  * the tasks when needed. The tasks are the only one to run the
  * modules (after having set runningTask).
  */
-class Module: public virtual VerboseEntity, public ParameterizedEntity
+class Module: public virtual VerboseEntity,
+	public ParameterizedEntity,
+	public InPortUser, public OutPortUser
 {
 public:
 	/**
@@ -90,7 +84,8 @@ public:
 	 * if customName or internalName is already in use.
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
-	      mParent(parent), ParameterizedEntity("module." + name)
+	      mParent(parent), ParameterizedEntity("module." + name),
+		  procMode(fullBufferedProcessing)
 	{
 	}
 
@@ -143,24 +138,6 @@ public:
 	 */
 	ModuleFactory* parent();
 
-	/**
-	 * Get input ports
-	 *
-	 * The dispatcher should be requested to get shared pointer
-	 * on the port items
-	 * @return a copy of the input ports list
-	 */
-	std::vector<InPort*> getInPorts() { return inPorts; }
-	InPort* getInPort(std::string portName);
-
-	/**
-	 * Get output ports
-	 *
-	 * @see getInPorts
-	 */
-	std::vector<OutPort*> getOutPorts() { return outPorts; }
-	OutPort* getOutPort(std::string portName);
-
     /**
      * Expire output data
      */
@@ -197,7 +174,61 @@ public:
      */
     void popTaskSync();
 
+    /**
+     * Processing modes:
+     *
+     * - direct: the input ports are locked, the output ports are locked,
+     * and the processing occurs directly from the input data into the output
+     * data
+     * - buffered in: the input data is duplicated, the input port is released,
+     * and then the processing occurs.
+     * - buffered out: the processing occurs into a buffer. Then the output
+     * port is locked and the data is copied into the outport.
+     * - full buffered: combination of buffered in and buffered out
+     * - other: any other processing way.
+     *
+     * Not all the processing modes are relevant... Mainly depending on the presence
+     * of input/output ports and of course depending on the processing itself.
+     *
+     * The main difference between those modes is not really the memory footprint
+     * (it can be, in some cases), but the time during which the ports are locked.
+     */
+    enum ProcessingMode
+	{
+    	directProcessing,
+		bufferedInProcessing = 1,
+		bufferedOutProcessing = 1 << 1,
+		fullBufferedProcessing = bufferedInProcessing | bufferedOutProcessing,
+		otherProcessing
+	};
+
+    /**
+     * Set the processing mode
+     *
+     * can be overloaded to execute some checks or restrictions.
+     * The parent method should be called, though.
+     */
+    virtual void setProcMode(ProcessingMode mode) { procMode = mode; }
+    ProcessingMode getProcMode() { return procMode; }
+
 protected:
+	void addInPort(
+			std::string name, std::string description,
+	        int dataType,
+	        size_t index )
+	{ InPortUser::addInPort(this, name, description, dataType, index); }
+
+	void addTrigPort(
+            std::string name, std::string description,
+            size_t index )
+	{ InPortUser::addTrigPort(this, name, description, index); }
+
+    void addOutPort(
+            std::string name, std::string description,
+            int dataType,
+            size_t index )
+	{ OutPortUser::addOutPort(this, name, description, dataType, index); }
+
     Poco::ThreadLocal<ModuleTask*> runningTask;
 
     void setRunningTask(ModuleTask* pTask) { *runningTask = pTask; }
@@ -208,6 +239,9 @@ protected:
     bool yield();
 	void setProgress(float progress);
     bool isCancelled();
+    InPort* triggingPort();
+    void setRunningState(ModuleTask::RunningStates state);
+    ModuleTask::RunningStates getRunningState();
     ///}
 
     // TODO: method to forward the running state to the runningTask (collectingInData, ... etc)
@@ -226,17 +260,7 @@ protected:
      *
      * @inPortIndexes indexes of the inPorts which data will be used
      */
-    void mergeTasks(std::set<int> inPortIndexes);
-
-    /// Start states as to be returned by startCondition
-    enum baseStartStates
-	{
-    	cancelledStartState = -1,
-    	noDataStartState,
-		unknownStartState,
-		allDataStartState,
-		firstUnusedBaseStartState // to be used to extend the start states with another enum
-	};
+    void mergeTasks(std::set<size_t> inPortIndexes);
 
 	/**
 	 * Implementation of Poco::Task::runTask()
@@ -249,46 +273,34 @@ protected:
 	 *
 	 * This function is virtual. it can be overloaded by
 	 * the derived class if the runTaskMutex lock is not wanted.
+	 *
+	 * It is not recommended to overload this method.
 	 */
 	virtual void run();
 
 	/**
 	 * Main logic called by runTask
 	 *
-	 * with a lock on runTaskMutex.
-	 * inPortsAccess and outPortsAccess should be used to
-	 * access the ports data, since it will handle the
-	 * unlocking of the ports in case of un-clean stop
+	 * Depending on the processing mode, the data should be buffered or
+	 * not.
 	 *
-	 * The enqueued tasks trigged by the input data that
-	 * are used here shall be merged.
+	 * Access to input ports data should be done via readInPort and
+	 * readInPortDataAttribute. Call releaseAllInPorts when over.
+	 *
+	 * Access to output ports should be granted via reserveOutPorts
+	 * and then data pointer should be accessed with getDataToWrite.
+	 * Call notifyAllOutPortReady when over.
+	 *
+	 * @param startCond start condition as defined in virtual method
+	 * startCondition. You should consider implementing your own
+	 * startCondition method for non-standard cases.
+	 *
+	 * @see startCondition
+	 * @see setRunningState
+	 * @see getProcMode
 	 */
-	virtual void process(InPortLockUnlock& inPortsAccess,
-	        OutPortLockUnlock& outPortsAccess)
-	    { poco_warning(logger(), name() + ": nothing to be done"); }
-
-	/**
-	 * Define a start state regarding the input data
-	 *
-	 * This state is described by an index that should be defined
-	 * as an enumeration in the implementation.
-	 *
-	 *     enum moreStartStates
-	 *     {
-	 *         firstStartState = firstUnusedBaseStartState,
-	 *         secondStartState,
-	 *         lastStartState
-	 *     };
-	 *
-	 * Default implementation:
-	 *  - check if there is input ports. if not, return.
-	 *  - check if the call is issued from incoming data
-	 *    - if it does, wait for all the data to be available
-	 *    - if it does not, check if the data is held. if not at all,
-	 *    return "no data", if partial, return "unknown",
-	 *    if all, return "all data".
-	 */
-	virtual int startCondition(InPortLockUnlock& inPortsAccess);
+	virtual void process(int startCond)
+		{ poco_warning(logger(), name() + ": nothing to be done"); }
 
     /**
      * Set the internal name of the module
@@ -318,54 +330,6 @@ protected:
 	 * in the Dispatcher
 	 */
 	void notifyCreation();
-
-	/**
-	 * Set the inPorts list size
-	 */
-	void setInPortCount(size_t cnt) { inPorts.resize(cnt, NULL); }
-	/**
-	 * Add input data port
-	 *
-	 * @param name name of the port
-	 * @param description description of the port
-	 * @param dataType type of port data
-	 * @param index index of the port in the inPorts list. It allows
-	 * to use enums to access the ports.
-	 */
-	void addInPort(
-	        std::string name, std::string description,
-	        int dataType,
-	        size_t index );
-    /**
-     * Add trig port
-     *
-     * To trig the running of the module
-     * @param name name of the port
-     * @param description description of the port
-     * @param index index of the port in the inPorts list. It allows
-     * to use enums to access the ports.
-     */
-	void addTrigPort(
-            std::string name, std::string description,
-            size_t index );
-
-    /**
-     * Set the outPorts list size
-     */
-    void setOutPortCount(size_t cnt) { outPorts.resize(cnt, NULL); }
-    /**
-     * Add output data port
-     *
-     * @param name name of the port
-     * @param description description of the port
-     * @param dataType type of port data
-     * @param index index of the port in the outPorts list. It allows
-     * to use enums to access the ports.
-     */
-    void addOutPort(
-            std::string name, std::string description,
-            int dataType,
-            size_t index );
 
     Poco::Mutex runTaskMutex; ///< mutex used to block runTask(), and then, process()
 private:
@@ -404,8 +368,7 @@ private:
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
 
-	std::vector<InPort*> inPorts; ///< list of input ports
-	std::vector<OutPort*> outPorts; ///< list of output data ports
+	ProcessingMode procMode;
 
 	static std::vector<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
@@ -415,7 +378,7 @@ private:
 	std::list<ModuleTask*> taskQueue;
 	Poco::FastMutex taskMngtMutex;
 
-    friend class ModuleTask; // access to setRunningTask
+    friend class ModuleTask; // access to setRunningTask, releaseAll
 };
 
 #endif /* SRC_MODULE_H_ */

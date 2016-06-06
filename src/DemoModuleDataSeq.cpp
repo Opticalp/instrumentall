@@ -57,10 +57,8 @@ DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customNa
 
 #define MAX_INDEX 4
 
-void DemoModuleDataSeq::process(InPortLockUnlock& inPortsAccess,
-        OutPortLockUnlock& outPortsAccess)
+void DemoModuleDataSeq::process(int startCond)
 {
-    // --- process ---
     DataAttributeOut attr;
 
     attr.startSequence();
@@ -69,27 +67,16 @@ void DemoModuleDataSeq::process(InPortLockUnlock& inPortsAccess,
     {
         int *pData;
 
-        // try to acquire the output data lock
-        while (!outPortsAccess.tryData(outPortA, pData))
-        {
-            poco_information(logger(),
-                    "DemoModuleDataSeq::runTask(): "
-                    "failed to acquire the output data lock. "
-                    "Wait " + Poco::NumberFormatter::format(TIME_LAPSE)
-                    + " ms now and retry. ");
-
-            if (sleep(TIME_LAPSE))
-            {
-                poco_notice(logger(), "DemoModuleDataSeq::runTask(): cancelled!" );
-                return;
-            }
-        }
+        // lock outPortA
+        reserveOutPort(outPortA);
+        // retrieve data access
+        getDataToWrite(outPortA, pData);
 
         if (index==MAX_INDEX)
             attr.endSequence(); // set end sequence to the attribute
 
         *pData = index;
-        outPortsAccess.notifyReady(outPortA, attr++);
+        notifyOutPortReady(outPortA, attr++);
 
         poco_information(logger(), "DemoModuleDataSeq::runTask(): sent "
                 + Poco::NumberFormatter::format(index));
