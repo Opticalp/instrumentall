@@ -30,9 +30,9 @@
 #define SRC_MODULE_H_
 
 #include "VerboseEntity.h"
+#include "ParameterizedEntity.h"
 
 #include "Port.h"
-#include "ParameterSet.h"
 
 #include "InPortLockUnlock.h"
 #include "OutPortLockUnlock.h"
@@ -40,7 +40,6 @@
 #include "Poco/ThreadLocal.h"
 #include "Poco/RWLock.h"
 #include "Poco/Mutex.h"
-#include "Poco/Util/Application.h" // layered configuration
 
 #include <map>
 #include <set>
@@ -70,7 +69,7 @@ class ModuleTask;
  * the tasks when needed. The tasks are the only one to run the
  * modules (after having set runningTask).
  */
-class Module: public VerboseEntity
+class Module: public virtual VerboseEntity, public ParameterizedEntity
 {
 public:
 	/**
@@ -91,7 +90,9 @@ public:
 	 * if customName or internalName is already in use.
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
-	      mParent(parent), VerboseEntity() { }
+	      mParent(parent), ParameterizedEntity("module." + name)
+	{
+	}
 
 	/**
 	 * Destructor
@@ -159,46 +160,6 @@ public:
 	 */
 	std::vector<OutPort*> getOutPorts() { return outPorts; }
 	OutPort* getOutPort(std::string portName);
-
-	/**
-	 * Retrieve a copy of the parameter set of the module
-	 *
-	 * @param pSet reference to a user allocated ParameterSet
-	 */
-	void getParameterSet(ParameterSet* pSet);
-
-    /**
-     * Retrieve the parameter data type
-     *
-     * @throw Poco::NotFoundException if the parameter name is not found
-     */
-    ParamItem::ParamType getParameterType(std::string paramName);
-
-	/**
-	 * Retrieve the value of the parameter given by its name
-	 *
-	 * Check the parameter type and call one of:
-	 *  - getIntParameterValue
-	 *  - getFloatParameterValue
-	 *  - getStrParameterValue
-	 *
-	 * @throw Poco::NotFoundException if the name is not found
-	 * @throw Poco::DataFormatException if the parameter format does not fit
-	 */
-    template<typename T> T getParameterValue(std::string paramName);
-
-    /**
-     * Set the value of the parameter given by its name
-     *
-     * Check the parameter type and call one of:
-     *  - setIntParameterValue
-     *  - setFloatParameterValue
-     *  - setStrParameterValue
-     *
-     * @throw Poco::NotFoundException if the name is not found
-     * @throw Poco::DataFormatException if the parameter format does not fit
-     */
-    template<typename T> void setParameterValue(std::string paramName, T value);
 
     /**
      * Expire output data
@@ -406,73 +367,6 @@ protected:
             int dataType,
             size_t index );
 
-    /**
-     * Set parameter set size
-     *
-     * to be called before adding parameters
-     */
-    void setParameterCount(size_t count)
-        { paramSet.resize(count); }
-
-    /**
-     * Add a parameter in the parameter set
-     *
-     * Should be called in the module constructor
-     */
-    void addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype);
-
-    /**
-     * Add a parameter in the parameter set
-     *
-     * Should be called in the module constructor.
-     * Specify a default value as a string,
-     * as could be read in a config file
-     */
-    void addParameter(size_t index,
-            std::string name, std::string descr,
-            ParamItem::ParamType datatype,
-            std::string hardCodedValue);
-
-    /**
-     * Retrieve the default value for the given parameter
-     *
-     * - Check if the parameter has an entry in the configuration:
-     *      module.<name>.<paramName>
-     * - if not found, return the hard-coded value that was defined at creation,
-     * - if not found...
-     * @throw Poco::NotFoundException
-     */
-    long getIntParameterDefaultValue(size_t index);
-    double getFloatParameterDefaultValue(size_t index);
-    std::string getStrParameterDefaultValue(size_t index);
-
-    virtual long getIntParameterValue(size_t paramIndex)
-    {
-        poco_bugcheck_msg("getIntParameterValue not implemented for this module");
-        throw Poco::BugcheckException();
-    }
-
-    virtual double getFloatParameterValue(size_t paramIndex)
-    {
-        poco_bugcheck_msg("getFloatParameterValue not implemented for this module");
-        throw Poco::BugcheckException();
-    }
-
-    virtual std::string getStrParameterValue(size_t paramIndex)
-    {
-        poco_bugcheck_msg("getStrParameterValue not implemented for this module");
-        throw Poco::BugcheckException();
-    }
-
-    virtual void setIntParameterValue(size_t paramIndex, long value)
-        { poco_bugcheck_msg("setIntParameterValue not implemented for this module"); }
-
-    virtual void setFloatParameterValue(size_t paramIndex, double value)
-        { poco_bugcheck_msg("setFloatParameterValue not implemented for this module"); }
-
-    virtual void setStrParameterValue(size_t paramIndex, std::string value)
-        { poco_bugcheck_msg("setStrParameterValue not implemented for this module"); }
-
     Poco::Mutex runTaskMutex; ///< mutex used to block runTask(), and then, process()
 private:
     /// enum to be returned by checkName
@@ -521,39 +415,7 @@ private:
 	std::list<ModuleTask*> taskQueue;
 	Poco::FastMutex taskMngtMutex;
 
-	ParameterSet paramSet;
-
-	/**
-	 * Retrieve a parameter index from its name
-	 *
-	 * The main mutex has to be locked before calling this function
-	 */
-	size_t getParameterIndex(std::string paramName);
-
-	/**
-	 * Table of hard-coded values
-	 *
-	 * @see addParameter
-	 */
-	std::map<size_t, std::string> hardCodedValues;
-
-	/**
-	 * Retrieve the raw default value as a string
-	 */
-	std::string getParameterDefaultValue(size_t index);
-
-    /**
-     * Convenience function to get the application config
-     *
-     * simple forwarder to `Poco::Util::Application::instance().config()`
-     */
-    Poco::Util::LayeredConfiguration& appConf()
-        { return Poco::Util::Application::instance().config(); }
-
     friend class ModuleTask; // access to setRunningTask
 };
-
-/// templates implementation
-#include "Module.ipp"
 
 #endif /* SRC_MODULE_H_ */

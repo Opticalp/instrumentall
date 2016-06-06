@@ -102,6 +102,10 @@ void Module::setCustomName(std::string customName)
     if (customName.empty() || customName.compare(internalName())==0)
     {
         mName = internalName();
+
+        // update conf file prefix key
+        setPrefixKey("module." + mName);
+
         return;
     }
 
@@ -200,104 +204,6 @@ void Module::freeInternalName()
             return;
         }
     }
-}
-
-void Module::addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype)
-{
-    try
-    {
-        paramSet.at(index).name = name;
-        paramSet[index].descr = descr;
-        paramSet[index].datatype = datatype;
-    }
-    catch (std::out_of_range& )
-    {
-        poco_bugcheck_msg("addParameter: incorrect index. "
-                "Please check your module constructor");
-    }
-}
-
-void Module::addParameter(size_t index, std::string name, std::string descr,
-        ParamItem::ParamType datatype, std::string hardCodedValue)
-{
-    addParameter(index, name, descr, datatype);
-    hardCodedValues.insert(std::pair<size_t, std::string>(index, hardCodedValue));
-}
-
-std::string Module::getParameterDefaultValue(size_t index)
-{
-    // 1. check in the conf file
-    std::string keyStr = "module." + name()
-            + "." + paramSet.at(index).name;
-
-    try
-    {
-        return appConf().getString(keyStr);
-    }
-    catch (Poco::NotFoundException&)
-    {
-        poco_information(logger(),
-            std::string("property key: ") + keyStr +
-            std::string(" not found in config file"));
-    }
-
-    // 2. check in the hard coded values
-    std::map<size_t, std::string>::iterator it = hardCodedValues.find(index);
-    if (it != hardCodedValues.end())
-        return it->second;
-
-    throw Poco::NotFoundException("getParameterDefaultValue",
-                                        "no default value found");
-}
-
-long Module::getIntParameterDefaultValue(size_t index)
-{
-    std::string strValue = getParameterDefaultValue(index);
-    return static_cast<long>(Poco::NumberParser::parse64(strValue));
-}
-
-double Module::getFloatParameterDefaultValue(size_t index)
-{
-    std::string strValue = getParameterDefaultValue(index);
-    return Poco::NumberParser::parseFloat(strValue);
-}
-
-std::string Module::getStrParameterDefaultValue(size_t index)
-{
-    return getParameterDefaultValue(index);
-}
-
-void Module::getParameterSet(ParameterSet* pSet)
-{
-    // mainMutex.lock();
-    pSet->clear();
-    pSet->reserve(paramSet.size());
-    for (ParameterSet::iterator it = paramSet.begin(),
-            ite = paramSet.end(); it != ite; it++)
-    {
-        pSet->push_back(ParamItem());
-        pSet->back().name = it->name;
-        pSet->back().descr = it->descr;
-        pSet->back().datatype = it->datatype;
-    }
-    // mainMutex.unlock();
-}
-
-size_t Module::getParameterIndex(std::string paramName)
-{
-    size_t length = paramSet.size();
-
-    for (size_t index = 0; index < length; index++)
-        if (paramSet[index].name.compare(paramName) == 0)
-            return index;
-
-    throw Poco::NotFoundException("getParameterIndex", "parameter name not found");
-}
-
-ParamItem::ParamType Module::getParameterType(std::string paramName)
-{
-    // TODO: mainMutex scoped lock
-    return paramSet[getParameterIndex(paramName)].datatype;
 }
 
 InPort* Module::getInPort(std::string portName)
