@@ -30,6 +30,7 @@
 
 #include "DataLogger.h"
 #include "ModuleTask.h"
+#include "Module.h"
 
 #include "Poco/Observer.h"
 #include "Poco/NumberFormatter.h"
@@ -52,6 +53,9 @@ ThreadManager::ThreadManager():
     taskManager.addObserver(
                 Observer<ThreadManager, TaskFinishedNotification>(
                         *this, &ThreadManager::onFinished ) );
+    taskManager.addObserver(
+                Observer<ThreadManager, TaskEnslavedNotification>(
+                        *this, &ThreadManager::onEnslaved ) );
 
     threadPool.addCapacity(32);
 }
@@ -61,8 +65,7 @@ void ThreadManager::onStarted(TaskStartedNotification* pNf)
     poco_information(logger(), pNf->task()->name() + " was started");
 
     // TODO:
-    // - unstack task
-    // - dispatch to a TimedNotificationQueue
+    // - dispatch to a NotificationQueue
 }
 
 void ThreadManager::onFailed(TaskFailedNotification* pNf)
@@ -71,8 +74,7 @@ void ThreadManager::onFailed(TaskFailedNotification* pNf)
     poco_error(logger(), e.displayText());
 
     // TODO:
-    // - unstack task
-    // - dispatch to a TimedNotificationQueue
+    // - dispatch to a NotificationQueue
 }
 
 void ThreadManager::onFinished(TaskFinishedNotification* pNf)
@@ -83,16 +85,33 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 
     if (modTask)
     {
-		// TODO:
-		// - unstack task
-		// - dispatch to a TimedNotificationQueue
+    	// TODO:
+		// - dispatch to a NotificationQueue
 
-		Poco::ScopedWriteRWLock lock(taskListLock);
+    	unregisterModuleTask(modTask);
 
-		Poco::AutoPtr<ModuleTask> taskPtr(modTask, true); // do not take ownership!
-		pendingModTasks.erase(taskPtr);
+    	taskListLock.readLock();
+
+		poco_information(logger(), "pending module tasks list size is: "
+				+ Poco::NumberFormatter::format(pendingModTasks.size()));
+
+		taskListLock.unlock();
+
+		if (!modTask->isSlave())
+		{
+			poco_information(logger(), modTask->name() + " is not a slave");
+			modTask->module()->popTaskSync();
+		}
+
+//		poco_information(logger(), "TaskFinishednotification dispatched. ");
     }
-    // else   datalogger task
+    // else   datalogger task ==> 06.06.16 datalogger does not run in a task any more?
+}
+
+void ThreadManager::onEnslaved(TaskEnslavedNotification* pNf)
+{
+    poco_information(logger(), pNf->task()->name()
+    		+ " enslaved " + pNf->slave()->name() );
 }
 
 void ThreadManager::startDataLogger(DataLogger* dataLogger)
@@ -127,16 +146,32 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 		poco_error(logger(), pTask->name() + " cannot be started, "
 				+ e.displayText());
 	}
+	catch (...)
+	{
+		unregisterModuleTask(pTask);
+		throw;
+	}
 }
 
 void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 {
 	Poco::AutoPtr<MergeableTask> taskPtr(pTask, true); // do not take ownership!
-    taskManager.startSync(taskPtr);
+
+	try
+	{
+		taskManager.startSync(taskPtr);
+	}
+	catch (...)
+	{
+		unregisterModuleTask(pTask);
+		throw;
+	}
 }
 
 int ThreadManager::count()
 {
+	Poco::ScopedReadRWLock lock(taskListLock);
+
     return pendingModTasks.size();
 }
 
@@ -171,4 +206,15 @@ void ThreadManager::registerNewModuleTask(ModuleTask* pTask)
 
 	Poco::AutoPtr<ModuleTask> taskPtr(pTask);
 	pendingModTasks.insert(taskPtr);
+}
+
+void ThreadManager::unregisterModuleTask(ModuleTask* pTask)
+{
+//	poco_information(logger(), "unregistering " + pTask->name());
+	Poco::ScopedWriteRWLock lock(taskListLock);
+
+	Poco::AutoPtr<ModuleTask> taskPtr(pTask, true); // do not take ownership!
+	if (pendingModTasks.erase(taskPtr) < 1)
+		poco_warning(logger(), "Failed to erase the task " + pTask->name()
+				+ " from the thread manager");
 }

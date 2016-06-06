@@ -97,3 +97,12 @@ TaskProgressNotification::~TaskProgressNotification()
 {
 }
 
+TaskEnslavedNotification::TaskEnslavedNotification(MergeableTask* pTask, MergeableTask* enslaved):
+	TaskNotification(pTask),
+	mSlave(enslaved)
+{
+}
+
+TaskEnslavedNotification::~TaskEnslavedNotification()
+{
+}

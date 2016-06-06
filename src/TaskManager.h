@@ -50,6 +50,12 @@
  * subclasses for the various events that result in a notification.
  * To keep the number of notifications small, a TaskProgressNotification
  * will only be sent out once in 100 milliseconds.
+ *
+ * This task manager allows the use of mergeable tasks (MergeableTask).
+ * in this case, once merged, the slave tasks only dispatch
+ * TaskFinishedNotification. The other possible notifications
+ * (TaskCancelledNotification, TaskProgressNotification,
+ *  TaskFailedNotifications... ) are only issued by the master task.
  */
 class TaskManager
 {
@@ -104,6 +110,7 @@ protected:
 	void taskCancelled(MergeableTask* pTask);
 	void taskFinished(MergeableTask* pTask);
 	void taskFailed(MergeableTask* pTask, const Poco::Exception& exc);
+	void taskEnslaved(MergeableTask* pTask, MergeableTask* enslaved);
 
 private:
 	Poco::ThreadPool&        threadPool;

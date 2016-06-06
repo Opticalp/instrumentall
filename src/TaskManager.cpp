@@ -80,7 +80,7 @@ void TaskManager::startSync(TaskPtr pAutoTask)
 	mutex.unlock();
 	try
 	{
-		pAutoTask->runTask();
+		pAutoTask->run();
 	}
 	catch (...)
 	{
@@ -181,4 +181,10 @@ void TaskManager::taskFinished(MergeableTask* pTask)
 void TaskManager::taskFailed(MergeableTask* pTask, const Poco::Exception& exc)
 {
 	nc.postNotification(new TaskFailedNotification(pTask, exc));
+}
+
+void TaskManager::taskEnslaved(MergeableTask* pTask, MergeableTask* enslaved)
+{
+	enslaved->setOwner(this);
+	nc.postNotification(new TaskEnslavedNotification(pTask, enslaved));
 }

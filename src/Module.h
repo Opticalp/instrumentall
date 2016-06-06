@@ -164,6 +164,8 @@ public:
      * Launch the next task of the queue
      *
      * and dequeue it.
+     *
+     * Do nothing if the queue is empty.
      */
     void popTask();
 

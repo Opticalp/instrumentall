@@ -54,11 +54,12 @@ MergeableTask::~MergeableTask()
 	if (masterTask)
 		masterTask->eraseSlave(this);
 
-	if (slavedTasks.size())
+	for (std::set<MergeableTask*>::iterator it = slavedTasks.begin(),
+			ite = slavedTasks.end(); it != ite; it++)
 	{
-		for (std::set<MergeableTask*>::iterator it = slavedTasks.begin(),
-				ite = slavedTasks.end(); it != ite; it++)
-			(*it)->setMaster(NULL);
+		(*it)->setProgress(progress);
+		(*it)->setState(state);
+		(*it)->setMaster(NULL);
 	}
 }
 
@@ -149,9 +150,23 @@ void MergeableTask::run()
 			pTm->taskFailed(this, Poco::SystemException("unknown exception"));
 	}
 	tEnd.update();
+
+	taskFinishedBroadcast(pTm);
+}
+
+void MergeableTask::taskFinishedBroadcast(TaskManager* pTm)
+{
 	state = TASK_FINISHED;
 	if (pTm)
 		pTm->taskFinished(this);
+
+	for (std::set<MergeableTask*>::iterator it = slavedTasks.begin(),
+			ite = slavedTasks.end(); it != ite; it++)
+	{
+		(*it)->state = TASK_FINISHED;
+		if (pTm)
+			pTm->taskFinished(*it);
+	}
 }
 
 void MergeableTask::merge(MergeableTask* slave)
@@ -160,6 +175,10 @@ void MergeableTask::merge(MergeableTask* slave)
 
 	slavedTasks.insert(slave);
 	slave->setMaster(this);
+
+	TaskManager* pTm = getOwner();
+	if (pTm)
+		pTm->taskEnslaved(this, slave);
 }
 
 bool MergeableTask::sleep(long milliseconds)
@@ -211,9 +230,13 @@ void MergeableTask::setMaster(MergeableTask* master)
 	masterTask = master;
 }
 
+bool MergeableTask::isSlave()
+{
+	return (masterTask != NULL);
+}
+
 void MergeableTask::eraseSlave(MergeableTask* slave)
 {
 	Poco::FastMutex::ScopedLock lock(mainMutex);
 	slavedTasks.erase(slave);
 }
-

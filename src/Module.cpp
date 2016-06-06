@@ -249,7 +249,27 @@ bool Module::enqueueTask(ModuleTask* task)
 	allTasks.insert(task);
 	taskQueue.push_back(task);
 
-	// TODO: FIXME (transitional return value)
+	// check in allTasks if there is a task that is running
+	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
+			ite = allTasks.end(); it != ite; it++)
+	{
+		switch ((*it)->getState())
+		{
+		case MergeableTask::TASK_STARTING:
+		case MergeableTask::TASK_RUNNING:
+			poco_information(logger(), task->name()
+					+ ": a task is already running for " + name());
+			return false;
+		case MergeableTask::TASK_FALSE_START:
+		case MergeableTask::TASK_IDLE: // probably self
+		case MergeableTask::TASK_CANCELLING:
+		case MergeableTask::TASK_FINISHED:
+			break;
+		default:
+			poco_bugcheck_msg("unknown task state");
+		}
+	}
+
 	return true;
 }
 
@@ -257,9 +277,11 @@ void Module::popTask()
 {
 	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(taskMngtMutex);
 
-	ModuleTask* nextTask = taskQueue.front();
+	if (taskQueue.empty())
+		return;
 
-	// poco_information(logger(), "poping out the next task: " + nextTask->name());
+	ModuleTask* nextTask = taskQueue.front();
+	poco_information(logger(), "poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
 	lock.unlock();
@@ -273,7 +295,11 @@ void Module::popTaskSync()
 {
 	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(taskMngtMutex);
 
+	if (taskQueue.empty())
+		return;
+
 	ModuleTask* nextTask = taskQueue.front();
+	poco_information(logger(), "SYNC poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
 	lock.unlock();

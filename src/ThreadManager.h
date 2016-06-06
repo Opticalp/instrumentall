@@ -93,6 +93,7 @@ public:
 //    void onProgress(TaskProgressNotification* pNf);
     void onFailed(TaskFailedNotification* pNf);
     void onFinished(TaskFinishedNotification* pNf);
+    void onEnslaved(TaskEnslavedNotification* pNf);
 
     /**
      * Count the active tasks
@@ -149,6 +150,11 @@ private:
     /// Store all non-terminated tasks: idle, or active.
     std::set< Poco::AutoPtr<ModuleTask> > pendingModTasks;
     Poco::RWLock  taskListLock;
+
+    /**
+     * Unregister a task
+     */
+    void unregisterModuleTask(ModuleTask* pTask);
 };
 
 #endif /* SRC_THREADMANAGER_H_ */

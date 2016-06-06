@@ -66,7 +66,7 @@ protected:
 };
 
 
-class Foundation_API TaskCancelledNotification: public TaskNotification
+class TaskCancelledNotification: public TaskNotification
 	/// This notification is posted by the TaskManager for
 	/// every task that has been cancelled.
 {
@@ -78,7 +78,7 @@ protected:
 };
 
 
-class Foundation_API TaskFinishedNotification: public TaskNotification
+class TaskFinishedNotification: public TaskNotification
 	/// This notification is posted by the TaskManager for
 	/// every task that has finished.
 {
@@ -87,6 +87,23 @@ public:
 
 protected:
 	~TaskFinishedNotification();
+};
+
+
+class TaskEnslavedNotification: public TaskNotification
+	/// This notification is posted by the TaskManager for
+	/// every task that has been enslaved.
+{
+public:
+	TaskEnslavedNotification(MergeableTask* pTask, MergeableTask* enslaved);
+
+	MergeableTask* slave() const;
+
+protected:
+	~TaskEnslavedNotification();
+
+private:
+	MergeableTask* mSlave;
 };
 
 
@@ -164,6 +181,12 @@ inline MergeableTask* TaskNotification::task() const
 inline const Poco::Exception& TaskFailedNotification::reason() const
 {
 	return *_pException;
+}
+
+
+inline MergeableTask* TaskEnslavedNotification::slave() const
+{
+	return mSlave;
 }
 
 

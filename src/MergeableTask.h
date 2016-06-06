@@ -134,6 +134,11 @@ public:
 	 */
 	void merge(MergeableTask* slave);
 
+	/**
+	 * Check if this task is a slave task.
+	 */
+	bool isSlave();
+
 protected:
 	/**
 	 * Suspend the current thread for the specified
@@ -175,17 +180,22 @@ protected:
 //	/// notifications about its getProgress.
 //	virtual void postNotification(Poco::Notification* pNf);
 
+	/**
+	 * Set the (optional) owner of the task.
+	 */
 	void setOwner(TaskManager* pOwner);
-		/// Sets the (optional) owner of the task.
 
+	/**
+	 * Return the owner of the task, which may be NULL.
+	 */
 	TaskManager* getOwner() const;
-		/// Returns the owner of the task, which may be NULL.
 
+	/**
+	 * Set the task's state.
+	 */
 	void setState(TaskState state);
-		/// Sets the task's state.
 
 	virtual ~MergeableTask();
-		/// Destroys the Task.
 
 private:
 	MergeableTask(const MergeableTask&);
@@ -201,6 +211,8 @@ private:
 
 	std::set<MergeableTask*> slavedTasks;
 	MergeableTask* masterTask;
+
+	void taskFinishedBroadcast(TaskManager* pTm);
 
 	Poco::Timestamp t0; /// creation time
 	Poco::Timestamp tBegin; /// beginning of run time
