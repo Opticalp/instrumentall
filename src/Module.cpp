@@ -167,33 +167,15 @@ void Module::freeInternalName()
 
 void Module::run()
 {
-    // try to acquire the mutex
-    while (!runTaskMutex.tryLock())
-    {
-        if (yield())
-			throw Poco::RuntimeException(name()+"::run",
-					"Task cancellation upon user request");
-//		poco_information(logger(), "Module mutex not caught. Retrying...");
-    }
-
 	expireOutData();
 
-    try
-    {
-    	setRunningState(ModuleTask::retrievingInDataLocks);
-    	int startCond = startCondition();
+	setRunningState(ModuleTask::retrievingInDataLocks);
+	int startCond = startCondition();
 
-		mergeTasks(portsWithNewData());
+	mergeTasks(portsWithNewData());
 
-		setRunningState(ModuleTask::processing);
-		process(startCond);
-    }
-    catch (...)
-    {
-        runTaskMutex.unlock();
-        throw;
-    }
-    runTaskMutex.unlock();
+	setRunningState(ModuleTask::processing);
+	process(startCond);
 }
 
 bool Module::sleep(long Milliseconds)
@@ -229,13 +211,6 @@ void Module::setRunningState(ModuleTask::RunningStates state)
 ModuleTask::RunningStates Module::getRunningState()
 {
 	return (*runningTask)->getRunningState();
-}
-
-void Module::expireOutData()
-{
-    for (size_t portIndex = 0, cnt = getOutPortCount();
-    		portIndex < cnt; portIndex++)
-        getOutPort(portIndex)->expire();
 }
 
 bool Module::enqueueTask(ModuleTask* task)

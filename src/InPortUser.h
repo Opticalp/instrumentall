@@ -33,6 +33,7 @@
 
 #include "Poco/ThreadLocal.h"
 #include "Poco/Thread.h"
+#include "Poco/Mutex.h"
 
 #include <set>
 
@@ -107,6 +108,9 @@ protected:
 
     /**
      * Forward tryLock for the given port
+     *
+     * To be called by startCondition.
+     * The inMutex is managed by the caller.
      */
     bool tryInPortLock(size_t portIndex);
 
@@ -145,16 +149,8 @@ protected:
     /**
      * Check if the given port was caught/locked
      */
-    bool isInPortCaught(size_t index) { return caughts->at(index); }
-
-    /**
-     * Reset the caughts flags
-     *
-     * To be called before any action with the input ports.
-     *
-     * Be careful not to call it anywhere!
-     */
-    void resetInPortLockFlags() { caughts->assign(inPorts.size(), false); }
+    bool isInPortCaught(size_t index)
+    	{ return (caughts->find(index) != caughts->end()); }
 
     /// Start states as to be returned by startCondition
     enum baseStartStates
@@ -179,14 +175,22 @@ protected:
 	 *     };
 	 *
 	 * Default implementation:
+	 *  - lock inMutex
 	 *  - check if there is input ports. if not, return.
 	 *  - check if the call is issued from incoming data
 	 *    - if it does, wait for all the data to be available
 	 *    - if it does not, check if the data is held. if not at all,
-	 *    return "no data", if partial, return "unknown",
+	 *    return "no data" and unlock inMutex, if partial, return "unknown",
 	 *    if all, return "all data".
+	 *
+	 * A custom implementation should take care of inMutex that has to be
+	 * locked and kept locked if caughts is not empty.
 	 */
 	virtual int startCondition();
+
+	//	bool tryLockIn() { return inMutex.tryLock(); }
+	//	void lockIn() { inMutex.lock(); }
+	//	void unlockIn() { inMutex.unlock(); }
 
 	virtual bool yield() { Poco::Thread::yield(); return false; }
 
@@ -199,7 +203,9 @@ protected:
 
 private:
 	std::vector<InPort*> inPorts; ///< list of input ports
-	Poco::ThreadLocal< std::vector<bool> > caughts; ///< store which ports are locked
+	Poco::ThreadLocal< std::set<size_t> > caughts; ///< store which ports are locked
+
+	Poco::FastMutex inMutex; ///< lock input ports operations
 };
 
 #include "InPortUser.ipp"

@@ -62,8 +62,6 @@ void ModuleTask::runTask()
 		throw Poco::NullPointerException("no more module bound to " + name());
 
 	coreModule->setRunningTask(this);
-	coreModule->resetInPortLockFlags();
-	coreModule->resetOutPortLockFlags();
 
 	// releaseAllInports is called just in case it was not already done.
 	try

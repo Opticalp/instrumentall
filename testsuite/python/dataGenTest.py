@@ -48,6 +48,8 @@ def myMain():
     
     waitAll()
     print "Return value is: " + str(mod1.outPort("data").getDataValue())
+    if ( abs(mod1.outPort("data").getDataValue()-3.14) > 0.01 ):
+        raise RuntimeError("Wrong return value: 3.14 expected. ")
 
     print "Create module from StringDataGen factory"
     mod1 = fac.select("str").create("strGenerator")
@@ -61,6 +63,8 @@ def myMain():
     
     waitAll()
     print "Return value is: " + mod1.outPort("data").getDataValue()
+    if ( mod1.outPort("data").getDataValue() != "mojo" ):
+        raise RuntimeError('Wrong return value: "mojo" expected. ')
     
     print "Create module from Int32DataGen factory"
     mod1 = fac.select("int32").create("intGenerator")
@@ -74,6 +78,8 @@ def myMain():
     
     waitAll()
     print "Return value is: " + str(mod1.outPort("data").getDataValue())
+    if (mod1.outPort("data").getDataValue() != 1):
+        raise RuntimeError('Wrong return value: 1 expected. ')
 
     print "Test the data sequence management, using the seqAccu module"
     seqAccu = Factory("DemoRootFactory").select("branch").select("leafSeqAccu").create("seqAccu")
@@ -106,6 +112,8 @@ def myMain():
     runModule(mod1)
     waitAll()
     print "Return value is: " + str(seqAccu.outPorts()[0].getDataValue())
+    if ( seqAccu.outPorts()[0].getDataValue() != [50, 50, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 100] ):
+        raise RuntimeError("Wrong return value")
     
     print "Test the vector generation"
     mod1 = fac.select("dblFloatVect").create("vectGen")

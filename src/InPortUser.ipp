@@ -34,18 +34,23 @@ template<typename T>
 inline bool InPortUser::tryInPortData(size_t portIndex, T*& pData,
         DataAttributeIn* pAttr)
 {
+	if (caughts->empty())
+		inMutex.lock();
+
     if (inPorts.at(portIndex)->isTrig())
         poco_bugcheck_msg("The port at the given index is a trig port");
 
     InDataPort* inPort = reinterpret_cast<InDataPort*>(inPorts[portIndex]);
 
-    if ((*caughts)[portIndex])
+    if (isInPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
 
     bool retValue = inPort->tryData<T>(pData, pAttr);
 
     if (retValue)
-        (*caughts)[portIndex] = true;
+        caughts->insert(portIndex);
+    else
+    	inMutex.unlock();
 
     return retValue;
 }
@@ -58,7 +63,7 @@ inline void InPortUser::readInPortData(size_t portIndex, T*& pData)
 
     InDataPort* inPort = reinterpret_cast<InDataPort*>(inPorts[portIndex]);
 
-    if (!(*caughts)[portIndex])
+    if (!isInPortCaught(portIndex))
     	poco_bugcheck_msg("try to read an input port that was not previously locked");
 
     inPort->readData<T>(pData);

@@ -35,14 +35,18 @@ inline bool OutPortUser::tryOutPortData(size_t portIndex, T*& pData)
 {
     OutPort* outPort = outPorts.at(portIndex);
 
-    if ((*caughts)[portIndex])
-        poco_bugcheck_msg("try to re-lock an output port that was already locked? ");
+	if (caughts->empty())
+		outMutex.lock();
 
+	if (isOutPortCaught(portIndex))
+        poco_bugcheck_msg("try to re-lock an output port that was already locked? ");
 
     bool retValue = outPort->tryData<T>(pData);
 
     if (retValue)
-    	(*caughts)[portIndex] = true;
+    	caughts->insert(portIndex);
+    else
+    	outMutex.unlock();
 
     return retValue;
 }
@@ -50,10 +54,10 @@ inline bool OutPortUser::tryOutPortData(size_t portIndex, T*& pData)
 template<typename T>
 inline void OutPortUser::getDataToWrite(size_t portIndex, T*& pData)
 {
-    OutPort* outPort = outPorts.at(portIndex);
-
-    if (!(*caughts)[portIndex])
+    if (!isOutPortCaught(portIndex))
         poco_bugcheck_msg("try to read an output port that was not previously locked? ");
+
+    OutPort* outPort = outPorts[portIndex];
 
     outPort->getDataToWrite(pData);
 }

@@ -59,14 +59,13 @@ bool OutPortUser::tryOutPortLock(size_t portIndex)
 {
     OutPort* outPort = outPorts.at(portIndex);
 
-    if ((*caughts)[portIndex])
+    if (isOutPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an output port that was already locked? ");
-
 
     bool retValue = outPort->tryLock();
 
     if (retValue)
-    	(*caughts)[portIndex] = true;
+    	caughts->insert(portIndex);
 
     return retValue;
 }
@@ -74,53 +73,83 @@ bool OutPortUser::tryOutPortLock(size_t portIndex)
 void OutPortUser::notifyOutPortReady(size_t portIndex,
 		DataAttributeOut attribute)
 {
-    if (!(*caughts)[portIndex])
+    if (!isOutPortCaught(portIndex))
         poco_bugcheck_msg("try to unlock an output port "
-                "that was not already locked? ");
+                "that was not previously locked? ");
 
     outPorts[portIndex]->notifyReady(attribute);
 
-    (*caughts)[portIndex] = false;
+    caughts->erase(portIndex);
+
+	if (caughts->empty())
+		outMutex.unlock();
 }
 
 void OutPortUser::notifyAllOutPortReady(DataAttributeOut attribute)
 {
-    for (size_t index = 0; index < outPorts.size(); index++)
-    	if ((*caughts)[index])
-    		notifyOutPortReady(index, attribute);
+	for (std::set<size_t>::iterator it = caughts->begin(),
+			ite = caughts->end(); it != ite; it++)
+		notifyOutPortReady(*it, attribute);
+
+	if (caughts->size())
+	{
+		outMutex.unlock();
+		caughts->clear();
+	}
 }
 
 void OutPortUser::releaseAllOutPorts()
 {
-    for (size_t index = 0; index < outPorts.size(); index++)
-        if ((*caughts)[index])
-            outPorts[index]->releaseOnFailure();
+	for (std::set<size_t>::iterator it = caughts->begin(),
+			ite = caughts->end(); it != ite; it++)
+            outPorts[*it]->releaseOnFailure();
+
+	if (caughts->size())
+	{
+		outMutex.unlock();
+		caughts->clear();
+	}
 }
 
 void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 {
+	if (caughts->empty() && outputs.size())
+		outMutex.lock();
+
 	ModuleTask::RunningStates oldState = getRunningState();
 	setRunningState(ModuleTask::retrievingOutDataLocks);
 
 	while (!outputs.empty())
 	{
-		for (std::set<size_t>::iterator it = outputs.begin();
-				it != outputs.end(); )
+		try
 		{
-			if (tryOutPortLock(*it))
+			for (std::set<size_t>::iterator it = outputs.begin();
+					it != outputs.end(); )
 			{
-				std::set<size_t>::iterator itTmp = it++;
-				outputs.erase(itTmp);
+				if (tryOutPortLock(*it))
+				{
+					std::set<size_t>::iterator itTmp = it++;
+					outputs.erase(itTmp);
+				}
+				else
+				{
+					it++;
+				}
 			}
-			else
-			{
-				it++;
-			}
-		}
 
-		if (yield())
-			throw Poco::RuntimeException("reserveOutPorts",
-					"Task cancellation upon user request");
+			if (yield())
+				throw Poco::RuntimeException("reserveOutPorts",
+						"Task cancellation upon user request");
+		}
+		catch (...)
+		{
+			if (caughts->empty())
+				outMutex.unlock();
+			else
+				releaseAllOutPorts();
+
+			throw;
+		}
 
 //		poco_information(logger(),"Not all output ports caught. Retrying...");
 	}
@@ -130,19 +159,39 @@ void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 
 void OutPortUser::reserveOutPort(size_t output)
 {
+	if (caughts->empty())
+		outMutex.lock();
+
 	ModuleTask::RunningStates oldState = getRunningState();
 	setRunningState(ModuleTask::retrievingOutDataLocks);
 
-	while (!tryOutPortLock(output))
+	try
 	{
-		if (yield())
-			throw Poco::RuntimeException("reserveOutPort",
-					"Task cancellation upon user request");
+		while (!tryOutPortLock(output))
+		{
+			if (yield())
+				throw Poco::RuntimeException("reserveOutPort",
+						"Task cancellation upon user request");
 
-//		poco_information(logger(),"Output port not caught. Retrying...");
+	//		poco_information(logger(),"Output port not caught. Retrying...");
+		}
+	}
+	catch (...)
+	{
+		outMutex.unlock();
+		throw;
 	}
 
 	setRunningState(oldState);
+}
+
+void OutPortUser::expireOutData()
+{
+	Poco::ScopedLock<Poco::FastMutex> lock(outMutex);
+
+    for (size_t portIndex = 0, cnt = outPorts.size();
+    		portIndex < cnt; portIndex++)
+        outPorts[portIndex]->expire();
 }
 
 OutPortUser::~OutPortUser()

@@ -141,12 +141,14 @@ void DataGen::process(int startCond)
 
     dataLock.unlock();
 
+    // launch next task if requested.
+    popTask();
+
     reserveOutPort(outPortData);
 
     poco_information(logger(),"out port reserved");
 
     sendData();
-
 }
 
 void DataGen::freeRun()

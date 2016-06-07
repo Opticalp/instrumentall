@@ -36,6 +36,7 @@
 
 #include "Poco/ThreadLocal.h"
 #include "Poco/Thread.h"
+#include "Poco/Mutex.h"
 
 class Module;
 class OutPort;
@@ -55,6 +56,11 @@ public:
 	 */
 	std::vector<OutPort*> getOutPorts() { return outPorts; }
 	OutPort* getOutPort(std::string portName);
+
+    /**
+     * Expire output data
+     */
+    void expireOutData();
 
 protected:
     /**
@@ -87,11 +93,6 @@ protected:
 	OutPort* getOutPort(size_t index) { return outPorts.at(index); }
 
     /**
-     * Forward tryLock for the given port
-     */
-    bool tryOutPortLock(size_t portIndex);
-
-    /**
      * Retrieve a pointer on the data to be written
      */
     template<typename T>
@@ -120,17 +121,11 @@ protected:
 
     /**
      * Check if the given port was caught/locked
-     */
-    bool isOutPortCaught(size_t index) { return caughts->at(index); }
-
-    /**
-     * Reset the caughts flags
      *
-     * To be called before any action with the output ports.
-     *
-     * Be careful not to call it anywhere!
+     * No lock needed: caughts is ThreadLocal
      */
-    void resetOutPortLockFlags() { caughts->assign(outPorts.size(), false); }
+    bool isOutPortCaught(size_t index)
+    	{ return (caughts->find(index) != caughts->end()); }
 
 	/**
 	 * Specify a set of output ports to lock prior to their use.
@@ -142,14 +137,30 @@ protected:
 	 */
 	void reserveOutPort(size_t output);
 
+//	bool tryLockOut() { return outMutex.tryLock(); }
+//	void lockOut() { outMutex.lock(); }
+//	void unlockOut() { outMutex.unlock(); }
+
 	virtual bool yield() { Poco::Thread::yield(); return false; }
 
     virtual ModuleTask::RunningStates getRunningState() = 0;
     virtual void setRunningState(ModuleTask::RunningStates state) = 0;
 
 private:
+    /**
+     * Forward tryLock for the given port
+     *
+     * outMutex is managed by the caller.
+     *
+     * This method is private,
+     * for a direct call (e.g. from a Module), use reserveOutPort
+     */
+    bool tryOutPortLock(size_t portIndex);
+
 	std::vector<OutPort*> outPorts; ///< list of output data ports
-	Poco::ThreadLocal< std::vector<bool> > caughts; ///< store which ports are locked
+	Poco::ThreadLocal< std::set<size_t> > caughts; ///< store locked ports
+
+	Poco::FastMutex outMutex; ///< lock output ports operations
 };
 
 #include "OutPortUser.ipp"

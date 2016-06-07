@@ -71,12 +71,12 @@ InPort* InPortUser::getInPort(std::string portName)
 
 bool InPortUser::tryInPortLock(size_t portIndex)
 {
-    if ((*caughts)[portIndex])
+    if (isInPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
 
     if (inPorts[portIndex]->tryLock())
     {
-    	(*caughts)[portIndex] = true;
+    	caughts->insert(portIndex);
     	return true;
     }
     else
@@ -88,7 +88,7 @@ bool InPortUser::tryInPortLock(size_t portIndex)
 void InPortUser::readInPortDataAttribute(size_t portIndex,
 		DataAttributeIn* pAttr)
 {
-    if (!(*caughts)[portIndex])
+    if (!isInPortCaught(portIndex))
     	poco_bugcheck_msg("try to read an input port that was not previously locked");
 
     inPorts[portIndex]->readDataAttribute(pAttr);
@@ -97,35 +97,45 @@ void InPortUser::readInPortDataAttribute(size_t portIndex,
 bool InPortUser::tryInPortDataAttribute(size_t portIndex,
         DataAttributeIn* pAttr)
 {
+	if (caughts->empty())
+		inMutex.lock();
+
     if (!inPorts.at(portIndex)->isTrig())
         poco_bugcheck_msg("The port at the given index is a data port");
 
     TrigPort* trigPort = reinterpret_cast<TrigPort*>(inPorts[portIndex]);
 
-    if ((*caughts)[portIndex])
+    if (isInPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
-
 
     bool retValue = trigPort->tryDataAttribute(pAttr);
 
     if (retValue)
-        (*caughts)[portIndex] = true;
+        caughts->insert(portIndex);
+    else
+    	inMutex.unlock();
 
     return retValue;
 }
 
 void InPortUser::releaseInPort(size_t portIndex)
 {
-    if ((*caughts)[portIndex])
+    if (isInPortCaught(portIndex))
         inPorts[portIndex]->release();
 
-    (*caughts)[portIndex] = false;
+    caughts->erase(portIndex);
+	if (caughts->empty())
+		inMutex.unlock();
 }
 
 void InPortUser::releaseAllInPorts()
 {
-    for (size_t portIndex = 0; portIndex < inPorts.size(); portIndex++)
-    	releaseInPort(portIndex);
+	for (std::set<size_t>::iterator it = caughts->begin(),
+			ite = caughts->end(); it != ite; )
+	{
+		std::set<size_t>::iterator itTmp = it++;
+    	releaseInPort(*itTmp); // caughts is modified by releaseInPort
+	}
 }
 
 int InPortUser::startCondition()
@@ -142,29 +152,40 @@ int InPortUser::startCondition()
 	// ... the inPortsAccess should handle that in fact...
 
 	bool allPresent = false;
-	bool zeroPresent = true;
+
+	inMutex.lock();
 	while (!allPresent)
 	{
 		allPresent = true;
-		for (size_t port = 0; port < inPorts.size(); port++)
+		try
 		{
-			if (isInPortCaught(port))
-				continue;
+			for (size_t port = 0; port < inPorts.size(); port++)
+			{
+				if (isInPortCaught(port))
+					continue;
 
-			if (tryInPortLock(port))
-				zeroPresent = false;
-			else
-				allPresent = false;
+				if (!tryInPortLock(port))
+					allPresent = false;
+			}
+
+			if (nakedCall)
+				break;
+
+			if (!allPresent)
+			{
+				if (yield())
+					throw Poco::RuntimeException("startCondition",
+							"Task cancellation upon user request");
+			}
 		}
-
-		if (nakedCall)
-			break;
-
-		if (!allPresent)
+		catch (...)
 		{
-			if (yield())
-				throw Poco::RuntimeException("startCondition",
-						"Task cancellation upon user request");
+			if (caughts->empty())
+				inMutex.unlock();
+			else
+				releaseAllInPorts();
+
+			throw;
 		}
 
 //		poco_information(logger(), "Not all inputs caught. Retrying...");
@@ -173,21 +194,28 @@ int InPortUser::startCondition()
 	if (allPresent)
 		return allDataStartState;
 
-	if (zeroPresent)
+	if (caughts->empty())
+	{
+		inMutex.unlock();
 		return noDataStartState;
+	}
 	else
+	{
 		return unknownStartState;
+	}
 }
 
 std::set<size_t> InPortUser::portsWithNewData()
 {
 	std::set<size_t> portSet;
 
-	for (size_t portIndex=0; portIndex < inPorts.size(); portIndex++)
-	{
-		if ((*caughts)[portIndex] && inPorts[portIndex]->isNew())
-			portSet.insert(portIndex);
-	}
+	for (std::set<size_t>::iterator it = caughts->begin(),
+			ite = caughts->end(); it != ite; it++)
+		if (inPorts[*it]->isNew())
+			portSet.insert(*it);
+
+	poco_information(logger(), Poco::NumberFormatter::format(portSet.size())
+		+ " ports with new data");
 
 	return portSet;
 }

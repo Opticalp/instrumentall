@@ -139,11 +139,6 @@ public:
 	ModuleFactory* parent();
 
     /**
-     * Expire output data
-     */
-    void expireOutData();
-
-    /**
      * Enqueue a new task
      *
      * for this module.
@@ -213,6 +208,11 @@ public:
     virtual void setProcMode(ProcessingMode mode) { procMode = mode; }
     ProcessingMode getProcMode() { return procMode; }
 
+    /**
+     * Convenience method
+     */
+    void expireOutData() { OutPortUser::expireOutData(); }
+
 protected:
 	void addInPort(
 			std::string name, std::string description,
@@ -265,23 +265,17 @@ protected:
     void mergeTasks(std::set<size_t> inPortIndexes);
 
 	/**
-	 * Implementation of Poco::Task::runTask()
+	 * Method called by the task.
 	 *
-	 * Lock the runTaskMutex, expire the output data,
+	 * Expire the output data, check the start condition,
 	 * and call process().
 	 *
-	 * The arguments of process allow to automatically release
-	 * the data of the ports when exiting (even on exception thrown)
-	 *
-	 * This function is virtual. it can be overloaded by
-	 * the derived class if the runTaskMutex lock is not wanted.
-	 *
-	 * It is not recommended to overload this method.
+	 * There is no mutex locked here. Concurrence running should be OK.
 	 */
-	virtual void run();
+	void run();
 
 	/**
-	 * Main logic called by runTask
+	 * Main logic called by run
 	 *
 	 * Depending on the processing mode, the data should be buffered or
 	 * not.
@@ -296,6 +290,10 @@ protected:
 	 * @param startCond start condition as defined in virtual method
 	 * startCondition. You should consider implementing your own
 	 * startCondition method for non-standard cases.
+	 *
+	 * It could be wised to use a lock in this method if there is a
+	 * chance (popTask()?) that it is called twice at the same time.
+	 * No thread-safety is given by the caller.
 	 *
 	 * @see startCondition
 	 * @see setRunningState
@@ -333,7 +331,6 @@ protected:
 	 */
 	void notifyCreation();
 
-    Poco::Mutex runTaskMutex; ///< mutex used to block runTask(), and then, process()
 private:
     /// enum to be returned by checkName
     enum NameStatus

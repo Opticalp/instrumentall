@@ -68,6 +68,10 @@ void DemoModuleForwarder::process(int startCond)
 		poco_information(logger(), name() + ": no input data. Exiting. ");
 		return;
 	}
+	else
+	{
+		poco_information(logger(),"Input data locked");
+	}
 
     DataAttributeIn attr;
     int* pData;
