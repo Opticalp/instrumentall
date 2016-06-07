@@ -359,9 +359,13 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
     }
 }
 
-void Dispatcher::runModule(SharedPtr<Module*> ppModule)
+Poco::AutoPtr<ModuleTask> Dispatcher::runModule(SharedPtr<Module*> ppModule)
 {
-    enqueueModuleTask(new ModuleTask(*ppModule));
+	ModuleTask* modTask = new ModuleTask(*ppModule);
+    enqueueModuleTask(modTask);
+
+    // shared auto ptr (do not take ownership)
+    return Poco::AutoPtr<ModuleTask>(modTask, true);
 }
 
 void Dispatcher::runModule(Module* pModule)

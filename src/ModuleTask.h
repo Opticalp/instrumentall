@@ -31,6 +31,8 @@
 
 #include "MergeableTask.h"
 
+#include "Poco/Event.h"
+
 class Module;
 class InPort;
 
@@ -85,6 +87,22 @@ public:
 
 	RunningStates getRunningState() { return runState; }
 
+	/**
+	 * Wait the given time that the task finishes
+	 *
+	 * @return false if the task did not finish in the given time
+	 */
+	bool tryWaitTaskDone(long milliseconds)
+		{ return doneEvent.tryWait(milliseconds); }
+
+	/**
+	 * Wait that the task finishes
+	 *
+	 * Infinite wait.
+	 */
+	void waitTaskDone()
+		{ doneEvent.wait(); }
+
 protected:
 	/**
 	 * To be called by Module::run and Module::process
@@ -100,6 +118,8 @@ private:
 	std::string mName;
 
 	RunningStates runState;
+
+	Poco::Event doneEvent; /// event signaled when the task is finished.
 
 	friend class Module; // access to sleep, setProgress, ...
 };

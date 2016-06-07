@@ -176,14 +176,17 @@ public:
       *
       * to be called by the UI or by any mean, but without new
       * input port data.
+      *
+      * @return The task created for the module to run. The
+      * task can be used to check the state of the execution.
       */
-     void runModule(SharedPtr<Module*> ppModule);
+     Poco::AutoPtr<ModuleTask> runModule(SharedPtr<Module*> ppModule);
 
-     // TODO: remove this. Directly go to the thread manager.
      /**
       * Launch a module task
       *
       * Direct version: to be called by the module itself.
+      * E.g. following a parameter set
       */
      void runModule(Module* pModule);
 
