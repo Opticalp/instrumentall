@@ -157,11 +157,11 @@ void OutPort::expire()
 	data.expire();
 
 	// forward the expiration
-    seqTargetPortsLock.readLock();
+    targetPortsLock.readLock();
 
-    for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
-            ite = seqTargetPorts.end(); it != ite; it++ )
+    for( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
         (**it)->parent()->expireOutData();
 
-    seqTargetPortsLock.unlock();
+    targetPortsLock.unlock();
 }
