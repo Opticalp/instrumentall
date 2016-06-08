@@ -218,7 +218,7 @@ static PyMethodDef pyMethodDispatchRunModule =
     "runModule",
     pythonDispatchRunModule,
     METH_VARARGS,
-    "runModule(module1): Launch the module1 main thread. "
+    "runModule(module1): Launch module1. Returns the task encapsulating this run. "
 };
 
 // ----------------------------------------------------------------

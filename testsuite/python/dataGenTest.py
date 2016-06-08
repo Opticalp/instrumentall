@@ -44,9 +44,12 @@ def myMain():
     mod1.setParameterValue("value", 3.14)
     
     print "Run module"
-    runModule(mod1)
+    task = runModule(mod1)
+
+    print task.name + " state is " + task.state()
+    task.wait()
+    print task.name + " state is " + task.state()
     
-    waitAll()
     print "Return value is: " + str(mod1.outPort("data").getDataValue())
     if ( abs(mod1.outPort("data").getDataValue()-3.14) > 0.01 ):
         raise RuntimeError("Wrong return value: 3.14 expected. ")
