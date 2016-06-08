@@ -111,6 +111,16 @@ void OutPortUser::releaseAllOutPorts()
 	}
 }
 
+void OutPortUser::reserveAllOutPorts()
+{
+	std::set<size_t> allPorts;
+
+	for (size_t ind = 0; ind < outPorts.size(); ind++)
+		allPorts.insert(ind);
+
+	reserveOutPorts(allPorts);
+}
+
 void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 {
 	if (caughts->empty() && outputs.size())

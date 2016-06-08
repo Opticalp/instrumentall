@@ -128,6 +128,11 @@ protected:
     	{ return (caughts->find(index) != caughts->end()); }
 
 	/**
+	 * Lock all output ports prior to their use.
+	 */
+	void reserveAllOutPorts();
+
+	/**
 	 * Specify a set of output ports to lock prior to their use.
 	 */
 	void reserveOutPorts(std::set<size_t> outputs);
