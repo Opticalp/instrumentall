@@ -68,11 +68,6 @@ protected:
      */
     void setOutPortCount(size_t cnt) { outPorts.resize(cnt, NULL); }
 
-	/**
-	 * Retrieve the output ports count
-	 */
-    size_t getOutPortCount() { return outPorts.size(); }
-
     /**
      * Add output data port
      *
@@ -87,22 +82,17 @@ protected:
             int dataType,
             size_t index );
 
-	/**
-	 * Retrieve an output port, given its index
-	 */
-	OutPort* getOutPort(size_t index) { return outPorts.at(index); }
-
     /**
      * Retrieve a pointer on the data to be written
      */
     template<typename T>
     void getDataToWrite(size_t portIndex, T*& pData);
 
-    /**
-     * Forward tryData for the given port
-     */
-    template <typename T>
-    bool tryOutPortData(size_t portIndex, T*& pData);
+//    /**
+//     * Forward tryData for the given port
+//     */
+//    template <typename T>
+//    bool tryOutPortData(size_t portIndex, T*& pData);
 
     /**
      * Forward releaseData to the given port
@@ -136,6 +126,45 @@ protected:
 	 * Specify a set of output ports to lock prior to their use.
 	 */
 	void reserveOutPorts(std::set<size_t> outputs);
+
+	/**
+	 * Lock one of the given output ports prior to its use.
+	 *
+	 * Recommended use:
+	 *
+	 *     Poco::FastMutex::ScopedLock lock(mainMutex); // important!
+	 *
+	 *     std::set<size_t> somePorts;
+	 *     somePorts.insert(outPortA);
+	 *     somePorts.insert(outPortB);
+	 *
+	 *     while (somePorts.size())
+	 *     {
+	 *         switch (reserveOutPortOneOf(somePorts))
+	 *         {
+	 *         case outPortA:
+	 *             getDataToWrite<T>(outPortA, pDataA);
+	 *             *pDataA = somethingA;
+	 *             notifyOutPortReady(outPortA, attrA);
+	 *             break;
+	 *         case outPortB:
+	 *             getDataToWrite<T>(outPortB, pDataB);
+	 *             *pDataB = somethingB;
+	 *             notifyOutPortReady(outPortB, attrB);
+	 *             break;
+	 *         default:
+	 *             // ...
+	 *         }
+	 *     }
+	 *
+	 * The mainMutex lock is important since the output ports mutex
+	 * will be released at each notifyOutPortReady.
+	 *
+	 * @param outputs set of ports among which one will be locked.
+	 * The set is then updated
+	 * @return locked output port
+	 */
+	size_t reserveOutPortOneOf(std::set<size_t>& outputs);
 
 	/**
 	 * Specify an output port to lock prior to its use.
