@@ -209,7 +209,8 @@ public:
     ProcessingMode getProcMode() { return procMode; }
 
     /**
-     * Convenience method
+     * Parameterized entity needs this definition to be able
+     * to use OutPortUser::expireOutData
      */
     void expireOutData() { OutPortUser::expireOutData(); }
 
@@ -245,8 +246,6 @@ protected:
     void setRunningState(ModuleTask::RunningStates state);
     ModuleTask::RunningStates getRunningState();
     ///}
-
-    // TODO: method to forward the running state to the runningTask (collectingInData, ... etc)
 
     /**
      * Merge the enqueued tasks of the present Module
