@@ -98,7 +98,8 @@ bool InPortUser::tryInPortDataAttribute(size_t portIndex,
         DataAttributeIn* pAttr)
 {
 	if (caughts->empty())
-		inMutex.lock();
+		if (!tryLockIn())
+			return false;
 
     if (!inPorts.at(portIndex)->isTrig())
         poco_bugcheck_msg("The port at the given index is a data port");
@@ -113,7 +114,7 @@ bool InPortUser::tryInPortDataAttribute(size_t portIndex,
     if (retValue)
         caughts->insert(portIndex);
     else
-    	inMutex.unlock();
+    	unlockIn();
 
     return retValue;
 }
@@ -125,7 +126,7 @@ void InPortUser::releaseInPort(size_t portIndex)
 
     caughts->erase(portIndex);
 	if (caughts->empty())
-		inMutex.unlock();
+		unlockIn();
 }
 
 void InPortUser::releaseAllInPorts()
@@ -153,7 +154,7 @@ int InPortUser::startCondition()
 
 	bool allPresent = false;
 
-	inMutex.lock();
+	reserveLockIn();
 	while (!allPresent)
 	{
 		allPresent = true;
@@ -180,10 +181,10 @@ int InPortUser::startCondition()
 		}
 		catch (...)
 		{
-			if (caughts->empty())
-				inMutex.unlock();
-			else
+			if (inPortCaughtsCount())
 				releaseAllInPorts();
+			else
+				unlockIn();
 
 			throw;
 		}
@@ -194,14 +195,14 @@ int InPortUser::startCondition()
 	if (allPresent)
 		return allDataStartState;
 
-	if (caughts->empty())
+	if (inPortCaughtsCount())
 	{
-		inMutex.unlock();
-		return noDataStartState;
+		return unknownStartState;
 	}
 	else
 	{
-		return unknownStartState;
+		unlockIn();
+		return noDataStartState;
 	}
 }
 
@@ -227,3 +228,11 @@ InPortUser::~InPortUser()
         delete *it;
 }
 
+void InPortUser::reserveLockIn()
+{
+	while (!tryLockIn())
+	{
+		if (yield())
+			throw Poco::RuntimeException(name(), "task cancelled upon user request");
+	}
+}

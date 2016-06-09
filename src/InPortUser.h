@@ -152,6 +152,12 @@ protected:
     bool isInPortCaught(size_t index)
     	{ return (caughts->find(index) != caughts->end()); }
 
+    /**
+     * Count how many input ports were caught/locked
+     */
+    size_t inPortCaughtsCount()
+    	{ return caughts->size(); }
+
     /// Start states as to be returned by startCondition
     enum baseStartStates
 	{
@@ -188,20 +194,31 @@ protected:
 	 */
 	virtual int startCondition();
 
-	//	bool tryLockIn() { return inMutex.tryLock(); }
-	//	void lockIn() { inMutex.lock(); }
-	//	void unlockIn() { inMutex.unlock(); }
+	void unlockIn() { inMutex.unlock(); }
+
+	/**
+	 * Try to lock the inMutex until success or cancellation
+	 *
+	 * Call yield() between 2 tries.
+	 *
+	 * @throws Poco::RuntimeException on cancellation
+	 */
+	void reserveLockIn();
 
 	virtual bool yield() { Poco::Thread::yield(); return false; }
 
 	/**
 	 * Used by startCondition to know which port trigged the user execution
+	 *
+	 * Implemented in Module by forwarding the request to the running task.
 	 */
 	virtual InPort* triggingPort() = 0;
 
 	std::set<size_t> portsWithNewData();
 
 private:
+	bool tryLockIn() { return inMutex.tryLock(); }
+
 	std::vector<InPort*> inPorts; ///< list of input ports
 	Poco::ThreadLocal< std::set<size_t> > caughts; ///< store which ports are locked
 
