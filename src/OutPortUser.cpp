@@ -62,12 +62,15 @@ bool OutPortUser::tryOutPortLock(size_t portIndex)
     if (isOutPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an output port that was already locked? ");
 
-    bool retValue = outPort->tryLock();
-
-    if (retValue)
+    if (outPort->tryLock())
+    {
     	caughts->insert(portIndex);
-
-    return retValue;
+    	return true;
+    }
+    else
+    {
+    	return false;
+    }
 }
 
 void OutPortUser::notifyOutPortReady(size_t portIndex,
@@ -82,33 +85,33 @@ void OutPortUser::notifyOutPortReady(size_t portIndex,
     caughts->erase(portIndex);
 
 	if (caughts->empty())
-		outMutex.unlock();
+		unlockOut();
 }
 
 void OutPortUser::notifyAllOutPortReady(DataAttributeOut attribute)
 {
+	if (caughts->empty())
+		return;
+
 	for (std::set<size_t>::iterator it = caughts->begin(),
 			ite = caughts->end(); it != ite; it++)
 		notifyOutPortReady(*it, attribute);
 
-	if (caughts->size())
-	{
-		outMutex.unlock();
-		caughts->clear();
-	}
+	caughts->clear();
+	unlockOut();
 }
 
 void OutPortUser::releaseAllOutPorts()
 {
+	if (caughts->empty())
+		return;
+
 	for (std::set<size_t>::iterator it = caughts->begin(),
 			ite = caughts->end(); it != ite; it++)
             outPorts[*it]->releaseOnFailure();
 
-	if (caughts->size())
-	{
-		outMutex.unlock();
-		caughts->clear();
-	}
+	caughts->clear();
+	unlockOut();
 }
 
 void OutPortUser::reserveAllOutPorts()
@@ -124,7 +127,7 @@ void OutPortUser::reserveAllOutPorts()
 void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 {
 	if (caughts->empty() && outputs.size())
-		outMutex.lock();
+		reserveLockOut();
 
 	ModuleTask::RunningStates oldState = getRunningState();
 	setRunningState(ModuleTask::retrievingOutDataLocks);
@@ -154,7 +157,7 @@ void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 		catch (...)
 		{
 			if (caughts->empty())
-				outMutex.unlock();
+				unlockOut();
 			else
 				releaseAllOutPorts();
 
@@ -173,7 +176,7 @@ size_t OutPortUser::reserveOutPortOneOf(std::set<size_t>& outputs)
 		poco_bugcheck_msg("empty output port set to lock");
 
 	if (caughts->empty())
-		outMutex.lock();
+		reserveLockOut();
 
 	ModuleTask::RunningStates oldState = getRunningState();
 	setRunningState(ModuleTask::retrievingOutDataLocks);
@@ -201,7 +204,7 @@ size_t OutPortUser::reserveOutPortOneOf(std::set<size_t>& outputs)
 void OutPortUser::reserveOutPort(size_t output)
 {
 	if (caughts->empty())
-		outMutex.lock();
+		reserveLockOut();
 
 	ModuleTask::RunningStates oldState = getRunningState();
 	setRunningState(ModuleTask::retrievingOutDataLocks);
@@ -219,7 +222,7 @@ void OutPortUser::reserveOutPort(size_t output)
 	}
 	catch (...)
 	{
-		outMutex.unlock();
+		unlockOut();
 		throw;
 	}
 
@@ -228,7 +231,9 @@ void OutPortUser::reserveOutPort(size_t output)
 
 void OutPortUser::expireOutData()
 {
-	Poco::ScopedLock<Poco::FastMutex> lock(outMutex);
+	// reserveLockOut is not used here, since this method can be called
+	// from outer a module task.
+	Poco::Mutex::ScopedLock lock(outMutex);
 
     for (size_t portIndex = 0, cnt = outPorts.size();
     		portIndex < cnt; portIndex++)
@@ -240,5 +245,14 @@ OutPortUser::~OutPortUser()
     for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
             it!=ite; it++)
         delete *it;
+}
+
+void OutPortUser::reserveLockOut()
+{
+	while (!tryLockOut())
+	{
+		if (yield())
+			throw Poco::RuntimeException(name(), "task cancelled upon user request");
+	}
 }
 

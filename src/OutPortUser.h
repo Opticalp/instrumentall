@@ -132,33 +132,42 @@ protected:
 	 *
 	 * Recommended use:
 	 *
-	 *     Poco::FastMutex::ScopedLock lock(mainMutex); // important!
+	 *     reserveLockOut(); // recursive outMutex locked once
 	 *
 	 *     std::set<size_t> somePorts;
 	 *     somePorts.insert(outPortA);
 	 *     somePorts.insert(outPortB);
 	 *
-	 *     while (somePorts.size())
+	 *     try
 	 *     {
-	 *         switch (reserveOutPortOneOf(somePorts))
-	 *         {
-	 *         case outPortA:
-	 *             getDataToWrite<T>(outPortA, pDataA);
-	 *             *pDataA = somethingA;
-	 *             notifyOutPortReady(outPortA, attrA);
-	 *             break;
-	 *         case outPortB:
-	 *             getDataToWrite<T>(outPortB, pDataB);
-	 *             *pDataB = somethingB;
-	 *             notifyOutPortReady(outPortB, attrB);
-	 *             break;
-	 *         default:
-	 *             // ...
+	 *	       while (somePorts.size())
+	 *  	   {
+	 *      	   switch (reserveOutPortOneOf(somePorts)) // outMutex locked twice
+	 *	           {
+	 *  	       case outPortA:
+	 *      	       getDataToWrite<T>(outPortA, pDataA);
+	 *          	   *pDataA = somethingA;
+	 *	             notifyOutPortReady(outPortA, attrA); // outMutex released once here
+	 *  	           break;
+	 *      	   case outPortB:
+	 *          	   getDataToWrite<T>(outPortB, pDataB);
+	 *	             *pDataB = somethingB;
+	 *  	           notifyOutPortReady(outPortB, attrB); // or outMutex released once here
+	 *      	       break;
+	 *	           default:
+	 *             	   // ...
+	 *         	   }
 	 *         }
 	 *     }
+	 *     catch (...) // prevent deadlock if canceling during reserveOutPortOneOf
+	 *     {
+	 *     		unlockOut();
+	 *     		throw;
+	 *     }
+	 *     unlockOut(); // outMutex released twice. OK. unlocked.
 	 *
-	 * The mainMutex lock is important since the output ports mutex
-	 * will be released at each notifyOutPortReady.
+	 * The preliminary outMutex lock is important since the output ports mutex
+	 * will be released at each notifyOutPortReady. Then, the lock is kept.
 	 *
 	 * @param outputs set of ports among which one will be locked.
 	 * The set is then updated
@@ -171,9 +180,23 @@ protected:
 	 */
 	void reserveOutPort(size_t output);
 
-//	bool tryLockOut() { return outMutex.tryLock(); }
-//	void lockOut() { outMutex.lock(); }
-//	void unlockOut() { outMutex.unlock(); }
+	/**
+	 * Unlock the recursive mutex: outMutex
+	 */
+	void unlockOut() { outMutex.unlock(); }
+
+	/**
+	 * Try to lock the outMutex until success or cancellation
+	 *
+	 * Call yield() between 2 tries.
+	 *
+	 * outMutex is a recursive mutex. unlockOut has to be invoked
+	 * as many times as reserveLockOut() in order to release the mutex.
+	 *
+	 * @see outMutex
+	 * @throws Poco::RuntimeException on cancellation
+	 */
+	void reserveLockOut();
 
 	virtual bool yield() { Poco::Thread::yield(); return false; }
 
@@ -181,6 +204,8 @@ protected:
     virtual void setRunningState(ModuleTask::RunningStates state) = 0;
 
 private:
+	bool tryLockOut() { return outMutex.tryLock(); }
+
     /**
      * Forward tryLock for the given port
      *
@@ -194,7 +219,7 @@ private:
 	std::vector<OutPort*> outPorts; ///< list of output data ports
 	Poco::ThreadLocal< std::set<size_t> > caughts; ///< store locked ports
 
-	Poco::FastMutex outMutex; ///< lock output ports operations
+	Poco::Mutex outMutex; ///< Recursive mutex used to lock output ports operations
 };
 
 #include "OutPortUser.ipp"
