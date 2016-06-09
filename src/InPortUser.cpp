@@ -122,11 +122,13 @@ bool InPortUser::tryInPortDataAttribute(size_t portIndex,
 void InPortUser::releaseInPort(size_t portIndex)
 {
     if (isInPortCaught(portIndex))
+    {
         inPorts[portIndex]->release();
 
-    caughts->erase(portIndex);
-	if (caughts->empty())
-		unlockIn();
+		caughts->erase(portIndex);
+		if (caughts->empty())
+			unlockIn();
+    }
 }
 
 void InPortUser::releaseAllInPorts()
