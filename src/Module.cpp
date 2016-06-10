@@ -178,43 +178,69 @@ void Module::run()
 	process(startCond);
 }
 
-bool Module::sleep(long Milliseconds)
+bool Module::sleep(long milliseconds)
 {
-	return (*runningTask)->sleep(Milliseconds);
+	if (*runningTask)
+		return (*runningTask)->sleep(milliseconds);
+
+	Poco::Thread::sleep(milliseconds);
+	return false;
 }
 
 bool Module::yield()
 {
-	return (*runningTask)->yield();
+	if (*runningTask)
+		return (*runningTask)->yield();
+
+	Poco::Thread::yield();
+	return false;
 }
 
 void Module::setProgress(float progress)
 {
+	if (*runningTask == NULL)
+		return;
+
 	(*runningTask)->setProgress(progress);
 }
 
 bool Module::isCancelled()
 {
+	if (*runningTask == NULL)
+		return false;
+
 	return (*runningTask)->isCancelled();
 }
 
 void Module::cancel()
 {
-	(*runningTask)->cancel();
+	if (*runningTask)
+		(*runningTask)->cancel();
+
+	throw Poco::RuntimeException(name(), "cancel. not in a task");
 }
 
 InPort* Module::triggingPort()
 {
-	return (*runningTask)->triggingPort();
+	if (*runningTask)
+		return (*runningTask)->triggingPort();
+
+	throw Poco::RuntimeException(name(), "querying trigging port. not in a task");
 }
 
 void Module::setRunningState(ModuleTask::RunningStates state)
 {
+	if (*runningTask == NULL)
+		return;
+
 	(*runningTask)->setRunningState(state);
 }
 
 ModuleTask::RunningStates Module::getRunningState()
 {
+	if (*runningTask == NULL)
+		return ModuleTask::processing;
+
 	return (*runningTask)->getRunningState();
 }
 

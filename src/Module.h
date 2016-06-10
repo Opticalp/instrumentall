@@ -234,6 +234,13 @@ protected:
 
     Poco::ThreadLocal<ModuleTask*> runningTask;
 
+	/**
+	 * Set the running task thread local pointer. 
+	 *
+	 * To be set to NULL in case of need to call the task forwarding functions. 
+	 * 
+	 * e.g. when calling reserveOutPorts() from setParameter
+	 */
     void setRunningTask(ModuleTask* pTask) { *runningTask = pTask; }
 
     /// @name forwarding methods to thread local: runningTask
