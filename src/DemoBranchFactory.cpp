@@ -42,6 +42,7 @@ std::vector<std::string> DemoBranchFactory::selectValueList()
 	list.push_back("leafSeqMax");
 	list.push_back("leafForwarder");
 	list.push_back("leafParam");
+	list.push_back("leafTwoInputs");
 	return list;
 }
 
