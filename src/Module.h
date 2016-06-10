@@ -242,6 +242,7 @@ protected:
     bool yield();
 	void setProgress(float progress);
     bool isCancelled();
+	void cancel();
     InPort* triggingPort();
     void setRunningState(ModuleTask::RunningStates state);
     ModuleTask::RunningStates getRunningState();

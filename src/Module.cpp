@@ -198,6 +198,11 @@ bool Module::isCancelled()
 	return (*runningTask)->isCancelled();
 }
 
+void Module::cancel()
+{
+	(*runningTask)->cancel();
+}
+
 InPort* Module::triggingPort()
 {
 	return (*runningTask)->triggingPort();
