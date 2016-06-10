@@ -168,7 +168,7 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 	}
 }
 
-int ThreadManager::count()
+size_t ThreadManager::count()
 {
 	Poco::ScopedReadRWLock lock(taskListLock);
 

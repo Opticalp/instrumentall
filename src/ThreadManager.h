@@ -101,7 +101,7 @@ public:
      * It does include all the pending tasks.
      * @see pendingModTasks
      */
-    int count();
+    size_t count();
 
     /**
      * Cancel all the tasks
