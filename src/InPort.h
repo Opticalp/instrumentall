@@ -31,6 +31,8 @@
 
 #include "Port.h"
 
+#include "Poco/RWLock.h"
+
 class DataAttributeIn;
 class OutPort;
 class Dispatcher;
@@ -87,7 +89,11 @@ public:
      */
     virtual void release();
 
-    bool isNew() { return !used; }
+    bool isNew() 
+	{ 
+		Poco::ScopedReadRWLock lock(availabilityMutex);
+		return !used; 
+	}
 
     /**
      * Convenience function
@@ -125,6 +131,8 @@ protected:
      * when new data is available, just before the push.
      */
     void setNew(bool value = true);
+
+	Poco::RWLock availabilityMutex;
 
 private:
     SharedPtr<OutPort*> mSourcePort;

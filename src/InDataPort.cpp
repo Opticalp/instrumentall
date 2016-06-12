@@ -116,6 +116,8 @@ bool InDataPort::isUpToDate()
 {
 	// TODO: should check if the input data is in a sequence?
 	// inside a sequence, the holding should be impossible?
+	Poco::ScopedReadRWLock lock(availabilityMutex);
+
 	if (!held)
 		return false;
 	else

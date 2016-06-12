@@ -109,7 +109,12 @@ public:
      *
      * The port will re-use the previous data if it is not expired.
      */
-    void hold(bool status = true) { held = status; }
+    void hold(bool status = true) 
+	{
+		availabilityMutex.writeLock(); 
+		held = status; 
+		availabilityMutex.unlock();
+	}
 
 private:
     /**

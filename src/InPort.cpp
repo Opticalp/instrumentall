@@ -64,7 +64,9 @@ void InPort::setNew(bool value)
     if (value)
         (*getSourcePort())->dataItem()->readLock();
 
-    used = !value;
+	availabilityMutex.writeLock();
+	used = !value;
+	availabilityMutex.unlock();
 }
 
 void InPort::readDataAttribute(DataAttributeIn* pAttr)
