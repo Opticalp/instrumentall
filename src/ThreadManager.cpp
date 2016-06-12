@@ -88,7 +88,11 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
     	// TODO:
 		// - dispatch to a NotificationQueue
 
+		poco_information(logger(), modTask->name() + " refCount is: "
+			+ Poco::NumberFormatter::format(modTask->referenceCount()));
     	unregisterModuleTask(modTask);
+		poco_information(logger(), modTask->name() + " refCount is: "
+			+ Poco::NumberFormatter::format(modTask->referenceCount()));
 
     	taskListLock.readLock();
 
@@ -99,11 +103,15 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 
 		if (!modTask->isSlave())
 		{
-			poco_information(logger(), modTask->name() + " is not a slave");
+			// poco_information(logger(), modTask->name() + " is not a slave");
 			modTask->module()->popTaskSync();
 		}
+		else
+		{
+			poco_information(logger(),  modTask->name() + " is a slave. finished. ");
+		}
 
-//		poco_information(logger(), "TaskFinishednotification dispatched. ");
+		poco_information(logger(), "TaskFinishednotification treated. ");
     }
     // else   datalogger task ==> 06.06.16 datalogger does not run in a task any more?
 }
@@ -133,7 +141,7 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 {
 	Poco::AutoPtr<ModuleTask> taskPtr(pTask, true); // do not take ownership!
 
-	// poco_information(logger(), "starting " + taskPtr->name());
+	poco_information(logger(), "starting " + taskPtr->name());
 
 	try
 	{
@@ -156,6 +164,8 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 {
 	Poco::AutoPtr<MergeableTask> taskPtr(pTask, true); // do not take ownership!
+
+	poco_information(logger(), "SYNC starting " + taskPtr->name());
 
 	try
 	{

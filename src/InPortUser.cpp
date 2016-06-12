@@ -150,6 +150,8 @@ int InPortUser::startCondition()
 
 	if (triggingPort() == NULL)
 		nakedCall = true;
+	else
+		poco_information(logger(), name() + " started by " + triggingPort()->name());
 
 	// we would need a mean to check if held data is available without locking it
 	// ... the inPortsAccess should handle that in fact...
@@ -168,7 +170,14 @@ int InPortUser::startCondition()
 					continue;
 
 				if (!tryInPortLock(port))
+				{
 					allPresent = false;
+				}
+				//else
+				//{
+				//	poco_information(logger(), inPorts[port]->name() + " locked"
+				//		+ (inPorts[port]->isNew()?" with new data":" with held data"));
+				//}
 			}
 
 			if (nakedCall)
@@ -218,7 +227,7 @@ std::set<size_t> InPortUser::portsWithNewData()
 			portSet.insert(*it);
 
 	poco_information(logger(), Poco::NumberFormatter::format(portSet.size())
-		+ " ports with new data");
+		+ " port(s) with new data");
 
 	return portSet;
 }

@@ -51,6 +51,7 @@ ModuleTask::ModuleTask():
 
 ModuleTask::~ModuleTask()
 {
+	poco_information(coreModule->logger(), "erasing task: " + name());
 	coreModule->unregisterTask(this);
 
 	// there should be nothing to do in the managers since AutoPtr should be used
