@@ -255,6 +255,9 @@ bool Module::enqueueTask(ModuleTask* task)
 	allTasks.insert(task);
 	taskQueue.push_back(task);
 
+	if (taskQueue.size()>1)
+		return false;
+
 	// check in allTasks if there is a task that is running
 	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
 			ite = allTasks.end(); it != ite; it++)
@@ -302,7 +305,10 @@ void Module::popTaskSync()
 	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(taskMngtMutex);
 
 	if (taskQueue.empty())
+	{
+		poco_information(logger(), (*runningTask)->name() + ": empty task queue, nothing to sync pop");
 		return;
+	}
 
 	ModuleTask* nextTask = taskQueue.front();
 	poco_information(logger(), "SYNC poping out the next task: " + nextTask->name());
@@ -327,12 +333,15 @@ void Module::mergeTasks(std::set<size_t> inPortIndexes)
 	Poco::FastMutex::ScopedLock lock(taskMngtMutex);
 
 	for (std::set<size_t>::iterator it = inPortIndexes.begin(),
-			ite = inPortIndexes.end(); it != ite; it++)
+			ite = inPortIndexes.end(); it != ite; )
 	{
 		InPort* trigPort = getInPort(*it);
 
 		if (triggingPort() == trigPort)
+		{
+			it++;
 			continue; // current task
+		}
 
 		bool found = false;
 
@@ -340,17 +349,26 @@ void Module::mergeTasks(std::set<size_t> inPortIndexes)
 		for (std::list<ModuleTask*>::iterator qIt = taskQueue.begin(),
 				qIte = taskQueue.end(); qIt != qIte; qIt++)
 		{
+			poco_information(logger(), "taskQueue includes: " + (*qIt)->name());
 			if ((*qIt)->triggingPort() == trigPort)
 			{
 				found = true;
 				(*runningTask)->merge(*qIt);
 				taskQueue.erase(qIt);
+				poco_information(logger(), "slave task found, merging OK");
 				break;
 			}
 		}
 
 		if (!found)
+		{
 			poco_warning(logger(),
-					"Unable to merge the task for " + trigPort->name());
+					"Unable to merge the task for " + trigPort->name()
+					+ ". Retry.");
+			if (yield())
+				throw Poco::RuntimeException(name(), "Cancelation upon user request");
+		}
+		else
+			it++;
 	}
 }
