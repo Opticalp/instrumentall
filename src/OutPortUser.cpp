@@ -94,10 +94,13 @@ void OutPortUser::notifyAllOutPortReady(DataAttributeOut attribute)
 		return;
 
 	for (std::set<size_t>::iterator it = caughts->begin(),
-			ite = caughts->end(); it != ite; it++)
-		notifyOutPortReady(*it, attribute);
+			ite = caughts->end(); it != ite; )
+	{
+		size_t port = *it++;
+		notifyOutPortReady(port, attribute);
+	}
 
-	caughts->clear();
+	poco_assert(caughts->empty());
 	unlockOut();
 }
 
