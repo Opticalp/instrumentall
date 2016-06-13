@@ -228,6 +228,9 @@ std::set<size_t> InPortUser::portsWithNewData()
 
 	poco_information(logger(), Poco::NumberFormatter::format(portSet.size())
 		+ " port(s) with new data");
+	//for (std::set<size_t>::iterator it = portSet.begin(),
+	//		ite = portSet.end(); it != ite; it++)
+	//		poco_information(logger(), "port #" + Poco::NumberFormatter::format(*it));
 
 	return portSet;
 }
