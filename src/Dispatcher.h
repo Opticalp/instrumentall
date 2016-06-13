@@ -172,6 +172,20 @@ public:
      void setOutPortDataReady(OutPort* port);
 
      /**
+      * Lock the input ports
+      *
+      * to avoid its usage (mainly InPort::tryLock)
+      * during the data update.
+      *
+      *  - To be called by the OutPort when new data is ready on an OutPort
+      *  - the lock is released on new data
+      *
+      * @see OutPort::notifyReady
+      * @see InPort::setNew
+      */
+     void lockInPorts(OutPort* port);
+
+     /**
       * Launch a module task
       *
       * to be called by the UI or by any mean, but without new
