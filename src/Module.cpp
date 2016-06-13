@@ -293,11 +293,11 @@ void Module::popTask()
 	poco_information(logger(), "poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
-	lock.unlock();
-
 	Poco::Util::Application::instance()
 			             .getSubsystem<ThreadManager>()
 			             .startModuleTask(nextTask);
+
+	lock.unlock();
 }
 
 void Module::popTaskSync()
@@ -330,45 +330,59 @@ void Module::unregisterTask(ModuleTask* task)
 
 void Module::mergeTasks(std::set<size_t> inPortIndexes)
 {
-	Poco::FastMutex::ScopedLock lock(taskMngtMutex);
+	// Poco::FastMutex::ScopedLock lock(taskMngtMutex);
+	taskMngtMutex.lock();
 
 	for (std::set<size_t>::iterator it = inPortIndexes.begin(),
 			ite = inPortIndexes.end(); it != ite; )
 	{
-		InPort* trigPort = getInPort(*it);
-
-		if (triggingPort() == trigPort)
-		{
-			it++;
-			continue; // current task
-		}
-
 		bool found = false;
+		InPort* trigPort;
 
-		// seek
-		for (std::list<ModuleTask*>::iterator qIt = taskQueue.begin(),
-				qIte = taskQueue.end(); qIt != qIte; qIt++)
+		try
 		{
-			poco_information(logger(), "taskQueue includes: " + (*qIt)->name());
-			if ((*qIt)->triggingPort() == trigPort)
+			trigPort = getInPort(*it);
+
+			if (triggingPort() == trigPort)
 			{
-				found = true;
-				(*runningTask)->merge(*qIt);
-				taskQueue.erase(qIt);
-				poco_information(logger(), "slave task found, merging OK");
-				break;
+				it++;
+				continue; // current task
 			}
+
+			// seek
+			for (std::list<ModuleTask*>::iterator qIt = taskQueue.begin(),
+					qIte = taskQueue.end(); qIt != qIte; qIt++)
+			{
+				poco_information(logger(), "taskQueue includes: " + (*qIt)->name());
+				if ((*qIt)->triggingPort() == trigPort)
+				{
+					found = true;
+					(*runningTask)->merge(*qIt);
+					taskQueue.erase(qIt);
+					poco_information(logger(), "slave task found, merging OK");
+					break;
+				}
+			}
+		}
+		catch (...)
+		{
+			taskMngtMutex.unlock();
+			throw;
 		}
 
 		if (!found)
 		{
+			taskMngtMutex.unlock();
 			poco_warning(logger(),
 					"Unable to merge the task for " + trigPort->name()
 					+ ". Retry.");
-			if (yield())
+			if (sleep(500))
 				throw Poco::RuntimeException(name(), "Cancelation upon user request");
+			taskMngtMutex.lock();
 		}
 		else
 			it++;
 	}
+
+	taskMngtMutex.unlock();
 }
