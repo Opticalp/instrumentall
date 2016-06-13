@@ -44,6 +44,8 @@ TrigPort::TrigPort(OutPort* emptySourcePort):
 
 bool TrigPort::tryLock()
 {
+	waitUnfreeze();
+
     if (!isPlugged())
         return false;
 

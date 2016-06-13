@@ -87,6 +87,8 @@ bool InDataPort::tryLock()
         throw Poco::RuntimeException("InPort",
                 "The port is not plugged. Not able to get data. ");
 
+    waitUnfreeze();
+
     if (!isNew())
     {
         // try to get the lock

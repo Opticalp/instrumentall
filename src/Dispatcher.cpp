@@ -337,6 +337,14 @@ void Dispatcher::seqUnbind(SharedPtr<InPort*> target)
     reinterpret_cast<InDataPort*>(*target)->releaseSeqSourcePort();
 }
 
+void Dispatcher::freezeInPorts(OutPort* port)
+{
+    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
+    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
+        (**it)->freeze();
+}
+
 void Dispatcher::setOutPortDataReady(OutPort* port)
 {
     // poco_information(logger(), port->name() + " data ready");

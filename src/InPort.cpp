@@ -39,12 +39,14 @@ InPort::InPort(Module* parent, std::string name, std::string description,
         int datatype, size_t index, bool trig):
         Port(parent, name, description, datatype, index),
         used(true), plugged(false),
-        isTrigFlag(trig)
+        isTrigFlag(trig),
+		unfrozen(false) // manual reset
 {
     mSourcePort = SharedPtr<OutPort*>(
             new (OutPort*)( Poco::Util::Application::instance()
                                     .getSubsystem<Dispatcher>()
                                     .getEmptyOutPort()       ) );
+    unfrozen.set();
 }
 
 InPort::InPort(OutPort* emptySourcePort, std::string name,
@@ -54,17 +56,33 @@ InPort::InPort(OutPort* emptySourcePort, std::string name,
                     .getEmptyModule(), name, description,
                     DataItem::typeUndefined, 0),
                 used(false), plugged(false),
-                isTrigFlag(trig)
+                isTrigFlag(trig),
+				unfrozen(false) // manual reset
 {
     mSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
+    unfrozen.set();
 }
 
 void InPort::setNew(bool value)
 {
     if (value)
+	{
         (*getSourcePort())->dataItem()->readLock();
+		used = false;
+	    freeze(false);
+	}
+	else
+	{
+		used = true;
+	}
+}
 
-    used = !value;
+void InPort::freeze(bool value)
+{
+	if (value)
+		unfrozen.reset();
+	else
+		unfrozen.set();
 }
 
 void InPort::readDataAttribute(DataAttributeIn* pAttr)

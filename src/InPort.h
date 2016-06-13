@@ -31,6 +31,8 @@
 
 #include "Port.h"
 
+#include "Poco/Event.h"
+
 class DataAttributeIn;
 class OutPort;
 class Dispatcher;
@@ -67,6 +69,8 @@ public:
     /**
      * Try to lock the input port to get the incoming data
      *
+     * The implementation have to call waitUnfreeze prior
+     * to try to lock the data
      * @return true if success
      */
     virtual bool tryLock() = 0;
@@ -88,6 +92,7 @@ public:
     virtual void release();
 
     bool isNew() { return !used; }
+    void waitUnfreeze() { unfrozen.wait(); }
 
     /**
      * Convenience function
@@ -120,16 +125,33 @@ protected:
     void releaseSourcePort();
 
     /**
-     * To be called by the dispatcher
+     * Set the port as having new data and unfreeze the port.
      *
+     * To be called by the dispatcher
      * when new data is available, just before the push.
+     *
+     * @see freeze
+     * @see Dispatcher::setOutPortDataReady
      */
     void setNew(bool value = true);
+
+    /**
+     * To be called by the dispatcher
+     *
+     * to avoid tryLock operations on the input port when new data
+     * is being released. Indeed, it was possible to see the data
+     * as not expired but not new, which caused undefined behavior.
+     * @see OutPort::notifyReady
+     * @see Dispatcher::freezeInPorts
+     */
+    void freeze(bool value = true);
 
 private:
     SharedPtr<OutPort*> mSourcePort;
 
     bool used;
+    Poco::Event unfrozen;
+
     bool isTrigFlag;
 
     bool plugged;
