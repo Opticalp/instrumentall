@@ -30,6 +30,7 @@
 #define SRC_DATAITEM_H_
 
 #include "DataAttribute.h"
+#include "TypeNeutralData.h"
 
 #include "Poco/RWLock.h"
 #include "Poco/SharedPtr.h"
@@ -45,86 +46,11 @@ class DataLogger;
  *
  * Define data objects that will be used in the data manager.
  */
-class DataItem
+class DataItem: public TypeNeutralData
 {
 public:
-    /**
-     * Data type descriptor
-     */
-    enum DataTypeEnum
-    {
-        /// Undefined data type.
-        /// To be combined with contScalar container.
-        /// To be used in empty ports
-        typeUndefined,
-
-        // integer types
-        typeInt32,
-        typeInteger = typeInt32,
-        typeUInt32,
-        typeInt64,
-        typeUInt64,
-
-        // float types
-        typeFloat,
-        typeDblFloat,
-
-        // character string
-        typeString,
-
-        typeCnt // count the types
-    };
-
-    /**
-     * Mask to apply on the data type enum
-     *
-     * to get the complete data type description
-     */
-    enum DataContainerEnum
-    {
-        contScalar = 0, ///< no mask
-        contVector = 0x8000
-    };
-
     DataItem(int datatype = typeUndefined, OutPort* parent = NULL);
     virtual ~DataItem();
-
-    /**
-     * Get dataType as a character string
-     *
-     * To get the data type of a data item, use
-     *
-     *     dataTypeStr(item.dataType())
-     *
-     */
-    static std::string dataTypeStr(int datatype);
-
-    /**
-     * Get dataType as a character string -- short version
-     *
-     * The string is "short" and contains no space
-     */
-    static std::string dataTypeShortStr(int datatype);
-
-    /**
-     * Counterpart of dataTypeShortStr
-     */
-    static int getTypeFromShortStr(std::string typeName);
-
-    /**
-     * Check if the given datatype container is a vector
-     */
-    static bool isVector(int datatype)
-        { return (datatype & contVector) != 0 ; }
-
-    static DataTypeEnum noContainerDataType(int datatype)
-        { return static_cast<DataTypeEnum>(datatype & ~contVector); }
-
-    /**
-     * @throw Poco::DataFormatException is the type T
-     * does not fit mDataType
-     */
-    template <typename T> void checkType();
 
     DataAttribute getDataAttribute() { return attribute; }
 
@@ -227,11 +153,6 @@ public:
     OutPort* parentPort() { return mParentPort; }
 
     /**
-     * Get the data item data type
-     */
-    int dataType() { return mDataType; }
-
-    /**
      * Retrieve the data loggers
      *
      * This function calls the DataManager::getDataLogger
@@ -248,35 +169,6 @@ public:
     bool isExpired() { return expired; }
 
 private:
-    /**
-     * Data type
-     *
-     * The data type is a combination (logical OR) of
-     * a DataTypeEnum value and a DataContainerEnum value
-     */
-    int mDataType;
-
-    void checkContScalar()
-    {
-        if (mDataType & contVector)
-            throw Poco::DataFormatException("DataItem::checkType",
-                    "The data should be contained in a vector");
-    }
-
-    void checkContVector()
-    {
-        if ((mDataType & contVector) == 0)
-            throw Poco::DataFormatException("DataItem::checkType",
-                    "The data should be contained in a scalar");
-    }
-
-    /**
-     * @throw Poco::DataFormatException if datatype (without
-     * container) does not fit mDataType
-     */
-    void checkDataType(int datatype);
-
-    void* dataStore; ///< pointer to the data
 
     DataAttribute attribute; ///< data attribute
 
@@ -294,50 +186,5 @@ private:
     std::set<DataLogger*> allLoggers;
     RWLock loggersLock;
 };
-
-//
-// inlines
-//
-inline std::string DataItem::dataTypeStr(int datatype)
-{
-    if (datatype == typeUndefined)
-        return "undefined";
-
-    std::string desc;
-
-    if (datatype & contVector)
-        desc = "vector of ";
-
-    switch (datatype & ~contVector)
-    {
-    case typeInt32:
-        desc += "32-bit integer";
-        break;
-    case typeUInt32:
-        desc += "32-bit unsigned integer";
-        break;
-    case typeInt64:
-        desc += "64-bit integer";
-        break;
-    case typeUInt64:
-        desc += "64-bit unsigned integer";
-        break;
-    case typeFloat:
-        desc += "floating point scalar";
-        break;
-    case typeDblFloat:
-        desc += "double precision floating point scalar";
-        break;
-    case typeString:
-        desc += "character string";
-        break;
-    default:
-        return "";
-    }
-
-    return desc;
-}
-
-#include "DataItem.ipp"
 
 #endif /* SRC_DATAITEM_H_ */
