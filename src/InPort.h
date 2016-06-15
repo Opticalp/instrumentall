@@ -31,6 +31,8 @@
 
 #include "Port.h"
 
+#include "Poco/Mutex.h"
+
 class DataAttributeIn;
 class OutPort;
 class Dispatcher;
@@ -123,13 +125,36 @@ protected:
      * To be called by the dispatcher
      *
      * when new data is available, just before the push.
+     *
+     * Release the lock that was initiated by Dispatcher::lockInPorts
      */
     void setNew(bool value = true);
+
+    /**
+     * Lock the newDataMutex
+     *
+     * to insure that nobody tryLock the data during
+     * the data update
+     *
+     * To be called by Dispatcher::lockInPorts
+     * and to be released by `InPort::setNew(true)` called
+     * by Dispatcher::setOutPortDataReady
+     */
+    void newDataLock() { newDataMutex.lock(); }
+
+    /**
+     * Unlock the newDataMutex
+     *
+     * @see newDataLock
+     */
+    void newDataUnlock() { newDataMutex.unlock(); }
 
 private:
     SharedPtr<OutPort*> mSourcePort;
 
     bool used;
+    Poco::FastMutex newDataMutex;
+
     bool isTrigFlag;
 
     bool plugged;

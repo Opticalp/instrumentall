@@ -62,9 +62,17 @@ InPort::InPort(OutPort* emptySourcePort, std::string name,
 void InPort::setNew(bool value)
 {
     if (value)
+    {
         (*getSourcePort())->dataItem()->readLock();
-
-    used = !value;
+        used = false;
+        newDataUnlock();
+    }
+    else
+    {
+    	// no need to newDataLock() since the only caller is InPort::release(),
+    	// then, new data can not be written
+    	used = true;
+    }
 }
 
 void InPort::readDataAttribute(DataAttributeIn* pAttr)

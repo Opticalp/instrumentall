@@ -30,6 +30,7 @@
 #include "Poco/Runnable.h"
 #include "Poco/RefCountedObject.h"
 #include "Poco/Mutex.h"
+#include "Poco/RWLock.h"
 #include "Poco/Event.h"
 #include "Poco/Timestamp.h"
 
@@ -222,7 +223,9 @@ private:
 	float             progress;
 	TaskState         state;
 	Poco::Event       cancelEvent;
+
 	mutable Poco::FastMutex mainMutex;
+	mutable Poco::RWLock mergeAccess;
 
 	friend class TaskManager;
 };

@@ -1,6 +1,6 @@
 /**
- * @file	src/TrigPort.cpp
- * @date	apr. 2016
+ * @file	src/DemoModuleTwoInputs.h
+ * @date	june 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,44 +26,52 @@
  THE SOFTWARE.
  */
 
-#include "TrigPort.h"
-#include "ModuleManager.h"
+#ifndef SRC_DEMOMODULETWOINPUTS_H_
+#define SRC_DEMOMODULETWOINPUTS_H_
 
-TrigPort::TrigPort(Module* parent, std::string name, std::string description,
-        size_t index):
-        InPort(parent, name, description, DataItem::typeUndefined, index, true)
+#include "Module.h"
+
+/**
+ * DemoModuleTwoInputs
+ *
+ * Simple demo module to test sync issues with multiple tasks
+ */
+class DemoModuleTwoInputs: public Module
 {
-}
+public:
+	DemoModuleTwoInputs(ModuleFactory* parent, std::string customName);
+	virtual ~DemoModuleTwoInputs() { }
 
-TrigPort::TrigPort(OutPort* emptySourcePort):
-                InPort(emptySourcePort,
-                       "emptyTrig", "replace an expired port",
-                       true)
-{
-}
+    std::string description()
+    {
+        return "Demo Module to forward input onto output. ";
+    }
 
-bool TrigPort::tryLock()
-{
-    if (!isPlugged())
-        return false;
+private:
+    /**
+     * Main logic
+     *
+     * Simulate a job (1 sec). Outputs 100.
+     */
+    void process(int startCond);
 
-	newDataLock();
-	bool newData = isNew();
-	newDataUnlock();
+    static size_t refCount; ///< reference counter to generate a unique internal name
 
-	return newData;
-}
+    /// Indexes of the input ports
+    enum inPorts
+    {
+        inPortA,
+		inPortB,
+        inPortCnt
+    };
 
-bool TrigPort::tryDataAttribute(DataAttributeIn* pAttr)
-{
-	if (tryLock())
-	{
-		readDataAttribute(pAttr);
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
+    /// Indexes of the output ports
+    enum outPorts
+    {
+        outPortA,
+        outPortCnt
+    };
 
+};
+
+#endif /* SRC_DEMOMODULETWOINPUTS_H_ */

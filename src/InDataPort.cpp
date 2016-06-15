@@ -87,21 +87,27 @@ bool InDataPort::tryLock()
         throw Poco::RuntimeException("InPort",
                 "The port is not plugged. Not able to get data. ");
 
+    newDataLock();
     if (!isNew())
     {
         // try to get the lock
         if (!(*getSourcePort())->dataItem()->tryReadLock())
-            return false;
+        {
+        	newDataUnlock();
+        	return false;
+        }
 
         // check if the data is up to date
         if (!isUpToDate())
         {
             (*getSourcePort())->dataItem()->releaseData();
+        	newDataUnlock();
             return false;
         }
     }
     //else: nothing to do, the lock is already activated (by the dispatcher)
 
+	newDataUnlock();
     return true;
 }
 
