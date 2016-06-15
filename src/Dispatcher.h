@@ -162,23 +162,12 @@ public:
      void seqUnbind(SharedPtr<InPort*> target);
 
      /**
-      * Avoid operations on the target ports of the given output port
-      *
-      * as long as the new data is not ready.
-      * @see setOutPortDataReady
-      */
-     void freezeInPorts(OutPort* port);
-
-     /**
       * Function to be called when new data is ready on an OutPort
       *
       *  - Translate the DataAttributeOut attribute into a DataAttribute
       *  by checking the sequence targets
       *  - readLock the data for every target InPort
-      *  - unfreeze every target port
       *  - notify the Modules corresponding to the target Ports (push)
-      *
-      * @see freezeInPorts
       */
      void setOutPortDataReady(OutPort* port);
 

@@ -143,10 +143,6 @@ void OutPort::notifyReady(DataAttributeOut attribute)
         seqTargetPortsLock.unlock();
     }
 
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .freezeInPorts(this);
-
     dataItem()->setDataAttribute(attribute);
     dataItem()->releaseNewData();
 
