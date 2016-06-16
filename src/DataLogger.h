@@ -34,6 +34,7 @@
 
 using Poco::Mutex;
 
+class OutPort;
 class DataItem;
 
 /**
@@ -49,7 +50,7 @@ class DataLogger: public Poco::Runnable
 {
 public:
     DataLogger():
-        pData(NULL),
+        pSourcePort(NULL),
         empty(false) { }
     virtual ~DataLogger();
 
@@ -107,10 +108,12 @@ protected:
      */
     DataItem* data();
 
+    OutPort* sourcePort() { return pSourcePort;}
+
     /**
-     * Bind the logger to its data item
+     * Bind the logger to its source port
      */
-    void registerData(DataItem* data);
+    void registerSourcePort(OutPort* port);
 
     /**
      * Check if the given data type is supported
@@ -133,10 +136,10 @@ protected:
     friend class DataManager;
 
 private:
-    DataItem* pData; ///< registered data
-    Mutex dataLock;
+    OutPort* pSourcePort; ///< registered data
+    Mutex dataLock; ///< recursive mutex locked during data access attempts
 
-    bool empty; ///< check if the data logger is activable
+    bool empty; ///< check if the data logger is the empty logger
 };
 
 #endif /* SRC_DATALOGGER_H_ */

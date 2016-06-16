@@ -27,7 +27,7 @@
  */
 
 #include "DataLogger.h"
-#include "DataItem.h"
+#include "OutPort.h"
 
 DataLogger::~DataLogger()
 {
@@ -43,14 +43,14 @@ void DataLogger::detach()
 
 void DataLogger::detachNoLock()
 {
-    if (pData)
+    if (pSourcePort)
     {
-        pData->detachLogger(this);
-        pData = NULL;
+        pSourcePort->detachLogger(this);
+        pSourcePort = NULL;
     }
 }
 
-void DataLogger::registerData(DataItem* data)
+void DataLogger::registerSourcePort(OutPort* port)
 {
     if (empty)
         throw Poco::InvalidAccessException(name(),
@@ -58,7 +58,7 @@ void DataLogger::registerData(DataItem* data)
 
     dataLock.lock();
 
-    if (!isSupportedDataType(data->dataType()))
+    if (!isSupportedDataType(port->dataItem()->dataType()))
     {
         dataLock.unlock();
         throw Poco::RuntimeException("registerLogger",
@@ -69,17 +69,18 @@ void DataLogger::registerData(DataItem* data)
     detachNoLock();
 
     // bind to data
-    data->registerLogger(this);
-    pData = data;
+    port->registerLogger(this);
+    pSourcePort = port;
 
     dataLock.unlock();
 }
 
 void DataLogger::acquireLock()
 {
-    dataLock.lock();
-    if (pData)
-        pData->readLock();
+    dataLock.lock(); // regular recursive mutex. ok with multiple locks. see data().
+    if (pSourcePort)
+        data()->readLock();
+
     dataLock.unlock();
 }
 
@@ -99,7 +100,7 @@ DataItem* DataLogger::data()
 
     // lock in case somebody else already locks
     dataLock.lock();
-    tmp =  pData;
+    tmp =  pSourcePort->dataItem();
     dataLock.unlock();
 
     return tmp;

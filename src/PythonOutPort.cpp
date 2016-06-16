@@ -489,11 +489,11 @@ PyObject* pyOutPortGetDataValue(OutPortMembers* self)
 
 PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args)
 {
-	SharedPtr<DataItem*> sharedData = Poco::Util::Application::instance()
-			                          .getSubsystem<DataManager>()
-									  .getDataItem((**self->outPort)->dataItem());
+	SharedPtr<OutPort*> sharedPort =  Poco::Util::Application::instance()
+    								  .getSubsystem<Dispatcher>()
+									  .getOutPort(**self->outPort);
 
-    PyObject *pyObj;
+	PyObject *pyObj;
 
     // arguments parsing
     if (!PyArg_ParseTuple(args, "O:register", &pyObj))
@@ -516,7 +516,7 @@ PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args)
     {
         Poco::Util::Application::instance()
                                 .getSubsystem<DataManager>()
-                                .registerLogger(sharedData, *pyLogger->logger);
+                                .registerLogger(sharedPort, *pyLogger->logger);
     }
     catch (Poco::NotFoundException& e)
     {
@@ -540,7 +540,7 @@ PyObject* pyOutPortLoggers(OutPortMembers *self)
     std::set< SharedPtr<DataLogger*> > loggers;
     try
     {
-        loggers = (**self->outPort)->dataItem()->loggers();
+        loggers = (**self->outPort)->loggers();
     }
     catch (Poco::NotFoundException& e)
     {

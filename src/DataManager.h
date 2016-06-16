@@ -108,15 +108,6 @@ public:
     void removeOutPort(OutPort* port);
 
     /**
-     * To be called when new data is available
-     *
-     * Launch the log actions
-     *
-     * @param self caller
-     */
-    void newData(DataItem* self);
-
-    /**
      * Get a shared pointer on a data item
      */
     SharedPtr<DataItem*> getDataItem(DataItem* dataItem);
@@ -147,12 +138,12 @@ public:
     /**
      * Register a logger to a data item
      */
-    void registerLogger(SharedPtr<DataItem*> data, SharedPtr<DataLogger*> dataLogger);
+    void registerLogger(SharedPtr<OutPort*> port, SharedPtr<DataLogger*> dataLogger);
 
     /**
      * Get the source data of a logger
      */
-    SharedPtr<DataItem*> getSourceDataItem(SharedPtr<DataLogger*> dataLogger);
+    SharedPtr<OutPort*> getSourcePort(SharedPtr<DataLogger*> dataLogger);
 
     /**
      * Delete a DataLogger

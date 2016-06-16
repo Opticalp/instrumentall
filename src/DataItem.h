@@ -152,19 +152,6 @@ public:
      */
     OutPort* parentPort() { return mParentPort; }
 
-    /**
-     * Retrieve the data loggers
-     *
-     * This function calls the DataManager::getDataLogger
-     * to retrieve the shared pointers
-     */
-    std::set< SharedPtr<DataLogger*> > loggers();
-
-    /**
-     * Check if loggers are registered
-     */
-    bool hasLoggers() { return (allLoggers.size()>0); }
-
     void expire() { expired = true; }
     bool isExpired() { return expired; }
 
@@ -179,12 +166,6 @@ private:
     OutPort* mParentPort; ///< parent output data port.
 
     friend class DataLogger;
-
-    void registerLogger(DataLogger* logger);
-    void detachLogger(DataLogger* logger);
-
-    std::set<DataLogger*> allLoggers;
-    RWLock loggersLock;
 };
 
 #endif /* SRC_DATAITEM_H_ */

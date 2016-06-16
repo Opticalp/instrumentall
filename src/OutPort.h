@@ -72,8 +72,10 @@ public:
      * is called, then the Dispatcher::removeModule is called,
      * then this output port is deleted from Dispatcher::allOutPorts
      * after this removeTargetPort has been called.
+     *
+     * Detach loggers
      */
-    virtual ~OutPort() { }
+    virtual ~OutPort();
 
     /**
      * Retrieve the target ports
@@ -142,6 +144,19 @@ public:
      */
     void expire();
 
+    /**
+     * Retrieve the data loggers
+     *
+     * This function calls the DataManager::getDataLogger
+     * to retrieve the shared pointers
+     */
+    std::set< SharedPtr<DataLogger*> > loggers();
+
+    /**
+     * Check if loggers are registered
+     */
+    bool hasLoggers() { return (allLoggers.size()>0); }
+
 private:
     /**
      * Add a target port
@@ -186,8 +201,15 @@ private:
     std::vector< SharedPtr<InPort*> > seqTargetPorts;
     RWLock seqTargetPortsLock; ///< lock for seqTargetPorts operations
 
+    void registerLogger(DataLogger* logger);
+    void detachLogger(DataLogger* logger);
+
+    std::set<DataLogger*> allLoggers;
+    RWLock loggersLock;
+
     friend class InPort;
     friend class InDataPort;
+    friend class DataLogger;
 
     DataItem data;
 };

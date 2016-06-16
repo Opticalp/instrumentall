@@ -31,6 +31,7 @@
 #include "ModuleManager.h"
 #include "Dispatcher.h"
 #include "DataManager.h"
+#include "DataLogger.h"
 
 OutPort::OutPort(Module* parent,
         std::string name,
@@ -175,4 +176,43 @@ void OutPort::resetSeqTargets()
     Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()
                         .dispatchTargetReset(this);
+}
+
+std::set<SharedPtr<DataLogger*> > OutPort::loggers()
+{
+    std::set<SharedPtr<DataLogger*> > tmpList;
+
+    loggersLock.readLock();
+
+    for (std::set< DataLogger* >::iterator it = allLoggers.begin(),
+            ite = allLoggers.end(); it != ite; it++ )
+    {
+        tmpList.insert( Poco::Util::Application::instance()
+                            .getSubsystem<DataManager>()
+                            .getDataLogger(*it) );
+    }
+
+    loggersLock.unlock();
+
+    return tmpList;
+}
+
+void OutPort::registerLogger(DataLogger* logger)
+{
+    loggersLock.writeLock();
+    allLoggers.insert(logger);
+    loggersLock.unlock();
+}
+
+OutPort::~OutPort()
+{
+	while (allLoggers.size())
+		(*allLoggers.begin())->detach();
+}
+
+void OutPort::detachLogger(DataLogger* logger)
+{
+    loggersLock.writeLock();
+    allLoggers.erase(logger);
+    loggersLock.unlock();
 }

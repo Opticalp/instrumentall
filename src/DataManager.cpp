@@ -31,6 +31,7 @@
 
 #include "OutPort.h"
 #include "DataItem.h"
+#include "Dispatcher.h"
 
 #include "DataPocoLogger.h"
 
@@ -84,7 +85,7 @@ void DataManager::removeOutPort(OutPort* port)
         if (port->dataItem() == **it)
         {
             // unregister data item loggers
-            std::set< SharedPtr<DataLogger*> > itemLoggers = port->dataItem()->loggers();
+            std::set< SharedPtr<DataLogger*> > itemLoggers = port->loggers();
             for (std::set< SharedPtr<DataLogger*> >::iterator setIt = itemLoggers.begin(),
                     setIte = itemLoggers.end(); setIt != setIte; setIt++ )
                 (**setIt)->detach();
@@ -102,27 +103,6 @@ void DataManager::removeOutPort(OutPort* port)
     allDataLock.unlock();
     poco_error(logger(), "removeOutPort(): "
             "the port was not found");
-}
-
-void DataManager::newData(DataItem* self)
-{
-    if (!self->hasLoggers())
-        return;
-
-    std::set< SharedPtr<DataLogger*> > itemLoggers = self->loggers();
-
-    for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
-            ite = itemLoggers.end(); it != ite; it++ )
-        (**it)->acquireLock();
-
-    for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
-            ite = itemLoggers.end(); it != ite; it++ )
-    {
-        // launch logger threads via thread manager.
-        Poco::Util::Application::instance()
-            .getSubsystem<ThreadManager>()
-            .startDataLogger(**it);
-    }
 }
 
 SharedPtr<DataItem*> DataManager::getDataItem(DataItem* dataItem)
@@ -186,26 +166,24 @@ SharedPtr<DataLogger*> DataManager::getDataLogger(DataLogger* dataLogger)
 
 }
 
-void DataManager::registerLogger(SharedPtr<DataItem*> data,
-        SharedPtr<DataLogger*> dataLogger)
+void DataManager::registerLogger(SharedPtr<OutPort*> port,
+		SharedPtr<DataLogger*> dataLogger)
 {
-    if (*data == &emptyDataItem)
-        throw Poco::NotFoundException("registerLogger",
-                                        "Data item not found");
-
-    (*dataLogger)->registerData(*data);
+    (*dataLogger)->registerSourcePort(*port);
 }
 
-SharedPtr<DataItem*> DataManager::getSourceDataItem(
+SharedPtr<OutPort*> DataManager::getSourcePort(
         SharedPtr<DataLogger*> dataLogger)
 {
-    DataItem* data = (*dataLogger)->data();
+    OutPort* port = (*dataLogger)->sourcePort();
 
-    if (data)
-        return getDataItem(data);
+    if (port)
+        return     Poco::Util::Application::instance()
+    					.getSubsystem<Dispatcher>()
+						.getOutPort(port);
     else
-        throw Poco::NotFoundException("DataManager::getsourceDataItem",
-                "No source data item found. "
+        throw Poco::NotFoundException("DataManager::getsourcePort",
+                "No source port found. "
                 "The logger may be detached. ");
 }
 

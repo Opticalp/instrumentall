@@ -136,8 +136,7 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
     {
         tmpPort = (*Poco::Util::Application::instance()
                           .getSubsystem<DataManager>()
-                          .getSourceDataItem( *self->logger ))
-						  ->parentPort();
+                          .getSourcePort( *self->logger ));
     }
     catch (Poco::NotFoundException& e)
     {

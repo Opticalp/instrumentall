@@ -32,6 +32,7 @@
 #include "ThreadManager.h"
 #include "Module.h"
 #include "ModuleTask.h"
+#include "DataLogger.h"
 
 #include "InPort.h"
 #include "InDataPort.h"
@@ -347,9 +348,32 @@ void Dispatcher::lockInPorts(OutPort* port)
 
 void Dispatcher::setOutPortDataReady(OutPort* port)
 {
-    // poco_information(logger(), port->name() + " data ready");
+//    poco_information(logger(), port->name() + " data ready");
 
-    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
+	// loggers
+
+    if (port->hasLoggers())
+    {
+//        poco_information(logger(), port->name() + " has loggers");
+		std::set< SharedPtr<DataLogger*> > itemLoggers = port->loggers();
+
+		for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
+				ite = itemLoggers.end(); it != ite; it++ )
+			(**it)->acquireLock();
+
+		for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
+				ite = itemLoggers.end(); it != ite; it++ )
+		{
+			// launch logger threads via thread manager.
+			Poco::Util::Application::instance()
+				.getSubsystem<ThreadManager>()
+				.startDataLogger(**it);
+		}
+    }
+
+	// modules
+
+	std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
     for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
             ite = targetPorts.end(); it != ite; it++ )
     {
