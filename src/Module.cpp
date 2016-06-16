@@ -256,9 +256,17 @@ bool Module::enqueueTask(ModuleTask* task)
 	taskQueue.push_back(task);
 
 	if (taskQueue.size()>1)
+	{
+		//poco_information(logger(), task->name()
+		//			+ ": tasks are already enqueued for " + name());
 		return false;
+	}
 
-	// check in allTasks if there is a task that is running
+	return !taskIsRunning();
+}
+
+bool Module::taskIsRunning()
+{
 	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
 			ite = allTasks.end(); it != ite; it++)
 	{
@@ -266,9 +274,10 @@ bool Module::enqueueTask(ModuleTask* task)
 		{
 		case MergeableTask::TASK_STARTING:
 		case MergeableTask::TASK_RUNNING:
-			poco_information(logger(), task->name()
-					+ ": a task is already running for " + name());
-			return false;
+			//poco_information(logger(), task->name()
+			//		+ ": " + (*it)->name() 
+			//		+ " is already running for " + name());
+			return true;
 		case MergeableTask::TASK_FALSE_START:
 		case MergeableTask::TASK_IDLE: // probably self
 		case MergeableTask::TASK_CANCELLING:
@@ -279,7 +288,7 @@ bool Module::enqueueTask(ModuleTask* task)
 		}
 	}
 
-	return true;
+	return false;
 }
 
 void Module::popTask()
@@ -307,6 +316,12 @@ void Module::popTaskSync()
 	if (taskQueue.empty())
 	{
 		poco_information(logger(), (*runningTask)->name() + ": empty task queue, nothing to sync pop");
+		return;
+	}
+
+	if (taskIsRunning())
+	{
+		poco_information(logger(),"sync pop: a task is already running. ");
 		return;
 	}
 
@@ -376,7 +391,8 @@ void Module::mergeTasks(std::set<size_t> inPortIndexes)
 			poco_warning(logger(),
 					"Unable to merge the task for " + trigPort->name()
 					+ ". Retry.");
-			if (sleep(500))
+//			if (sleep(500))
+			if (yield())
 				throw Poco::RuntimeException(name(), "Cancelation upon user request");
 			taskMngtMutex.lock();
 		}

@@ -379,6 +379,14 @@ private:
 	static std::vector<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
+	/**
+	 * Check if a task is already running (or at least started)
+	 * for this module
+	 *
+	 * taskMngtMutex should be locked prior to calling this method
+	 */
+	bool taskIsRunning();
+
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
 	std::set<ModuleTask*> allTasks;
 	std::list<ModuleTask*> taskQueue;
