@@ -60,6 +60,11 @@ public:
 	void runTask();
 
 	/**
+	 * Sync-launch the next task of the module queue
+	 */
+	void leaveTask();
+
+	/**
 	 * Retrieve the attached module
 	 *
 	 * The returned value should be transformed into a sharedPtr via

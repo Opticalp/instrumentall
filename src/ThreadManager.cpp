@@ -101,16 +101,6 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 
 		taskListLock.unlock();
 
-		if (!modTask->isSlave())
-		{
-			// poco_information(logger(), modTask->name() + " is not a slave");
-			modTask->module()->popTaskSync();
-		}
-		else
-		{
-			poco_information(logger(),  modTask->name() + " is a slave. finished. ");
-		}
-
 		poco_information(logger(), "TaskFinishednotification treated. ");
     }
     // else   datalogger task ==> 06.06.16 datalogger does not run in a task any more?

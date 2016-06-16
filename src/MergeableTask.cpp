@@ -157,6 +157,8 @@ void MergeableTask::run()
 	tEnd.update();
 
 	taskFinishedBroadcast(pTm);
+
+	leaveTask();
 }
 
 void MergeableTask::taskFinishedBroadcast(TaskManager* pTm)

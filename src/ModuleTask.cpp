@@ -82,3 +82,11 @@ void ModuleTask::runTask()
 	coreModule->releaseAllOutPorts();
 	doneEvent.set();
 }
+
+void ModuleTask::leaveTask()
+{			
+	if (coreModule == NULL)
+		throw Poco::NullPointerException("no more module bound to " + name());
+
+	coreModule->popTaskSync();
+}

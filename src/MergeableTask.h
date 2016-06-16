@@ -119,6 +119,15 @@ public:
 	virtual void runTask() = 0;
 
 	/**
+	 * Method called after the finishedNotification is dispatched. 
+	 *
+	 * Could be used to run some cleaning, etc
+	 *
+	 * Default implementation: do nothing.
+	 */
+	virtual void leaveTask() { }
+
+	/**
 	 * Runnable::run method implementation
 	 */
 	void run();
