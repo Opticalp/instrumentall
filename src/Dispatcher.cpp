@@ -387,9 +387,5 @@ void Dispatcher::enqueueModuleTask(ModuleTask* pTask)
 
 	// poco_information(logger(),"enqueueing " + pTask->name());
 
-	if (pModule->enqueueTask(pTask))
-	{
-		// poco_information(logger(),"task enqueued, running the next available task for this module");
-		pModule->popTask();
-	}
+	pModule->enqueueTask(pTask);
 }

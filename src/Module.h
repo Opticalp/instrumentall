@@ -85,7 +85,9 @@ public:
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
 	      mParent(parent), ParameterizedEntity("module." + name),
-		  procMode(fullBufferedProcessing)
+		  procMode(fullBufferedProcessing),
+		  startSyncPending(false),
+		  enqueuing(false)
 	{
 	}
 
@@ -141,12 +143,12 @@ public:
     /**
      * Enqueue a new task
      *
-     * for this module.
+     * for this module. and pop it, if no task is running for this module.
      * To be called by the disptacher.
      * @return true if the module is not running, and thus,
      * the new enqueued task should be started.
      */
-    bool enqueueTask(ModuleTask* task);
+    void enqueueTask(ModuleTask* task);
 
     /**
      * Unregister a task
@@ -154,15 +156,6 @@ public:
      * called by the task destructor
      */
     void unregisterTask(ModuleTask* task);
-
-    /**
-     * Launch the next task of the queue
-     *
-     * and dequeue it.
-     *
-     * Do nothing if the queue is empty.
-     */
-    void popTask();
 
     /**
      * Launch the next task of the queue in the current thread
@@ -270,6 +263,15 @@ protected:
      * @inPortIndexes indexes of the inPorts which data will be used
      */
     void mergeTasks(std::set<size_t> inPortIndexes);
+
+    /**
+     * Launch the next task of the queue
+     *
+     * and dequeue it.
+     *
+     * Do nothing if the queue is empty.
+     */
+    void popTask();
 
 	/**
 	 * Method called by the task.
@@ -390,7 +392,9 @@ private:
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
 	std::set<ModuleTask*> allTasks;
 	std::list<ModuleTask*> taskQueue;
-	Poco::FastMutex taskMngtMutex;
+	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
+	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
+	bool enqueuing; ///< flag used during task enqueuing @see Dispatcher::enqueueModuleTask
 
     friend class ModuleTask; // access to setRunningTask, releaseAll
 };

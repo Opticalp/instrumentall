@@ -167,6 +167,14 @@ void Module::freeInternalName()
 
 void Module::run()
 {
+	taskMngtMutex.lock();
+	if (startSyncPending)
+	{
+		startSyncPending = false;
+		taskMngtMutex.unlock();
+	}
+	taskMngtMutex.unlock();
+
 	expireOutData();
 
 	setRunningState(ModuleTask::retrievingInDataLocks);
@@ -244,9 +252,9 @@ ModuleTask::RunningStates Module::getRunningState()
 	return (*runningTask)->getRunningState();
 }
 
-bool Module::enqueueTask(ModuleTask* task)
+void Module::enqueueTask(ModuleTask* task)
 {
-	Poco::FastMutex::ScopedLock lock(taskMngtMutex);
+	Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
 	Poco::Util::Application::instance()
 				             .getSubsystem<ThreadManager>()
@@ -257,12 +265,13 @@ bool Module::enqueueTask(ModuleTask* task)
 
 	if (taskQueue.size()>1)
 	{
-		//poco_information(logger(), task->name()
-		//			+ ": tasks are already enqueued for " + name());
-		return false;
+		poco_information(logger(), task->name()
+					+ ": tasks are already enqueued for " + name());
+		return;
 	}
 
-	return !taskIsRunning();
+	if (!taskIsRunning())
+		popTask();
 }
 
 bool Module::taskIsRunning()
@@ -293,7 +302,7 @@ bool Module::taskIsRunning()
 
 void Module::popTask()
 {
-	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(taskMngtMutex);
+	Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
 	if (taskQueue.empty())
 		return;
@@ -303,25 +312,26 @@ void Module::popTask()
 	taskQueue.pop_front();
 
 	Poco::Util::Application::instance()
-			             .getSubsystem<ThreadManager>()
-			             .startModuleTask(nextTask);
-
-	lock.unlock();
+						 .getSubsystem<ThreadManager>()
+						 .startModuleTask(nextTask);
 }
 
 void Module::popTaskSync()
 {
-	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(taskMngtMutex);
+	taskMngtMutex.lock();
 
 	if (taskQueue.empty())
 	{
-		poco_information(logger(), (*runningTask)->name() + ": empty task queue, nothing to sync pop");
+		poco_information(logger(), 
+			(*runningTask)->name() + ": empty task queue, nothing to sync pop");
+		taskMngtMutex.unlock();
 		return;
 	}
 
 	if (taskIsRunning())
 	{
 		poco_information(logger(),"sync pop: a task is already running. ");
+		taskMngtMutex.unlock();
 		return;
 	}
 
@@ -329,7 +339,7 @@ void Module::popTaskSync()
 	poco_information(logger(), "SYNC poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
-	lock.unlock();
+	startSyncPending = true;
 
 	Poco::Util::Application::instance()
 			             .getSubsystem<ThreadManager>()
@@ -338,7 +348,7 @@ void Module::popTaskSync()
 
 void Module::unregisterTask(ModuleTask* task)
 {
-	Poco::FastMutex::ScopedLock lock(taskMngtMutex);
+	Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
 	allTasks.erase(task);
 }
@@ -399,6 +409,9 @@ void Module::mergeTasks(std::set<size_t> inPortIndexes)
 		else
 			it++;
 	}
+
+	poco_information(logger(),
+		"remaining tasks: " + Poco::NumberFormatter::format(taskQueue.size()));
 
 	taskMngtMutex.unlock();
 }
