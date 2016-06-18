@@ -123,6 +123,8 @@ void MergeableTask::reset()
 
 void MergeableTask::run()
 {
+	duplicate();
+
 	mergeAccess.readLock();
 	if (masterTask)
 		throw Poco::InvalidAccessException("MergeableTask::run",
@@ -159,6 +161,8 @@ void MergeableTask::run()
 	taskFinishedBroadcast(pTm);
 
 	leaveTask();
+
+	release();
 }
 
 void MergeableTask::taskFinishedBroadcast(TaskManager* pTm)

@@ -65,7 +65,6 @@ void ModuleTask::runTask()
 		throw Poco::NullPointerException("no more module bound to " + name());
 
 	coreModule->setRunningTask(this);
-
 	try
 	{
 		coreModule->run();

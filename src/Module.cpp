@@ -349,7 +349,6 @@ void Module::popTaskSync()
 void Module::unregisterTask(ModuleTask* task)
 {
 	Poco::Mutex::ScopedLock lock(taskMngtMutex);
-
 	allTasks.erase(task);
 }
 

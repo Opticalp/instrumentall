@@ -53,6 +53,8 @@ def myMain():
     task = runModule(Y)
     task.wait()
     
+    del task
+    
     print "Look for the two inputs demo module factory"
     
     facDemo = Factory("DemoRootFactory").select("branch").select("leafTwoInputs")

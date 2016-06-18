@@ -66,6 +66,8 @@ void ThreadManager::onStarted(TaskStartedNotification* pNf)
 
     // TODO:
     // - dispatch to a NotificationQueue
+
+    pNf->release();
 }
 
 void ThreadManager::onFailed(TaskFailedNotification* pNf)
@@ -75,6 +77,8 @@ void ThreadManager::onFailed(TaskFailedNotification* pNf)
 
     // TODO:
     // - dispatch to a NotificationQueue
+
+    pNf->release();
 }
 
 void ThreadManager::onFinished(TaskFinishedNotification* pNf)
@@ -88,11 +92,7 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
     	// TODO:
 		// - dispatch to a NotificationQueue
 
-		poco_information(logger(), modTask->name() + " refCount is: "
-			+ Poco::NumberFormatter::format(modTask->referenceCount()));
     	unregisterModuleTask(modTask);
-		poco_information(logger(), modTask->name() + " refCount is: "
-			+ Poco::NumberFormatter::format(modTask->referenceCount()));
 
     	taskListLock.readLock();
 
@@ -104,12 +104,16 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 		poco_information(logger(), "TaskFinishednotification treated. ");
     }
     // else   datalogger task ==> 06.06.16 datalogger does not run in a task any more?
+
+    pNf->release();
 }
 
 void ThreadManager::onEnslaved(TaskEnslavedNotification* pNf)
 {
     poco_information(logger(), pNf->task()->name()
     		+ " enslaved " + pNf->slave()->name() );
+
+    pNf->release();
 }
 
 void ThreadManager::startDataLogger(DataLogger* dataLogger)
@@ -210,7 +214,6 @@ void ThreadManager::registerNewModuleTask(ModuleTask* pTask)
 
 void ThreadManager::unregisterModuleTask(ModuleTask* pTask)
 {
-//	poco_information(logger(), "unregistering " + pTask->name());
 	Poco::ScopedWriteRWLock lock(taskListLock);
 
 	Poco::AutoPtr<ModuleTask> taskPtr(pTask, true); // do not take ownership!

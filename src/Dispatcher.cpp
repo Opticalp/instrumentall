@@ -369,11 +369,10 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
 
 Poco::AutoPtr<ModuleTask> Dispatcher::runModule(SharedPtr<Module*> ppModule)
 {
-	ModuleTask* modTask = new ModuleTask(*ppModule);
-    enqueueModuleTask(modTask);
+    Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(*ppModule), true);
+    enqueueModuleTask(taskPtr);
 
-    // shared auto ptr (do not take ownership)
-    return Poco::AutoPtr<ModuleTask>(modTask, true);
+    return taskPtr;
 }
 
 void Dispatcher::runModule(Module* pModule)
@@ -383,9 +382,5 @@ void Dispatcher::runModule(Module* pModule)
 
 void Dispatcher::enqueueModuleTask(ModuleTask* pTask)
 {
-	Module* pModule = pTask->module();
-
-	// poco_information(logger(),"enqueueing " + pTask->name());
-
-	pModule->enqueueTask(pTask);
+	pTask->module()->enqueueTask(pTask);
 }
