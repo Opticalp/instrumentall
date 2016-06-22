@@ -221,3 +221,17 @@ void ThreadManager::unregisterModuleTask(ModuleTask* pTask)
 		poco_warning(logger(), "Failed to erase the task " + pTask->name()
 				+ " from the thread manager");
 }
+
+void ThreadManager::cancelAll()
+{
+	Poco::ScopedReadRWLock lock(taskListLock);
+
+	poco_notice(logger(), "Dispatching cancel() to all modules");
+
+	for (std::set< Poco::AutoPtr<ModuleTask> >::iterator it = pendingModTasks.begin(),
+			ite = pendingModTasks.end(); it != ite; it++)
+	{
+		Poco::AutoPtr<ModuleTask> tsk = *it;
+		tsk->cancel();
+	}
+}

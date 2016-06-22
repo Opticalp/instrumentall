@@ -106,9 +106,9 @@ public:
     /**
      * Cancel all the tasks
      *
-     * Cancel module tasks and logging tasks whenever possible
+     * Cancel module tasks whenever possible
      */
-    void cancelAll() { taskManager.cancelAll(); }
+    void cancelAll();
 
     /**
      * Start a runnable in a thread of the thread pool
