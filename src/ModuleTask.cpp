@@ -34,7 +34,9 @@
 #include "Poco/NumberFormatter.h"
 
 ModuleTask::ModuleTask(Module* module, InPort* inPort):
-	coreModule(module), mTriggingPort(inPort),
+	coreModule(module),
+	runState(NotAvailableRunningState),
+	mTriggingPort(inPort),
 	doneEvent(false) // manual reset
 {
 	// commented: registered when queued by the dispatcher
@@ -44,7 +46,9 @@ ModuleTask::ModuleTask(Module* module, InPort* inPort):
 }
 
 ModuleTask::ModuleTask():
-	coreModule(NULL), mTriggingPort(NULL),
+	coreModule(NULL),
+	runState(NotAvailableRunningState),
+	mTriggingPort(NULL),
 	doneEvent(false) // manual reset
 {
 }
@@ -57,6 +61,14 @@ ModuleTask::~ModuleTask()
 	// there should be nothing to do in the managers since AutoPtr should be used
 	// - in the thread manager
 	// - in the task manager
+}
+
+ModuleTask::RunningStates ModuleTask::getRunningState()
+{
+	if (getState() == TASK_RUNNING)
+		return runState;
+	else
+		return NotAvailableRunningState;
 }
 
 void ModuleTask::runTask()

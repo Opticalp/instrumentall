@@ -87,10 +87,11 @@ public:
 	{
 		retrievingInDataLocks,
 		retrievingOutDataLocks,
-		processing
+		processing,
+		NotAvailableRunningState
 	};
 
-	RunningStates getRunningState() { return runState; }
+	RunningStates getRunningState();
 
 	/**
 	 * Wait the given time that the task finishes
