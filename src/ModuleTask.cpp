@@ -101,3 +101,11 @@ void ModuleTask::leaveTask()
 
 	coreModule->popTaskSync();
 }
+
+void ModuleTask::cancel()
+{
+	if ((coreModule == NULL) && (getState() == TASK_RUNNING))
+		coreModule->cancel();
+
+	MergeableTask::cancel();
+}

@@ -220,14 +220,6 @@ bool Module::isCancelled()
 	return (*runningTask)->isCancelled();
 }
 
-void Module::cancel()
-{
-	if (*runningTask)
-		(*runningTask)->cancel();
-
-	throw Poco::RuntimeException(name(), "cancel. not in a task");
-}
-
 InPort* Module::triggingPort()
 {
 	if (*runningTask)

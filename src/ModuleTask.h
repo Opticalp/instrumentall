@@ -65,6 +65,14 @@ public:
 	void leaveTask();
 
 	/**
+	 * Task cancel method.
+	 *
+	 *  - call Module::cancel if the task is running
+	 *  - call MergeableTask::cancel
+	 */
+	void cancel();
+
+	/**
 	 * Retrieve the attached module
 	 *
 	 * The returned value should be transformed into a sharedPtr via

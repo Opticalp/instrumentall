@@ -242,13 +242,22 @@ protected:
     bool yield();
 	void setProgress(float progress);
     bool isCancelled();
-	void cancel();
     InPort* triggingPort();
     void setRunningState(ModuleTask::RunningStates state);
     ModuleTask::RunningStates getRunningState();
     ///}
 
     /**
+	 * Canceling method to be called by the module task when the task
+	 * is cancelled.
+	 *
+	 * Only running tasks call this method.
+	 *
+	 * @see Module::clean
+	 */
+	virtual void cancel() { }
+
+	/**
      * Merge the enqueued tasks of the present Module
      *
      * given by their triggering inPort index.
