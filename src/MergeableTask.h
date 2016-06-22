@@ -108,11 +108,6 @@ public:
 	TaskState getState() const;
 
 	/**
-	 * Set the task's progress to zero and clear the cancel flag.
-	 */
-	void reset();
-
-	/**
 	 * Do whatever the task needs to do. Must
 	 * be overridden by subclasses.
 	 */

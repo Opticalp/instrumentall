@@ -65,8 +65,6 @@ MergeableTask::~MergeableTask()
 
 float MergeableTask::getProgress() const
 {
-	Poco::FastMutex::ScopedLock lock(mainMutex);
-
 	mergeAccess.readLock();
 	Poco::AutoPtr<MergeableTask> master(masterTask, true);
 	mergeAccess.unlock();
@@ -74,6 +72,7 @@ float MergeableTask::getProgress() const
 	if (!master.isNull())
 		return master->getProgress();
 
+	Poco::FastMutex::ScopedLock lock(mainMutex);
 	return progress;
 }
 
@@ -107,18 +106,6 @@ MergeableTask::TaskState MergeableTask::getState() const
 		return master->getState();
 
 	return state;
-}
-
-void MergeableTask::reset()
-{
-	mergeAccess.readLock();
-	if (masterTask)
-		poco_bugcheck_msg("trying to reset a slave task");
-	mergeAccess.unlock();
-
-	progress = 0.0;
-	state    = TASK_IDLE;
-	cancelEvent.reset();
 }
 
 void MergeableTask::run()

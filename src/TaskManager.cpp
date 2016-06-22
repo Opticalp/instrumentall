@@ -51,6 +51,10 @@ void TaskManager::start(TaskPtr pAutoTask)
 {
 	Poco::FastMutex::ScopedLock lock(mutex);
 
+	if (pAutoTask->getState() != MergeableTask::TASK_IDLE)
+		throw Poco::InvalidAccessException(pAutoTask->name(),
+				"can not be started: not idle. ");
+
 	pAutoTask->setOwner(this);
 	pAutoTask->setState(MergeableTask::TASK_STARTING);
 	mTaskList.push_back(pAutoTask);
@@ -73,6 +77,10 @@ void TaskManager::start(TaskPtr pAutoTask)
 void TaskManager::startSync(TaskPtr pAutoTask)
 {
 	mutex.lock();
+
+	if (pAutoTask->getState() != MergeableTask::TASK_IDLE)
+		throw Poco::InvalidAccessException(pAutoTask->name(),
+				"can not be started: not idle. ");
 
 	pAutoTask->setOwner(this);
 	pAutoTask->setState(MergeableTask::TASK_STARTING);

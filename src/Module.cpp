@@ -341,9 +341,18 @@ void Module::popTaskSync()
 
 	startSyncPending = true;
 
-	Poco::Util::Application::instance()
+	try
+	{
+		Poco::Util::Application::instance()
 			             .getSubsystem<ThreadManager>()
 			             .startSyncModuleTask(nextTask);
+	}
+	catch (...)
+	{
+		startSyncPending = false;
+		taskMngtMutex.unlock();
+		throw;
+	}
 }
 
 void Module::unregisterTask(ModuleTask* task)
