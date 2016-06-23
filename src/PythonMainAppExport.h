@@ -242,6 +242,23 @@ static PyMethodDef pyMethodThreadManWaitAll =
     "Wait for all the tasks to be terminated"
 };
 
+/**
+ * @brief Python wrapper to cancel all the tasks
+ *
+ * Call ThreadManager::cancelAll() method
+ *
+ */
+extern "C" PyObject*
+pythonThreadManCancelAll(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodThreadManCancelAll =
+{
+    "cancelAll",
+    pythonThreadManCancelAll,
+    METH_NOARGS,
+    "Cancel all the tasks, running or pending. "
+};
+
 // ----------------------------------------------------------------
 //     Data Manager
 // ----------------------------------------------------------------

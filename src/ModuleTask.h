@@ -128,8 +128,10 @@ protected:
 	/**
 	 * To be called by Module::run and Module::process
 	 * to give information about the current running state of the task
+	 *
+	 * check if the task is cancelling before changing the state
 	 */
-	void setRunningState(RunningStates state) { runState = state; }
+	void setRunningState(RunningStates state);
 
 private:
 	ModuleTask();

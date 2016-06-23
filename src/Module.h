@@ -248,12 +248,14 @@ protected:
     ///}
 
     /**
-	 * Canceling method to be called by the module task when the task
+	 * Canceling method to be called when a running task
 	 * is cancelled.
 	 *
 	 * Only running tasks call this method.
 	 *
-	 * @see Module::clean
+	 * Called by ModuleTask::cancel
+	 *
+	 * @see Module::reset
 	 */
 	virtual void cancel() { }
 

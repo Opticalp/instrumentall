@@ -262,6 +262,7 @@ void Module::enqueueTask(ModuleTask* task)
 {
 	Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
+	// take ownership of the task.
 	Poco::Util::Application::instance()
 				             .getSubsystem<ThreadManager>()
 				             .registerNewModuleTask(task);
@@ -278,6 +279,8 @@ void Module::enqueueTask(ModuleTask* task)
 
 	if (!taskIsRunning())
 		popTask();
+//	else
+//		poco_information(logger(), name() + ": a task is already running");
 }
 
 bool Module::taskIsRunning()
@@ -341,7 +344,7 @@ void Module::popTaskSync()
 		return;
 	}
 
-	ModuleTask* nextTask = taskQueue.front();
+	Poco::AutoPtr<ModuleTask> nextTask(taskQueue.front(), true);
 	poco_information(logger(), "SYNC poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
@@ -355,6 +358,7 @@ void Module::popTaskSync()
 	}
 	catch (...)
 	{
+		poco_error(logger(), "can not sync start " + nextTask->name());
 		startSyncPending = false;
 		taskMngtMutex.unlock();
 		throw;

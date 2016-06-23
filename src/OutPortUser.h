@@ -200,6 +200,8 @@ protected:
 
 	virtual bool yield() { Poco::Thread::yield(); return false; }
 
+	virtual bool isCancelled() = 0;
+
     virtual ModuleTask::RunningStates getRunningState() = 0;
     virtual void setRunningState(ModuleTask::RunningStates state) = 0;
 

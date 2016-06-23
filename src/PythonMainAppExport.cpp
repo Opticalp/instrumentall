@@ -422,6 +422,16 @@ pythonThreadManWaitAll(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+extern "C" PyObject*
+pythonThreadManCancelAll(PyObject *self, PyObject *args)
+{
+    Poco::Util::Application::instance()
+            .getSubsystem<ThreadManager>()
+            .cancelAll();
+
+    Py_RETURN_NONE;
+}
+
 #include "DataManager.h"
 
 extern "C" PyObject*

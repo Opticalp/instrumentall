@@ -71,6 +71,16 @@ ModuleTask::RunningStates ModuleTask::getRunningState()
 		return NotAvailableRunningState;
 }
 
+void ModuleTask::setRunningState(RunningStates state)
+{
+	if (isCancelled())
+		throw Poco::RuntimeException(name() +
+				": can not change running state, "
+				"the task is cancelling");
+
+	runState = state;
+}
+
 void ModuleTask::runTask()
 {
 	if (coreModule == NULL)
@@ -92,9 +102,22 @@ void ModuleTask::runTask()
 void ModuleTask::leaveTask()
 {			
 	if (coreModule == NULL)
-		throw Poco::NullPointerException("no more module bound to " + name());
+		return;
 
-	coreModule->popTaskSync();
+	// enqueue tasks until it works.
+	while (true)
+	{
+		try
+		{
+			coreModule->popTaskSync();
+		}
+		catch (...)
+		{
+			continue;
+		}
+		break;
+	}
+
 }
 
 void ModuleTask::cancel()

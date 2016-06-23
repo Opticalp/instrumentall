@@ -80,6 +80,10 @@ void OutPortUser::notifyOutPortReady(size_t portIndex,
         poco_bugcheck_msg("try to unlock an output port "
                 "that was not previously locked? ");
 
+    if (isCancelled())
+    	throw Poco::RuntimeException("notify out port ready, "
+    			"although the task is cancelled. abort. ");
+
     outPorts[portIndex]->notifyReady(attribute);
 
     caughts->erase(portIndex);

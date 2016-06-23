@@ -224,6 +224,24 @@ TaskManager* MergeableTask::getOwner() const
 
 void MergeableTask::setState(TaskState taskState)
 {
+	if ((taskState != TASK_FINISHED) && (state == TASK_CANCELLING))
+		throw Poco::RuntimeException("task cancelling. "
+				"Can not be changed to another state than \"finished\"");
+
+	switch (taskState)
+	{
+	case TASK_STARTING:
+		if (state != TASK_IDLE)
+			throw Poco::RuntimeException("trying to start a task that is not idle");
+		break;
+	case TASK_RUNNING:
+		if (state != TASK_STARTING)
+			throw Poco::RuntimeException("trying to run a task that is not started");
+		break;
+	default:
+		break;
+	}
+
 	state = taskState;
 }
 

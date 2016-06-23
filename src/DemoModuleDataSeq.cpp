@@ -55,7 +55,8 @@ DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customNa
     refCount++;
 }
 
-#define MAX_INDEX 4
+#define MAX_INDEX 8
+#define WAIT_TIME 200
 
 void DemoModuleDataSeq::process(int startCond)
 {
@@ -83,7 +84,7 @@ void DemoModuleDataSeq::process(int startCond)
 
         setProgress(static_cast<float>(index + 1) / static_cast<float>(MAX_INDEX + 1));
 
-        if (isCancelled())
+        if (sleep(WAIT_TIME))
         {
             poco_notice(logger(), "DemoModuleDataSeq::runTask(): cancelled!" );
             return;

@@ -102,6 +102,13 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 		poco_information(logger(), "pending module tasks list size is: "
 				+ Poco::NumberFormatter::format(pendingModTasks.size()));
 
+//		if (pendingModTasks.size() == 1)
+//		{
+//			Poco::AutoPtr<ModuleTask> tmpTsk(*pendingModTasks.begin());
+//			poco_information(logger(),
+//					"remaining task is: " + tmpTsk->name());
+//		}
+
 		taskListLock.unlock();
 
 		poco_information(logger(), "TaskFinishednotification treated. ");
@@ -153,6 +160,8 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 	}
 	catch (...)
 	{
+		poco_information(logger(), pTask->name()
+				+ " failed to start");
 		unregisterModuleTask(pTask);
 		throw;
 	}
@@ -170,7 +179,11 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 	}
 	catch (...)
 	{
+		poco_information(logger(), pTask->name()
+				+ " failed to sync start");
 		unregisterModuleTask(pTask);
+//		poco_information(logger(), pTask->name()
+//				+ " is probably erased");
 		throw;
 	}
 }
@@ -227,14 +240,17 @@ void ThreadManager::unregisterModuleTask(ModuleTask* pTask)
 
 void ThreadManager::cancelAll()
 {
-	Poco::ScopedReadRWLock lock(taskListLock);
+	taskListLock.readLock();
+	std::set< Poco::AutoPtr<ModuleTask> > tempModTasks = pendingModTasks;
+	taskListLock.unlock();
 
-	poco_notice(logger(), "Dispatching cancel() to all modules");
+	poco_notice(logger(), "Dispatching cancel() to all active tasks");
 
-	for (std::set< Poco::AutoPtr<ModuleTask> >::iterator it = pendingModTasks.begin(),
-			ite = pendingModTasks.end(); it != ite; it++)
+	for (std::set< Poco::AutoPtr<ModuleTask> >::iterator it = tempModTasks.begin(),
+			ite = tempModTasks.end(); it != ite; it++)
 	{
 		Poco::AutoPtr<ModuleTask> tsk = *it;
+		poco_information(logger(), "cancelling " + tsk->name());
 		tsk->cancel();
 	}
 }
