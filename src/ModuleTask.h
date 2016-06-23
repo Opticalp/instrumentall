@@ -117,6 +117,13 @@ public:
 	void waitTaskDone()
 		{ doneEvent.wait(); }
 
+	/**
+	 * Forward to coreModule Module::reset()
+	 *
+	 * If the coreModule is available.
+	 */
+	void resetModule();
+
 protected:
 	/**
 	 * To be called by Module::run and Module::process

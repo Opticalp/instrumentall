@@ -258,6 +258,22 @@ protected:
 	virtual void cancel() { }
 
 	/**
+	 * Reset the module to its initial state.
+	 *
+	 * This method is called on error (TaskFailedNotification)
+	 * which can be trigged with an exception throw e.g. on
+	 * user request cancellation.
+	 *
+	 * Should achieve:
+	 *  - reset running seqIndexes
+	 *  - reset evtl flags, states,...
+	 *
+	 * @note Locks or mutexes should not be kept locked in case
+	 * of exceptions, then no unlock should be necessary here
+	 */
+	virtual void reset() { }
+
+	/**
      * Merge the enqueued tasks of the present Module
      *
      * given by their triggering inPort index.

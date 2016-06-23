@@ -75,6 +75,9 @@ void ThreadManager::onFailed(TaskFailedNotification* pNf)
     Poco::Exception e(pNf->reason());
     poco_error(logger(), e.displayText());
 
+    ModuleTask* modTask = dynamic_cast<ModuleTask*>(pNf->task());
+    modTask->resetModule();
+
     // TODO:
     // - dispatch to a NotificationQueue
 

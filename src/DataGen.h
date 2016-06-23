@@ -54,6 +54,11 @@ private:
 
     void process(int startCond);
 
+    /**
+     * Cleaning action in case of failure
+     */
+    void reset();
+
     void triggedRun();
 
     void freeRun();

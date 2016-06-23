@@ -418,3 +418,22 @@ void DataGen::setStrParameterValue(size_t paramIndex, std::string value)
 	dataLock.unlock();
 }
 
+void DataGen::reset()
+{
+	Poco::ScopedWriteRWLock lock(dataLock);
+
+	attr = DataAttributeOut();
+
+    std::queue<long> iEmpty;
+    std::swap(iEmpty, iQueue);
+    std::queue<double> fEmpty;
+    std::swap(fEmpty, fQueue);
+    std::queue<std::string> sEmpty;
+    std::swap(sEmpty, sQueue);
+    std::queue<DataAttributeOut> attrEmpty;
+    std::swap(attrEmpty, attrQueue);
+
+    seqStart = 0;
+    seqEnd = 0;
+}
+

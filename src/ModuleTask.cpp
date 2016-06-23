@@ -104,3 +104,10 @@ void ModuleTask::cancel()
 
 	MergeableTask::cancel();
 }
+
+void ModuleTask::resetModule()
+{
+	if (coreModule)
+		coreModule->reset();
+}
+

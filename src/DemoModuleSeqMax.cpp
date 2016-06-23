@@ -114,3 +114,8 @@ void DemoModuleSeqMax::process(int startCond)
         throw Poco::RuntimeException("DemoModuleSeqMax::process",
                 "not able to process data out of a sequence...");
 }
+
+void DemoModuleSeqMax::reset()
+{
+	seqIndex = 0;
+}

@@ -123,3 +123,9 @@ void DemoModuleSeqAccu::process(int startCond)
         throw Poco::RuntimeException("DemoModuleSeqAccu::process",
                 "not able to process data out of a sequence...");
 }
+
+void DemoModuleSeqAccu::reset()
+{
+	seqIndex = 0;
+	accumulator.clear();
+}
