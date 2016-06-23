@@ -283,14 +283,16 @@ protected:
     void popTask();
 
 	/**
-	 * Method called by the task.
+	 * Method called by the task that identifies itself with pTask.
 	 *
 	 * Expire the output data, check the start condition,
 	 * and call process().
 	 *
 	 * There is no mutex locked here. Concurrence running should be OK.
+	 *
+	 * Manage ports release.
 	 */
-	void run();
+	void run(ModuleTask* pTask);
 
 	/**
 	 * Main logic called by run

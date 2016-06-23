@@ -165,8 +165,10 @@ void Module::freeInternalName()
     }
 }
 
-void Module::run()
+void Module::run(ModuleTask* pTask)
 {
+	setRunningTask(pTask);
+
 	taskMngtMutex.lock();
 	if (startSyncPending)
 	{
@@ -175,15 +177,27 @@ void Module::run()
 	}
 	taskMngtMutex.unlock();
 
-	expireOutData();
+	try
+	{
+		expireOutData();
 
-	setRunningState(ModuleTask::retrievingInDataLocks);
-	int startCond = startCondition();
+		setRunningState(ModuleTask::retrievingInDataLocks);
+		int startCond = startCondition();
 
-	mergeTasks(portsWithNewData());
+		mergeTasks(portsWithNewData());
 
-	setRunningState(ModuleTask::processing);
-	process(startCond);
+		setRunningState(ModuleTask::processing);
+		process(startCond);
+	}
+	catch (...)
+	{
+		releaseAllInPorts();
+		releaseAllOutPorts();
+		throw;
+	}
+
+	releaseAllInPorts();
+	releaseAllOutPorts();
 }
 
 bool Module::sleep(long milliseconds)

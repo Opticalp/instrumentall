@@ -76,21 +76,16 @@ void ModuleTask::runTask()
 	if (coreModule == NULL)
 		throw Poco::NullPointerException("no more module bound to " + name());
 
-	coreModule->setRunningTask(this);
 	try
 	{
-		coreModule->run();
+		coreModule->run(this);
 	}
 	catch (...)
 	{
-		coreModule->releaseAllInPorts();
-		coreModule->releaseAllOutPorts();
 		doneEvent.set();
 		throw;
 	}
 
-	coreModule->releaseAllInPorts();
-	coreModule->releaseAllOutPorts();
 	doneEvent.set();
 }
 
