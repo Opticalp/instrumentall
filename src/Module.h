@@ -87,7 +87,8 @@ public:
 	      mParent(parent), ParameterizedEntity("module." + name),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
-		  enqueuing(false)
+		  enqueuing(false),
+		  reseting (false)
 	{
 	}
 
@@ -207,6 +208,15 @@ public:
      */
     void expireOutData() { OutPortUser::expireOutData(); }
 
+	/**
+	 * Reset the module by calling Module::reset(),
+	 * but reset also all the seqTargets.
+	 *
+	 * Called by ModuleTask::resetModule,
+	 * and then by Dispatcher::dispatchSeqTargetReset
+	 */
+	void resetWithSeqTargets();
+
 protected:
 	void addInPort(
 			std::string name, std::string description,
@@ -270,6 +280,8 @@ protected:
 	 *  - reset running seqIndexes
 	 *  - reset evtl flags, states,...
 	 *
+	 * Called by Module::resetWithSeqTargets
+	 *
 	 * @note Locks or mutexes should not be kept locked in case
 	 * of exceptions, then no unlock should be necessary here
 	 */
@@ -324,6 +336,11 @@ protected:
 	 * Access to output ports should be granted via reserveOutPorts
 	 * and then data pointer should be accessed with getDataToWrite.
 	 * Call notifyAllOutPortReady when over.
+	 *
+	 * In case of cancellation detected via Module::isCancelled or
+	 * Module::yield or Module::sleep,
+	 * an exception should be thrown to trigg the Module::reset
+	 * function.
 	 *
 	 * @param startCond start condition as defined in virtual method
 	 * startCondition. You should consider implementing your own
@@ -409,6 +426,8 @@ private:
 
 	static std::vector<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
+
+	bool reseting; ///< flag set when the reseting begins
 
 	/**
 	 * Check if a task is already running (or at least started)

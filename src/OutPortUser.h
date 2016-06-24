@@ -110,6 +110,12 @@ protected:
     void releaseAllOutPorts();
 
     /**
+     * Called by Module::resetWithSeqTargets to dispatch the reseting to the
+     * sequence targets
+     */
+    void resetSeqTargets();
+
+    /**
      * Check if the given port was caught/locked
      *
      * No lock needed: caughts is ThreadLocal

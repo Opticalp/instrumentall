@@ -74,8 +74,8 @@ def myMain():
     runModule(mod1)
     runModule(mod1)
 
-#    print "wait 0.5 sec and cancel all (2) "
-#    time.sleep(0.5)
+    print "wait 0.5 sec and cancel all (2) "
+    time.sleep(0.5)
     cancelAll()
     waitAll()
 

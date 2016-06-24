@@ -131,6 +131,13 @@ void OutPortUser::reserveAllOutPorts()
 	reserveOutPorts(allPorts);
 }
 
+void OutPortUser::resetSeqTargets()
+{
+    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
+            it!=ite; it++)
+    	(*it)->resetSeqTargets();
+}
+
 void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 {
 	if (caughts->empty() && outputs.size())

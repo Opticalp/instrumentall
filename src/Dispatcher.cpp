@@ -367,6 +367,18 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
     }
 }
 
+void Dispatcher::dispatchSeqTargetReset(OutPort* port)
+{
+    std::vector< SharedPtr<InPort*> > targetPorts = port->getSeqTargetPorts();
+    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
+    {
+    	poco_information(logger(), "forwarding module cancellation to "
+    			+ (**it)->parent()->name());
+    	(**it)->parent()->resetWithSeqTargets();
+    }
+}
+
 Poco::AutoPtr<ModuleTask> Dispatcher::runModule(SharedPtr<Module*> ppModule)
 {
     Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(*ppModule), true);

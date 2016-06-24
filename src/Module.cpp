@@ -283,6 +283,22 @@ void Module::enqueueTask(ModuleTask* task)
 //		poco_information(logger(), name() + ": a task is already running");
 }
 
+void Module::resetWithSeqTargets()
+{
+	if (reseting)
+		return;
+
+	reseting = true;
+
+	// reset this module
+	reset();
+
+	// reset the sequence targets
+	resetSeqTargets();
+
+	reseting = false;
+}
+
 bool Module::taskIsRunning()
 {
 	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
