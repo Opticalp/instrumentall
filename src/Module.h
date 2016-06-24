@@ -87,7 +87,6 @@ public:
 	      mParent(parent), ParameterizedEntity("module." + name),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
-		  enqueuing(false),
 		  reseting (false)
 	{
 	}
@@ -442,7 +441,6 @@ private:
 	std::list<ModuleTask*> taskQueue;
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
-	bool enqueuing; ///< flag used during task enqueuing @see Dispatcher::enqueueModuleTask
 
     friend class ModuleTask; // access to setRunningTask, releaseAll
 };
