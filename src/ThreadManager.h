@@ -151,6 +151,8 @@ private:
     std::set< Poco::AutoPtr<ModuleTask> > pendingModTasks;
     Poco::RWLock  taskListLock;
 
+    bool cancellingAll;
+
     /**
      * Unregister a task
      */

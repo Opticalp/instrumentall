@@ -42,7 +42,8 @@ using Poco::Observer;
 ThreadManager::ThreadManager():
         VerboseEntity(name()),
         threadPool(2,32), // TODO set maxCapacity from config file
-        taskManager(threadPool)
+        taskManager(threadPool),
+		cancellingAll(false)
 {
     taskManager.addObserver(
             Observer<ThreadManager, TaskStartedNotification>(
@@ -149,6 +150,9 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 
 	try
 	{
+		if (cancellingAll)
+			throw Poco::RuntimeException("Cancelling, can not start " + taskPtr->name());
+
 		taskManager.start(taskPtr);
 	}
 	catch (Poco::NoThreadAvailableException& e)
@@ -175,6 +179,9 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 
 	try
 	{
+		if (cancellingAll)
+			throw Poco::RuntimeException("Cancelling, can not sync start " + pTask->name());
+
 		taskManager.startSync(taskPtr);
 	}
 	catch (...)
@@ -244,6 +251,8 @@ void ThreadManager::cancelAll()
 	std::set< Poco::AutoPtr<ModuleTask> > tempModTasks = pendingModTasks;
 	taskListLock.unlock();
 
+	cancellingAll = true; // we wish that it is an atomic operation
+
 	poco_notice(logger(), "Dispatching cancel() to all active tasks");
 
 	for (std::set< Poco::AutoPtr<ModuleTask> >::iterator it = tempModTasks.begin(),
@@ -253,4 +262,6 @@ void ThreadManager::cancelAll()
 		poco_information(logger(), "cancelling " + tsk->name());
 		tsk->cancel();
 	}
+
+	cancellingAll = false;
 }
