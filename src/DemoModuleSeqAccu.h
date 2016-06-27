@@ -59,7 +59,18 @@ private:
      */
     void process(int startCond);
 
+    bool seqRunning()
+    {
+    	poco_information(logger(), name() + " seqRunning request");
+    	return seqIndex != 0;
+    }
+
     void reset();
+
+    /**
+     * Do nothing but warn about Module::cancel being called.
+     */
+    void cancel();
 
     static size_t refCount; ///< reference counter to generate a unique internal name
 

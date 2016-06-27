@@ -257,14 +257,15 @@ protected:
     ///}
 
     /**
-	 * Canceling method to be called when a running task
-	 * is cancelled.
-	 *
-	 * Only running tasks call this method.
-	 *
-	 * Called by ModuleTask::cancel
+	 * Canceling method to be called:
+	 *  - from ModuleTask::cancel when a running task
+	 * 	is cancelled
+	 * 	- or from Module::resetWithSeqTargets when reset
+	 * 	is called while a seq is running. Module::seqRunning
+	 * 	should be implemented, then.
 	 *
 	 * @see Module::reset
+	 * @see Module::seqRunning
 	 */
 	virtual void cancel() { }
 
@@ -355,6 +356,17 @@ protected:
 	 */
 	virtual void process(int startCond)
 		{ poco_warning(logger(), name() + ": nothing to be done"); }
+
+	/**
+	 * Method to check if a sequence is running.
+	 *
+	 * It can be true even if the module has no task running.
+	 *
+	 * This method is used by ModuleTask::cancel to know if
+	 * Module::cancel needs to be called if the task is not
+	 * running.
+	 */
+	virtual bool seqRunning() { return false; }
 
     /**
      * Set the internal name of the module

@@ -290,6 +290,9 @@ void Module::resetWithSeqTargets()
 
 	reseting = true;
 
+	if (seqRunning())
+		cancel();
+
 	// reset this module
 	reset();
 

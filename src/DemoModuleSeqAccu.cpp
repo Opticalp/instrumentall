@@ -129,3 +129,8 @@ void DemoModuleSeqAccu::reset()
 	seqIndex = 0;
 	accumulator.clear();
 }
+
+void DemoModuleSeqAccu::cancel()
+{
+	poco_warning(logger(), name() + " cancelling...");
+}
