@@ -131,6 +131,6 @@ void ModuleTask::cancel()
 void ModuleTask::resetModule()
 {
 	if (coreModule)
-		coreModule->resetWithSeqTargets();
+		coreModule->resetWithTargets();
 }
 

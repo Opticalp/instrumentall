@@ -209,12 +209,12 @@ public:
 
 	/**
 	 * Reset the module by calling Module::reset(),
-	 * but reset also all the seqTargets.
+	 * but reset also all the targets.
 	 *
 	 * Called by ModuleTask::resetModule,
-	 * and then by Dispatcher::dispatchSeqTargetReset
+	 * and then by Dispatcher::dispatchTargetReset
 	 */
-	void resetWithSeqTargets();
+	void resetWithTargets();
 
 protected:
 	void addInPort(

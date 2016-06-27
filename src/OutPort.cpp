@@ -174,5 +174,5 @@ void OutPort::resetSeqTargets()
 {
     Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()
-                        .dispatchSeqTargetReset(this);
+                        .dispatchTargetReset(this);
 }

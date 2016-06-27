@@ -174,11 +174,11 @@ public:
      /**
       * Dispatching function for module reset when a task failed.
       *
-      *  * called by Module::resetWithSeqTargets
-      *  * call Module::resetWithSeqTargets
+      *  * called by Module::resetWithTargets
+      *  * call Module::resetWithTargets
       *  * Module::reseting flag avoids the recursions
       */
-     void dispatchSeqTargetReset(OutPort* port);
+     void dispatchTargetReset(OutPort* port);
 
      /**
       * Lock the input ports

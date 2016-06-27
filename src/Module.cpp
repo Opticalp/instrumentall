@@ -283,7 +283,7 @@ void Module::enqueueTask(ModuleTask* task)
 //		poco_information(logger(), name() + ": a task is already running");
 }
 
-void Module::resetWithSeqTargets()
+void Module::resetWithTargets()
 {
 	if (reseting)
 		return;
@@ -297,7 +297,7 @@ void Module::resetWithSeqTargets()
 	reset();
 
 	// reset the sequence targets
-	resetSeqTargets();
+	resetTargets();
 
 	reseting = false;
 }

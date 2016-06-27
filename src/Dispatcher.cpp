@@ -367,15 +367,15 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
     }
 }
 
-void Dispatcher::dispatchSeqTargetReset(OutPort* port)
+void Dispatcher::dispatchTargetReset(OutPort* port)
 {
-    std::vector< SharedPtr<InPort*> > targetPorts = port->getSeqTargetPorts();
+    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
     for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
             ite = targetPorts.end(); it != ite; it++ )
     {
     	poco_information(logger(), "forwarding module cancellation to "
     			+ (**it)->parent()->name());
-    	(**it)->parent()->resetWithSeqTargets();
+    	(**it)->parent()->resetWithTargets();
     }
 }
 

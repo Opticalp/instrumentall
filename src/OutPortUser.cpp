@@ -131,7 +131,7 @@ void OutPortUser::reserveAllOutPorts()
 	reserveOutPorts(allPorts);
 }
 
-void OutPortUser::resetSeqTargets()
+void OutPortUser::resetTargets()
 {
     for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
             it!=ite; it++)
