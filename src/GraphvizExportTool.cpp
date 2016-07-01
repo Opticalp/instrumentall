@@ -83,7 +83,7 @@ void GraphvizExportTool::exportGraph(std::ostream& out, bool withEdges)
 	out << "}" << std::endl;
 }
 
-#define OBSOLETE_RECORD
+//#define OBSOLETE_RECORD
 
 void GraphvizExportTool::exportNodes(std::ostream& out)
 {
@@ -176,10 +176,156 @@ void GraphvizExportTool::exportNode(std::ostream& out,
 	}
 	out << "} }\"];" << std::endl;
 #else
-	size_t rows;
-	size_t cols;
+	size_t rows = pSet.size();
+	bool paramSpan = false;
+	if (rows < 3)
+	{
+		if (pSet.size()==2)
+			rows = 4;
+		else
+			rows = 3;
+		paramSpan = true;
+	}
 
-	out << "    " << (*mod)->name() << ";" << std::endl;
+	size_t cols;
+	bool colSpan = false;
+	if (inP.empty() && outP.empty())
+		cols = 2;
+	else if (inP.empty())
+		cols = 1 + outP.size();
+	else if (outP.empty())
+		cols = 1+ inP.size();
+	else if (inP.size() == outP.size())
+		cols = 1 + inP.size();
+	else
+	{
+		cols = 1 + inP.size() * outP.size();
+		colSpan = true;
+	}
+
+	out << "    " << (*mod)->name() << " [label=<" << std::endl;
+	out << "      <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">" << std::endl;
+
+	for (size_t row=0; row<rows; row++)
+	{
+		out << "      <TR>" << std::endl;
+		for (size_t col=0; col<cols; col++)
+		{
+
+			if (col == 0) 			           // parameter
+			{
+				if (!paramSpan) // row == param index
+				{
+					out << "        <TD PORT=\"param_" << pSet.at(row).name << "\">";
+					out << pSet.at(row).name << "</TD>" << std::endl;
+				}
+				else
+				{
+					switch(pSet.size())
+					{
+					case 2:
+						if (row%2==0)
+						{
+							out << "        <TD ROWSPAN=\"2\" PORT=\"param_" << pSet.at(row/2).name << "\">";
+							out << pSet.at(row/2).name << "</TD>" << std::endl;
+						}
+						break;
+					case 1:
+						if (row==0)
+						{
+							out << "        <TD ROWSPAN=\"3\" PORT=\"param_" << pSet.at(row).name << "\">";
+							out << pSet.at(row).name << "</TD>" << std::endl;
+						}
+						break;
+					case 0:
+						if (row==0)
+						{
+							out << "        <TD ROWSPAN=\"3\"> </TD>" << std::endl;
+						}
+						break;
+					default:
+						poco_bugcheck_msg("wrong parameterSet size");
+					}
+				}
+
+			}
+			else if (row == 0)                 // input port
+			{
+				if (inP.empty())
+				{
+					if (col==1)
+					{
+						out << "        <TD COLSPAN=\"" << cols-1 << "\"> </TD>" << std::endl;
+					}
+				}
+				else if (!colSpan)
+				{
+					SharedPtr<InPort*> port =
+							Poco::Util::Application::instance()
+							.getSubsystem<Dispatcher>()
+							.getInPort(inP.at(col-1));
+
+					out << "        <TD PORT=\"inPort_" << (*port)->name() << "\">";
+					out << (*port)->name() << "</TD>" << std::endl;
+				}
+				else if ((col-1)%outP.size() == 0)
+				{
+					SharedPtr<InPort*> port =
+							Poco::Util::Application::instance()
+							.getSubsystem<Dispatcher>()
+							.getInPort(inP.at((col-1)/outP.size()));
+
+					out << "        <TD COLSPAN=\"" << outP.size() << "\" ";
+					out << "PORT=\"inPort_" << (*port)->name() << "\">";
+					out << (*port)->name() << "</TD>" << std::endl;;
+				}
+			}
+			else if ((row == 1) && (col == 1)) // module name
+			{
+				out << "        <TD ROWSPAN=\"" << rows-2 << "\" ";
+				out << "COLSPAN=\"" << cols-1 << "\" > ";
+				out << "<FONT POINT-SIZE=\"20\"><B>";
+				out << (*mod)->name() << "</B></FONT>";
+				out << "<I> (" << (*mod)->internalName() << ") </I><BR/>";
+				out << (*mod)->description() ;
+				out << " </TD> " << std::endl;
+			}
+			else if (row == rows-1)
+			{
+				if (outP.empty())
+				{
+					if (col==1)
+					{
+						out << "        <TD COLSPAN=\"" << cols-1 << "\"> </TD>" << std::endl;
+					}
+				}
+				else if (!colSpan)
+				{
+					SharedPtr<OutPort*> port =
+							Poco::Util::Application::instance()
+							.getSubsystem<Dispatcher>()
+							.getOutPort(outP.at(col-1));
+
+					out << "        <TD PORT=\"outPort_" << (*port)->name() << "\">";
+					out << (*port)->name() << "</TD>" << std::endl;
+				}
+				else if ((col-1)%inP.size() == 0)
+				{
+					SharedPtr<OutPort*> port =
+							Poco::Util::Application::instance()
+							.getSubsystem<Dispatcher>()
+							.getOutPort(outP.at((col-1)/inP.size()));
+
+					out << "        <TD COLSPAN=\"" << inP.size() << "\" ";
+					out << "PORT=\"outPort_" << (*port)->name() << "\">";
+					out << (*port)->name() << "</TD>" << std::endl;;
+				}
+			}
+		}
+		out << "      </TR>" << std::endl;
+	}
+
+	out << "      </TABLE>\n    >];" << std::endl;
 #endif
 }
 
@@ -190,13 +336,13 @@ void GraphvizExportTool::exportEdges(std::ostream& out)
 	for (std::vector< SharedPtr<OutPort*> >::iterator it = outPorts.begin(),
 			ite = outPorts.end(); it != ite; it++)
 	{
-		out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << " -> { ";
+		out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
 
 		std::vector<SharedPtr<InPort*> > targets = (**it)->getTargetPorts();
 
 		for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
 				tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-			out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << " ";
+			out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
 
 		out << "};" << std::endl;
 	}
@@ -211,13 +357,13 @@ void GraphvizExportTool::exportSeqEdges(std::ostream& out)
 	for (std::vector< SharedPtr<OutPort*> >::iterator it = outSeqPorts.begin(),
 			ite = outSeqPorts.end(); it != ite; it++)
 	{
-		out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << " -> { ";
+		out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
 
 		std::vector<SharedPtr<InPort*> > targets = (**it)->getSeqTargetPorts();
 
 		for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
 				tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-			out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << " ";
+			out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
 
 		out << "}[style=dotted];" << std::endl;
 	}
