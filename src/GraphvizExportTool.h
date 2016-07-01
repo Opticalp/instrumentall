@@ -32,6 +32,8 @@
 #include "Poco/SharedPtr.h"
 #include "Poco/Path.h"
 
+using Poco::SharedPtr;
+
 #include <vector>
 #include <ostream>
 
@@ -42,11 +44,15 @@ class OutPort;
  * Tool to export the workflow structure into a dot (graphviz) graph.
  *
  * This dot can either be retrieved as a file or as a string.
+ *
+ *  - parameter names are prefixed with "param_"
+ *  - input port names are prefixed with "inPort_"
+ *  - output port names are prefixed with "outPort_"
  */
 class GraphvizExportTool
 {
 public:
-	GraphvizExportTool(std::vector< Poco::SharedPtr<Module*> > modules);
+	GraphvizExportTool(std::vector< SharedPtr<Module*> > modules);
 	virtual ~GraphvizExportTool() { }
 
 	/**
@@ -75,12 +81,13 @@ private:
 	void exportGraph(std::ostream& out, bool withEdges);
 
 	void exportNodes(std::ostream& out);
-	void exportNode(std::ostream& out, Poco::SharedPtr<Module*> mod);
+	void exportNode(std::ostream& out, SharedPtr<Module*> mod);
 	void exportEdges(std::ostream& out);
 	void exportSeqEdges(std::ostream& out);
 
-	std::vector< Poco::SharedPtr<Module*> > modulesList; ///< all the modules
-	std::vector< Poco::SharedPtr<OutPort*> > outPorts; ///< output ports that have targets
+	std::vector< SharedPtr<Module*> > modulesList; ///< all the modules
+	std::vector< SharedPtr<OutPort*> > outPorts; ///< output ports that have targets
+	std::vector< SharedPtr<OutPort*> > outSeqPorts; ///< output ports that have seq targets
 };
 
 #endif /* SRC_GRAPHVIZEXPORTTOOL_H_ */
