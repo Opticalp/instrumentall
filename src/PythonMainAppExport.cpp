@@ -78,7 +78,7 @@ pythonMainAppLoadConfig(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 #include "PythonModuleFactory.h"
@@ -205,6 +205,37 @@ pythonModManGetModules(PyObject *self, PyObject *args)
     }
 
     return pyModules;
+}
+
+PyObject* pythonModManExportWFGraphviz(PyObject* self, PyObject* args)
+{
+    // convert arg to Poco::Path
+	// TODO: use unicode?
+    char *charParamName;
+
+    if (!PyArg_ParseTuple(args, "s:exportWorkflow", &charParamName))
+    {
+        return NULL;
+    }
+    else
+    {
+        std::string paramName = charParamName;
+
+        try
+        {
+            Poco::Util::Application::instance()
+                .getSubsystem<ModuleManager>()
+                .exportWFGraphviz(Poco::Path(paramName));
+        }
+        catch (Poco::Exception& e)
+        {
+            PyErr_SetString( PyExc_RuntimeError,
+                    e.displayText().c_str() );
+            return NULL;
+        }
+    }
+
+    Py_RETURN_NONE;
 }
 
 #include "Dispatcher.h"

@@ -129,6 +129,22 @@ static PyMethodDef pyMethodModManGetModules =
     "Retrieve the list of modules"
 };
 
+/**
+ * Python wrapper to export the workflow as a graphviz dot graph
+ *
+ * Call ModuleManager::exportWFGraphviz
+ */
+extern "C" PyObject*
+pythonModManExportWFGraphviz(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodModManExportWFGraphviz =
+{
+    "exportWorkflow",
+    pythonModManExportWFGraphviz,
+    METH_VARARGS,
+    "Export the workflow as a graphviz dot graph. arg: file path"
+};
+
 // ----------------------------------------------------------------
 //     Dispatcher
 // ----------------------------------------------------------------

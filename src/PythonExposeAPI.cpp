@@ -58,6 +58,7 @@ static PyMethodDef EmbMethods[] =
     // module manager
     pyMethodModManGetRootFact,
     pyMethodModManGetModules,
+	pyMethodModManExportWFGraphviz,
 
     // dispatcher
     pyMethodDispatchBind,
