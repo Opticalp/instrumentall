@@ -261,18 +261,18 @@ SharedPtr<ModuleFactory*> ModuleManager::getFactory(ModuleFactory* pFactory)
             "Should have been deleted during the query");
 }
 
-#include "GraphvizExportTool.h"
+#include "GvExportWorkFlow.h"
 
 void ModuleManager::exportWFGraphviz(Poco::Path filePath)
 {
-	GraphvizExportTool gvTool(getModules());
+	GvExportWorkFlow gvTool(getModules(), true);
 
-	gvTool.writeDotFile(filePath, true);
+	gvTool.writeDotFile(filePath);
 }
 
 std::string ModuleManager::exportWFGraphviz()
 {
-	GraphvizExportTool gvTool(getModules());
+    GvExportWorkFlow gvTool(getModules(), true);
 
 	return gvTool.getDotString();
 }

@@ -1,5 +1,5 @@
 /**
- * @file	src/GraphvizExportTool.h
+ * @file	src/GvExportWorkFlow.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -26,49 +26,42 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_GRAPHVIZEXPORTTOOL_H_
-#define SRC_GRAPHVIZEXPORTTOOL_H_
+#ifndef SRC_GVEXPORTWORKFLOW_H_
+#define SRC_GVEXPORTWORKFLOW_H_
 
-#include "Poco/Path.h"
-#include "Poco/SharedPtr.h"
+#include "GraphvizExportTool.h"
 
-#include <vector>
-#include <ostream>
-
-using Poco::SharedPtr;
-
-class Module;
+class OutPort;
 
 /**
- * Tool to export a data structure into a dot (graphviz) graph.
+ * Export the workflow as a graphviz dot graph
  *
- * This dot can either be retrieved as a file or as a string.
+ *  - parameter names are prefixed with "param_"
+ *  - input port names are prefixed with "inPort_"
+ *  - output port names are prefixed with "outPort_"
+ *
  */
-class GraphvizExportTool
+class GvExportWorkFlow: public GraphvizExportTool
 {
 public:
-	GraphvizExportTool() { }
-	virtual ~GraphvizExportTool() { }
+	GvExportWorkFlow(std::vector< SharedPtr<Module*> > modules, bool withEdges = true);
+	virtual ~GvExportWorkFlow() { }
 
-	/**
-	 * Export the workflow structure in a file.
-	 *
-	 * @param filePath file path in which to write the graph
-	 */
-	void writeDotFile(Poco::Path filePath);
+private:
+	/// Should not be used
+	GvExportWorkFlow();
 
-	/**
-	 * Retrieve the workflow structure as a string.
-	 */
-	std::string getDotString(bool withEdges = true);
+	void exportGraph(std::ostream& out);
 
-protected:
-	virtual void exportGraph(std::ostream& out) = 0;
+	void exportNodes(std::ostream& out);
+	void exportEdges(std::ostream& out);
+	void exportSeqEdges(std::ostream& out);
 
-	/**
-	 * Export a module
-	 */
-	void exportModuleNode(std::ostream& out, SharedPtr<Module*> mod);
+	std::vector< SharedPtr<Module*> > modulesList; ///< all the modules
+	std::vector< SharedPtr<OutPort*> > outPorts; ///< output ports that have targets
+	std::vector< SharedPtr<OutPort*> > outSeqPorts; ///< output ports that have seq targets
+
+	bool drawEdges;
 };
 
-#endif /* SRC_GRAPHVIZEXPORTTOOL_H_ */
+#endif /* SRC_GVEXPORTWORKFLOW_H_ */

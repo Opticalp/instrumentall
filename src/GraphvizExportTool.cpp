@@ -38,18 +38,12 @@
 #include <fstream>
 #include <sstream>
 
-GraphvizExportTool::GraphvizExportTool(std::vector< SharedPtr<Module*> > modules):
-	modulesList(modules)
-{
-
-}
-
-void GraphvizExportTool::writeDotFile(Poco::Path filePath, bool withEdges)
+void GraphvizExportTool::writeDotFile(Poco::Path filePath)
 {
 	std::ofstream file(filePath.toString().c_str());
 
 	if (file.is_open())
-		exportGraph(file, withEdges);
+		exportGraph(file);
 	else
 		throw Poco::FileException("writeDotFile",
 				"not able to open the file "
@@ -62,66 +56,14 @@ void GraphvizExportTool::writeDotFile(Poco::Path filePath, bool withEdges)
 std::string GraphvizExportTool::getDotString(bool withEdges)
 {
 	std::ostringstream stream;
-	exportGraph(stream, withEdges);
+	exportGraph(stream);
 
 	return stream.str();
 }
 
-void GraphvizExportTool::exportGraph(std::ostream& out, bool withEdges)
-{
-	out << "/* instrumentall workflow */" << std::endl;
-	out << "digraph G {\n" << std::endl;
-
-	exportNodes(out);
-
-	if (withEdges)
-	{
-		exportEdges(out);
-		exportSeqEdges(out);
-	}
-
-	out << "}" << std::endl;
-}
-
 //#define OBSOLETE_RECORD
 
-void GraphvizExportTool::exportNodes(std::ostream& out)
-{
-#ifdef OBSOLETE_RECORD
-	out << "    node [shape=record];" << std::endl;
-#else
-	out << "    node [shape=plaintext];" << std::endl;
-#endif
-	out << "    /* available nodes */" << std::endl;
-
-	for (std::vector< SharedPtr<Module*> >::iterator it = modulesList.begin(),
-			ite = modulesList.end(); it != ite; it++)
-	{
-		exportNode(out, *it);
-
-		std::vector<OutPort*> ports = (**it)->getOutPorts();
-
-		for (std::vector<OutPort*>::iterator it = ports.begin(),
-				ite = ports.end(); it != ite; it++)
-		{
-			// retrieve shared port from dispatcher
-			SharedPtr<OutPort*> port =
-					Poco::Util::Application::instance()
-					.getSubsystem<Dispatcher>()
-					.getOutPort(*it);
-
-			if ((*port)->getTargetPorts().size())
-				outPorts.push_back(port);
-
-			if ((*port)->getSeqTargetPorts().size())
-				outSeqPorts.push_back(port);
-		}
-	}
-
-	out << std::endl;
-}
-
-void GraphvizExportTool::exportNode(std::ostream& out,
+void GraphvizExportTool::exportModuleNode(std::ostream& out,
 		SharedPtr<Module*> mod)
 {
 	ParameterSet pSet;
@@ -131,7 +73,7 @@ void GraphvizExportTool::exportNode(std::ostream& out,
 	std::vector<OutPort*> outP = (*mod)->getOutPorts();
 
 #ifdef OBSOLETE_RECORD
-	out << "    " << (*mod)->name() << " [label=\"{";
+	out << "    " << (*mod)->name() << " [shape=record, label=\"{";
 
 	// parameters
 	for (ParameterSet::iterator it = pSet.begin(),
@@ -203,7 +145,7 @@ void GraphvizExportTool::exportNode(std::ostream& out,
 		colSpan = true;
 	}
 
-	out << "    " << (*mod)->name() << " [label=<" << std::endl;
+	out << "    " << (*mod)->name() << " [shape=plaintext, label=<" << std::endl;
 	out << "      <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">" << std::endl;
 
 	for (size_t row=0; row<rows; row++)
@@ -283,7 +225,8 @@ void GraphvizExportTool::exportNode(std::ostream& out,
 			else if ((row == 1) && (col == 1)) // module name
 			{
 				out << "        <TD ROWSPAN=\"" << rows-2 << "\" ";
-				out << "COLSPAN=\"" << cols-1 << "\" > ";
+				out << "COLSPAN=\"" << cols-1 << "\"  ";
+				out << "PORT=\"" << (*mod)->name() << "\"> ";
 				out << "<FONT POINT-SIZE=\"20\"><B>";
 				out << (*mod)->name() << "</B></FONT>";
 				out << "<I> (" << (*mod)->internalName() << ") </I><BR/>";
@@ -327,46 +270,4 @@ void GraphvizExportTool::exportNode(std::ostream& out,
 
 	out << "      </TABLE>\n    >];" << std::endl;
 #endif
-}
-
-void GraphvizExportTool::exportEdges(std::ostream& out)
-{
-	out << "    /* edges */" << std::endl;
-
-	for (std::vector< SharedPtr<OutPort*> >::iterator it = outPorts.begin(),
-			ite = outPorts.end(); it != ite; it++)
-	{
-		out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
-
-		std::vector<SharedPtr<InPort*> > targets = (**it)->getTargetPorts();
-
-		for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-				tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-			out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
-
-		out << "};" << std::endl;
-	}
-
-	out << std::endl;
-}
-
-void GraphvizExportTool::exportSeqEdges(std::ostream& out)
-{
-	out << "    /* sequence edges */" << std::endl;
-
-	for (std::vector< SharedPtr<OutPort*> >::iterator it = outSeqPorts.begin(),
-			ite = outSeqPorts.end(); it != ite; it++)
-	{
-		out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
-
-		std::vector<SharedPtr<InPort*> > targets = (**it)->getSeqTargetPorts();
-
-		for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-				tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-			out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
-
-		out << "}[style=dotted];" << std::endl;
-	}
-
-	out << std::endl;
 }
