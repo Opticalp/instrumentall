@@ -63,7 +63,7 @@ void GvExportFactories::exportGraph(std::ostream& out)
     exportFactories(out);
     exportFactoriesEdges(out);
 
-    if (drawModules)
+    if (drawModules && modulesList.size())
     {
         exportModules(out);
         exportModulesEdges(out);
@@ -227,8 +227,18 @@ void GvExportFactories::exportFactoriesEdges(std::ostream& out)
 
 void GvExportFactories::exportModules(std::ostream& out)
 {
+    out << "\n    /* modules */" << std::endl;
+
+    for (std::vector< SharedPtr<Module*> >::iterator it = modulesList.begin(),
+            ite = modulesList.end(); it != ite; it++)
+        exportModuleNode(out, *it);
 }
 
 void GvExportFactories::exportModulesEdges(std::ostream& out)
 {
+    out << "\n    /* factory to module edges*/" << std::endl;
+
+    for (std::vector< SharedPtr<Module*> >::iterator it = modulesList.begin(),
+            ite = modulesList.end(); it != ite; it++)
+        out << (**it)->parent()->name() << " -> " << (**it)->name() << ":w;" << std::endl;
 }
