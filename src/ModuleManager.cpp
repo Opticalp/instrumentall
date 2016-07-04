@@ -277,3 +277,19 @@ std::string ModuleManager::exportWFGraphviz()
 	return gvTool.getDotString();
 }
 
+#include "GvExportFactories.h"
+
+void ModuleManager::exportFacTreeGraphviz(Poco::Path filePath)
+{
+    GvExportFactories gvTool(getRootFactories(), true);
+
+    gvTool.writeDotFile(filePath);
+}
+
+std::string ModuleManager::exportFacTreeGraphviz()
+{
+    GvExportFactories gvTool(getRootFactories(), true);
+
+    return gvTool.getDotString();
+}
+

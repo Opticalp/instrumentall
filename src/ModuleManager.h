@@ -178,6 +178,20 @@ public:
      */
     std::string exportWFGraphviz();
 
+    /**
+     * Export the factories tree as a graphviz graph
+     *
+     * Write to the given file
+     */
+    void exportFacTreeGraphviz(Poco::Path filePath);
+
+    /**
+     * Export the factories tree as a graphviz graph
+     *
+     * Return the graph as a string
+     */
+    std::string exportFacTreeGraphviz();
+
 private:
     /**
      * Root module factory list

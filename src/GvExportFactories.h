@@ -1,5 +1,5 @@
 /**
- * @file	src/GraphvizExportTool.h
+ * @file	src/GvExportFactories.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -26,51 +26,43 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_GRAPHVIZEXPORTTOOL_H_
-#define SRC_GRAPHVIZEXPORTTOOL_H_
+#ifndef SRC_GVEXPORTFACTORIES_H_
+#define SRC_GVEXPORTFACTORIES_H_
 
-#include "Poco/Path.h"
-#include "Poco/SharedPtr.h"
+#include "GraphvizExportTool.h"
 
-#include <vector>
-#include <ostream>
+#include <set>
 
-using Poco::SharedPtr;
-
-// #define OBSOLETE_RECORD
-
-class Module;
+class ModuleFactory;
 
 /**
- * Tool to export a data structure into a dot (graphviz) graph.
- *
- * This dot can either be retrieved as a file or as a string.
+ * Export the factories tree as a graphviz dot graph
  */
-class GraphvizExportTool
+class GvExportFactories: public GraphvizExportTool
 {
 public:
-	GraphvizExportTool() { }
-	virtual ~GraphvizExportTool() { }
+    GvExportFactories(std::vector< SharedPtr<ModuleFactory*> > factories, bool withModules = true);
+    virtual ~GvExportFactories() { }
 
-	/**
-	 * Export the workflow structure in a file.
-	 *
-	 * @param filePath file path in which to write the graph
-	 */
-	void writeDotFile(Poco::Path filePath);
+private:
+    GvExportFactories();
 
-	/**
-	 * Retrieve the workflow structure as a string.
-	 */
-	std::string getDotString(bool withEdges = true);
+    void exportGraph(std::ostream& out);
 
-protected:
-	virtual void exportGraph(std::ostream& out) = 0;
+    void seekChildrenFactories();
+    void seekChildrenModules();
 
-	/**
-	 * Export a module
-	 */
-	void exportModuleNode(std::ostream& out, SharedPtr<Module*> mod);
+    void exportFactories(std::ostream& out);
+    void exportFactoriesEdges(std::ostream& out);
+    void exportModules(std::ostream& out);
+    void exportModulesEdges(std::ostream& out);
+
+    void exportFactory(std::ostream& out, SharedPtr<ModuleFactory*> fact);
+
+    std::set< SharedPtr<ModuleFactory*> > factorySet; ///< all the factories
+    std::vector< SharedPtr<Module*> > modulesList;
+
+    bool drawModules;
 };
 
-#endif /* SRC_GRAPHVIZEXPORTTOOL_H_ */
+#endif /* SRC_GVEXPORTFACTORIES_H_ */

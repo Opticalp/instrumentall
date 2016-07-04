@@ -145,6 +145,22 @@ static PyMethodDef pyMethodModManExportWFGraphviz =
     "Export the workflow as a graphviz dot graph. arg: file path"
 };
 
+/**
+ * Python wrapper to export the factories tree as a graphviz dot graph
+ *
+ * Call ModuleManager::exportFacTreeGraphviz
+ */
+extern "C" PyObject*
+pythonModManExportFacTreeGraphviz(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodModManExportFacTreeGraphviz =
+{
+    "exportFactoriesTree",
+    pythonModManExportFacTreeGraphviz,
+    METH_VARARGS,
+    "Export the factories tree as a graphviz dot graph. arg: file path"
+};
+
 // ----------------------------------------------------------------
 //     Dispatcher
 // ----------------------------------------------------------------

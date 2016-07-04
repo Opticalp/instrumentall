@@ -70,7 +70,10 @@ def myMain():
     seqBind(mod1.outPorts()[0], mod3b.inPorts()[0])
     print "Sequence binding done. "
 
-    exportWorkflow("test.dot")    
+    print "Export workflow to workflow.gv"
+    exportWorkflow("workflow.gv")
+    print "Export factories tree to facTree.gv"
+    exportFactoriesTree("facTree.gv")
             
     print "End of script workflowExportTest.py"
     

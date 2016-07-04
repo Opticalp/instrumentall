@@ -238,6 +238,37 @@ PyObject* pythonModManExportWFGraphviz(PyObject* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
+PyObject* pythonModManExportFacTreeGraphviz(PyObject* self, PyObject* args)
+{
+    // convert arg to Poco::Path
+    // TODO: use unicode?
+    char *charParamName;
+
+    if (!PyArg_ParseTuple(args, "s:exportFactoriesTree", &charParamName))
+    {
+        return NULL;
+    }
+    else
+    {
+        std::string paramName = charParamName;
+
+        try
+        {
+            Poco::Util::Application::instance()
+                .getSubsystem<ModuleManager>()
+                .exportFacTreeGraphviz(Poco::Path(paramName));
+        }
+        catch (Poco::Exception& e)
+        {
+            PyErr_SetString( PyExc_RuntimeError,
+                    e.displayText().c_str() );
+            return NULL;
+        }
+    }
+
+    Py_RETURN_NONE;
+}
+
 #include "Dispatcher.h"
 #include "PythonInPort.h"
 #include "PythonOutPort.h"

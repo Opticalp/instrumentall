@@ -61,8 +61,6 @@ std::string GraphvizExportTool::getDotString(bool withEdges)
 	return stream.str();
 }
 
-//#define OBSOLETE_RECORD
-
 void GraphvizExportTool::exportModuleNode(std::ostream& out,
 		SharedPtr<Module*> mod)
 {
