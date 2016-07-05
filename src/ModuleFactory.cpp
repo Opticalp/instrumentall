@@ -163,6 +163,28 @@ void ModuleFactory::deleteChildFactories()
     childFactLock.unlock();
 }
 
+
+std::vector<Poco::SharedPtr<ModuleFactory*> > ModuleFactory::getChildFactories()
+{
+    if (isLeaf())
+        return std::vector<Poco::SharedPtr<ModuleFactory*> >();
+
+    std::vector< Poco::SharedPtr<ModuleFactory*> > list;
+
+    ModuleManager& modMan =
+            Poco::Util::Application::instance().getSubsystem<ModuleManager>();
+
+    childFactLock.readLock();
+
+    for (std::vector<ModuleFactoryBranch*>::iterator it = childFactories.begin(),
+            ite = childFactories.end(); it != ite; it++)
+        list.push_back(modMan.getFactory(*it));
+
+    childFactLock.unlock();
+
+    return list;
+}
+
 Module* ModuleFactory::create(std::string customName)
 {
     if (!isLeaf())

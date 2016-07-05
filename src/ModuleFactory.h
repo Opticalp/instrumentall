@@ -174,6 +174,16 @@ public:
      */
     void removeChildFactory(ModuleFactoryBranch* factory);
 
+    /**
+     * Retrieve the child factories
+     *
+     * Those factories are ModuleFactoryBranch, but we get a shared ptr
+     * on ModuleFactory from the ModuleManager
+     *
+     * @see select
+     */
+    std::vector< Poco::SharedPtr<ModuleFactory*> > getChildFactories();
+
 	/**
 	 * Create a module
 	 *
