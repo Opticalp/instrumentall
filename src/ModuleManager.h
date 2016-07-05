@@ -164,6 +164,34 @@ public:
      */
     Module* getEmptyModule() { return &emptyModule; }
 
+    /**
+     * Export the workflow as a graphviz graph
+     *
+     * Write to the given file
+     */
+    void exportWFGraphviz(Poco::Path filePath);
+
+    /**
+     * Export the workflow as a graphviz graph
+     *
+     * Return the graph as a string
+     */
+    std::string exportWFGraphviz();
+
+    /**
+     * Export the factories tree as a graphviz graph
+     *
+     * Write to the given file
+     */
+    void exportFacTreeGraphviz(Poco::Path filePath);
+
+    /**
+     * Export the factories tree as a graphviz graph
+     *
+     * Return the graph as a string
+     */
+    std::string exportFacTreeGraphviz();
+
 private:
     /**
      * Root module factory list

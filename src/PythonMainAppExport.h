@@ -129,6 +129,38 @@ static PyMethodDef pyMethodModManGetModules =
     "Retrieve the list of modules"
 };
 
+/**
+ * Python wrapper to export the workflow as a graphviz dot graph
+ *
+ * Call ModuleManager::exportWFGraphviz
+ */
+extern "C" PyObject*
+pythonModManExportWFGraphviz(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodModManExportWFGraphviz =
+{
+    "exportWorkflow",
+    pythonModManExportWFGraphviz,
+    METH_VARARGS,
+    "Export the workflow as a graphviz dot graph. arg: file path"
+};
+
+/**
+ * Python wrapper to export the factories tree as a graphviz dot graph
+ *
+ * Call ModuleManager::exportFacTreeGraphviz
+ */
+extern "C" PyObject*
+pythonModManExportFacTreeGraphviz(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodModManExportFacTreeGraphviz =
+{
+    "exportFactoriesTree",
+    pythonModManExportFacTreeGraphviz,
+    METH_VARARGS,
+    "Export the factories tree as a graphviz dot graph. arg: file path"
+};
+
 // ----------------------------------------------------------------
 //     Dispatcher
 // ----------------------------------------------------------------

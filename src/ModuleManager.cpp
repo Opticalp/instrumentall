@@ -260,3 +260,36 @@ SharedPtr<ModuleFactory*> ModuleManager::getFactory(ModuleFactory* pFactory)
     throw Poco::NotFoundException("getFactory", "factory not found: "
             "Should have been deleted during the query");
 }
+
+#include "GvExportWorkFlow.h"
+
+void ModuleManager::exportWFGraphviz(Poco::Path filePath)
+{
+	GvExportWorkFlow gvTool(getModules(), true);
+
+	gvTool.writeDotFile(filePath);
+}
+
+std::string ModuleManager::exportWFGraphviz()
+{
+    GvExportWorkFlow gvTool(getModules(), true);
+
+	return gvTool.getDotString();
+}
+
+#include "GvExportFactories.h"
+
+void ModuleManager::exportFacTreeGraphviz(Poco::Path filePath)
+{
+    GvExportFactories gvTool(getRootFactories(), true);
+
+    gvTool.writeDotFile(filePath);
+}
+
+std::string ModuleManager::exportFacTreeGraphviz()
+{
+    GvExportFactories gvTool(getRootFactories(), true);
+
+    return gvTool.getDotString();
+}
+
