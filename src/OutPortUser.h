@@ -110,6 +110,12 @@ protected:
     void releaseAllOutPorts();
 
     /**
+     * Called by Module::resetWithTargets to dispatch the reseting
+     * to the targets
+     */
+    void resetTargets();
+
+    /**
      * Check if the given port was caught/locked
      *
      * No lock needed: caughts is ThreadLocal
@@ -199,6 +205,8 @@ protected:
 	void reserveLockOut();
 
 	virtual bool yield() { Poco::Thread::yield(); return false; }
+
+	virtual bool isCancelled() = 0;
 
     virtual ModuleTask::RunningStates getRunningState() = 0;
     virtual void setRunningState(ModuleTask::RunningStates state) = 0;

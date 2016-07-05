@@ -172,6 +172,15 @@ public:
      void setOutPortDataReady(OutPort* port);
 
      /**
+      * Dispatching function for module reset when a task failed.
+      *
+      *  * called by Module::resetWithTargets
+      *  * call Module::resetWithTargets
+      *  * Module::reseting flag avoids the recursions
+      */
+     void dispatchTargetReset(OutPort* port);
+
+     /**
       * Lock the input ports
       *
       * to avoid its usage (mainly InPort::tryLock)

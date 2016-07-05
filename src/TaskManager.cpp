@@ -74,10 +74,20 @@ void TaskManager::startSync(TaskPtr pAutoTask)
 {
 	mutex.lock();
 
-	pAutoTask->setOwner(this);
-	pAutoTask->setState(MergeableTask::TASK_STARTING);
+	try
+	{
+		pAutoTask->setOwner(this);
+		pAutoTask->setState(MergeableTask::TASK_STARTING);
+	}
+	catch (...)
+	{
+		mutex.unlock();
+		throw;
+	}
+
 	mTaskList.push_back(pAutoTask);
 	mutex.unlock();
+
 	try
 	{
 		pAutoTask->run();

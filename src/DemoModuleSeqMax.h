@@ -59,6 +59,10 @@ private:
      */
     void process(int startCond);
 
+    bool seqRunning() { return seqIndex != 0; }
+
+    void reset();
+
     static size_t refCount; ///< reference counter to generate a unique internal name
 
     /// Indexes of the input ports

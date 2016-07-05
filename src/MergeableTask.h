@@ -108,11 +108,6 @@ public:
 	TaskState getState() const;
 
 	/**
-	 * Set the task's progress to zero and clear the cancel flag.
-	 */
-	void reset();
-
-	/**
 	 * Do whatever the task needs to do. Must
 	 * be overridden by subclasses.
 	 */
@@ -124,6 +119,8 @@ public:
 	 * Could be used to run some cleaning, etc
 	 *
 	 * Default implementation: do nothing.
+	 *
+	 * Shall not throw exceptions.
 	 */
 	virtual void leaveTask() { }
 
@@ -202,6 +199,11 @@ protected:
 
 	/**
 	 * Set the task's state.
+	 *
+	 * Run tests to verify the workflow:
+	 *  - if TASK_CANCELlING, TASK_FINISHED is the only allowed next value
+	 *  - TASK_STARTING after TASK_IDLE
+	 *  - TASK_RUNNING after TASK_STARTING
 	 */
 	void setState(TaskState state);
 

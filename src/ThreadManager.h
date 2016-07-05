@@ -106,9 +106,9 @@ public:
     /**
      * Cancel all the tasks
      *
-     * Cancel module tasks and logging tasks whenever possible
+     * Cancel module tasks whenever possible
      */
-    void cancelAll() { taskManager.cancelAll(); }
+    void cancelAll();
 
     /**
      * Start a runnable in a thread of the thread pool
@@ -150,6 +150,8 @@ private:
     /// Store all non-terminated tasks: idle, or active.
     std::set< Poco::AutoPtr<ModuleTask> > pendingModTasks;
     Poco::RWLock  taskListLock;
+
+    bool cancellingAll;
 
     /**
      * Unregister a task

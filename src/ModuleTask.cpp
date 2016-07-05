@@ -34,7 +34,9 @@
 #include "Poco/NumberFormatter.h"
 
 ModuleTask::ModuleTask(Module* module, InPort* inPort):
-	coreModule(module), mTriggingPort(inPort),
+	coreModule(module),
+	runState(NotAvailableRunningState),
+	mTriggingPort(inPort),
 	doneEvent(false) // manual reset
 {
 	// commented: registered when queued by the dispatcher
@@ -44,7 +46,9 @@ ModuleTask::ModuleTask(Module* module, InPort* inPort):
 }
 
 ModuleTask::ModuleTask():
-	coreModule(NULL), mTriggingPort(NULL),
+	coreModule(NULL),
+	runState(NotAvailableRunningState),
+	mTriggingPort(NULL),
 	doneEvent(false) // manual reset
 {
 }
@@ -59,33 +63,74 @@ ModuleTask::~ModuleTask()
 	// - in the task manager
 }
 
+ModuleTask::RunningStates ModuleTask::getRunningState()
+{
+	if (getState() == TASK_RUNNING)
+		return runState;
+	else
+		return NotAvailableRunningState;
+}
+
+void ModuleTask::setRunningState(RunningStates state)
+{
+	if (isCancelled())
+		throw Poco::RuntimeException(name() +
+				": can not change running state, "
+				"the task is cancelling");
+
+	runState = state;
+}
+
 void ModuleTask::runTask()
 {
 	if (coreModule == NULL)
 		throw Poco::NullPointerException("no more module bound to " + name());
 
-	coreModule->setRunningTask(this);
 	try
 	{
-		coreModule->run();
+		coreModule->run(this);
 	}
 	catch (...)
 	{
-		coreModule->releaseAllInPorts();
-		coreModule->releaseAllOutPorts();
 		doneEvent.set();
 		throw;
 	}
 
-	coreModule->releaseAllInPorts();
-	coreModule->releaseAllOutPorts();
 	doneEvent.set();
 }
 
 void ModuleTask::leaveTask()
 {			
 	if (coreModule == NULL)
-		throw Poco::NullPointerException("no more module bound to " + name());
+		return;
 
-	coreModule->popTaskSync();
+	// enqueue tasks until it works.
+	while (true)
+	{
+		try
+		{
+			coreModule->popTaskSync();
+		}
+		catch (...)
+		{
+			continue;
+		}
+		break;
+	}
+
 }
+
+void ModuleTask::cancel()
+{
+	if ((coreModule == NULL) && (getState() == TASK_RUNNING))
+		coreModule->cancel();
+
+	MergeableTask::cancel();
+}
+
+void ModuleTask::resetModule()
+{
+	if (coreModule)
+		coreModule->resetWithTargets();
+}
+

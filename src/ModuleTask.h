@@ -65,6 +65,14 @@ public:
 	void leaveTask();
 
 	/**
+	 * Task cancel method.
+	 *
+	 *  - call Module::cancel if the task is running
+	 *  - call MergeableTask::cancel
+	 */
+	void cancel();
+
+	/**
 	 * Retrieve the attached module
 	 *
 	 * The returned value should be transformed into a sharedPtr via
@@ -87,10 +95,11 @@ public:
 	{
 		retrievingInDataLocks,
 		retrievingOutDataLocks,
-		processing
+		processing,
+		NotAvailableRunningState
 	};
 
-	RunningStates getRunningState() { return runState; }
+	RunningStates getRunningState();
 
 	/**
 	 * Wait the given time that the task finishes
@@ -108,12 +117,21 @@ public:
 	void waitTaskDone()
 		{ doneEvent.wait(); }
 
+	/**
+	 * Forward to coreModule Module::reset()
+	 *
+	 * If the coreModule is available.
+	 */
+	void resetModule();
+
 protected:
 	/**
 	 * To be called by Module::run and Module::process
 	 * to give information about the current running state of the task
+	 *
+	 * check if the task is cancelling before changing the state
 	 */
-	void setRunningState(RunningStates state) { runState = state; }
+	void setRunningState(RunningStates state);
 
 private:
 	ModuleTask();

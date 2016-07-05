@@ -80,6 +80,10 @@ void OutPortUser::notifyOutPortReady(size_t portIndex,
         poco_bugcheck_msg("try to unlock an output port "
                 "that was not previously locked? ");
 
+    if (isCancelled())
+    	throw Poco::RuntimeException("notify out port ready, "
+    			"although the task is cancelled. abort. ");
+
     outPorts[portIndex]->notifyReady(attribute);
 
     caughts->erase(portIndex);
@@ -125,6 +129,13 @@ void OutPortUser::reserveAllOutPorts()
 		allPorts.insert(ind);
 
 	reserveOutPorts(allPorts);
+}
+
+void OutPortUser::resetTargets()
+{
+    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
+            it!=ite; it++)
+    	(*it)->resetSeqTargets();
 }
 
 void OutPortUser::reserveOutPorts(std::set<size_t> outputs)

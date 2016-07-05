@@ -165,8 +165,10 @@ void Module::freeInternalName()
     }
 }
 
-void Module::run()
+void Module::run(ModuleTask* pTask)
 {
+	setRunningTask(pTask);
+
 	taskMngtMutex.lock();
 	if (startSyncPending)
 	{
@@ -175,15 +177,27 @@ void Module::run()
 	}
 	taskMngtMutex.unlock();
 
-	expireOutData();
+	try
+	{
+		expireOutData();
 
-	setRunningState(ModuleTask::retrievingInDataLocks);
-	int startCond = startCondition();
+		setRunningState(ModuleTask::retrievingInDataLocks);
+		int startCond = startCondition();
 
-	mergeTasks(portsWithNewData());
+		mergeTasks(portsWithNewData());
 
-	setRunningState(ModuleTask::processing);
-	process(startCond);
+		setRunningState(ModuleTask::processing);
+		process(startCond);
+	}
+	catch (...)
+	{
+		releaseAllInPorts();
+		releaseAllOutPorts();
+		throw;
+	}
+
+	releaseAllInPorts();
+	releaseAllOutPorts();
 }
 
 bool Module::sleep(long milliseconds)
@@ -220,14 +234,6 @@ bool Module::isCancelled()
 	return (*runningTask)->isCancelled();
 }
 
-void Module::cancel()
-{
-	if (*runningTask)
-		(*runningTask)->cancel();
-
-	throw Poco::RuntimeException(name(), "cancel. not in a task");
-}
-
 InPort* Module::triggingPort()
 {
 	if (*runningTask)
@@ -256,6 +262,7 @@ void Module::enqueueTask(ModuleTask* task)
 {
 	Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
+	// take ownership of the task.
 	Poco::Util::Application::instance()
 				             .getSubsystem<ThreadManager>()
 				             .registerNewModuleTask(task);
@@ -272,6 +279,27 @@ void Module::enqueueTask(ModuleTask* task)
 
 	if (!taskIsRunning())
 		popTask();
+//	else
+//		poco_information(logger(), name() + ": a task is already running");
+}
+
+void Module::resetWithTargets()
+{
+	if (reseting)
+		return;
+
+	reseting = true;
+
+	if (seqRunning())
+		cancel();
+
+	// reset this module
+	reset();
+
+	// reset the sequence targets
+	resetTargets();
+
+	reseting = false;
 }
 
 bool Module::taskIsRunning()
@@ -335,15 +363,25 @@ void Module::popTaskSync()
 		return;
 	}
 
-	ModuleTask* nextTask = taskQueue.front();
+	Poco::AutoPtr<ModuleTask> nextTask(taskQueue.front(), true);
 	poco_information(logger(), "SYNC poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
 	startSyncPending = true;
 
-	Poco::Util::Application::instance()
+	try
+	{
+		Poco::Util::Application::instance()
 			             .getSubsystem<ThreadManager>()
 			             .startSyncModuleTask(nextTask);
+	}
+	catch (...)
+	{
+		poco_error(logger(), "can not sync start " + nextTask->name());
+		startSyncPending = false;
+		taskMngtMutex.unlock();
+		throw;
+	}
 }
 
 void Module::unregisterTask(ModuleTask* task)

@@ -87,7 +87,7 @@ public:
 	      mParent(parent), ParameterizedEntity("module." + name),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
-		  enqueuing(false)
+		  reseting (false)
 	{
 	}
 
@@ -207,6 +207,15 @@ public:
      */
     void expireOutData() { OutPortUser::expireOutData(); }
 
+	/**
+	 * Reset the module by calling Module::reset(),
+	 * but reset also all the targets.
+	 *
+	 * Called by ModuleTask::resetModule,
+	 * and then by Dispatcher::dispatchTargetReset
+	 */
+	void resetWithTargets();
+
 protected:
 	void addInPort(
 			std::string name, std::string description,
@@ -242,13 +251,43 @@ protected:
     bool yield();
 	void setProgress(float progress);
     bool isCancelled();
-	void cancel();
     InPort* triggingPort();
     void setRunningState(ModuleTask::RunningStates state);
     ModuleTask::RunningStates getRunningState();
     ///}
 
     /**
+	 * Canceling method to be called:
+	 *  - from ModuleTask::cancel when a running task
+	 * 	is cancelled
+	 * 	- or from Module::resetWithSeqTargets when reset
+	 * 	is called while a seq is running. Module::seqRunning
+	 * 	should be implemented, then.
+	 *
+	 * @see Module::reset
+	 * @see Module::seqRunning
+	 */
+	virtual void cancel() { }
+
+	/**
+	 * Reset the module to its initial state.
+	 *
+	 * This method is called on error (TaskFailedNotification)
+	 * which can be trigged with an exception throw e.g. on
+	 * user request cancellation.
+	 *
+	 * Should achieve:
+	 *  - reset running seqIndexes
+	 *  - reset evtl flags, states,...
+	 *
+	 * Called by Module::resetWithSeqTargets
+	 *
+	 * @note Locks or mutexes should not be kept locked in case
+	 * of exceptions, then no unlock should be necessary here
+	 */
+	virtual void reset() { }
+
+	/**
      * Merge the enqueued tasks of the present Module
      *
      * given by their triggering inPort index.
@@ -274,14 +313,16 @@ protected:
     void popTask();
 
 	/**
-	 * Method called by the task.
+	 * Method called by the task that identifies itself with pTask.
 	 *
 	 * Expire the output data, check the start condition,
 	 * and call process().
 	 *
 	 * There is no mutex locked here. Concurrence running should be OK.
+	 *
+	 * Manage ports release.
 	 */
-	void run();
+	void run(ModuleTask* pTask);
 
 	/**
 	 * Main logic called by run
@@ -295,6 +336,11 @@ protected:
 	 * Access to output ports should be granted via reserveOutPorts
 	 * and then data pointer should be accessed with getDataToWrite.
 	 * Call notifyAllOutPortReady when over.
+	 *
+	 * In case of cancellation detected via Module::isCancelled or
+	 * Module::yield or Module::sleep,
+	 * an exception should be thrown to trigg the Module::reset
+	 * function.
 	 *
 	 * @param startCond start condition as defined in virtual method
 	 * startCondition. You should consider implementing your own
@@ -310,6 +356,17 @@ protected:
 	 */
 	virtual void process(int startCond)
 		{ poco_warning(logger(), name() + ": nothing to be done"); }
+
+	/**
+	 * Method to check if a sequence is running.
+	 *
+	 * It can be true even if the module has no task running.
+	 *
+	 * This method is used by ModuleTask::cancel to know if
+	 * Module::cancel needs to be called if the task is not
+	 * running.
+	 */
+	virtual bool seqRunning() { return false; }
 
     /**
      * Set the internal name of the module
@@ -381,6 +438,8 @@ private:
 	static std::vector<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
+	bool reseting; ///< flag set when the reseting begins
+
 	/**
 	 * Check if a task is already running (or at least started)
 	 * for this module
@@ -394,7 +453,6 @@ private:
 	std::list<ModuleTask*> taskQueue;
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
-	bool enqueuing; ///< flag used during task enqueuing @see Dispatcher::enqueueModuleTask
 
     friend class ModuleTask; // access to setRunningTask, releaseAll
 };

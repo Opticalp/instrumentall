@@ -42,7 +42,8 @@ using Poco::Observer;
 ThreadManager::ThreadManager():
         VerboseEntity(name()),
         threadPool(2,32), // TODO set maxCapacity from config file
-        taskManager(threadPool)
+        taskManager(threadPool),
+		cancellingAll(false)
 {
     taskManager.addObserver(
             Observer<ThreadManager, TaskStartedNotification>(
@@ -75,6 +76,9 @@ void ThreadManager::onFailed(TaskFailedNotification* pNf)
     Poco::Exception e(pNf->reason());
     poco_error(logger(), e.displayText());
 
+    ModuleTask* modTask = dynamic_cast<ModuleTask*>(pNf->task());
+    modTask->resetModule();
+
     // TODO:
     // - dispatch to a NotificationQueue
 
@@ -98,6 +102,13 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 
 		poco_information(logger(), "pending module tasks list size is: "
 				+ Poco::NumberFormatter::format(pendingModTasks.size()));
+
+//		if (pendingModTasks.size() == 1)
+//		{
+//			Poco::AutoPtr<ModuleTask> tmpTsk(*pendingModTasks.begin());
+//			poco_information(logger(),
+//					"remaining task is: " + tmpTsk->name());
+//		}
 
 		taskListLock.unlock();
 
@@ -139,6 +150,9 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 
 	try
 	{
+		if (cancellingAll)
+			throw Poco::RuntimeException("Cancelling, can not start " + taskPtr->name());
+
 		taskManager.start(taskPtr);
 	}
 	catch (Poco::NoThreadAvailableException& e)
@@ -150,6 +164,8 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 	}
 	catch (...)
 	{
+		poco_information(logger(), pTask->name()
+				+ " failed to start");
 		unregisterModuleTask(pTask);
 		throw;
 	}
@@ -163,11 +179,18 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 
 	try
 	{
+		if (cancellingAll)
+			throw Poco::RuntimeException("Cancelling, can not sync start " + pTask->name());
+
 		taskManager.startSync(taskPtr);
 	}
 	catch (...)
 	{
+		poco_information(logger(), pTask->name()
+				+ " failed to sync start");
 		unregisterModuleTask(pTask);
+//		poco_information(logger(), pTask->name()
+//				+ " is probably erased");
 		throw;
 	}
 }
@@ -220,4 +243,25 @@ void ThreadManager::unregisterModuleTask(ModuleTask* pTask)
 	if (pendingModTasks.erase(taskPtr) < 1)
 		poco_warning(logger(), "Failed to erase the task " + pTask->name()
 				+ " from the thread manager");
+}
+
+void ThreadManager::cancelAll()
+{
+	taskListLock.readLock();
+	std::set< Poco::AutoPtr<ModuleTask> > tempModTasks = pendingModTasks;
+	taskListLock.unlock();
+
+	cancellingAll = true; // we wish that it is an atomic operation
+
+	poco_notice(logger(), "Dispatching cancel() to all active tasks");
+
+	for (std::set< Poco::AutoPtr<ModuleTask> >::iterator it = tempModTasks.begin(),
+			ite = tempModTasks.end(); it != ite; it++)
+	{
+		Poco::AutoPtr<ModuleTask> tsk = *it;
+		poco_information(logger(), "cancelling " + tsk->name());
+		tsk->cancel();
+	}
+
+	cancellingAll = false;
 }
