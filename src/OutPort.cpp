@@ -130,12 +130,6 @@ OutPort::OutPort():
     // nothing to do
 }
 
-//template<typename T>
-//bool OutPort::tryData(T*& pData)
-//{
-//    return data.tryGetDataToWrite<T>(pData);
-//}
-
 void OutPort::notifyReady(DataAttributeOut attribute)
 {
     if (attribute.isSettingSequence())
@@ -148,6 +142,10 @@ void OutPort::notifyReady(DataAttributeOut attribute)
 
         seqTargetPortsLock.unlock();
     }
+
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .lockInPorts(this);
 
     dataItem()->setDataAttribute(attribute);
     dataItem()->releaseNewData();
@@ -163,11 +161,18 @@ void OutPort::expire()
 	data.expire();
 
 	// forward the expiration
-    seqTargetPortsLock.readLock();
+    targetPortsLock.readLock();
 
-    for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
-            ite = seqTargetPorts.end(); it != ite; it++ )
+    for( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
         (**it)->parent()->expireOutData();
 
-    seqTargetPortsLock.unlock();
+    targetPortsLock.unlock();
+}
+
+void OutPort::resetSeqTargets()
+{
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .dispatchTargetReset(this);
 }

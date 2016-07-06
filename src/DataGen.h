@@ -49,10 +49,19 @@ public:
 
     std::string description();
 
-    void runTask();
-
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name
+
+    void process(int startCond);
+
+    /**
+     * Cleaning action in case of failure
+     */
+    void reset();
+
+    void triggedRun();
+
+    void freeRun();
 
     DataAttributeOut attr;
 
@@ -101,13 +110,6 @@ private:
     void setIntParameterValue(size_t paramIndex, long value);
     void setFloatParameterValue(size_t paramIndex, double value);
     void setStrParameterValue(size_t paramIndex, std::string value);
-
-    /**
-     * Try to acquire the output port data lock
-     *
-     * The main mutex is locked by the caller
-     */
-    bool tryData();
 
     /**
      * Set the data to the output port

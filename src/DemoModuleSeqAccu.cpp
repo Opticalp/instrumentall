@@ -64,28 +64,18 @@ DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customNa
     refCount++;
 }
 
-void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
-        OutPortLockUnlock& outPortsAccess)
+void DemoModuleSeqAccu::process(int startCond)
 {
-    DataAttributeIn attr;
+	if (startCond != allDataStartState)
+	{
+		poco_information(logger(), name() + ": no input data. Exiting. ");
+		return;
+	}
 
+	DataAttributeIn attr;
     Poco::Int32* pData;
-
-    // try to acquire the data
-    // It should not be a problem since this is the only input data
-    // then, if the task was launched, it is probably that this is due
-    // to a push.
-    if (!inPortsAccess.tryData<Poco::Int32>(inPortA, pData, &attr))
-    {
-        poco_information(logger(),
-                "DemoModuleSeqAccu::runTask(): "
-                "failed to acquire the input data lock. "
-                "Data is probably not up to date. ");
-
-        return; // data not up to date
-    }
-
-    inPortsAccess.processing();
+    readInPortData<Poco::Int32>(inPortA, pData);
+    readInPortDataAttribute(inPortA, &attr);
 
     if (attr.isStartSequence(seqIndex))
     {
@@ -118,30 +108,29 @@ void DemoModuleSeqAccu::process(InPortLockUnlock& inPortsAccess,
         {
             poco_information(logger(), "DemoModuleSeqAccu::runTask(): sequence ending");
             DataAttributeOut outAttr = attr;
-            inPortsAccess.release(inPortA);
+            releaseInPort(inPortA);
 
             std::vector<Poco::Int32>* pOutData;
 
-            // try to acquire the output data lock
-            while (!outPortsAccess.tryData< std::vector<Poco::Int32> >(outPortA, pOutData))
-            {
-                poco_information(logger(),
-                        "DemoModuleSeqAccu::runTask(): "
-                        "failed to acquire the output data lock");
-
-                if (sleep(TIME_LAPSE))
-                {
-                    poco_notice(logger(),
-                            "DemoModuleSeqAccu::runTask(): cancelled!");
-                    return;
-                }
-            }
+            reserveOutPort(outPortA);
+            getDataToWrite< std::vector<Poco::Int32> >(outPortA, pOutData);
 
             *pOutData = accumulator;
-            outPortsAccess.notifyReady(outPortA, outAttr);
+            notifyOutPortReady(outPortA, outAttr);
         }
     }
     else
         throw Poco::RuntimeException("DemoModuleSeqAccu::process",
                 "not able to process data out of a sequence...");
+}
+
+void DemoModuleSeqAccu::reset()
+{
+	seqIndex = 0;
+	accumulator.clear();
+}
+
+void DemoModuleSeqAccu::cancel()
+{
+	poco_warning(logger(), name() + " cancelling...");
 }

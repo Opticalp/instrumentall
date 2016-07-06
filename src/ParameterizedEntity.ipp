@@ -1,40 +1,37 @@
 /**
- * Module class specialized templates implementation
- * 
- * @file	src/Module.ipp
- * @date	10 mars 2016
+ * @file	src/ParameterizedEntity.ipp
+ * @date	June 2016
  * @author	PhRG - opticalp.fr
  *
- * $Id$
+ * ParameterizedEntity class specialized templates implementation
  */
 
 /*
-Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ */
 
-
-#include "Module.h"
+#include "ParameterizedEntity.h"
 
 template <> inline
-long Module::getParameterValue<long>(std::string paramName)
+long ParameterizedEntity::getParameterValue<long>(std::string paramName)
 {
     // TODO: scoped mainMutex
 
@@ -59,7 +56,7 @@ long Module::getParameterValue<long>(std::string paramName)
 }
 
 template <> inline
-double Module::getParameterValue<double>(std::string paramName)
+double ParameterizedEntity::getParameterValue<double>(std::string paramName)
 {
     // TODO: scoped mainMutex
 
@@ -83,9 +80,9 @@ double Module::getParameterValue<double>(std::string paramName)
     }
 }
 
-/// Module::getParameter specialization for string parameters
+/// ParameterizedEntity::getParameter specialization for string parameters
 template <> inline
-std::string Module::getParameterValue<std::string>(std::string paramName)
+std::string ParameterizedEntity::getParameterValue<std::string>(std::string paramName)
 {
     // TODO: scoped mainMutex
 
@@ -110,7 +107,7 @@ std::string Module::getParameterValue<std::string>(std::string paramName)
 }
 
 template <> inline
-void Module::setParameterValue<long>(std::string paramName, long value)
+void ParameterizedEntity::setParameterValue<long>(std::string paramName, long value)
 {
     // TODO: scoped mainMutex
 
@@ -138,7 +135,7 @@ void Module::setParameterValue<long>(std::string paramName, long value)
 }
 
 template <> inline
-void Module::setParameterValue<double>(std::string paramName, double value)
+void ParameterizedEntity::setParameterValue<double>(std::string paramName, double value)
 {
     // TODO: scoped mainMutex
 
@@ -165,9 +162,9 @@ void Module::setParameterValue<double>(std::string paramName, double value)
     }
 }
 
-/// Module::getParameter specialization for string parameters
+/// ParameterizedEntity::getParameter specialization for string parameters
 template <> inline
-void Module::setParameterValue<std::string>(std::string paramName, std::string value)
+void ParameterizedEntity::setParameterValue<std::string>(std::string paramName, std::string value)
 {
     // TODO: scoped mainMutex
 
@@ -199,17 +196,20 @@ void Module::setParameterValue<std::string>(std::string paramName, std::string v
 //
 
 template <typename T> inline
-T Module::getParameterValue(std::string paramName)
+T ParameterizedEntity::getParameterValue(std::string paramName)
 {
     // report a bug to the developer
-    poco_bugcheck_msg("Module::getParameterValue<T>(): Wrong type T. ");
+    poco_bugcheck_msg("ParameterizedEntity::getParameterValue<T>(): Wrong type T. ");
     throw Poco::BugcheckException();
 }
 
 template <typename T> inline
-void Module::setParameterValue(std::string paramName, T value)
+void ParameterizedEntity::setParameterValue(std::string paramName, T value)
 {
     // report a bug to the developer
-    poco_bugcheck_msg("Module::setParameterValue<T>(): Wrong type T. ");
+    poco_bugcheck_msg("ParameterizedEntity::setParameterValue<T>(): Wrong type T. ");
     throw Poco::BugcheckException();
 }
+
+
+

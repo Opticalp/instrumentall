@@ -47,6 +47,7 @@ using Poco::RWLock;
 using Poco::SharedPtr;
 
 class Module;
+class ModuleTask;
 
 /**
  * Dispatcher
@@ -171,16 +172,54 @@ public:
      void setOutPortDataReady(OutPort* port);
 
      /**
-      * Launch a module task
+      * Dispatching function for module reset when a task failed.
+      *
+      *  * called by Module::resetWithTargets
+      *  * call Module::resetWithTargets
+      *  * Module::reseting flag avoids the recursions
       */
-     void runModule(SharedPtr<Module*> module);
+     void dispatchTargetReset(OutPort* port);
+
+     /**
+      * Lock the input ports
+      *
+      * to avoid its usage (mainly InPort::tryLock)
+      * during the data update.
+      *
+      *  - To be called by the OutPort when new data is ready on an OutPort
+      *  - the lock is released on new data
+      *
+      * @see OutPort::notifyReady
+      * @see InPort::setNew
+      */
+     void lockInPorts(OutPort* port);
+
+     /**
+      * Launch a module task
+      *
+      * to be called by the UI or by any mean, but without new
+      * input port data.
+      *
+      * @return The task created for the module to run. The
+      * task can be used to check the state of the execution.
+      */
+     Poco::AutoPtr<ModuleTask> runModule(SharedPtr<Module*> ppModule);
 
      /**
       * Launch a module task
       *
       * Direct version: to be called by the module itself.
+      * E.g. following a parameter set
       */
-     void runModule(Module* module);
+     void runModule(Module* pModule);
+
+     /**
+      * Enqueue a new module task
+      *
+      * and launch it if possible.
+      * Register the task in the Module
+      */
+     void enqueueModuleTask(ModuleTask* pTask);
 
 private:
      /**

@@ -30,26 +30,20 @@
 #define SRC_MODULE_H_
 
 #include "VerboseEntity.h"
+#include "ParameterizedEntity.h"
+#include "InPortUser.h"
+#include "OutPortUser.h"
+#include "ModuleTask.h"
 
-#include "Port.h"
-#include "ParameterSet.h"
-
-#include "InPortLockUnlock.h"
-#include "OutPortLockUnlock.h"
-
-#include "Poco/Task.h"
+#include "Poco/ThreadLocal.h"
 #include "Poco/RWLock.h"
 #include "Poco/Mutex.h"
-#include "Poco/Util/Application.h" // layered configuration
 
 #include <map>
+#include <set>
+#include <list>
 
-class InDataPort;
-class OutPort;
 class ModuleFactory;
-
-/// Time lapse in milliseconds between 2 tries in multithread lock case
-#define TIME_LAPSE 10
 
 /**
  * Module
@@ -62,10 +56,14 @@ class ModuleFactory;
  *  - a computing cell: image processing, signal processing,
  *  ...
  *
- *  Inherit from Poco::Task to have the Poco::Runnable features
- *  and to be able to control progress and task cancellation.
+ * The modules are closely bound to their ModuleTask s.
+ * The module lists the tasks to be launched, and even can launch
+ * the tasks when needed. The tasks are the only one to run the
+ * modules (after having set runningTask).
  */
-class Module: public VerboseEntity, public Poco::Task
+class Module: public virtual VerboseEntity,
+	public ParameterizedEntity,
+	public InPortUser, public OutPortUser
 {
 public:
 	/**
@@ -86,7 +84,12 @@ public:
 	 * if customName or internalName is already in use.
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
-	      mParent(parent), Poco::Task(name), VerboseEntity() { }
+	      mParent(parent), ParameterizedEntity("module." + name),
+		  procMode(fullBufferedProcessing),
+		  startSyncPending(false),
+		  reseting (false)
+	{
+	}
 
 	/**
 	 * Destructor
@@ -95,6 +98,7 @@ public:
 	 *  - parent factory
 	 *  - module manager
 	 *  - dispatcher
+	 *  - tasks
 	 */
 	virtual ~Module();
 
@@ -136,96 +140,234 @@ public:
 	 */
 	ModuleFactory* parent();
 
-	/**
-	 * Get input ports
-	 *
-	 * The dispatcher should be requested to get shared pointer
-	 * on the port items
-	 * @return a copy of the input ports list
-	 */
-	std::vector<InPort*> getInPorts() { return inPorts; }
-	InPort* getInPort(std::string portName);
-
-	/**
-	 * Get output ports
-	 *
-	 * @see getInPorts
-	 */
-	std::vector<OutPort*> getOutPorts() { return outPorts; }
-	OutPort* getOutPort(std::string portName);
-
-	/**
-	 * Implementation of Poco::Task::runTask()
-	 *
-	 * Lock the runTaskMutex, expire the output data,
-	 * and call process().
-	 *
-	 * The arguments of process allow to automatically release
-	 * the data of the ports when exiting (even on exception thrown)
-	 *
-	 * This function is virtual. it can be overloaded by
-	 * the derived class if the runTaskMutex lock is not wanted.
-	 */
-	virtual void runTask();
-
-	/**
-	 * Main logic called by runTask
-	 *
-	 * with a lock on runTaskMutex.
-	 * inPortsAccess and outPortsAccess should be used to
-	 * access the ports data, since it will handle the
-	 * unlocking of the ports in case of un-clean stop
-	 */
-	virtual void process(InPortLockUnlock& inPortsAccess,
-	        OutPortLockUnlock& outPortsAccess)
-	    { poco_warning(logger(), name() + ": empty task"); }
-
-	/**
-	 * Retrieve a copy of the parameter set of the module
-	 *
-	 * @param pSet reference to a user allocated ParameterSet
-	 */
-	void getParameterSet(ParameterSet* pSet);
+    /**
+     * Enqueue a new task
+     *
+     * for this module. and pop it, if no task is running for this module.
+     * To be called by the disptacher.
+     * @return true if the module is not running, and thus,
+     * the new enqueued task should be started.
+     */
+    void enqueueTask(ModuleTask* task);
 
     /**
-     * Retrieve the parameter data type
+     * Unregister a task
      *
-     * @throw Poco::NotFoundException if the parameter name is not found
+     * called by the task destructor
      */
-    ParamItem::ParamType getParameterType(std::string paramName);
+    void unregisterTask(ModuleTask* task);
+
+    /**
+     * Launch the next task of the queue in the current thread
+     *
+     * and dequeue it.
+     */
+    void popTaskSync();
+
+    /**
+     * Processing modes:
+     *
+     * - direct: the input ports are locked, the output ports are locked,
+     * and the processing occurs directly from the input data into the output
+     * data
+     * - buffered in: the input data is duplicated, the input port is released,
+     * and then the processing occurs.
+     * - buffered out: the processing occurs into a buffer. Then the output
+     * port is locked and the data is copied into the outport.
+     * - full buffered: combination of buffered in and buffered out
+     * - other: any other processing way.
+     *
+     * Not all the processing modes are relevant... Mainly depending on the presence
+     * of input/output ports and of course depending on the processing itself.
+     *
+     * The main difference between those modes is not really the memory footprint
+     * (it can be, in some cases), but the time during which the ports are locked.
+     */
+    enum ProcessingMode
+	{
+    	directProcessing,
+		bufferedInProcessing = 1,
+		bufferedOutProcessing = 1 << 1,
+		fullBufferedProcessing = bufferedInProcessing | bufferedOutProcessing,
+		otherProcessing
+	};
+
+    /**
+     * Set the processing mode
+     *
+     * can be overloaded to execute some checks or restrictions.
+     * The parent method should be called, though.
+     */
+    virtual void setProcMode(ProcessingMode mode) { procMode = mode; }
+    ProcessingMode getProcMode() { return procMode; }
+
+    /**
+     * Parameterized entity needs this definition to be able
+     * to use OutPortUser::expireOutData
+     */
+    void expireOutData() { OutPortUser::expireOutData(); }
 
 	/**
-	 * Retrieve the value of the parameter given by its name
+	 * Reset the module by calling Module::reset(),
+	 * but reset also all the targets.
 	 *
-	 * Check the parameter type and call one of:
-	 *  - getIntParameterValue
-	 *  - getFloatParameterValue
-	 *  - getStrParameterValue
-	 *
-	 * @throw Poco::NotFoundException if the name is not found
-	 * @throw Poco::DataFormatException if the parameter format does not fit
+	 * Called by ModuleTask::resetModule,
+	 * and then by Dispatcher::dispatchTargetReset
 	 */
-    template<typename T> T getParameterValue(std::string paramName);
-
-    /**
-     * Set the value of the parameter given by its name
-     *
-     * Check the parameter type and call one of:
-     *  - setIntParameterValue
-     *  - setFloatParameterValue
-     *  - setStrParameterValue
-     *
-     * @throw Poco::NotFoundException if the name is not found
-     * @throw Poco::DataFormatException if the parameter format does not fit
-     */
-    template<typename T> void setParameterValue(std::string paramName, T value);
-
-    /**
-     * Expire output data
-     */
-    void expireOutData();
+	void resetWithTargets();
 
 protected:
+	void addInPort(
+			std::string name, std::string description,
+	        int dataType,
+	        size_t index )
+	{ InPortUser::addInPort(this, name, description, dataType, index); }
+
+	void addTrigPort(
+            std::string name, std::string description,
+            size_t index )
+	{ InPortUser::addTrigPort(this, name, description, index); }
+
+    void addOutPort(
+            std::string name, std::string description,
+            int dataType,
+            size_t index )
+	{ OutPortUser::addOutPort(this, name, description, dataType, index); }
+
+    Poco::ThreadLocal<ModuleTask*> runningTask;
+
+	/**
+	 * Set the running task thread local pointer. 
+	 *
+	 * To be set to NULL in case of need to call the task forwarding functions. 
+	 * 
+	 * e.g. when calling reserveOutPorts() from setParameter
+	 */
+    void setRunningTask(ModuleTask* pTask) { *runningTask = pTask; }
+
+    /// @name forwarding methods to thread local: runningTask
+    ///@{
+    bool sleep(long milliseconds);
+    bool yield();
+	void setProgress(float progress);
+    bool isCancelled();
+    InPort* triggingPort();
+    void setRunningState(ModuleTask::RunningStates state);
+    ModuleTask::RunningStates getRunningState();
+    ///}
+
+    /**
+	 * Canceling method to be called:
+	 *  - from ModuleTask::cancel when a running task
+	 * 	is cancelled
+	 * 	- or from Module::resetWithSeqTargets when reset
+	 * 	is called while a seq is running. Module::seqRunning
+	 * 	should be implemented, then.
+	 *
+	 * @see Module::reset
+	 * @see Module::seqRunning
+	 */
+	virtual void cancel() { }
+
+	/**
+	 * Reset the module to its initial state.
+	 *
+	 * This method is called on error (TaskFailedNotification)
+	 * which can be trigged with an exception throw e.g. on
+	 * user request cancellation.
+	 *
+	 * Should achieve:
+	 *  - reset running seqIndexes
+	 *  - reset evtl flags, states,...
+	 *
+	 * Called by Module::resetWithSeqTargets
+	 *
+	 * @note Locks or mutexes should not be kept locked in case
+	 * of exceptions, then no unlock should be necessary here
+	 */
+	virtual void reset() { }
+
+	/**
+     * Merge the enqueued tasks of the present Module
+     *
+     * given by their triggering inPort index.
+     *
+     *  - The current task can be listed in this set.
+     *  - a test should be made, so that only the inPorts
+     *  giving new data are listed (they should have been
+     *  trigged simultaneously)
+     *  - but a held port can be sent too. a simple warning
+     *  would be emitted.
+     *
+     * @inPortIndexes indexes of the inPorts which data will be used
+     */
+    void mergeTasks(std::set<size_t> inPortIndexes);
+
+    /**
+     * Launch the next task of the queue
+     *
+     * and dequeue it.
+     *
+     * Do nothing if the queue is empty.
+     */
+    void popTask();
+
+	/**
+	 * Method called by the task that identifies itself with pTask.
+	 *
+	 * Expire the output data, check the start condition,
+	 * and call process().
+	 *
+	 * There is no mutex locked here. Concurrence running should be OK.
+	 *
+	 * Manage ports release.
+	 */
+	void run(ModuleTask* pTask);
+
+	/**
+	 * Main logic called by run
+	 *
+	 * Depending on the processing mode, the data should be buffered or
+	 * not.
+	 *
+	 * Access to input ports data should be done via readInPort and
+	 * readInPortDataAttribute. Call releaseAllInPorts when over.
+	 *
+	 * Access to output ports should be granted via reserveOutPorts
+	 * and then data pointer should be accessed with getDataToWrite.
+	 * Call notifyAllOutPortReady when over.
+	 *
+	 * In case of cancellation detected via Module::isCancelled or
+	 * Module::yield or Module::sleep,
+	 * an exception should be thrown to trigg the Module::reset
+	 * function.
+	 *
+	 * @param startCond start condition as defined in virtual method
+	 * startCondition. You should consider implementing your own
+	 * startCondition method for non-standard cases.
+	 *
+	 * It could be wised to use a lock in this method if there is a
+	 * chance (popTask()?) that it is called twice at the same time.
+	 * No thread-safety is given by the caller.
+	 *
+	 * @see startCondition
+	 * @see setRunningState
+	 * @see getProcMode
+	 */
+	virtual void process(int startCond)
+		{ poco_warning(logger(), name() + ": nothing to be done"); }
+
+	/**
+	 * Method to check if a sequence is running.
+	 *
+	 * It can be true even if the module has no task running.
+	 *
+	 * This method is used by ModuleTask::cancel to know if
+	 * Module::cancel needs to be called if the task is not
+	 * running.
+	 */
+	virtual bool seqRunning() { return false; }
+
     /**
      * Set the internal name of the module
      *
@@ -255,122 +397,6 @@ protected:
 	 */
 	void notifyCreation();
 
-	/**
-	 * Set the inPorts list size
-	 */
-	void setInPortCount(size_t cnt) { inPorts.resize(cnt, NULL); }
-	/**
-	 * Add input data port
-	 *
-	 * @param name name of the port
-	 * @param description description of the port
-	 * @param dataType type of port data
-	 * @param index index of the port in the inPorts list. It allows
-	 * to use enums to access the ports.
-	 */
-	void addInPort(
-	        std::string name, std::string description,
-	        int dataType,
-	        size_t index );
-    /**
-     * Add trig port
-     *
-     * To trig the running of the module
-     * @param name name of the port
-     * @param description description of the port
-     * @param index index of the port in the inPorts list. It allows
-     * to use enums to access the ports.
-     */
-	void addTrigPort(
-            std::string name, std::string description,
-            size_t index );
-
-    /**
-     * Set the outPorts list size
-     */
-    void setOutPortCount(size_t cnt) { outPorts.resize(cnt, NULL); }
-    /**
-     * Add output data port
-     *
-     * @param name name of the port
-     * @param description description of the port
-     * @param dataType type of port data
-     * @param index index of the port in the outPorts list. It allows
-     * to use enums to access the ports.
-     */
-    void addOutPort(
-            std::string name, std::string description,
-            int dataType,
-            size_t index );
-
-    /**
-     * Set parameter set size
-     *
-     * to be called before adding parameters
-     */
-    void setParameterCount(size_t count)
-        { paramSet.resize(count); }
-
-    /**
-     * Add a parameter in the parameter set
-     *
-     * Should be called in the module constructor
-     */
-    void addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype);
-
-    /**
-     * Add a parameter in the parameter set
-     *
-     * Should be called in the module constructor.
-     * Specify a default value as a string,
-     * as could be read in a config file
-     */
-    void addParameter(size_t index,
-            std::string name, std::string descr,
-            ParamItem::ParamType datatype,
-            std::string hardCodedValue);
-
-    /**
-     * Retrieve the default value for the given parameter
-     *
-     * - Check if the parameter has an entry in the configuration:
-     *      module.<name>.<paramName>
-     * - if not found, return the hard-coded value that was defined at creation,
-     * - if not found...
-     * @throw Poco::NotFoundException
-     */
-    long getIntParameterDefaultValue(size_t index);
-    double getFloatParameterDefaultValue(size_t index);
-    std::string getStrParameterDefaultValue(size_t index);
-
-    virtual long getIntParameterValue(size_t paramIndex)
-    {
-        poco_bugcheck_msg("getIntParameterValue not implemented for this module");
-        throw Poco::BugcheckException();
-    }
-
-    virtual double getFloatParameterValue(size_t paramIndex)
-    {
-        poco_bugcheck_msg("getFloatParameterValue not implemented for this module");
-        throw Poco::BugcheckException();
-    }
-
-    virtual std::string getStrParameterValue(size_t paramIndex)
-    {
-        poco_bugcheck_msg("getStrParameterValue not implemented for this module");
-        throw Poco::BugcheckException();
-    }
-
-    virtual void setIntParameterValue(size_t paramIndex, long value)
-        { poco_bugcheck_msg("setIntParameterValue not implemented for this module"); }
-
-    virtual void setFloatParameterValue(size_t paramIndex, double value)
-        { poco_bugcheck_msg("setFloatParameterValue not implemented for this module"); }
-
-    virtual void setStrParameterValue(size_t paramIndex, std::string value)
-        { poco_bugcheck_msg("setStrParameterValue not implemented for this module"); }
-
-    Poco::Mutex runTaskMutex; ///< mutex used to block runTask(), and then, process()
 private:
     /// enum to be returned by checkName
     enum NameStatus
@@ -407,43 +433,28 @@ private:
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
 
-	std::vector<InPort*> inPorts; ///< list of input ports
-	std::vector<OutPort*> outPorts; ///< list of output data ports
+	ProcessingMode procMode;
 
 	static std::vector<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
-	ParameterSet paramSet;
+	bool reseting; ///< flag set when the reseting begins
 
 	/**
-	 * Retrieve a parameter index from its name
+	 * Check if a task is already running (or at least started)
+	 * for this module
 	 *
-	 * The main mutex has to be locked before calling this function
+	 * taskMngtMutex should be locked prior to calling this method
 	 */
-	size_t getParameterIndex(std::string paramName);
+	bool taskIsRunning();
 
-	/**
-	 * Table of hard-coded values
-	 *
-	 * @see addParameter
-	 */
-	std::map<size_t, std::string> hardCodedValues;
+	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
+	std::set<ModuleTask*> allTasks;
+	std::list<ModuleTask*> taskQueue;
+	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
+	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
 
-	/**
-	 * Retrieve the raw default value as a string
-	 */
-	std::string getParameterDefaultValue(size_t index);
-
-    /**
-     * Convenience function to get the application config
-     *
-     * simple forwarder to `Poco::Util::Application::instance().config()`
-     */
-    Poco::Util::LayeredConfiguration& appConf()
-        { return Poco::Util::Application::instance().config(); }
+    friend class ModuleTask; // access to setRunningTask, releaseAll
 };
-
-/// templates implementation
-#include "Module.ipp"
 
 #endif /* SRC_MODULE_H_ */

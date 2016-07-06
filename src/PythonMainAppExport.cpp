@@ -420,6 +420,8 @@ pythonDispatchSeqUnbind(PyObject* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
+#include "PythonTask.h"
+
 extern "C" PyObject*
 pythonDispatchRunModule(PyObject *self, PyObject *args)
 {
@@ -441,11 +443,33 @@ pythonDispatchRunModule(PyObject *self, PyObject *args)
 
     ModMembers* pyMod = reinterpret_cast<ModMembers*>(pyObj);
 
-    Poco::Util::Application::instance()
+    Poco::AutoPtr<ModuleTask> task = Poco::Util::Application::instance()
         .getSubsystem<Dispatcher>()
         .runModule(*pyMod->module);
 
-    Py_RETURN_NONE;
+    // alloc
+    if (PyType_Ready(&PythonTask) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the Task Type");
+        return NULL;
+    }
+
+    TaskMembers* pyTask =
+            (TaskMembers*)(pyTaskNew((PyTypeObject*)&PythonTask, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // retrieve name and description
+    tmp = pyTask->name;
+    pyTask->name = PyString_FromString(task->name().c_str());
+    Py_XDECREF(tmp);
+
+    // set Module reference
+    *(pyTask->task) = task;
+
+    return (PyObject*)(pyTask);
 }
 
 #include "ThreadManager.h"
@@ -456,6 +480,16 @@ pythonThreadManWaitAll(PyObject *self, PyObject *args)
     Poco::Util::Application::instance()
             .getSubsystem<ThreadManager>()
             .waitAll();
+
+    Py_RETURN_NONE;
+}
+
+extern "C" PyObject*
+pythonThreadManCancelAll(PyObject *self, PyObject *args)
+{
+    Poco::Util::Application::instance()
+            .getSubsystem<ThreadManager>()
+            .cancelAll();
 
     Py_RETURN_NONE;
 }

@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleSeqAccu.h
- * @date	Feb. 2016
+ * @file	src/DemoModuleTwoInputs.h
+ * @date	june 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,51 +26,34 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOMODULESEQACCU_H_
-#define SRC_DEMOMODULESEQACCU_H_
+#ifndef SRC_DEMOMODULETWOINPUTS_H_
+#define SRC_DEMOMODULETWOINPUTS_H_
 
 #include "Module.h"
 
-#include "Poco/Types.h"
-
 /**
- * DemoModuleSeqAccu
+ * DemoModuleTwoInputs
  *
- * Demo module to retrieve a data sequence as a vector.
+ * Simple demo module to test sync issues with multiple tasks
  */
-class DemoModuleSeqAccu: public Module
+class DemoModuleTwoInputs: public Module
 {
 public:
-    DemoModuleSeqAccu(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleSeqAccu() { }
+	DemoModuleTwoInputs(ModuleFactory* parent, std::string customName);
+	virtual ~DemoModuleTwoInputs() { }
 
     std::string description()
     {
-        return "Demo Module to transform a data sequence into a vector. ";
+        return "Demo Module to forward input onto output. ";
     }
 
 private:
     /**
      * Main logic
      *
-     * Accumulate the data sequence:
-     *  - reinit the accumulator storage at each startSequence
-     *  - send the accumulator at each endSequence
+     * Simulate a job (1 sec). Outputs 100.
      */
     void process(int startCond);
-
-    bool seqRunning()
-    {
-    	poco_information(logger(), name() + " seqRunning request");
-    	return seqIndex != 0;
-    }
-
-    void reset();
-
-    /**
-     * Do nothing but warn about Module::cancel being called.
-     */
-    void cancel();
 
     static size_t refCount; ///< reference counter to generate a unique internal name
 
@@ -78,6 +61,7 @@ private:
     enum inPorts
     {
         inPortA,
+		inPortB,
         inPortCnt
     };
 
@@ -88,8 +72,6 @@ private:
         outPortCnt
     };
 
-    size_t seqIndex;
-    std::vector<Poco::Int32> accumulator;
 };
 
-#endif /* SRC_DEMOMODULESEQACCU_H_ */
+#endif /* SRC_DEMOMODULETWOINPUTS_H_ */

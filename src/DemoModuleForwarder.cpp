@@ -61,51 +61,51 @@ DemoModuleForwarder::DemoModuleForwarder(ModuleFactory* parent, std::string cust
     refCount++;
 }
 
-void DemoModuleForwarder::process(InPortLockUnlock& inPortsAccess,
-        OutPortLockUnlock& outPortsAccess)
+void DemoModuleForwarder::process(int startCond)
 {
+	if (startCond != allDataStartState)
+	{
+		poco_information(logger(), name() + ": no input data. Exiting. ");
+		return;
+	}
+	else
+	{
+		poco_information(logger(),"Input data locked");
+	}
+
     DataAttributeIn attr;
-
     int* pData;
+    readInPortData<int>(inPortA, pData);
+    readInPortDataAttribute(inPortA, &attr);
 
-    // try to acquire the data
-    // It should not be a problem since this is the only input data
-    // then, if the task was launched, it is probably that this is due
-    // to a push.
-    if (!inPortsAccess.tryData<int>(inPortA, pData, &attr))
-    {
-        poco_information(logger(),
-                "DemoModuleForwarder::runTask(): "
-                "failed to acquire the input data lock. "
-                "Data is probably not up to date. ");
-
-        return; // data not up to date
-    }
-
-    int tmpData = *pData;
     DataAttributeOut outAttr = attr;
 
-    inPortsAccess.release(inPortA);
+    int tmpData;
 
-    int* pOutData;
-
-    // try to acquire the output data lock
-    while (!outPortsAccess.tryData<int>(outPortA, pOutData))
+    if (getProcMode()) // buffered mode
     {
-        poco_information(logger(),
-                "DemoModuleForwarder::runTask(): "
-                "failed to acquire the output data lock");
+    	tmpData = *pData;
 
-        if (sleep(TIME_LAPSE))
-        {
-            poco_notice(logger(),
-                    "DemoModuleForwarder::runTask(): cancelled!");
-            return;
-        }
+    	releaseInPort(inPortA);
     }
 
-    *pOutData = tmpData;
-    outPortsAccess.notifyReady(outPortA, outAttr);
+    reserveOutPort(outPortA);
+
+    int* pOutData;
+    getDataToWrite<int>(outPortA, pOutData);
+
+    if (getProcMode()) // buffered mode
+    {
+    	*pOutData = tmpData;
+
+    	releaseInPort(inPortA);
+    }
+    else
+    {
+    	*pOutData = *pData;
+    }
+
+    notifyOutPortReady(outPortA, outAttr);
 
     poco_information(logger(), "DemoModuleForwarder::runTask(): "
             + Poco::NumberFormatter::format(tmpData) + " was forwarded.");

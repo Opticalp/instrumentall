@@ -28,6 +28,7 @@
 
 #include "InPort.h"
 
+#include "InDataPort.h"
 #include "OutPort.h"
 #include "Dispatcher.h"
 #include "ModuleManager.h"
@@ -61,9 +62,23 @@ InPort::InPort(OutPort* emptySourcePort, std::string name,
 void InPort::setNew(bool value)
 {
     if (value)
+    {
         (*getSourcePort())->dataItem()->readLock();
+        used = false;
+        newDataUnlock();
+    }
+    else
+    {
+    	// no need to newDataLock() since the only caller is InPort::release(),
+    	// then, new data can not be written
+    	used = true;
+    }
+}
 
-    used = !value;
+void InPort::readDataAttribute(DataAttributeIn* pAttr)
+{
+	*pAttr = DataAttributeIn(
+		(*getSourcePort())->dataItem()->getDataAttribute(), this);
 }
 
 void InPort::release()

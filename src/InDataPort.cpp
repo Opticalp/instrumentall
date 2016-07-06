@@ -26,8 +26,6 @@
  THE SOFTWARE.
  */
 
-#include "InDataPort.h"
-
 #include "ModuleManager.h"
 #include "Dispatcher.h"
 #include "OutPort.h"
@@ -81,6 +79,36 @@ void InDataPort::releaseSeqSourcePort()
 SharedPtr<OutPort*> InDataPort::getSeqSourcePort()
 {
     return mSeqSourcePort;
+}
+
+bool InDataPort::tryLock()
+{
+    if (!isPlugged())
+        throw Poco::RuntimeException("InPort",
+                "The port is not plugged. Not able to get data. ");
+
+    newDataLock();
+    if (!isNew())
+    {
+        // try to get the lock
+        if (!(*getSourcePort())->dataItem()->tryReadLock())
+        {
+        	newDataUnlock();
+        	return false;
+        }
+
+        // check if the data is up to date
+        if (!isUpToDate())
+        {
+            (*getSourcePort())->dataItem()->releaseData();
+        	newDataUnlock();
+            return false;
+        }
+    }
+    //else: nothing to do, the lock is already activated (by the dispatcher)
+
+	newDataUnlock();
+    return true;
 }
 
 void InDataPort::release()

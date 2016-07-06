@@ -44,10 +44,15 @@ def myMain():
     mod1.setParameterValue("value", 3.14)
     
     print "Run module"
-    runModule(mod1)
+    task = runModule(mod1)
+
+    print task.name + " state is " + task.state()
+    task.wait()
+    print task.name + " state is " + task.state()
     
-    waitAll()
     print "Return value is: " + str(mod1.outPort("data").getDataValue())
+    if ( abs(mod1.outPort("data").getDataValue()-3.14) > 0.01 ):
+        raise RuntimeError("Wrong return value: 3.14 expected. ")
 
     print "Create module from StringDataGen factory"
     mod1 = fac.select("str").create("strGenerator")
@@ -61,6 +66,8 @@ def myMain():
     
     waitAll()
     print "Return value is: " + mod1.outPort("data").getDataValue()
+    if ( mod1.outPort("data").getDataValue() != "mojo" ):
+        raise RuntimeError('Wrong return value: "mojo" expected. ')
     
     print "Create module from Int32DataGen factory"
     mod1 = fac.select("int32").create("intGenerator")
@@ -74,6 +81,8 @@ def myMain():
     
     waitAll()
     print "Return value is: " + str(mod1.outPort("data").getDataValue())
+    if (mod1.outPort("data").getDataValue() != 1):
+        raise RuntimeError('Wrong return value: 1 expected. ')
 
     print "Test the data sequence management, using the seqAccu module"
     seqAccu = Factory("DemoRootFactory").select("branch").select("leafSeqAccu").create("seqAccu")
@@ -86,11 +95,13 @@ def myMain():
     mod1.setParameterValue("value", 50)
     print 'setParameterValue("seqStart", 1)'
     mod1.setParameterValue("seqStart", 1)
-    print "runModule many times... Twice, and then in a 'for' loop"
+    print "runModule many times: Twice..."
     runModule(mod1)
     runModule(mod1)
     waitAll() # if we do not wait here, the data is de-synced because
             # we did not stack the value again with setParameterValue
+
+    print "done, and then in a 'for' loop"
     
     for value in range(10):
         mod1.setParameterValue("value", value)
@@ -104,6 +115,8 @@ def myMain():
     runModule(mod1)
     waitAll()
     print "Return value is: " + str(seqAccu.outPorts()[0].getDataValue())
+    if ( seqAccu.outPorts()[0].getDataValue() != [50, 50, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 100] ):
+        raise RuntimeError("Wrong return value")
     
     print "Test the vector generation"
     mod1 = fac.select("dblFloatVect").create("vectGen")

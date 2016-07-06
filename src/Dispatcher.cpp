@@ -31,6 +31,7 @@
 #include "ModuleManager.h"
 #include "ThreadManager.h"
 #include "Module.h"
+#include "ModuleTask.h"
 
 #include "InPort.h"
 #include "InDataPort.h"
@@ -336,10 +337,16 @@ void Dispatcher::seqUnbind(SharedPtr<InPort*> target)
     reinterpret_cast<InDataPort*>(*target)->releaseSeqSourcePort();
 }
 
+void Dispatcher::lockInPorts(OutPort* port)
+{
+    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
+    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
+        (**it)->newDataLock();
+}
+
 void Dispatcher::setOutPortDataReady(OutPort* port)
 {
-    std::set<Module*> targetModules;
-
     // poco_information(logger(), port->name() + " data ready");
 
     std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
@@ -347,37 +354,45 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
             ite = targetPorts.end(); it != ite; it++ )
     {
         (**it)->setNew();
-        targetModules.insert((**it)->parent());
-    }
 
-    for ( std::set<Module*>::iterator it = targetModules.begin(),
-            ite = targetModules.end(); it != ite; it++ )
-    {
         // get module from module manager
         SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
                                         .getSubsystem<ModuleManager>()
-                                        .getModule(*it);
+                                        .getModule((**it)->parent());
 
         poco_information(logger(),port->parent()->name() + " port " + port->name()
-                + " STARTS " + (*it)->name() );
+                + " STARTS " + (**it)->parent()->name() );
 
-                // launch task
-        Poco::Util::Application::instance()
-                 .getSubsystem<ThreadManager>()
-                 .start(*shdMod);
+        enqueueModuleTask(new ModuleTask(*shdMod, **it));
     }
 }
 
-void Dispatcher::runModule(SharedPtr<Module*> module)
+void Dispatcher::dispatchTargetReset(OutPort* port)
 {
-    Poco::Util::Application::instance()
-             .getSubsystem<ThreadManager>()
-             .start(*module);
+    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
+    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
+    {
+    	poco_information(logger(), "forwarding module cancellation to "
+    			+ (**it)->parent()->name());
+    	(**it)->parent()->resetWithTargets();
+    }
 }
 
-void Dispatcher::runModule(Module* module)
+Poco::AutoPtr<ModuleTask> Dispatcher::runModule(SharedPtr<Module*> ppModule)
 {
-    Poco::Util::Application::instance()
-             .getSubsystem<ThreadManager>()
-             .start(module);
+    Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(*ppModule), true);
+    enqueueModuleTask(taskPtr);
+
+    return taskPtr;
+}
+
+void Dispatcher::runModule(Module* pModule)
+{
+	enqueueModuleTask(new ModuleTask(pModule));
+}
+
+void Dispatcher::enqueueModuleTask(ModuleTask* pTask)
+{
+	pTask->module()->enqueueTask(pTask);
 }

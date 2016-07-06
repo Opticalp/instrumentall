@@ -31,13 +31,13 @@
 
 #include "InPort.h"
 
-class DataAttribute;
-
 /**
  * TrigPort
  *
  * InPort that accepts any type of data. This kind of port is used to
  * trig the runTask (see Dispatcher::setOutPortDataReady)
+ *
+ * It can even accept seq info, e.g. to trig a sequenced acquisition
  */
 class TrigPort: public InPort
 {
@@ -54,7 +54,17 @@ public:
 
     virtual ~TrigPort() { }
 
-    bool tryDataAttribute(DataAttribute* pAttr);
+    /**
+     * Do not accept held data. Only new data is allowed.
+     *
+     * @see InPort::tryLock
+     */
+    bool tryLock();
+
+    /**
+     * tryDataAttribute is tryLock + readDataAttribute
+     */
+    bool tryDataAttribute(DataAttributeIn* pAttr);
 };
 
 #endif /* SRC_TRIGPORT_H_ */

@@ -131,6 +131,24 @@ public:
     void setDataAttribute(DataAttribute attr) { attribute = attr; }
 
     /**
+     * Locking part of tryGetDataToWrite
+     *
+     * @see getDataToWrite
+     */
+    bool tryLockToWrite() { return dataLock.tryWriteLock(); }
+
+    /**
+     * Retrieving pointer part of tryGetDataToWrite
+     *
+     * @see tryLockToWrite
+     */
+    template<typename T> void getDataToWrite(T*& pData)
+    {
+        checkType<T>();
+        pData = reinterpret_cast<T*>(dataStore);
+    }
+
+    /**
      * Retrieve a write reference on the data
      *
      * Lock the data

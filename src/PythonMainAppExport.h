@@ -250,7 +250,7 @@ static PyMethodDef pyMethodDispatchRunModule =
     "runModule",
     pythonDispatchRunModule,
     METH_VARARGS,
-    "runModule(module1): Launch the module1 main thread. "
+    "runModule(module1): Launch module1. Returns the task encapsulating this run. "
 };
 
 // ----------------------------------------------------------------
@@ -272,6 +272,23 @@ static PyMethodDef pyMethodThreadManWaitAll =
     pythonThreadManWaitAll,
     METH_NOARGS,
     "Wait for all the tasks to be terminated"
+};
+
+/**
+ * @brief Python wrapper to cancel all the tasks
+ *
+ * Call ThreadManager::cancelAll() method
+ *
+ */
+extern "C" PyObject*
+pythonThreadManCancelAll(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodThreadManCancelAll =
+{
+    "cancelAll",
+    pythonThreadManCancelAll,
+    METH_NOARGS,
+    "Cancel all the tasks, running or pending. "
 };
 
 // ----------------------------------------------------------------

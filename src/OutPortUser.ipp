@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleDataSeq.h
- * @date	Feb. 2016
+ * @file	src/OutPortUser.ipp
+ * @date	June 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,46 +26,40 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOMODULEDATASEQ_H_
-#define SRC_DEMOMODULEDATASEQ_H_
+#include "OutPortUser.h"
 
-#include "Poco/Mutex.h"
+#include "OutPort.h"
 
-#include "Module.h"
+//template<typename T>
+//inline bool OutPortUser::tryOutPortData(size_t portIndex, T*& pData)
+//{
+//    OutPort* outPort = outPorts.at(portIndex);
+//
+//	if (caughts->empty())
+//		outMutex.lock();
+//
+//	if (isOutPortCaught(portIndex))
+//        poco_bugcheck_msg("try to re-lock an output port that was already locked? ");
+//
+//    bool retValue = outPort->tryData<T>(pData);
+//
+//    if (retValue)
+//    	caughts->insert(portIndex);
+//    else
+//    	outMutex.unlock();
+//
+//    return retValue;
+//}
 
-/**
- * DemoModuleDataSeq
- *
- * Demo module to generate a data sequence at each call to run()
- * It has no input port, but 1 output port.
- */
-class DemoModuleDataSeq: public Module
+template<typename T>
+inline void OutPortUser::getDataToWrite(size_t portIndex, T*& pData)
 {
-public:
-    DemoModuleDataSeq(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleDataSeq() { }
+    if (!isOutPortCaught(portIndex))
+        poco_bugcheck_msg("try to read an output port that was not previously locked? ");
 
-    std::string description()
-    {
-        return "Demo Module to generate a data sequence. ";
-    }
+    OutPort* outPort = outPorts[portIndex];
 
-private:
-    /**
-     * Main logic
-     *
-     * Generate an integer data sequence {0;1;2;3}
-     */
-    void process(int startCond);
+    outPort->getDataToWrite(pData);
+}
 
-    static size_t refCount; ///< reference counter to generate a unique internal name
 
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        outPortA,
-        outPortCnt
-    };
-};
-
-#endif /* SRC_DEMOMODULEDATASEQ_H_ */

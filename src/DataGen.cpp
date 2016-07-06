@@ -112,50 +112,22 @@ std::string DataGen::description()
 	return descr;
 }
 
-void DataGen::runTask()
+void DataGen::process(int startCond)
 {
     dataLock.writeLock(); // write since the seq flags can be changed
 
-    DataAttribute inAttr;
-
-    bool trigged = false;
-
-    if (reinterpret_cast<TrigPort*>(getInPorts()[trigPort])->tryDataAttribute(&inAttr))
+    switch (startCond)
     {
-        poco_information(logger(),"trigged ------------------------------");
-        trigged = true;
-        (getInPorts()[trigPort])->release();
-
-        if (attr.isSettingSequence())
-        {
-            dataLock.unlock();
-            throw Poco::RuntimeException("DataGen",
-                    "Concurrence between trig attribute "
-                    "and module sequence parameters. ");
-        }
+    case noDataStartState:
+    	freeRun();
+    	break;
+    case allDataStartState:
+    	triggedRun();
+    	break;
+    default:
+    	poco_bugcheck_msg("impossible start condition");
+    	throw Poco::BugcheckException();
     }
-
-    if (!trigged)
-    {
-        for (; seqStart > 0; seqStart--)
-        {
-            poco_information(logger(),name()+":startSeq");
-            attr.startSequence();
-        }
-
-        // FIXME: should check that they are not sent more end sequence
-        // than start sequence.
-        for (; seqEnd > 0; seqEnd--)
-        {
-            poco_information(logger(),name()+":endSeq");
-            attr.endSequence();
-        }
-    }
-
-    if (!trigged)
-        attrQueue.push(attr++);
-    else
-        attrQueue.push(inAttr);
 
     // unstack and send just 1 element (fifo).
     poco_information(logger(),"queue size: "
@@ -164,81 +136,117 @@ void DataGen::runTask()
     if (iQueue.size())
         poco_information(logger(),"iQueue front: "
             + Poco::NumberFormatter::format(iQueue.front()));
+    else
+    	poco_information(logger(),"not working with iQueue");
 
     dataLock.unlock();
 
-    // try to acquire the output data lock
-    runTaskMutex.lock();
+    // launch next task if requested.
+    popTask();
 
-    while (!tryData())
-    {
-        poco_information(logger(),
-                "DatGen::runTask(): "
-                "failed to acquire the output data lock. "
-                "Wait " + Poco::NumberFormatter::format(TIME_LAPSE)
-                + " ms now and retry. ");
+    reserveOutPort(outPortData);
 
-        // the data lock is unlocked, data can be stacked on the queue
-        // during sleep time,
-        // but the main lock avoid another thread to acquire the output
-        // port lock.
-
-        if (sleep(TIME_LAPSE))
-        {
-            runTaskMutex.unlock();
-            poco_notice(logger(), "DataGen::runTask(): cancelled!" );
-            return;
-        }
-    }
+    poco_information(logger(),"out port reserved");
 
     sendData();
-    runTaskMutex.unlock();
 }
 
-bool DataGen::tryData()
+void DataGen::freeRun()
+{
+	poco_information(logger(),"DataGen: free run");
+
+    for (; seqStart > 0; seqStart--)
+    {
+        poco_information(logger(),name()+":startSeq");
+        attr.startSequence();
+    }
+
+    // FIXME: should check that they are not sent more end sequence
+    // than start sequence.
+    for (; seqEnd > 0; seqEnd--)
+    {
+        poco_information(logger(),name()+":endSeq");
+        attr.endSequence();
+    }
+
+    attrQueue.push(attr++);
+}
+
+void DataGen::triggedRun()
+{
+	poco_information(logger(),"DataGen: trigged run");
+
+    DataAttributeIn inAttr;
+
+    readInPortDataAttribute(trigPort, &inAttr);
+    releaseInPort(trigPort);
+
+    if (attr.isSettingSequence())
+    {
+        dataLock.unlock();
+        throw Poco::RuntimeException("DataGen",
+                "Concurrence between trig attribute "
+                "and module sequence parameters. ");
+    }
+
+    attrQueue.push(inAttr);
+}
+
+void DataGen::sendData()
 {
 	switch(mDataType)
 	{
 	case DataItem::typeInt32:
-		return getOutPorts()[outPortData]->tryData<Poco::Int32>(pInt32);
+		getDataToWrite<Poco::Int32>(outPortData, pInt32);
+		break;
 	case DataItem::typeUInt32:
-		return getOutPorts()[outPortData]->tryData<Poco::UInt32>(pUInt32);
+		getDataToWrite<Poco::UInt32>(outPortData, pUInt32);
+		break;
 	case DataItem::typeInt64:
-		return getOutPorts()[outPortData]->tryData<Poco::Int64>(pInt64);
+		getDataToWrite<Poco::Int64>(outPortData, pInt64);
+		break;
 	case DataItem::typeUInt64:
-		return getOutPorts()[outPortData]->tryData<Poco::UInt64>(pUInt64);
+		getDataToWrite<Poco::UInt64>(outPortData, pUInt64);
+		break;
 	case DataItem::typeFloat:
-		return getOutPorts()[outPortData]->tryData<float>(pFloat);
+		getDataToWrite<float>(outPortData, pFloat);
+		break;
 	case DataItem::typeDblFloat:
-		return getOutPorts()[outPortData]->tryData<double>(pDblFloat);
+		getDataToWrite<double>(outPortData, pDblFloat);
+		break;
 	case DataItem::typeString:
-		return getOutPorts()[outPortData]->tryData<std::string>(pString);
+		getDataToWrite<std::string>(outPortData, pString);
+		break;
 
     case DataItem::typeInt32 | DataItem::contVector:
-        return getOutPorts()[outPortData]->tryData< std::vector<Poco::Int32> >(pVectInt32);
+        getDataToWrite< std::vector<Poco::Int32> >(outPortData, pVectInt32);
+		break;
     case DataItem::typeUInt32 | DataItem::contVector:
-        return getOutPorts()[outPortData]->tryData< std::vector<Poco::UInt32> >(pVectUInt32);
+        getDataToWrite< std::vector<Poco::UInt32> >(outPortData, pVectUInt32);
+		break;
     case DataItem::typeInt64 | DataItem::contVector:
-        return getOutPorts()[outPortData]->tryData< std::vector<Poco::Int64> >(pVectInt64);
+        getDataToWrite< std::vector<Poco::Int64> >(outPortData, pVectInt64);
+		break;
     case DataItem::typeUInt64 | DataItem::contVector:
-        return getOutPorts()[outPortData]->tryData< std::vector<Poco::UInt64> >(pVectUInt64);
+        getDataToWrite< std::vector<Poco::UInt64> >(outPortData, pVectUInt64);
+		break;
     case DataItem::typeFloat | DataItem::contVector:
-        return getOutPorts()[outPortData]->tryData< std::vector<float> >(pVectFloat);
+        getDataToWrite< std::vector<float> >(outPortData, pVectFloat);
+		break;
     case DataItem::typeDblFloat | DataItem::contVector:
-        return getOutPorts()[outPortData]->tryData< std::vector<double> >(pVectDblFloat);
+        getDataToWrite< std::vector<double> >(outPortData, pVectDblFloat);
+		break;
     case DataItem::typeString | DataItem::contVector:
-        return getOutPorts()[outPortData]->tryData< std::vector<std::string> >(pVectString);
+        getDataToWrite< std::vector<std::string> >(outPortData, pVectString);
+		break;
 
     default:
 		// already verified in constructor!
     	poco_bugcheck_msg("DataGen::tryData >> data type not supported");
     	throw Poco::BugcheckException();
 	}
-}
 
-void DataGen::sendData()
-{
-    dataLock.writeLock();
+	dataLock.writeLock();
 
     poco_information(logger(),"sendData, queue size: "
             + Poco::NumberFormatter::format(attrQueue.size()));
@@ -318,7 +326,7 @@ void DataGen::sendData()
     // done with the module data
 	dataLock.unlock();
 
-	getOutPorts()[outPortData]->notifyReady(attrOut);
+	notifyOutPortReady(outPortData, attrOut);
 
 	poco_information(logger(),"DataGen: data sent");
 }
@@ -408,5 +416,24 @@ void DataGen::setStrParameterValue(size_t paramIndex, std::string value)
     sQueue.push(value);
     sPar = value;
 	dataLock.unlock();
+}
+
+void DataGen::reset()
+{
+	Poco::ScopedWriteRWLock lock(dataLock);
+
+	attr = DataAttributeOut();
+
+    std::queue<long> iEmpty;
+    std::swap(iEmpty, iQueue);
+    std::queue<double> fEmpty;
+    std::swap(fEmpty, fQueue);
+    std::queue<std::string> sEmpty;
+    std::swap(sEmpty, sQueue);
+    std::queue<DataAttributeOut> attrEmpty;
+    std::swap(attrEmpty, attrQueue);
+
+    seqStart = 0;
+    seqEnd = 0;
 }
 

@@ -29,9 +29,9 @@
 #include "Module.h"
 #include "ModuleFactory.h"
 #include "ModuleManager.h"
+#include "ThreadManager.h"
+#include "ModuleTask.h"
 
-#include "TrigPort.h"
-#include "InDataPort.h"
 #include "OutPort.h"
 
 #include "Poco/NumberFormatter.h"
@@ -49,6 +49,8 @@ void Module::notifyCreation()
 
 Module::~Module()
 {
+	// TODO: tasks?
+
     // notify parent factory
     if (mParent)
     {
@@ -57,15 +59,6 @@ Module::~Module()
         // notify module manager
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
     }
-
-    // delete ports
-    for (std::vector<InPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
-            it!=ite; it++)
-        delete *it;
-
-    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
-            it!=ite; it++)
-        delete *it;
 }
 
 #include "Poco/Exception.h"
@@ -98,6 +91,10 @@ void Module::setCustomName(std::string customName)
     if (customName.empty() || customName.compare(internalName())==0)
     {
         mName = internalName();
+
+        // update conf file prefix key
+        setPrefixKey("module." + mName);
+
         return;
     }
 
@@ -131,36 +128,6 @@ ModuleFactory* Module::parent()
     else
         throw Poco::InvalidAccessException("parent",
                 "This module has no valid parent factory");
-}
-
-void Module::addInPort(std::string name, std::string description,
-        int dataType, size_t index)
-{
-    if (index<inPorts.size())
-        inPorts[index] = new InDataPort(this, name, description, dataType, index);
-    else
-        poco_bugcheck_msg(("addInPort: wrong index "
-                + Poco::NumberFormatter::format(index)).c_str());
-}
-
-void Module::addTrigPort(std::string name, std::string description,
-        size_t index)
-{
-    if (index<inPorts.size())
-        inPorts[index] = new TrigPort(this, name, description, index);
-    else
-        poco_bugcheck_msg(("addTrigPort: wrong index "
-                + Poco::NumberFormatter::format(index)).c_str());
-}
-
-void Module::addOutPort(std::string name, std::string description,
-        int dataType, size_t index)
-{
-    if (index<outPorts.size())
-        outPorts[index] = new OutPort(this, name, description, dataType, index);
-    else
-        poco_bugcheck_msg(("addOutPort: wrong index "
-                + Poco::NumberFormatter::format(index)).c_str());
 }
 
 #include "Poco/RegularExpression.h"
@@ -198,169 +165,290 @@ void Module::freeInternalName()
     }
 }
 
-void Module::addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype)
+void Module::run(ModuleTask* pTask)
 {
-    try
-    {
-        paramSet.at(index).name = name;
-        paramSet[index].descr = descr;
-        paramSet[index].datatype = datatype;
-    }
-    catch (std::out_of_range& )
-    {
-        poco_bugcheck_msg("addParameter: incorrect index. "
-                "Please check your module constructor");
-    }
+	setRunningTask(pTask);
+
+	taskMngtMutex.lock();
+	if (startSyncPending)
+	{
+		startSyncPending = false;
+		taskMngtMutex.unlock();
+	}
+	taskMngtMutex.unlock();
+
+	try
+	{
+		expireOutData();
+
+		setRunningState(ModuleTask::retrievingInDataLocks);
+		int startCond = startCondition();
+
+		mergeTasks(portsWithNewData());
+
+		setRunningState(ModuleTask::processing);
+		process(startCond);
+	}
+	catch (...)
+	{
+		releaseAllInPorts();
+		releaseAllOutPorts();
+		throw;
+	}
+
+	releaseAllInPorts();
+	releaseAllOutPorts();
 }
 
-void Module::addParameter(size_t index, std::string name, std::string descr,
-        ParamItem::ParamType datatype, std::string hardCodedValue)
+bool Module::sleep(long milliseconds)
 {
-    addParameter(index, name, descr, datatype);
-    hardCodedValues.insert(std::pair<size_t, std::string>(index, hardCodedValue));
+	if (*runningTask)
+		return (*runningTask)->sleep(milliseconds);
+
+	Poco::Thread::sleep(milliseconds);
+	return false;
 }
 
-std::string Module::getParameterDefaultValue(size_t index)
+bool Module::yield()
 {
-    // 1. check in the conf file
-    std::string keyStr = "module." + name()
-            + "." + paramSet.at(index).name;
+	if (*runningTask)
+		return (*runningTask)->yield();
 
-    try
-    {
-        return appConf().getString(keyStr);
-    }
-    catch (Poco::NotFoundException&)
-    {
-        poco_information(logger(),
-            std::string("property key: ") + keyStr +
-            std::string(" not found in config file"));
-    }
-
-    // 2. check in the hard coded values
-    std::map<size_t, std::string>::iterator it = hardCodedValues.find(index);
-    if (it != hardCodedValues.end())
-        return it->second;
-
-    throw Poco::NotFoundException("getParameterDefaultValue",
-                                        "no default value found");
+	Poco::Thread::yield();
+	return false;
 }
 
-long Module::getIntParameterDefaultValue(size_t index)
+void Module::setProgress(float progress)
 {
-    std::string strValue = getParameterDefaultValue(index);
-    return static_cast<long>(Poco::NumberParser::parse64(strValue));
+	if (*runningTask == NULL)
+		return;
+
+	(*runningTask)->setProgress(progress);
 }
 
-double Module::getFloatParameterDefaultValue(size_t index)
+bool Module::isCancelled()
 {
-    std::string strValue = getParameterDefaultValue(index);
-    return Poco::NumberParser::parseFloat(strValue);
+	if (*runningTask == NULL)
+		return false;
+
+	return (*runningTask)->isCancelled();
 }
 
-std::string Module::getStrParameterDefaultValue(size_t index)
+InPort* Module::triggingPort()
 {
-    return getParameterDefaultValue(index);
+	if (*runningTask)
+		return (*runningTask)->triggingPort();
+
+	throw Poco::RuntimeException(name(), "querying trigging port. not in a task");
 }
 
-void Module::getParameterSet(ParameterSet* pSet)
+void Module::setRunningState(ModuleTask::RunningStates state)
 {
-    // mainMutex.lock();
-    pSet->clear();
-    pSet->reserve(paramSet.size());
-    for (ParameterSet::iterator it = paramSet.begin(),
-            ite = paramSet.end(); it != ite; it++)
-    {
-        pSet->push_back(ParamItem());
-        pSet->back().name = it->name;
-        pSet->back().descr = it->descr;
-        pSet->back().datatype = it->datatype;
-    }
-    // mainMutex.unlock();
+	if (*runningTask == NULL)
+		return;
+
+	(*runningTask)->setRunningState(state);
 }
 
-size_t Module::getParameterIndex(std::string paramName)
+ModuleTask::RunningStates Module::getRunningState()
 {
-    size_t length = paramSet.size();
+	if (*runningTask == NULL)
+		return ModuleTask::processing;
 
-    for (size_t index = 0; index < length; index++)
-        if (paramSet[index].name.compare(paramName) == 0)
-            return index;
-
-    throw Poco::NotFoundException("getParameterIndex", "parameter name not found");
+	return (*runningTask)->getRunningState();
 }
 
-ParamItem::ParamType Module::getParameterType(std::string paramName)
+void Module::enqueueTask(ModuleTask* task)
 {
-    // TODO: mainMutex scoped lock
-    return paramSet[getParameterIndex(paramName)].datatype;
+	Poco::Mutex::ScopedLock lock(taskMngtMutex);
+
+	// take ownership of the task.
+	Poco::Util::Application::instance()
+				             .getSubsystem<ThreadManager>()
+				             .registerNewModuleTask(task);
+
+	allTasks.insert(task);
+	taskQueue.push_back(task);
+
+	if (taskQueue.size()>1)
+	{
+		poco_information(logger(), task->name()
+					+ ": tasks are already enqueued for " + name());
+		return;
+	}
+
+	if (!taskIsRunning())
+		popTask();
+//	else
+//		poco_information(logger(), name() + ": a task is already running");
 }
 
-InPort* Module::getInPort(std::string portName)
+void Module::resetWithTargets()
 {
-    for (std::vector<InPort*>::iterator it = inPorts.begin(),
-            ite = inPorts.end(); it != ite; it++)
-    {
-        if (portName.compare((*it)->name()) == 0)
-            return *it;
-    }
+	if (reseting)
+		return;
 
-    throw Poco::NotFoundException("getInPort",
-            "port: " + portName + " not found "
-            + "in module: " + name());
+	reseting = true;
+
+	if (seqRunning())
+		cancel();
+
+	// reset this module
+	reset();
+
+	// reset the sequence targets
+	resetTargets();
+
+	reseting = false;
 }
 
-OutPort* Module::getOutPort(std::string portName)
+bool Module::taskIsRunning()
 {
-    for (std::vector<OutPort*>::iterator it = outPorts.begin(),
-            ite = outPorts.end(); it != ite; it++)
-    {
-        if (portName.compare((*it)->name()) == 0)
-            return *it;
-    }
+	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
+			ite = allTasks.end(); it != ite; it++)
+	{
+		switch ((*it)->getState())
+		{
+		case MergeableTask::TASK_STARTING:
+		case MergeableTask::TASK_RUNNING:
+			//poco_information(logger(), task->name()
+			//		+ ": " + (*it)->name() 
+			//		+ " is already running for " + name());
+			return true;
+		case MergeableTask::TASK_FALSE_START:
+		case MergeableTask::TASK_IDLE: // probably self
+		case MergeableTask::TASK_CANCELLING:
+		case MergeableTask::TASK_FINISHED:
+			break;
+		default:
+			poco_bugcheck_msg("unknown task state");
+		}
+	}
 
-    throw Poco::NotFoundException("getOutPort",
-            "port: " + portName + " not found "
-            + "in module: " + name());
+	return false;
 }
 
-void Module::runTask()
+void Module::popTask()
 {
-    // try to acquire the mutex
-    while (!runTaskMutex.tryLock(TIME_LAPSE))
-    {
-        if (isCancelled())
-            return;
-    }
+	Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
-	expireOutData();
+	if (taskQueue.empty())
+		return;
 
-	// scoped-lock-like objects for ports
-	InPortLockUnlock inPortAccess(getInPorts());
-	OutPortLockUnlock outPortAccess(getOutPorts());
+	ModuleTask* nextTask = taskQueue.front();
+	poco_information(logger(), "poping out the next task: " + nextTask->name());
+	taskQueue.pop_front();
 
-    try
-    {
-        process(inPortAccess, outPortAccess);
-    }
-    catch (Poco::Exception& e)
-    {
-        // release input ports data -- even if new --,
-        // since the module task exited on error
-        inPortAccess.processing();
-
-        runTaskMutex.unlock();
-        e.rethrow();
-    }
-
-    runTaskMutex.unlock();
-
-    // outPortAccess and inPortAccess are destroyed here...
+	Poco::Util::Application::instance()
+						 .getSubsystem<ThreadManager>()
+						 .startModuleTask(nextTask);
 }
 
-void Module::expireOutData()
+void Module::popTaskSync()
 {
-    for (std::vector<OutPort*>::iterator it = outPorts.begin(),
-            ite = outPorts.end(); it != ite; it++)
-        (*it)->expire();
+	taskMngtMutex.lock();
+
+	if (taskQueue.empty())
+	{
+		poco_information(logger(), 
+			(*runningTask)->name() + ": empty task queue, nothing to sync pop");
+		taskMngtMutex.unlock();
+		return;
+	}
+
+	if (taskIsRunning())
+	{
+		poco_information(logger(),"sync pop: a task is already running. ");
+		taskMngtMutex.unlock();
+		return;
+	}
+
+	Poco::AutoPtr<ModuleTask> nextTask(taskQueue.front(), true);
+	poco_information(logger(), "SYNC poping out the next task: " + nextTask->name());
+	taskQueue.pop_front();
+
+	startSyncPending = true;
+
+	try
+	{
+		Poco::Util::Application::instance()
+			             .getSubsystem<ThreadManager>()
+			             .startSyncModuleTask(nextTask);
+	}
+	catch (...)
+	{
+		poco_error(logger(), "can not sync start " + nextTask->name());
+		startSyncPending = false;
+		taskMngtMutex.unlock();
+		throw;
+	}
+}
+
+void Module::unregisterTask(ModuleTask* task)
+{
+	Poco::Mutex::ScopedLock lock(taskMngtMutex);
+	allTasks.erase(task);
+}
+
+void Module::mergeTasks(std::set<size_t> inPortIndexes)
+{
+	// Poco::FastMutex::ScopedLock lock(taskMngtMutex);
+	taskMngtMutex.lock();
+
+	for (std::set<size_t>::iterator it = inPortIndexes.begin(),
+			ite = inPortIndexes.end(); it != ite; )
+	{
+		bool found = false;
+		InPort* trigPort;
+
+		try
+		{
+			trigPort = getInPort(*it);
+
+			if (triggingPort() == trigPort)
+			{
+				it++;
+				continue; // current task
+			}
+
+			// seek
+			for (std::list<ModuleTask*>::iterator qIt = taskQueue.begin(),
+					qIte = taskQueue.end(); qIt != qIte; qIt++)
+			{
+				poco_information(logger(), "taskQueue includes: " + (*qIt)->name());
+				if ((*qIt)->triggingPort() == trigPort)
+				{
+					found = true;
+					(*runningTask)->merge(*qIt);
+					taskQueue.erase(qIt);
+					poco_information(logger(), "slave task found, merging OK");
+					break;
+				}
+			}
+		}
+		catch (...)
+		{
+			taskMngtMutex.unlock();
+			throw;
+		}
+
+		if (!found)
+		{
+			taskMngtMutex.unlock();
+			poco_warning(logger(),
+					"Unable to merge the task for " + trigPort->name()
+					+ ". Retry.");
+//			if (sleep(500))
+			if (yield())
+				throw Poco::RuntimeException(name(), "Cancelation upon user request");
+			taskMngtMutex.lock();
+		}
+		else
+			it++;
+	}
+
+	poco_information(logger(),
+		"remaining tasks: " + Poco::NumberFormatter::format(taskQueue.size()));
+
+	taskMngtMutex.unlock();
 }

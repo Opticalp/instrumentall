@@ -137,6 +137,11 @@ void DataAttributeIn::checkSequence(size_t seqIndex)
                 "this port is not a seq target, "
                 "but a seqIndex != 0 is given");
 
+    if (allSequences.empty())
+        throw Poco::RuntimeException("checkSequence",
+                "no running sequence, "
+                "but given seqIndex != 0");
+
     if (allSequences.back() != seqIndex)
         throw Poco::RuntimeException("checkSequence",
                 "the given seqIndex does not correspond "

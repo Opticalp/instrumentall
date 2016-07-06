@@ -49,6 +49,7 @@ public:
         return "Demo Module to retrieve the max of a data sequence. ";
     }
 
+private:
     /**
      * Main logic
      *
@@ -56,9 +57,12 @@ public:
      *  - reinit the temp max storage at each startSequence
      *  - send the max at each endSequence
      */
-    void process(InPortLockUnlock& inPortsAccess, OutPortLockUnlock& outPortsAccess);
+    void process(int startCond);
 
-private:
+    bool seqRunning() { return seqIndex != 0; }
+
+    void reset();
+
     static size_t refCount; ///< reference counter to generate a unique internal name
 
     /// Indexes of the input ports

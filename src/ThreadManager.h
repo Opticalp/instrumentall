@@ -31,10 +31,19 @@
 
 #include "VerboseEntity.h"
 
-#include "Poco/TaskManager.h"
+#include "ModuleTask.h"
+#include "TaskManager.h"
+#include "TaskNotification.h"
+
 #include "Poco/ThreadPool.h"
 #include "Poco/TaskNotification.h"
 #include "Poco/Util/Subsystem.h"
+#include "Poco/RWLock.h"
+#include "Poco/AutoPtr.h"
+
+#include <set>
+
+class DataLogger;
 
 /**
  * ThreadManager
@@ -80,39 +89,74 @@ public:
          { poco_information(logger(), "ThreadManager::uninitialize()"); }
      ///@}
 
-    void onStarted(Poco::TaskStartedNotification* pNf);
-//    void onProgress(Poco::TaskProgressNotification* pNf);
-    void onFailed(Poco::TaskFailedNotification* pNf);
-    void onFinished(Poco::TaskFinishedNotification* pNf);
+    void onStarted(TaskStartedNotification* pNf);
+//    void onProgress(TaskProgressNotification* pNf);
+    void onFailed(TaskFailedNotification* pNf);
+    void onFinished(TaskFinishedNotification* pNf);
+    void onEnslaved(TaskEnslavedNotification* pNf);
 
     /**
      * Count the active tasks
+     *
+     * It does include all the pending tasks.
+     * @see pendingModTasks
      */
-    int count();
+    size_t count();
 
     /**
      * Cancel all the tasks
      *
-     * Cancel module tasks and logging tasks whenever possible
+     * Cancel module tasks whenever possible
      */
-    void cancelAll() { taskManager.cancelAll(); }
+    void cancelAll();
+
+    /**
+     * Start a runnable in a thread of the thread pool
+     */
+    void startDataLogger(DataLogger* dataLogger);
 
     /**
      * Start a task
      *
-     * Duplicate the task before launching it in order that
-     * the task manager does not delete it after execution
+     * Start a ModuleTask.
+     * Do not take ownership of the task.
      */
-    void start(Poco::Task* task);
+    void startModuleTask(ModuleTask* task);
+
+    /**
+     * Start a task in the current thread
+     *
+     * ModuleTask specific.
+     * Do not take ownership of the task.
+     */
+    void startSyncModuleTask(ModuleTask* task);
 
     /**
      * Wait for all tasks to be terminated
      */
     void waitAll();
 
+    /**
+     * Register a new task
+     *
+     * and take ownership of it
+     */
+    void registerNewModuleTask(ModuleTask* pTask);
+
 private:
-    Poco::TaskManager taskManager;
+    TaskManager taskManager;
     Poco::ThreadPool threadPool;
+
+    /// Store all non-terminated tasks: idle, or active.
+    std::set< Poco::AutoPtr<ModuleTask> > pendingModTasks;
+    Poco::RWLock  taskListLock;
+
+    bool cancellingAll;
+
+    /**
+     * Unregister a task
+     */
+    void unregisterModuleTask(ModuleTask* pTask);
 };
 
 #endif /* SRC_THREADMANAGER_H_ */

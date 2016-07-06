@@ -35,6 +35,7 @@
 #include "DemoModuleSeqMax.h"
 #include "DemoModuleForwarder.h"
 #include "DemoModuleParam.h"
+#include "DemoModuleTwoInputs.h"
 
 Module* DemoLeafFactory::newChildModule(std::string customName)
 {
@@ -72,6 +73,9 @@ Module* DemoLeafFactory::newChildModule(std::string customName)
 
     if (getSelector().compare("leafParam")==0)
         return new DemoModuleParam(this, customName);
+
+    if (getSelector().compare("leafTwoInputs")==0)
+    	return new DemoModuleTwoInputs(this, customName);
 
     throw Poco::InvalidArgumentException("newChildModule","Impossible selector value");
 }

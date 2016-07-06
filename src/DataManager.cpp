@@ -121,7 +121,7 @@ void DataManager::newData(DataItem* self)
         // launch logger threads via thread manager.
         Poco::Util::Application::instance()
             .getSubsystem<ThreadManager>()
-            .start(**it);
+            .startDataLogger(**it);
     }
 }
 
