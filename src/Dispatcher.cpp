@@ -37,6 +37,7 @@
 #include "InPort.h"
 #include "InDataPort.h"
 #include "OutPort.h"
+#include "DataSource.h"
 
 #include "Poco/NumberFormatter.h"
 
@@ -391,7 +392,7 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
     }
 }
 
-void Dispatcher::dispatchTargetReset(OutPort* port)
+void Dispatcher::dispatchTargetReset(DataSource* port)
 {
     std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
     for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),

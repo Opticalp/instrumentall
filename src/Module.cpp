@@ -296,7 +296,7 @@ void Module::resetWithTargets()
 	// reset this module
 	reset();
 
-	// reset the sequence targets
+	// reset the targets (imply sequence targets)
 	resetTargets();
 
 	reseting = false;

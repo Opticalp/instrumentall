@@ -135,7 +135,7 @@ void OutPortUser::resetTargets()
 {
     for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
             it!=ite; it++)
-    	(*it)->resetSeqTargets();
+    	(*it)->resetTargets();
 }
 
 void OutPortUser::reserveOutPorts(std::set<size_t> outputs)

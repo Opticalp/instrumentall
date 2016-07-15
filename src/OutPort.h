@@ -29,7 +29,7 @@
 #ifndef SRC_OUTPORT_H_
 #define SRC_OUTPORT_H_
 
-#include "DataSource.h"
+#include "SeqSource.h"
 #include "DataAttributeOut.h"
 #include "Port.h"
 
@@ -40,16 +40,13 @@
 using Poco::RWLock;
 using Poco::SharedPtr;
 
-class InDataPort;
-class InPort;
-
 /**
  * OutPort
  *
  * Data output module port.
  * Contain links to the target ports
  */
-class OutPort: public Port, public DataSource
+class OutPort: public Port, public SeqSource
 {
 public:
     OutPort(Module* parent,
@@ -81,11 +78,6 @@ public:
     int dataType() { return TypeNeutralData::dataType(); }
 
     /**
-     * Retrieve the data sequence target ports
-     */
-    std::vector< SharedPtr<InPort*> > getSeqTargetPorts();
-
-    /**
      * Notify the dispatcher that the new data is ready
      *
      * With the given attributes,
@@ -102,11 +94,6 @@ public:
     void releaseOnFailure() { releaseBrokenData(); }
 
     /**
-     * Dispatch Module::resetWithSeqTargets
-     */
-    void resetSeqTargets();
-
-    /**
      * Retrieve the data loggers
      *
      * This function calls the DataManager::getDataLogger
@@ -120,36 +107,14 @@ public:
     bool hasLoggers() { return (allLoggers.size()>0); }
 
 private:
-    /**
-     * Add a sequence re-combiner target port
-     *
-     * This function should only be called by the seq target InDataPort.
-     *
-     * The Dispatcher is requested to get the shared pointer
-     * on the InDataPort.
-     */
-    void addSeqTargetPort(InDataPort* port);
-
-    /**
-     * Remove a sequence re-combiner target port
-     *
-     * Should not throw an exception if the port is not present
-     * in the seqTargetPorts
-     */
-    void removeSeqTargetPort(InDataPort* port);
-
-    /// list of target ports for data sequence re-combination
-    std::vector< SharedPtr<InPort*> > seqTargetPorts;
-    RWLock seqTargetPortsLock; ///< lock for seqTargetPorts operations
-
     void registerLogger(DataLogger* logger);
     void detachLogger(DataLogger* logger);
 
     std::set<DataLogger*> allLoggers;
     RWLock loggersLock;
 
-    friend class InPort;
-    friend class InDataPort;
+//    friend class InPort;
+//    friend class InDataPort;
     friend class DataLogger;
 };
 

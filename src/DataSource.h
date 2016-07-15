@@ -78,6 +78,11 @@ public:
     void expire();
     bool isExpired() { return expired; }
 
+    /**
+     * Dispatch Module::resetWithSeqTargets
+     */
+    void resetTargets();
+
 private:
     /**
      * Add a target port

@@ -39,49 +39,12 @@ OutPort::OutPort(Module* parent,
         int datatype,
         size_t index):
     Port(parent, name, description, datatype, index),
-	DataSource(datatype)
+	SeqSource(datatype)
 {
 //    // notify the DataManager of the creation
 //    Poco::Util::Application::instance()
 //                            .getSubsystem<DataManager>()
 //                            .addOutPort(this);
-}
-
-std::vector<SharedPtr<InPort*> > OutPort::getSeqTargetPorts()
-{
-    std::vector<SharedPtr<InPort*> > list;
-
-    seqTargetPortsLock.readLock();
-    list = seqTargetPorts;
-    seqTargetPortsLock.unlock();
-
-    return list;
-}
-
-void OutPort::addSeqTargetPort(InDataPort* port)
-{
-    Poco::ScopedRWLock lock(seqTargetPortsLock, true);
-
-    SharedPtr<InPort*> sharedPort =
-        Poco::Util::Application::instance()
-                    .getSubsystem<Dispatcher>()
-                    .getInPort(port);
-        seqTargetPorts.push_back(sharedPort);
-}
-
-void OutPort::removeSeqTargetPort(InDataPort* port)
-{
-    Poco::ScopedRWLock lock(seqTargetPortsLock, true);
-
-    for (std::vector< SharedPtr<InPort*> >::iterator it=seqTargetPorts.begin(),
-            ite=seqTargetPorts.end(); it != ite; it++ )
-    {
-        if (**it==port)
-        {
-            seqTargetPorts.erase(it);
-            return;
-        }
-    }
 }
 
 OutPort::OutPort():
@@ -117,13 +80,6 @@ void OutPort::notifyReady(DataAttributeOut attribute)
     Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()
                         .setOutPortDataReady(this);
-}
-
-void OutPort::resetSeqTargets()
-{
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .dispatchTargetReset(this);
 }
 
 std::set<SharedPtr<DataLogger*> > OutPort::loggers()

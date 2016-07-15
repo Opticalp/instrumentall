@@ -48,6 +48,7 @@ using Poco::SharedPtr;
 
 class Module;
 class ModuleTask;
+class DataSource;
 
 /**
  * Dispatcher
@@ -174,11 +175,11 @@ public:
      /**
       * Dispatching function for module reset when a task failed.
       *
-      *  * called by Module::resetWithTargets
+      *  * called by Module::resetWithTargets via DataSource::ResetTargets
       *  * call Module::resetWithTargets
       *  * Module::reseting flag avoids the recursions
       */
-     void dispatchTargetReset(OutPort* port);
+     void dispatchTargetReset(DataSource* port);
 
      /**
       * Lock the input ports

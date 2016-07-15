@@ -1,7 +1,7 @@
 /**
  * detailed comment
  * 
- * @file	/Instrumentall-Debug@instru-git-debug/[Source directory]/src/DataSource.cpp
+ * @file	/Instrumentall-Debug@instru-git-debug/[Source directory]/src/SeqSource.cpp
  * @brief	short comment
  * @date	15 juil. 2016
  * @author	PhRG - opticalp.fr
@@ -31,91 +31,46 @@
  THE SOFTWARE.
  */
 
-#include "DataSource.h"
-#include "Module.h"
+#include "SeqSource.h"
 
 #include "Dispatcher.h"
 
 #include "Poco/Util/Application.h"
 
-DataSource::DataSource(int datatype):
-		DataItem(datatype),
-		expired(true)
-{
-
-}
-
-DataSource::~DataSource()
-{
-
-}
-
-void DataSource::releaseNewData()
-{
-	expired = false;
-    unlockData();
-}
-
-void DataSource::releaseBrokenData()
-{
-    expired = true;
-    unlockData();
-}
-
-std::vector<SharedPtr<InPort*> > DataSource::getTargetPorts()
+std::vector<SharedPtr<InPort*> > SeqSource::getSeqTargetPorts()
 {
     std::vector<SharedPtr<InPort*> > list;
 
-    targetPortsLock.readLock();
-    list = targetPorts;
-    targetPortsLock.unlock();
+    seqTargetPortsLock.readLock();
+    list = seqTargetPorts;
+    seqTargetPortsLock.unlock();
 
     return list;
 }
 
-void DataSource::addTargetPort(InPort* port)
+void SeqSource::addSeqTargetPort(InDataPort* port)
 {
-    Poco::ScopedRWLock lock(targetPortsLock, true);
+    Poco::ScopedRWLock lock(seqTargetPortsLock, true);
 
     SharedPtr<InPort*> sharedPort =
         Poco::Util::Application::instance()
                     .getSubsystem<Dispatcher>()
                     .getInPort(port);
-    targetPorts.push_back(sharedPort);
+        seqTargetPorts.push_back(sharedPort);
 }
 
-void DataSource::expire()
+void SeqSource::removeSeqTargetPort(InDataPort* port)
 {
-	expired = true;
+    Poco::ScopedRWLock lock(seqTargetPortsLock, true);
 
-	// forward the expiration
-    targetPortsLock.readLock();
-
-    for( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
-            ite = targetPorts.end(); it != ite; it++ )
-        (**it)->parent()->expireOutData();
-
-    targetPortsLock.unlock();
-}
-
-void DataSource::resetTargets()
-{
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .dispatchTargetReset(this);
-}
-
-void DataSource::removeTargetPort(InPort* port)
-{
-    Poco::ScopedRWLock lock(targetPortsLock, true);
-
-    for (std::vector< SharedPtr<InPort*> >::iterator it=targetPorts.begin(),
-            ite=targetPorts.end(); it != ite; it++ )
+    for (std::vector< SharedPtr<InPort*> >::iterator it=seqTargetPorts.begin(),
+            ite=seqTargetPorts.end(); it != ite; it++ )
     {
         if (**it==port)
         {
-            targetPorts.erase(it);
+            seqTargetPorts.erase(it);
             return;
         }
     }
 }
+
