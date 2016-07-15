@@ -126,8 +126,8 @@ private:
     DataAttribute attribute; ///< data attribute
     RWLock dataLock; ///< lock to manage the access to the data
 
-    // transitional
-    friend class OutPort;
+    // FIXME: transitional?
+    friend class OutPortUser;
 };
 
 #endif /* SRC_DATAITEM_H_ */

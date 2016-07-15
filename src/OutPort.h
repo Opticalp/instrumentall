@@ -49,7 +49,7 @@ class InPort;
  * Data output module port.
  * Contain links to the target ports
  */
-class OutPort: public Port
+class OutPort: public Port, public DataSource
 {
 public:
     OutPort(Module* parent,
@@ -77,41 +77,13 @@ public:
      */
     virtual ~OutPort();
 
-    /**
-     * Retrieve the target ports
-     */
-    std::vector< SharedPtr<InPort*> > getTargetPorts();
+    /// FIXME: transitional
+    int dataType() { return TypeNeutralData::dataType(); }
 
     /**
      * Retrieve the data sequence target ports
      */
     std::vector< SharedPtr<InPort*> > getSeqTargetPorts();
-
-    /**
-     * Try to lock the output port to retrieve a pointer on
-     * the data to be written
-     *
-     * @return true if success
-     */
-    bool tryLock()
-    	{ return dataSource()->tryWriteDataLock(); }
-
-    /**
-     * Retrieve a pointer on the data to be written
-     *
-     * The port shall have been previously locked using
-     * tryLock, with return value == true.
-     */
-    template<typename T> void getDataToWrite(T*& pData)
-    	{ pData = dataSource()->getData<T>(); }
-
-    /**
-     * Try to retrieve a pointer on the data to be written
-     *
-     * @return false if the lock cannot be acquired
-     */
-    template<typename T> bool tryData(T*& pData)
-        { return dataSource()->tryGetDataToWrite<T>(pData); }
 
     /**
      * Notify the dispatcher that the new data is ready
@@ -127,22 +99,12 @@ public:
      * Without notifying the dispatcher.
      * To be used in case of failure.
      */
-    void releaseOnFailure() { dataSource()->releaseBrokenData(); }
+    void releaseOnFailure() { releaseBrokenData(); }
 
     /**
      * Dispatch Module::resetWithSeqTargets
      */
     void resetSeqTargets();
-
-    /**
-     * Get the DataSource for this OutPort
-     */
-    DataSource* dataSource() { return &data; }
-
-    /**
-     * Expire port data
-     */
-    void expire();
 
     /**
      * Retrieve the data loggers
@@ -158,27 +120,6 @@ public:
     bool hasLoggers() { return (allLoggers.size()>0); }
 
 private:
-    /**
-     * Add a target port
-     *
-     * This function should only be called by the target InPort.
-     *
-     * The Dispatcher is requested to get the shared pointer
-     * on the InPort.
-     */
-    void addTargetPort(InPort* port);
-
-    /**
-     * Remove a target port
-     *
-     * Should not throw an exception if the port is not present
-     * in the targetPorts
-     */
-    void removeTargetPort(InPort* port);
-
-    std::vector< SharedPtr<InPort*> > targetPorts;
-    RWLock targetPortsLock; ///< lock for targetPorts operations
-
     /**
      * Add a sequence re-combiner target port
      *
@@ -210,8 +151,6 @@ private:
     friend class InPort;
     friend class InDataPort;
     friend class DataLogger;
-
-    DataSource data;
 };
 
 #endif /* SRC_OUTPORT_H_ */

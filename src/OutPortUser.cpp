@@ -62,7 +62,7 @@ bool OutPortUser::tryOutPortLock(size_t portIndex)
     if (isOutPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an output port that was already locked? ");
 
-    if (outPort->tryLock())
+    if (outPort->tryWriteDataLock())
     {
     	caughts->insert(portIndex);
     	return true;

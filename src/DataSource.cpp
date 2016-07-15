@@ -32,10 +32,14 @@
  */
 
 #include "DataSource.h"
+#include "Module.h"
 
-DataSource::DataSource(int datatype, OutPort* parent):
+#include "Dispatcher.h"
+
+#include "Poco/Util/Application.h"
+
+DataSource::DataSource(int datatype):
 		DataItem(datatype),
-		mParentPort(parent),
 		expired(true)
 {
 
@@ -56,4 +60,55 @@ void DataSource::releaseBrokenData()
 {
     expired = true;
     unlockData();
+}
+
+std::vector<SharedPtr<InPort*> > DataSource::getTargetPorts()
+{
+    std::vector<SharedPtr<InPort*> > list;
+
+    targetPortsLock.readLock();
+    list = targetPorts;
+    targetPortsLock.unlock();
+
+    return list;
+}
+
+void DataSource::addTargetPort(InPort* port)
+{
+    Poco::ScopedRWLock lock(targetPortsLock, true);
+
+    SharedPtr<InPort*> sharedPort =
+        Poco::Util::Application::instance()
+                    .getSubsystem<Dispatcher>()
+                    .getInPort(port);
+    targetPorts.push_back(sharedPort);
+}
+
+void DataSource::expire()
+{
+	expired = true;
+
+	// forward the expiration
+    targetPortsLock.readLock();
+
+    for( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
+        (**it)->parent()->expireOutData();
+
+    targetPortsLock.unlock();
+}
+
+void DataSource::removeTargetPort(InPort* port)
+{
+    Poco::ScopedRWLock lock(targetPortsLock, true);
+
+    for (std::vector< SharedPtr<InPort*> >::iterator it=targetPorts.begin(),
+            ite=targetPorts.end(); it != ite; it++ )
+    {
+        if (**it==port)
+        {
+            targetPorts.erase(it);
+            return;
+        }
+    }
 }

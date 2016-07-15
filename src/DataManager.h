@@ -91,23 +91,6 @@ public:
 //    void defineOptions(Poco::Util::OptionSet & options);
 
     /**
-     * Add the DataItem of a new output port
-     *
-     * append its DataItem to the dataStore
-     * This function is called by the OutPort constructor
-     */
-    void addOutPort(OutPort* port);
-
-    /**
-     * Remove the DataItem of a deleted output port
-     *
-     * detach the loggers of the data item and
-     * remove its DataItem from the dataStore
-     * This function is called by the OutPort destructor
-     */
-    void removeOutPort(OutPort* port);
-
-    /**
      * Get a shared pointer on a data source
      */
     SharedPtr<DataSource*> getDataItem(DataSource* dataItem);

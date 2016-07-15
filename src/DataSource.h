@@ -51,8 +51,13 @@ class DataLogger;
 class DataSource: public DataItem
 {
 public:
-	DataSource(int datatype = typeUndefined, OutPort* parent = NULL);
+	DataSource(int datatype = typeUndefined);
 	virtual ~DataSource();
+
+    /**
+     * Retrieve the target ports
+     */
+    std::vector< SharedPtr<InPort*> > getTargetPorts();
 
     /**
      * Release newly created data
@@ -70,21 +75,34 @@ public:
      */
     void releaseBrokenData();
 
-    /**
-     * Get the parent port
-     *
-     * @warning the parent port can be NULL
-     */
-    OutPort* parentPort() { return mParentPort; }
-
-    void expire() { expired = true; }
+    void expire();
     bool isExpired() { return expired; }
 
 private:
+    /**
+     * Add a target port
+     *
+     * This function should only be called by the target InPort.
+     *
+     * The Dispatcher is requested to get the shared pointer
+     * on the InPort.
+     */
+    void addTargetPort(InPort* port);
+
+    /**
+     * Remove a target port
+     *
+     * Should not throw an exception if the port is not present
+     * in the targetPorts
+     */
+    void removeTargetPort(InPort* port);
+
+    std::vector< SharedPtr<InPort*> > targetPorts;
+    RWLock targetPortsLock; ///< lock for targetPorts operations
+
     bool expired;
 
-    OutPort* mParentPort; ///< parent output data port.
-
+    friend class InPort;
     // friend class DataLogger;
 };
 

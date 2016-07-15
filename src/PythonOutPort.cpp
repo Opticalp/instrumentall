@@ -254,19 +254,19 @@ PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
 /**
  * Construct a python list from a vector
  */
-PyObject* getVectorValue(SharedPtr<DataSource*> data)
+PyObject* getVectorValue(DataSource* data)
 {
     // construct pyList
     PyObject* list = PyList_New(0);
 
-    (*data)->readDataLock();
+    data->readDataLock();
 
-    switch (DataItem::noContainerDataType((*data)->dataType()))
+    switch (DataItem::noContainerDataType(data->dataType()))
     {
     case DataItem::typeInt32:
     {
         std::vector<Poco::Int32>* pData;
-        pData = (*data)->getData< std::vector<Poco::Int32> >();
+        pData = data->getData< std::vector<Poco::Int32> >();
 
         for (std::vector<Poco::Int32>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -277,7 +277,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->unlockData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -286,7 +286,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
     case DataItem::typeUInt32:
     {
         std::vector<Poco::UInt32>* pData;
-        pData = (*data)->getData< std::vector<Poco::UInt32> >();
+        pData = data->getData< std::vector<Poco::UInt32> >();
 
         for (std::vector<Poco::UInt32>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -297,7 +297,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->unlockData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -306,7 +306,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
     case DataItem::typeInt64:
     {
         std::vector<Poco::Int64>* pData;
-        pData = (*data)->getData< std::vector<Poco::Int64> >();
+        pData = data->getData< std::vector<Poco::Int64> >();
 
         for (std::vector<Poco::Int64>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -317,7 +317,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->unlockData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -326,7 +326,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
     case DataItem::typeUInt64:
     {
         std::vector<Poco::UInt64>* pData;
-        pData = (*data)->getData< std::vector<Poco::UInt64> >();
+        pData = data->getData< std::vector<Poco::UInt64> >();
 
         for (std::vector<Poco::UInt64>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -337,7 +337,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->unlockData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -346,7 +346,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
     case DataItem::typeFloat:
     {
         std::vector<float>* pData;
-        pData = (*data)->getData< std::vector<float> >();
+        pData = data->getData< std::vector<float> >();
 
         for (std::vector<float>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -357,7 +357,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->unlockData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -366,7 +366,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
     case DataItem::typeDblFloat:
     {
         std::vector<double>* pData;
-        pData = (*data)->getData< std::vector<double> >();
+        pData = data->getData< std::vector<double> >();
 
         for (std::vector<double>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -377,7 +377,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->unlockData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -386,7 +386,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
     case DataItem::typeString:
     {
         std::vector<std::string>* pData;
-        pData = (*data)->getData< std::vector<std::string> >();
+        pData = data->getData< std::vector<std::string> >();
 
         for (std::vector<std::string>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -397,7 +397,7 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->unlockData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -406,83 +406,79 @@ PyObject* getVectorValue(SharedPtr<DataSource*> data)
     default:
         PyErr_SetString(PyExc_NotImplementedError,
                 "getValue is not implemented for this dataType");
-        (*data)->unlockData();
+        data->unlockData();
         return NULL;
     }
 
-    (*data)->unlockData();
+    data->unlockData();
 
     return list;
 }
 
 PyObject* pyOutPortGetDataValue(OutPortMembers* self)
 {
-	SharedPtr<DataSource*> sharedData = Poco::Util::Application::instance()
-			                          .getSubsystem<DataManager>()
-									  .getDataItem((**self->outPort)->dataSource());
-
-    int dataType = (*sharedData)->dataType();
+    int dataType = (**self->outPort)->dataType();
 
     if (DataItem::isVector(dataType))
-        return getVectorValue(sharedData);
+        return getVectorValue(**self->outPort);
 
     // python object to return
     PyObject* pyObj;
 
-    (*sharedData)->readDataLock();
+    (**self->outPort)->readDataLock();
 
     switch (DataItem::noContainerDataType(dataType))
     {
     case DataItem::typeInt32:
     {
-        long data = *((*sharedData)->getData<Poco::Int32>());
+        long data = *((**self->outPort)->getData<Poco::Int32>());
         pyObj = PyInt_FromLong(data);
         break;
     }
     case DataItem::typeUInt32:
     {
-        size_t data = *((*sharedData)->getData<Poco::UInt32>());
+        size_t data = *((**self->outPort)->getData<Poco::UInt32>());
         pyObj = PyInt_FromSize_t(data);
         break;
     }
     case DataItem::typeInt64:
     {
-        long data = static_cast<long>(*((*sharedData)->getData<Poco::Int64>()));
+        long data = static_cast<long>(*((**self->outPort)->getData<Poco::Int64>()));
         pyObj = PyInt_FromLong(data);
         break;
     }
     case DataItem::typeUInt64:
     {
-        size_t data = *((*sharedData)->getData<Poco::UInt64>());
+        size_t data = *((**self->outPort)->getData<Poco::UInt64>());
         pyObj = PyInt_FromSize_t(data);
         break;
     }
     case DataItem::typeFloat:
     {
-        double data = *((*sharedData)->getData<float>());
+        double data = *((**self->outPort)->getData<float>());
         pyObj = PyFloat_FromDouble(data);
         break;
     }
     case DataItem::typeDblFloat:
     {
-        double data = *((*sharedData)->getData<double>());
+        double data = *((**self->outPort)->getData<double>());
         pyObj = PyFloat_FromDouble(data);
         break;
     }
     case DataItem::typeString:
     {
-        std::string* pData = (*sharedData)->getData<std::string>();
+        std::string* pData = (**self->outPort)->getData<std::string>();
         pyObj = PyString_FromString(pData->c_str());
         break;
     }
     default:
         PyErr_SetString(PyExc_NotImplementedError,
                 "getValue is not implemented for this dataType");
-        (*sharedData)->unlockData();
+        (**self->outPort)->unlockData();
         return NULL;
     }
 
-    (*sharedData)->unlockData();
+    (**self->outPort)->unlockData();
 
     return pyObj;
 }

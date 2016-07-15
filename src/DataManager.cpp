@@ -68,43 +68,6 @@ void DataManager::uninitialize()
     // TODO: empty all data (expired, etc)
 }
 
-void DataManager::addOutPort(OutPort* port)
-{
-    allDataLock.writeLock();
-    allData.push_back(SharedPtr<DataSource*>(new DataSource*(port->dataSource())));
-    allDataLock.unlock();
-}
-
-void DataManager::removeOutPort(OutPort* port)
-{
-    allDataLock.writeLock();
-
-    for (std::vector< SharedPtr<DataSource*> >::iterator it = allData.begin(),
-            ite = allData.end(); it != ite; it++)
-    {
-        if (port->dataSource() == **it)
-        {
-            // unregister data item loggers
-            std::set< SharedPtr<DataLogger*> > itemLoggers = port->loggers();
-            for (std::set< SharedPtr<DataLogger*> >::iterator setIt = itemLoggers.begin(),
-                    setIte = itemLoggers.end(); setIt != setIte; setIt++ )
-                (**setIt)->detach();
-
-            // replace the pointed data item by something throwing exceptions
-            **it = &emptyDataSource;
-            allData.erase(it);
-            // poco_information(logger(), port->name() + " port DataItem "
-            //         "erased from DataManager::allData. ");
-            allDataLock.unlock();
-            return;
-        }
-    }
-
-    allDataLock.unlock();
-    poco_error(logger(), "removeOutPort(): "
-            "the port was not found");
-}
-
 SharedPtr<DataSource*> DataManager::getDataItem(DataSource* dataItem)
 {
     allDataLock.readLock();
