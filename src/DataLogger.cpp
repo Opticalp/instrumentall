@@ -58,7 +58,7 @@ void DataLogger::registerSourcePort(OutPort* port)
 
     dataLock.lock();
 
-    if (!isSupportedDataType(port->dataItem()->dataType()))
+    if (!isSupportedDataType(port->dataSource()->dataType()))
     {
         dataLock.unlock();
         throw Poco::RuntimeException("registerLogger",
@@ -94,13 +94,13 @@ void DataLogger::setEmpty()
     dataLock.unlock();
 }
 
-DataItem* DataLogger::data()
+DataSource* DataLogger::data()
 {
-    DataItem* tmp;
+    DataSource* tmp;
 
     // lock in case somebody else already locks
     dataLock.lock();
-    tmp =  pSourcePort->dataItem();
+    tmp =  pSourcePort->dataSource();
     dataLock.unlock();
 
     return tmp;

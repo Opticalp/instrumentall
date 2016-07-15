@@ -63,7 +63,7 @@ void InPort::setNew(bool value)
 {
     if (value)
     {
-        (*getSourcePort())->dataItem()->readLock();
+        (*getSourcePort())->dataSource()->readLock();
         used = false;
         newDataUnlock();
     }
@@ -78,13 +78,13 @@ void InPort::setNew(bool value)
 void InPort::readDataAttribute(DataAttributeIn* pAttr)
 {
 	*pAttr = DataAttributeIn(
-		(*getSourcePort())->dataItem()->getDataAttribute(), this);
+		(*getSourcePort())->dataSource()->getDataAttribute(), this);
 }
 
 void InPort::release()
 {
     setNew(false);
-    (*getSourcePort())->dataItem()->releaseData();
+    (*getSourcePort())->dataSource()->releaseData();
 }
 
 void InPort::setSourcePort(SharedPtr<OutPort*> port)

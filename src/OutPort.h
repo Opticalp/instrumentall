@@ -29,7 +29,7 @@
 #ifndef SRC_OUTPORT_H_
 #define SRC_OUTPORT_H_
 
-#include "DataItem.h"
+#include "DataSource.h"
 #include "DataAttributeOut.h"
 #include "Port.h"
 
@@ -94,7 +94,7 @@ public:
      * @return true if success
      */
     bool tryLock()
-    	{ return dataItem()->tryLockToWrite(); }
+    	{ return dataSource()->tryLockToWrite(); }
 
     /**
      * Retrieve a pointer on the data to be written
@@ -103,7 +103,7 @@ public:
      * tryLock, with return value == true.
      */
     template<typename T> void getDataToWrite(T*& pData)
-    	{ dataItem()->getDataToWrite(pData); }
+    	{ dataSource()->getDataToWrite(pData); }
 
     /**
      * Try to retrieve a pointer on the data to be written
@@ -111,7 +111,7 @@ public:
      * @return false if the lock cannot be acquired
      */
     template<typename T> bool tryData(T*& pData)
-        { return dataItem()->tryGetDataToWrite<T>(pData); }
+        { return dataSource()->tryGetDataToWrite<T>(pData); }
 
     /**
      * Notify the dispatcher that the new data is ready
@@ -127,7 +127,7 @@ public:
      * Without notifying the dispatcher.
      * To be used in case of failure.
      */
-    void releaseOnFailure() { dataItem()->releaseBrokenData(); }
+    void releaseOnFailure() { dataSource()->releaseBrokenData(); }
 
     /**
      * Dispatch Module::resetWithSeqTargets
@@ -135,9 +135,9 @@ public:
     void resetSeqTargets();
 
     /**
-     * Get the DataItem for this OutPort
+     * Get the DataSource for this OutPort
      */
-    DataItem* dataItem() { return &data; }
+    DataSource* dataSource() { return &data; }
 
     /**
      * Expire port data
@@ -211,7 +211,7 @@ private:
     friend class InDataPort;
     friend class DataLogger;
 
-    DataItem data;
+    DataSource data;
 };
 
 #endif /* SRC_OUTPORT_H_ */

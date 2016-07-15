@@ -32,6 +32,9 @@
 #include "Port.h"
 
 #include "Poco/Mutex.h"
+#include "Poco/SharedPtr.h"
+
+using Poco::SharedPtr;
 
 class DataAttributeIn;
 class OutPort;

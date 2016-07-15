@@ -1,7 +1,12 @@
 /**
- * @file	src/DataItem.cpp
- * @date	Feb. 2016
+ * detailed comment
+ * 
+ * @file	/Instrumentall-Debug@instru-git-debug/[Source directory]/src/DataSource.cpp
+ * @brief	short comment
+ * @date	15 juil. 2016
  * @author	PhRG - opticalp.fr
+ *
+ * $Id$
  */
 
 /*
@@ -26,33 +31,28 @@
  THE SOFTWARE.
  */
 
-#include "DataItem.h"
-#include "DataLogger.h"
-#include "DataManager.h"
+#include "DataSource.h"
 
-#include "Poco/Types.h"
-#include "Poco/Util/Application.h"
-
-DataItem::DataItem(int dataType, OutPort* parent):
-		TypeNeutralData(dataType),
-        mParentPort(parent),
+DataSource::DataSource(int datatype, OutPort* parent):
+		DataItem(datatype),
+		mParentPort(parent),
 		expired(true)
 {
+
 }
 
-DataItem::~DataItem()
+DataSource::~DataSource()
 {
-    // The loggers are detached by DataManager::removeOutPort()
 
 }
 
-void DataItem::releaseNewData()
+void DataSource::releaseNewData()
 {
 	expired = false;
     releaseData();
 }
 
-void DataItem::releaseBrokenData()
+void DataSource::releaseBrokenData()
 {
     expired = true;
     releaseData();

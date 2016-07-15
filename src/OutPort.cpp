@@ -148,8 +148,8 @@ void OutPort::notifyReady(DataAttributeOut attribute)
                         .getSubsystem<Dispatcher>()
                         .lockInPorts(this);
 
-    dataItem()->setDataAttribute(attribute);
-    dataItem()->releaseNewData();
+    dataSource()->setDataAttribute(attribute);
+    dataSource()->releaseNewData();
 
     Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()

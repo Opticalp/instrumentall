@@ -29,7 +29,7 @@
 #ifndef SRC_DATAMANAGER_H_
 #define SRC_DATAMANAGER_H_
 
-#include "DataItem.h"
+#include "DataSource.h"
 
 #include "VerboseEntity.h"
 
@@ -108,9 +108,9 @@ public:
     void removeOutPort(OutPort* port);
 
     /**
-     * Get a shared pointer on a data item
+     * Get a shared pointer on a data source
      */
-    SharedPtr<DataItem*> getDataItem(DataItem* dataItem);
+    SharedPtr<DataSource*> getDataItem(DataSource* dataItem);
 
     /**
      * Get the data loggers class names
@@ -153,7 +153,7 @@ public:
     void removeDataLogger(SharedPtr<DataLogger*> logger);
 
 private:
-    std::vector< SharedPtr<DataItem*> > allData; ///< data corresponding to each OutPort
+    std::vector< SharedPtr<DataSource*> > allData; ///< data corresponding to each OutPort
     Poco::RWLock allDataLock;
 
     Poco::DynamicFactory<DataLogger> loggerFactory;
@@ -166,7 +166,7 @@ private:
     std::set< SharedPtr<DataLogger*> > loggers;
     Poco::RWLock loggersLock;
 
-    DataItem emptyDataItem;
+    DataSource emptyDataSource;
 
     // TODO: any volatile data storage here that is used by the UI
     // to push data (one shot) into a given InPort

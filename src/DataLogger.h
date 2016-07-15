@@ -29,13 +29,14 @@
 #ifndef SRC_DATALOGGER_H_
 #define SRC_DATALOGGER_H_
 
+#include "DataSource.h"
+
 #include "Poco/Runnable.h"
 #include "Poco/Mutex.h"
 
 using Poco::Mutex;
 
 class OutPort;
-class DataItem;
 
 /**
  * DataLogger
@@ -104,9 +105,9 @@ public:
 
 protected:
     /**
-     * Retrieve parent data item
+     * Retrieve parent data
      */
-    DataItem* data();
+    DataSource* data();
 
     OutPort* sourcePort() { return pSourcePort;}
 

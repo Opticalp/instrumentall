@@ -34,7 +34,7 @@ THE SOFTWARE.
 template<typename T>
 void InDataPort::readData(T*& pData)
 {
-	pData = (*getSourcePort())->dataItem()->getDataToRead<T>();
+	pData = (*getSourcePort())->dataSource()->getDataToRead<T>();
 }
 
 template<typename T> inline bool InDataPort::tryData(T*& pData, DataAttributeIn* pAttr)

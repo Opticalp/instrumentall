@@ -1,5 +1,5 @@
 /**
- * @file	DataItem.h
+ * @file	src/DataItem.h
  * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -32,140 +32,22 @@
 #include "DataAttribute.h"
 #include "TypeNeutralData.h"
 
-#include "Poco/RWLock.h"
-#include "Poco/SharedPtr.h"
-
-using Poco::RWLock;
-using Poco::SharedPtr;
-
-class OutPort;
-class DataLogger;
-
 /**
  * DataItem
  *
- * Define data objects that will be used in the data manager.
+ * Container for TypeNeutralData and a DataAttribute.
  */
 class DataItem: public TypeNeutralData
 {
 public:
-    DataItem(int datatype = typeUndefined, OutPort* parent = NULL);
-    virtual ~DataItem();
+    DataItem(int datatype = typeUndefined): TypeNeutralData(datatype) { }
+    virtual ~DataItem() { }
 
     DataAttribute getDataAttribute() { return attribute; }
-
     void setDataAttribute(DataAttribute attr) { attribute = attr; }
 
-    /**
-     * Locking part of tryGetDataToWrite
-     *
-     * @see getDataToWrite
-     */
-    bool tryLockToWrite() { return dataLock.tryWriteLock(); }
-
-    /**
-     * Retrieving pointer part of tryGetDataToWrite
-     *
-     * @see tryLockToWrite
-     */
-    template<typename T> void getDataToWrite(T*& pData)
-    {
-        checkType<T>();
-        pData = reinterpret_cast<T*>(dataStore);
-    }
-
-    /**
-     * Retrieve a write reference on the data
-     *
-     * Lock the data
-     * @throw Poco::DataFormatException forwarded from checkType()
-     */
-    template <typename T> bool tryGetDataToWrite(T*& pData)
-    {
-        checkType<T>();
-
-        if (dataLock.tryWriteLock())
-        {
-            pData = reinterpret_cast<T*>(dataStore);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    /**
-     * Retrieve a pointer on the data to read it
-     *
-     * @warning The lock has to have been previously acquired
-     * @throw Poco::DataFormatException forwarded from checkType()
-     */
-    template <typename T> T* getDataToRead()
-    {
-        checkType<T>();
-
-        return reinterpret_cast<T*>(dataStore);
-    }
-
-    /**
-     * Forward the tryReadLock() call to the data RWLock
-     */
-    bool tryReadLock()
-        { return dataLock.tryReadLock(); }
-
-    /**
-     * Forward the readLock() call to the data RWLock
-     */
-    void readLock()
-        { dataLock.readLock(); }
-
-    /**
-     * Release newly created data
-     *
-     *  - Release the lock
-     *  - Notify the data manager that will acquire a read lock if necessary
-     */
-    void releaseNewData();
-
-    /**
-     * Release data that failed to be created
-     *
-     *  - Release the lock
-     *  - expire the data
-     */
-    void releaseBrokenData();
-
-    /**
-     * Unlock the data
-     *
-     * unlock the data that was previously locked using tryGetDataToWrite
-     * or tryReadLock()
-     */
-    void releaseData()
-        { dataLock.unlock(); }
-
-    /**
-     * Get the parent port
-     *
-     * @warning the parent port can be NULL
-     */
-    OutPort* parentPort() { return mParentPort; }
-
-    void expire() { expired = true; }
-    bool isExpired() { return expired; }
-
 private:
-
     DataAttribute attribute; ///< data attribute
-
-    bool expired;
-
-    RWLock dataLock; ///< lock to manage the access to the dataStore
-
-    OutPort* mParentPort; ///< parent output data port.
-
-    friend class DataLogger;
 };
 
 #endif /* SRC_DATAITEM_H_ */

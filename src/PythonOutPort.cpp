@@ -254,7 +254,7 @@ PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
 /**
  * Construct a python list from a vector
  */
-PyObject* getVectorValue(SharedPtr<DataItem*> data)
+PyObject* getVectorValue(SharedPtr<DataSource*> data)
 {
     // construct pyList
     PyObject* list = PyList_New(0);
@@ -417,9 +417,9 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
 
 PyObject* pyOutPortGetDataValue(OutPortMembers* self)
 {
-	SharedPtr<DataItem*> sharedData = Poco::Util::Application::instance()
+	SharedPtr<DataSource*> sharedData = Poco::Util::Application::instance()
 			                          .getSubsystem<DataManager>()
-									  .getDataItem((**self->outPort)->dataItem());
+									  .getDataItem((**self->outPort)->dataSource());
 
     int dataType = (*sharedData)->dataType();
 
