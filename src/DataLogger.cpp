@@ -79,7 +79,7 @@ void DataLogger::acquireLock()
 {
     dataLock.lock(); // regular recursive mutex. ok with multiple locks. see data().
     if (pSourcePort)
-        data()->readLock();
+        data()->readDataLock();
 
     dataLock.unlock();
 }
@@ -119,9 +119,9 @@ void DataLogger::run()
     }
     catch (Poco::Exception& e)
     {
-        data()->releaseData();
+        data()->unlockData();
         e.rethrow();
     }
 
-    data()->releaseData();
+    data()->unlockData();
 }

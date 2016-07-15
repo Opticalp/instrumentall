@@ -32,10 +32,22 @@
 #include "DataAttribute.h"
 #include "TypeNeutralData.h"
 
+#include "Poco/RWLock.h"
+
+using Poco::RWLock;
+
 /**
  * DataItem
  *
  * Container for TypeNeutralData and a DataAttribute.
+ *
+ * Manage the locks about the data access.
+ *
+ * The public methods are the read methods to be accessed from the data targets
+ *
+ * The protected methods are the write methods to be accessed by the
+ * inherited data generating classes.
+ *
  */
 class DataItem: public TypeNeutralData
 {
@@ -44,10 +56,78 @@ public:
     virtual ~DataItem() { }
 
     DataAttribute getDataAttribute() { return attribute; }
+
+    /**
+     * Retrieve a pointer on the data
+     *
+     * @warning The lock (read or write) has to have been previously acquired
+     * @throw Poco::DataFormatException forwarded from checkType()
+     */
+    template <typename T> T* getData()
+    {
+        checkType<T>();
+        return reinterpret_cast<T*>(dataStore);
+    }
+
+    /**
+     * Forward the tryReadLock() call to the data RWLock
+     */
+    bool tryReadDataLock()
+        { return dataLock.tryReadLock(); }
+
+    /**
+     * Forward the readLock() call to the data RWLock
+     */
+    void readDataLock()
+        { dataLock.readLock(); }
+
+    /**
+     * Unlock the data
+     *
+     * unlock the data that was previously locked using tryGetDataToWrite
+     * or tryReadLock()
+     */
+    void unlockData()
+        { dataLock.unlock(); }
+
+protected:
     void setDataAttribute(DataAttribute attr) { attribute = attr; }
+
+    /**
+     * Locking part of tryGetDataToWrite
+     *
+     * @see getDataToWrite
+     */
+    bool tryWriteDataLock()
+    	{ return dataLock.tryWriteLock(); }
+
+    /**
+     * Retrieve a write reference on the data
+     *
+     * Lock the data
+     * @throw Poco::DataFormatException forwarded from checkType()
+     */
+    template <typename T> bool tryGetDataToWrite(T*& pData)
+    {
+        checkType<T>();
+
+        if (dataLock.tryWriteLock())
+        {
+            pData = reinterpret_cast<T*>(dataStore);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
 private:
     DataAttribute attribute; ///< data attribute
+    RWLock dataLock; ///< lock to manage the access to the data
+
+    // transitional
+    friend class OutPort;
 };
 
 #endif /* SRC_DATAITEM_H_ */

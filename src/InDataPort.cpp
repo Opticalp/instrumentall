@@ -91,7 +91,7 @@ bool InDataPort::tryLock()
     if (!isNew())
     {
         // try to get the lock
-        if (!(*getSourcePort())->dataSource()->tryReadLock())
+        if (!(*getSourcePort())->dataSource()->tryReadDataLock())
         {
         	newDataUnlock();
         	return false;
@@ -100,7 +100,7 @@ bool InDataPort::tryLock()
         // check if the data is up to date
         if (!isUpToDate())
         {
-            (*getSourcePort())->dataSource()->releaseData();
+            (*getSourcePort())->dataSource()->unlockData();
         	newDataUnlock();
             return false;
         }

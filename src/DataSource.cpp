@@ -49,11 +49,11 @@ DataSource::~DataSource()
 void DataSource::releaseNewData()
 {
 	expired = false;
-    releaseData();
+    unlockData();
 }
 
 void DataSource::releaseBrokenData()
 {
     expired = true;
-    releaseData();
+    unlockData();
 }

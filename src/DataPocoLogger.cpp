@@ -44,30 +44,30 @@ void DataPocoLogger::log()
         {
         case DataItem::typeInt32:
             poco_information(logger(),
-                    Poco::NumberFormatter::format(*(data()->getDataToRead<Poco::Int32>())));
+                    Poco::NumberFormatter::format(*(data()->getData<Poco::Int32>())));
             break;
         case DataItem::typeUInt32:
             poco_information(logger(),
-                    Poco::NumberFormatter::format(*(data()->getDataToRead<Poco::UInt32>())));
+                    Poco::NumberFormatter::format(*(data()->getData<Poco::UInt32>())));
             break;
         case DataItem::typeInt64:
             poco_information(logger(),
-                    Poco::NumberFormatter::format(*(data()->getDataToRead<Poco::Int64>())));
+                    Poco::NumberFormatter::format(*(data()->getData<Poco::Int64>())));
             break;
         case DataItem::typeUInt64:
             poco_information(logger(),
-                    Poco::NumberFormatter::format(*(data()->getDataToRead<Poco::UInt64>())));
+                    Poco::NumberFormatter::format(*(data()->getData<Poco::UInt64>())));
             break;
         case DataItem::typeFloat:
             poco_information(logger(),
-                    Poco::NumberFormatter::format(*(data()->getDataToRead<float>())));
+                    Poco::NumberFormatter::format(*(data()->getData<float>())));
             break;
         case DataItem::typeDblFloat:
             poco_information(logger(),
-                    Poco::NumberFormatter::format(*(data()->getDataToRead<double>())));
+                    Poco::NumberFormatter::format(*(data()->getData<double>())));
             break;
         case DataItem::typeString:
-            poco_information(logger(), *(data()->getDataToRead<std::string>()));
+            poco_information(logger(), *(data()->getData<std::string>()));
             break;
         default:
             throw Poco::NotImplementedException("DataPocoLogger",
@@ -102,7 +102,7 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
     case DataItem::typeInt32:
     {
         std::vector<Poco::Int32>* pData;
-        pData = data()->getDataToRead< std::vector<Poco::Int32> >();
+        pData = data()->getData< std::vector<Poco::Int32> >();
 
         for (std::vector<Poco::Int32>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -115,7 +115,7 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
     case DataItem::typeUInt32:
     {
         std::vector<Poco::UInt32>* pData;
-        pData = data()->getDataToRead< std::vector<Poco::UInt32> >();
+        pData = data()->getData< std::vector<Poco::UInt32> >();
 
         for (std::vector<Poco::UInt32>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -128,7 +128,7 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
     case DataItem::typeInt64:
     {
         std::vector<Poco::Int64>* pData;
-        pData = data()->getDataToRead< std::vector<Poco::Int64> >();
+        pData = data()->getData< std::vector<Poco::Int64> >();
 
         for (std::vector<Poco::Int64>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -141,7 +141,7 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
     case DataItem::typeUInt64:
     {
         std::vector<Poco::UInt64>* pData;
-        pData = data()->getDataToRead< std::vector<Poco::UInt64> >();
+        pData = data()->getData< std::vector<Poco::UInt64> >();
 
         for (std::vector<Poco::UInt64>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -154,7 +154,7 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
     case DataItem::typeFloat:
     {
         std::vector<float>* pData;
-        pData = data()->getDataToRead< std::vector<float> >();
+        pData = data()->getData< std::vector<float> >();
 
        for (std::vector<float>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -167,7 +167,7 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
     case DataItem::typeDblFloat:
     {
         std::vector<double>* pData;
-        pData = data()->getDataToRead< std::vector<double> >();
+        pData = data()->getData< std::vector<double> >();
 
         for (std::vector<double>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -180,7 +180,7 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
     case DataItem::typeString:
     {
         std::vector<std::string>* pData;
-        pData = data()->getDataToRead< std::vector<std::string> >();
+        pData = data()->getData< std::vector<std::string> >();
 
         for (std::vector<std::string>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -191,7 +191,7 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
         break;
     }
     default:
-        data()->releaseData();
+        data()->unlockData();
         throw Poco::NotImplementedException("DataPocoLogger",
                 "data type not implemented");
     }

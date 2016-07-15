@@ -31,10 +31,8 @@
 
 #include "DataItem.h"
 
-#include "Poco/RWLock.h"
 #include "Poco/SharedPtr.h"
 
-using Poco::RWLock;
 using Poco::SharedPtr;
 
 class OutPort;
@@ -57,70 +55,6 @@ public:
 	virtual ~DataSource();
 
     /**
-     * Locking part of tryGetDataToWrite
-     *
-     * @see getDataToWrite
-     */
-    bool tryLockToWrite() { return dataLock.tryWriteLock(); }
-
-    /**
-     * Retrieving pointer part of tryGetDataToWrite
-     *
-     * @see tryLockToWrite
-     */
-    template<typename T> void getDataToWrite(T*& pData)
-    {
-        checkType<T>();
-        pData = reinterpret_cast<T*>(dataStore);
-    }
-
-    /**
-     * Retrieve a write reference on the data
-     *
-     * Lock the data
-     * @throw Poco::DataFormatException forwarded from checkType()
-     */
-    template <typename T> bool tryGetDataToWrite(T*& pData)
-    {
-        checkType<T>();
-
-        if (dataLock.tryWriteLock())
-        {
-            pData = reinterpret_cast<T*>(dataStore);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    /**
-     * Retrieve a pointer on the data to read it
-     *
-     * @warning The lock has to have been previously acquired
-     * @throw Poco::DataFormatException forwarded from checkType()
-     */
-    template <typename T> T* getDataToRead()
-    {
-        checkType<T>();
-
-        return reinterpret_cast<T*>(dataStore);
-    }
-
-    /**
-     * Forward the tryReadLock() call to the data RWLock
-     */
-    bool tryReadLock()
-        { return dataLock.tryReadLock(); }
-
-    /**
-     * Forward the readLock() call to the data RWLock
-     */
-    void readLock()
-        { dataLock.readLock(); }
-
-    /**
      * Release newly created data
      *
      *  - Release the lock
@@ -137,15 +71,6 @@ public:
     void releaseBrokenData();
 
     /**
-     * Unlock the data
-     *
-     * unlock the data that was previously locked using tryGetDataToWrite
-     * or tryReadLock()
-     */
-    void releaseData()
-        { dataLock.unlock(); }
-
-    /**
      * Get the parent port
      *
      * @warning the parent port can be NULL
@@ -157,8 +82,6 @@ public:
 
 private:
     bool expired;
-
-    RWLock dataLock; ///< lock to manage the access to the dataStore
 
     OutPort* mParentPort; ///< parent output data port.
 

@@ -94,7 +94,7 @@ public:
      * @return true if success
      */
     bool tryLock()
-    	{ return dataSource()->tryLockToWrite(); }
+    	{ return dataSource()->tryWriteDataLock(); }
 
     /**
      * Retrieve a pointer on the data to be written
@@ -103,7 +103,7 @@ public:
      * tryLock, with return value == true.
      */
     template<typename T> void getDataToWrite(T*& pData)
-    	{ dataSource()->getDataToWrite(pData); }
+    	{ pData = dataSource()->getData<T>(); }
 
     /**
      * Try to retrieve a pointer on the data to be written
