@@ -477,9 +477,18 @@ pythonDispatchRunModule(PyObject *self, PyObject *args)
 extern "C" PyObject*
 pythonThreadManWaitAll(PyObject *self, PyObject *args)
 {
-    Poco::Util::Application::instance()
-            .getSubsystem<ThreadManager>()
-            .waitAll();
+	try
+	{
+		Poco::Util::Application::instance()
+				.getSubsystem<ThreadManager>()
+				.waitAll();
+	}
+	catch (Poco::RuntimeException& e)
+	{
+	      PyErr_SetString(PyExc_RuntimeError,
+	          ("WaitAll processing error: " + e.displayText()).c_str());
+	      return NULL;
+	}
 
     Py_RETURN_NONE;
 }

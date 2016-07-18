@@ -206,10 +206,12 @@ size_t ThreadManager::count()
 
 void ThreadManager::waitAll()
 {
+	bool stoppedOnCancel = false;
+
     // joinAll does not work here,
     // since it seems that it locks the recursive creation of new threads...
     // We use an event instead.
-    while (count())
+    while (count() || cancellingAll)
     {
         //Poco::TaskManager::TaskList list = taskManager.taskList();
         //std::string nameList("\n");
@@ -222,7 +224,13 @@ void ThreadManager::waitAll()
         //poco_information(logger(), "active threads are : " + nameList);
 
         Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+
+        if (cancellingAll)
+        	stoppedOnCancel = true;
     }
+
+    if (stoppedOnCancel)
+    	throw Poco::RuntimeException("waitAll","Cancellation upon user request");
 
     poco_information(logger(), "All threads have stopped. ");
 }
