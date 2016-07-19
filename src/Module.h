@@ -87,7 +87,7 @@ public:
 	      mParent(parent), ParameterizedEntity("module." + name),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
-		  reseting (false)
+		  reseting (false), resetDone(false)
 	{
 	}
 
@@ -439,6 +439,7 @@ private:
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
 	bool reseting; ///< flag set when the reseting begins
+	bool resetDone; ///< flag set when a reset just occurred
 
 	/**
 	 * Check if a task is already running (or at least started)

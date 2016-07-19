@@ -167,6 +167,8 @@ void Module::freeInternalName()
 
 void Module::run(ModuleTask* pTask)
 {
+	resetDone = false;
+
 	setRunningTask(pTask);
 
 	taskMngtMutex.lock();
@@ -285,7 +287,7 @@ void Module::enqueueTask(ModuleTask* task)
 
 void Module::resetWithTargets()
 {
-	if (reseting)
+	if (reseting || resetDone)
 		return;
 
 	reseting = true;
@@ -300,6 +302,7 @@ void Module::resetWithTargets()
 	resetTargets();
 
 	reseting = false;
+	resetDone = true;
 }
 
 bool Module::taskIsRunning()
