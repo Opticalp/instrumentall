@@ -70,6 +70,12 @@ public:
      */
     virtual ~InDataPort() { }
 
+    /// get port data type
+    int dataType() { return mType; }
+    /// get port data type as a character string
+    std::string dataTypeStr() { return DataItem::dataTypeStr(mType); }
+    /// get port indexing at the parent module
+
     /// Retrieve the data sequence source port
     SharedPtr<OutPort*> getSeqSourcePort();
 
@@ -112,6 +118,13 @@ public:
     void hold(bool status = true) { held = status; }
 
 private:
+    int mType; ///< port data type
+
+    bool isSupportedDataType(int dataType)
+    	{ return (dataType == mType); }
+
+    std::set<int> supportedDataType();
+
     /**
      * Set the data sequence source port
      *

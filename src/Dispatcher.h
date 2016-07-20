@@ -135,14 +135,21 @@ public:
       * @note If the target port expired during the binding,
       * no exception is thrown, but the binding is not made.
       */
-     void bind (SharedPtr<OutPort*> source, SharedPtr<InPort*> target);
+     void bind (DataSource* source, DataTarget* target);
 
      /**
-      * Remove a connection between two ports
+      * Remove the incoming connection to the given data target
       *
       * No exception is thrown
       */
-     void unbind(SharedPtr<InPort*> target);
+     void unbind(DataTarget* target);
+
+     /**
+      * Remove all outgoing connection from the given data source
+      *
+      * No exception is thrown
+      */
+     void unbind(DataSource* source);
 
      /**
       * Create a sequence combination connection between two ports

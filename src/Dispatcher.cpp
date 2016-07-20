@@ -228,9 +228,9 @@ void Dispatcher::removeInPort(InPort* port)
     {
         if (port == **it)
         {
-            (**it)->releaseSourcePort(); // break the connection
+            unbind(port);
 
-            // replace the pointed factory by something throwing exceptions
+            // replace the pointed port by something throwing exceptions
             if ((**it)->isTrig())
                 **it = &emptyTrigPort;
             else
@@ -273,10 +273,7 @@ void Dispatcher::removeOutPort(OutPort* port)
             // should already be broken by the deletion of the inPorts.
             std::vector< SharedPtr<InPort*> > targets;
 
-            targets = port->getTargetPorts();
-            for (std::vector< SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-                    tgtIte = targets.end() ; tgtIt != tgtIte ; tgtIt++)
-                (**tgtIt)->releaseSourcePort();
+            unbind(port);
 
             targets = port->getSeqTargetPorts();
             for (std::vector< SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
@@ -304,19 +301,26 @@ void Dispatcher::addOutPort(OutPort* port)
     allOutPorts.push_back(SharedPtr<OutPort*>(new (OutPort*)(port)));
 }
 
-void Dispatcher::bind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
+void Dispatcher::bind(DataSource* source, DataTarget* target)
 {
-    if (!(*target)->isTrig()
-            && (*target)->dataType() != (*source)->dataType())
-        throw Poco::DataFormatException("bind",
-                "The source and target port data types must fit");
-
-    (*target)->setSourcePort(source);
+	target->setDataSource(source);
 }
 
-void Dispatcher::unbind(SharedPtr<InPort*> target)
+void Dispatcher::unbind(DataTarget* target)
 {
-    (*target)->releaseSourcePort();
+    target->releaseDataSource();
+}
+
+void Dispatcher::unbind(DataSource* source)
+{
+	std::set<DataTarget*> targets = source->getDataTargets();
+
+	while (targets.size())
+	{
+		std::set<DataTarget*>::iterator it = targets.begin();
+		unbind(*it);
+		targets.erase(it);
+	}
 }
 
 void Dispatcher::seqBind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
@@ -341,9 +345,9 @@ void Dispatcher::seqUnbind(SharedPtr<InPort*> target)
 
 void Dispatcher::lockInPorts(OutPort* port)
 {
-    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
-    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
-            ite = targetPorts.end(); it != ite; it++ )
+    std::set<DataTarget*> targets = port->getDataTargets();
+    for ( std::vector< SharedPtr<InPort*> >::iterator it = targets.begin(),
+            ite = targets.end(); it != ite; it++ )
         (**it)->newDataLock();
 }
 
@@ -374,19 +378,24 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
 
 	// modules
 
-	std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
-    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
-            ite = targetPorts.end(); it != ite; it++ )
+	std::set<DataTarget*> targets = port->getDataTargets();
+    for ( std::set<DataTarget*>::iterator it = targets.begin(),
+            ite = targets.end(); it != ite; it++ )
     {
-        (**it)->setNew();
+        (*it)->setNew();
+
+        InPort* tmpPort = dynamic_cast<InPort*>(*it);
+
+        if (tmpPort == NULL)
+        	continue;
 
         // get module from module manager
         SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
                                         .getSubsystem<ModuleManager>()
-                                        .getModule((**it)->parent());
+                                        .getModule(tmpPort->parent());
 
         poco_information(logger(),port->parent()->name() + " port " + port->name()
-                + " STARTS " + (**it)->parent()->name() );
+                + " STARTS " + tmpPort->parent()->name() );
 
         enqueueModuleTask(new ModuleTask(*shdMod, **it));
     }
@@ -394,13 +403,18 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
 
 void Dispatcher::dispatchTargetReset(DataSource* port)
 {
-    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
-    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
-            ite = targetPorts.end(); it != ite; it++ )
+	std::set<DataTarget*> targets = port->getDataTargets();
+    for ( std::set<DataTarget*>::iterator it = targets.begin(),
+            ite = targets.end(); it != ite; it++ )
     {
+        InPort* tmpPort = dynamic_cast<InPort*>(*it);
+
+        if (tmpPort == NULL)
+        	continue;
+
     	poco_information(logger(), "forwarding module cancellation to "
-    			+ (**it)->parent()->name());
-    	(**it)->parent()->resetWithTargets();
+    			+ tmpPort->parent()->name());
+    	tmpPort->parent()->resetWithTargets();
     }
 }
 

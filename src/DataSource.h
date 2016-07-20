@@ -31,12 +31,14 @@
 
 #include "DataItem.h"
 
+#include "Poco/Mutex.h"
 #include "Poco/SharedPtr.h"
+
+#include <set>
 
 using Poco::SharedPtr;
 
-class OutPort;
-class DataLogger;
+class DataTarget;
 
 /**
  * DataSource
@@ -59,9 +61,9 @@ public:
 		{ return "empty data source to be used when a data source was just deleted"; } ;
 
     /**
-     * Retrieve the target ports
+     * Retrieve the data targets
      */
-    std::vector< SharedPtr<InPort*> > getTargetPorts();
+    std::set<DataTarget*> getDataTargets();
 
     /**
      * Release newly created data
@@ -89,30 +91,26 @@ public:
 
 private:
     /**
-     * Add a target port
+     * Add a data target
      *
-     * This function should only be called by the target InPort.
-     *
-     * The Dispatcher is requested to get the shared pointer
-     * on the InPort.
+     * This function should only be called by the target.
      */
-    void addTargetPort(InPort* port);
+    void addDataTarget(DataTarget* port);
 
     /**
-     * Remove a target port
+     * Remove a data target
      *
-     * Should not throw an exception if the port is not present
-     * in the targetPorts
+     * Should not throw an exception if the target is not present
+     * in the dataTargets
      */
-    void removeTargetPort(InPort* port);
+    void removeDataTarget(DataTarget* target);
 
-    std::vector< SharedPtr<InPort*> > targetPorts;
-    RWLock targetLock; ///< lock for data target operations
+    std::set<DataTarget*> dataTargets;
+    Poco::Mutex targetLock; ///< recursive mutex for data target operations
 
     bool expired;
 
-    friend class InPort;
-    // friend class DataLogger;
+    friend class DataTarget;
 };
 
 #endif /* SRC_DATASOURCE_H_ */

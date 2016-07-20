@@ -36,16 +36,11 @@
 #include "Poco/Util/Application.h"
 
 InPort::InPort(Module* parent, std::string name, std::string description,
-        int datatype, size_t index, bool trig):
+        size_t index, bool trig):
         Port(parent, name, description, index),
-		mType(datatype),
-        used(true), plugged(false),
         isTrigFlag(trig)
 {
-    mSourcePort = SharedPtr<OutPort*>(
-            new (OutPort*)( Poco::Util::Application::instance()
-                                    .getSubsystem<Dispatcher>()
-                                    .getEmptyOutPort()       ) );
+
 }
 
 InPort::InPort(OutPort* emptySourcePort, std::string name,
@@ -53,78 +48,7 @@ InPort::InPort(OutPort* emptySourcePort, std::string name,
                 Port(Poco::Util::Application::instance()
                     .getSubsystem<ModuleManager>()
                     .getEmptyModule(), name, description, 0),
-				mType(DataItem::typeUndefined),
-                used(false), plugged(false),
                 isTrigFlag(trig)
 {
-    mSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
-}
-
-void InPort::setNew(bool value)
-{
-    if (value)
-    {
-        (*getSourcePort())->readDataLock();
-        used = false;
-        newDataUnlock();
-    }
-    else
-    {
-    	// no need to newDataLock() since the only caller is InPort::release(),
-    	// then, new data can not be written
-    	used = true;
-    }
-}
-
-void InPort::readDataAttribute(DataAttributeIn* pAttr)
-{
-	*pAttr = DataAttributeIn(
-		(*getSourcePort())->getDataAttribute(), this);
-}
-
-void InPort::release()
-{
-    setNew(false);
-    (*getSourcePort())->unlockData();
-}
-
-void InPort::setSourcePort(SharedPtr<OutPort*> port)
-{
-    if (!plugged)
-        (*mSourcePort)->removeTargetPort(this);
-
-    mSourcePort = port;
-    try
-    {
-        (*mSourcePort)->addTargetPort(this);
-        plugged = true;
-    }
-    catch (Poco::Exception& e)
-    {
-        mSourcePort = SharedPtr<OutPort*>(
-                new (OutPort*)( Poco::Util::Application::instance()
-                                        .getSubsystem<Dispatcher>()
-                                        .getEmptyOutPort()       ) );
-        e.rethrow();
-    }
-}
-
-void InPort::releaseSourcePort()
-{
-    if (!plugged)
-        return;
-
-    (*mSourcePort)->removeTargetPort(this);
-    mSourcePort = SharedPtr<OutPort*>(
-            new (OutPort*)( Poco::Util::Application::instance()
-                                    .getSubsystem<Dispatcher>()
-                                    .getEmptyOutPort()       ) );
-    plugged = false;
-}
-
-int InPort::supportedDataType()
-{
-	std::set<int> ret;
-	ret.insert(mType);
-	return ret;
+	setNew();
 }

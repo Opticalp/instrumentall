@@ -35,18 +35,27 @@ InDataPort::InDataPort(Module* parent,
         std::string description,
         int datatype,
         size_t index):
-    InPort(parent, name, description, datatype, index),
-    held(false)
+    InPort(parent, name, description, index),
+	mType(datatype),
+    held(false), mSeqSourcePort(NULL)
 {
-    mSeqSourcePort = getSourcePort();
+
 }
 
 InDataPort::InDataPort(OutPort* emptySourcePort):
         InPort( emptySourcePort,
                 "emptyIn", "replace an expired port"),
-        held(false)
+		mType(DataItem::typeUndefined),
+		held(false)
 {
     mSeqSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
+}
+
+std::set<int> InDataPort::supportedDataType()
+{
+	std::set<int> ret;
+	ret.insert(mType);
+	return ret;
 }
 
 void InDataPort::setSeqSourcePort(SharedPtr<OutPort*> port)
@@ -91,7 +100,7 @@ bool InDataPort::tryLock()
     if (!isNew())
     {
         // try to get the lock
-        if (!(*getSourcePort())->tryReadDataLock())
+        if (!getDataSource()->tryReadDataLock())
         {
         	newDataUnlock();
         	return false;
@@ -100,7 +109,7 @@ bool InDataPort::tryLock()
         // check if the data is up to date
         if (!isUpToDate())
         {
-            (*getSourcePort())->unlockData();
+            getDataSource()->unlockData();
         	newDataUnlock();
             return false;
         }
@@ -125,5 +134,5 @@ bool InDataPort::isUpToDate()
 	if (!held)
 		return false;
 	else
-		return (!(*getSourcePort())->isExpired());
+		return (!getDataSource()->isExpired());
 }

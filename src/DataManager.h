@@ -30,6 +30,7 @@
 #define SRC_DATAMANAGER_H_
 
 #include "DataSource.h"
+#include "OutPort.h"
 
 #include "VerboseEntity.h"
 

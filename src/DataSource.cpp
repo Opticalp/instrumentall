@@ -47,7 +47,9 @@ DataSource::DataSource(int datatype):
 
 DataSource::~DataSource()
 {
-
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+						.unbind(this);
 }
 
 void DataSource::releaseNewData()
@@ -62,40 +64,30 @@ void DataSource::releaseBrokenData()
     unlockData();
 }
 
-std::vector<SharedPtr<InPort*> > DataSource::getTargetPorts()
+std::set<DataTarget*> DataSource::getDataTargets()
 {
-    std::vector<SharedPtr<InPort*> > list;
-
-    targetLock.readLock();
-    list = targetPorts;
-    targetLock.unlock();
-
-    return list;
+    Poco::Mutex::ScopedLock lock(targetLock);
+    return dataTargets;
 }
 
-void DataSource::addTargetPort(InPort* port)
+void DataSource::addDataTarget(DataTarget* target)
 {
-    Poco::ScopedRWLock lock(targetLock, true);
-
-    SharedPtr<InPort*> sharedPort =
-        Poco::Util::Application::instance()
-                    .getSubsystem<Dispatcher>()
-                    .getInPort(port);
-    targetPorts.push_back(sharedPort);
+    Poco::Mutex::ScopedLock lock(targetLock);
+    dataTargets.insert(target);
 }
 
 void DataSource::expire()
 {
 	expired = true;
 
-	// forward the expiration
-    targetLock.readLock();
-
-    for( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
-            ite = targetPorts.end(); it != ite; it++ )
-        (**it)->parent()->expireOutData();
-
-    targetLock.unlock();
+//	// forward the expiration
+//    targetLock.lock();
+//
+//    for( std::set<DataTargets*>::iterator it = dataTargets.begin(),
+//            ite = dataTargets.end(); it != ite; it++ )
+//        (**it)->parent()->expireOutData();
+//
+//    targetLock.unlock();
 }
 
 void DataSource::resetTargets()
@@ -105,17 +97,8 @@ void DataSource::resetTargets()
                         .dispatchTargetReset(this);
 }
 
-void DataSource::removeTargetPort(InPort* port)
+void DataSource::removeDataTarget(DataTarget* target)
 {
-    Poco::ScopedRWLock lock(targetLock, true);
-
-    for (std::vector< SharedPtr<InPort*> >::iterator it=targetPorts.begin(),
-            ite=targetPorts.end(); it != ite; it++ )
-    {
-        if (**it==port)
-        {
-            targetPorts.erase(it);
-            return;
-        }
-    }
+    Poco::Mutex::ScopedLock lock(targetLock);
+    dataTargets.erase(target);
 }

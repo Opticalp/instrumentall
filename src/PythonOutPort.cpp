@@ -144,7 +144,7 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
 {
     std::vector< Poco::SharedPtr<InPort*> > targets;
 
-    targets = (**self->outPort)->getTargetPorts();
+    targets = (**self->outPort)->getDataTargets();
 
     // prepare python list
     PyObject* pyPorts = PyList_New(0);

@@ -37,8 +37,6 @@
 
 using Poco::SharedPtr;
 
-class DataAttributeIn;
-class OutPort;
 class Dispatcher;
 
 /**
@@ -52,7 +50,6 @@ public:
     InPort(Module* parent,
             std::string name,
             std::string description,
-            int datatype,
             size_t index, bool trig = false);
 
     /**
@@ -66,40 +63,19 @@ public:
 
     virtual ~InPort() { }
 
-    /// get port data type
-    int dataType() { return mType; }
-    /// get port data type as a character string
-    std::string dataTypeStr() { return DataItem::dataTypeStr(mType); }
-    /// get port indexing at the parent module
-
-    /// Retrieve the source port
-    SharedPtr<OutPort*> getSourcePort()
-        { return mSourcePort; }
+    /**
+     * Implementation of DataTarget::name
+     *
+     * as explicit inheritance from Port::name
+     */
+    std::string name() { return Port::name(); }
 
     /**
-     * Try to lock the input port to get the incoming data
+     * Implementation of DataTarget::description
      *
-     * @return true if success
+     * as explicit inheritance from Port::description
      */
-    virtual bool tryLock() = 0;
-
-    /**
-     * Read the data attribute of the incoming data
-     *
-     * The port shall have been previously locked using
-     * tryLock, with return value == true.
-     */
-    void readDataAttribute(DataAttributeIn* pAttr);
-
-    /**
-     * Store that the data has been used and can be released.
-     *
-     * Release the corresponding locks, record that the data is not new
-     * any more
-     */
-    virtual void release();
-
-    bool isNew() { return !used; }
+    std::string description() { return Port::description(); }
 
     /**
      * Convenience function
@@ -109,74 +85,8 @@ public:
      */
     bool isTrig() { return isTrigFlag; }
 
-    bool isPlugged() { return plugged; }
-
-protected:
-    /**
-     * Set the source port
-     *
-     * This function should only be called by the dispatcher.
-     *
-     * If the source port was not the empty port,
-     * the port that was previously bound is notified
-     */
-    void setSourcePort(SharedPtr<OutPort*> port);
-
-    /**
-     * Release the source port
-     *
-     * And replace it by the empty port.
-     * If the source port was not the empty port,
-     * the port that was previously bound is notified
-     */
-    void releaseSourcePort();
-
-    /**
-     * To be called by the dispatcher
-     *
-     * when new data is available, just before the push.
-     *
-     * Release the lock that was initiated by Dispatcher::lockInPorts
-     */
-    void setNew(bool value = true);
-
-    /**
-     * Lock the newDataMutex
-     *
-     * to insure that nobody tryLock the data during
-     * the data update
-     *
-     * To be called by Dispatcher::lockInPorts
-     * and to be released by `InPort::setNew(true)` called
-     * by Dispatcher::setOutPortDataReady
-     */
-    void newDataLock() { newDataMutex.lock(); }
-
-    /**
-     * Unlock the newDataMutex
-     *
-     * @see newDataLock
-     */
-    void newDataUnlock() { newDataMutex.unlock(); }
-
 private:
-    int mType; ///< port data type
-
-    bool isSupportedDataType(int dataType)
-    	{ return (dataType == mType); }
-
-    int supportedDataType();
-
-    SharedPtr<OutPort*> mSourcePort;
-
-    bool used;
-    Poco::FastMutex newDataMutex;
-
     bool isTrigFlag;
-
-    bool plugged;
-
-    friend class Dispatcher;
 };
 
 #endif /* SRC_INPORT_H_ */

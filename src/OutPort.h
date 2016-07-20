@@ -40,6 +40,8 @@
 using Poco::RWLock;
 using Poco::SharedPtr;
 
+class DataLogger;
+
 /**
  * OutPort
  *

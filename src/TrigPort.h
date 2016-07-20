@@ -65,6 +65,13 @@ public:
      * tryDataAttribute is tryLock + readDataAttribute
      */
     bool tryDataAttribute(DataAttributeIn* pAttr);
+
+private:
+    bool isSupportedDataType(int dataType)
+    	{ return true; }
+
+    std::set<int> supportedDataType()
+    	{ return std::set<int>(); }
 };
 
 #endif /* SRC_TRIGPORT_H_ */

@@ -35,6 +35,8 @@
 
 #include <set>
 
+class DataAttributeIn;
+//class OutPort;
 class Dispatcher;
 
 /**
@@ -67,6 +69,33 @@ public:
 	 * Retrieve the data source
 	 */
 	DataSource* getDataSource();
+
+    bool isPlugged() { return (dataSource != 0); }
+
+    bool isNew() { return !used; }
+
+    /**
+     * Try to lock the input port to get the incoming data
+     *
+     * @return true if success
+     */
+    virtual bool tryLock() = 0;
+
+    /**
+     * Read the data attribute of the incoming data
+     *
+     * The port shall have been previously locked using
+     * tryLock, with return value == true.
+     */
+    void readDataAttribute(DataAttributeIn* pAttr);
+
+    /**
+     * Store that the data has been used and can be released.
+     *
+     * Release the corresponding locks, record that the data is not new
+     * any more
+     */
+    virtual void release();
 
 protected:
 	/**
@@ -103,9 +132,40 @@ protected:
      */
     virtual std::set<int> supportedDataType() = 0;
 
+    /**
+     * To be called by the dispatcher
+     *
+     * when new data is available, just before the push.
+     *
+     * Release the lock that was initiated by Dispatcher::lockInPorts
+     */
+    void setNew(bool value = true);
+
+    /**
+     * Lock the newDataMutex
+     *
+     * to insure that nobody tryLock the data during
+     * the data update
+     *
+     * To be called by Dispatcher::lockInPorts
+     * and to be released by `InPort::setNew(true)` called
+     * by Dispatcher::setOutPortDataReady
+     */
+    void newDataLock() { newDataMutex.lock(); }
+
+    /**
+     * Unlock the newDataMutex
+     *
+     * @see newDataLock
+     */
+    void newDataUnlock() { newDataMutex.unlock(); }
+
 private:
     DataSource* dataSource;
     Poco::FastMutex sourceLock; ///< lock for the data source operations
+
+    bool used;
+    Poco::FastMutex newDataMutex;
 
     friend class Dispatcher;
 };
