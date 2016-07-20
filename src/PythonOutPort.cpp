@@ -199,7 +199,7 @@ PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
 {
     std::vector< Poco::SharedPtr<InPort*> > targets;
 
-    targets = (**self->outPort)->getSeqTargetPorts();
+    targets = (**self->outPort)->getSeqTargets();
 
     // prepare python list
     PyObject* pyPorts = PyList_New(0);

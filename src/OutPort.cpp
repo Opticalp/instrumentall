@@ -60,13 +60,13 @@ void OutPort::notifyReady(DataAttributeOut attribute)
 {
     if (attribute.isSettingSequence())
     {
-        seqTargetPortsLock.readLock();
+        seqTargetsLock.readLock();
 
-        for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
-                ite = seqTargetPorts.end(); it != ite; it++ )
+        for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargets.begin(),
+                ite = seqTargets.end(); it != ite; it++ )
             attribute.appendSeqPortTarget(reinterpret_cast<InDataPort*>(**it));
 
-        seqTargetPortsLock.unlock();
+        seqTargetsLock.unlock();
     }
 
     Poco::Util::Application::instance()

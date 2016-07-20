@@ -44,7 +44,7 @@ class Dispatcher;
  *
  * Parent class for InDataPort and TrigPort
  */
-class InPort: public Port, public DataTarget
+class InPort: public Port, public SeqTarget
 {
 public:
     InPort(Module* parent,

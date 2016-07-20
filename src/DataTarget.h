@@ -109,7 +109,7 @@ protected:
 	void setDataSource(DataSource* source);
 
 	/**
-	 * Release the source port
+	 * Release the data source
 	 *
 	 * and replace it by NULL
 	 */
@@ -162,7 +162,7 @@ protected:
 
 private:
     DataSource* dataSource;
-    Poco::FastMutex sourceLock; ///< lock for the data source operations
+    Poco::FastMutex sourceLock; ///< lock for the dataSource operations
 
     bool used;
     Poco::FastMutex newDataMutex;

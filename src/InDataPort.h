@@ -76,9 +76,6 @@ public:
     std::string dataTypeStr() { return DataItem::dataTypeStr(mType); }
     /// get port indexing at the parent module
 
-    /// Retrieve the data sequence source port
-    SharedPtr<OutPort*> getSeqSourcePort();
-
     /**
      * Try to lock the input port to read its data and attribute
      *
@@ -124,27 +121,6 @@ private:
     	{ return (dataType == mType); }
 
     std::set<int> supportedDataType();
-
-    /**
-     * Set the data sequence source port
-     *
-     * This function should only be called by the dispatcher.
-     *
-     * If the source port was not the empty port,
-     * the port that was previously bound is notified
-     */
-    void setSeqSourcePort(SharedPtr<OutPort*> port);
-
-    /**
-     * Release the data sequence source port
-     *
-     * And replace it by the empty port.
-     * If the source port was not the empty port,
-     * the port that was previously bound is notified
-     */
-    void releaseSeqSourcePort();
-
-    SharedPtr<OutPort*> mSeqSourcePort;
 
     /**
      * Determine if the data of this port are up to date

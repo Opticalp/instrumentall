@@ -95,7 +95,7 @@ void GvExportWorkFlow::exportNodes(std::ostream& out)
             if ((*port)->getDataTargets().size())
                 outPorts.push_back(port);
 
-            if ((*port)->getSeqTargetPorts().size())
+            if ((*port)->getSeqTargets().size())
                 outSeqPorts.push_back(port);
         }
     }
@@ -134,7 +134,7 @@ void GvExportWorkFlow::exportSeqEdges(std::ostream& out)
     {
         out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
 
-        std::vector<SharedPtr<InPort*> > targets = (**it)->getSeqTargetPorts();
+        std::vector<SharedPtr<InPort*> > targets = (**it)->getSeqTargets();
 
         for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
                 tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)

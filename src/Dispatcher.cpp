@@ -275,7 +275,7 @@ void Dispatcher::removeOutPort(OutPort* port)
 
             unbind(port);
 
-            targets = port->getSeqTargetPorts();
+            targets = port->getSeqTargets();
             for (std::vector< SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
                     tgtIte = targets.end() ; tgtIt != tgtIte ; tgtIt++)
                 reinterpret_cast<InDataPort*>(**tgtIt)->releaseSeqSourcePort();
@@ -323,24 +323,26 @@ void Dispatcher::unbind(DataSource* source)
 	}
 }
 
-void Dispatcher::seqBind(SharedPtr<OutPort*> source, SharedPtr<InPort*> target)
+void Dispatcher::seqBind(SeqSource* source, SeqTarget* target)
 {
-    if ((*target)->isTrig())
-        throw Poco::RuntimeException("seqBind",
-                "The target port is a trig port. "
-                "A data sequence can not be bound to a trig port");
-
-    reinterpret_cast<InDataPort*>(*target)->setSeqSourcePort(source);
+    target->setSeqSource(source);
 }
 
-void Dispatcher::seqUnbind(SharedPtr<InPort*> target)
+void Dispatcher::seqUnbind(SeqTarget* target)
 {
-    if ((*target)->isTrig())
-        throw Poco::RuntimeException("seqBind",
-                "The target port is a trig port. "
-                "A data sequence can not be bound to a trig port");
+	target->releaseSeqSource();
+}
 
-    reinterpret_cast<InDataPort*>(*target)->releaseSeqSourcePort();
+void Dispatcher::seqUnbind(SeqSource* source)
+{
+	std::set<SeqTarget*> targets = source->getSeqTargets();
+
+	while (targets.size())
+	{
+		std::set<SeqTarget*>::iterator it = targets.begin();
+		seqUnbind(*it);
+		targets.erase(it);
+	}
 }
 
 void Dispatcher::lockInPorts(OutPort* port)

@@ -60,11 +60,11 @@ std::set<int> InDataPort::supportedDataType()
 
 void InDataPort::setSeqSourcePort(SharedPtr<OutPort*> port)
 {
-    (*mSeqSourcePort)->removeSeqTargetPort(this);
+    (*mSeqSourcePort)->removeSeqTarget(this);
     mSeqSourcePort = port;
     try
     {
-        (*mSeqSourcePort)->addSeqTargetPort(this);
+        (*mSeqSourcePort)->addSeqTarget(this);
     }
     catch (Poco::Exception& e)
     {
@@ -78,7 +78,7 @@ void InDataPort::setSeqSourcePort(SharedPtr<OutPort*> port)
 
 void InDataPort::releaseSeqSourcePort()
 {
-    (*mSeqSourcePort)->removeSeqTargetPort(this);
+    (*mSeqSourcePort)->removeSeqTarget(this);
     mSeqSourcePort = SharedPtr<OutPort*>(
             new (OutPort*)( Poco::Util::Application::instance()
                                     .getSubsystem<Dispatcher>()

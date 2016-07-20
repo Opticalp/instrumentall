@@ -1,12 +1,7 @@
 /**
- * detailed comment
- * 
- * @file	/Instrumentall-Debug@instru-git-debug/[Source directory]/src/SeqSource.cpp
- * @brief	short comment
- * @date	15 juil. 2016
+ * @file	/src/SeqTarget.h
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
- *
- * $Id$
  */
 
 /*
@@ -31,34 +26,53 @@
  THE SOFTWARE.
  */
 
-#include "SeqSource.h"
+#ifndef SRC_SEQTARGET_H_
+#define SRC_SEQTARGET_H_
 
-#include "SeqTarget.h"
-#include "Dispatcher.h"
+#include "DataTarget.h"
 
-#include "Poco/Util/Application.h"
-
-SeqSource::~SeqSource()
+/**
+ * SeqTarget
+ *
+ * Data sequence target.
+ * Inherited from DataTarget since it can not be a seqTarget
+ * if it is not a DataTarget
+ */
+class SeqTarget: public DataTarget
 {
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-						.seqUnbind(this);
-}
+public:
+	SeqTarget() { }
+	virtual ~SeqTarget();
 
-std::set<SeqTarget*> SeqSource::getSeqTargets()
-{
-	Poco::ScopedReadRWLock lock(seqTargetsLock);
-    return seqTargets;
-}
+	/**
+	 * Retrieve the data sequence source port
+	 */
+	SeqSource* getSeqSource();
 
-void SeqSource::addSeqTarget(SeqTarget* target)
-{
-	Poco::ScopedLock<Poco::FastMutex> lock(seqTargetsLock);
-	seqTargets.insert(target);
-}
+protected:
+	/**
+	 * Register a new data sequence source
+	 *
+	 * The data sequence source has to be unique.
+	 * Setting a new data sequence source frees the
+	 * previous data sequence source.
+	 *
+	 * Call SeqSource::AddSeqTarget
+	 */
+	void setSeqSource(SeqSource* source);
 
-void SeqSource::removeSeqTarget(SeqTarget* target)
-{
-	Poco::ScopedLock<Poco::FastMutex> lock(seqTargetsLock);
-	seqTargets.erase(target);
-}
+	/**
+	 * Release the seq source
+	 *
+	 * and replace it by NULL
+	 */
+	void releaseSeqSource();
+
+private:
+    SeqSource* seqSource;
+    Poco::FastMutex sourceLock; ///< lock for the seqSource operations
+
+    friend class Dispatcher;
+};
+
+#endif /* SRC_SEQTARGET_H_ */

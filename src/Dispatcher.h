@@ -152,7 +152,7 @@ public:
      void unbind(DataSource* source);
 
      /**
-      * Create a sequence combination connection between two ports
+      * Create a data sequence connection
       *
       * @throw Poco::Exception that is forwarded
       * from @ref getInPort. It is issued if the port is deleted
@@ -160,14 +160,21 @@ public:
       * @note If the target port expired during the binding,
       * no exception is thrown, but the binding is not made.
       */
-     void seqBind (SharedPtr<OutPort*> source, SharedPtr<InPort*> target);
+     void seqBind (SeqSource* source, SeqTarget* target);
 
      /**
-      * Remove a seq combination connection between two ports
+      * Remove a data seq connection
       *
       * No exception is thrown
       */
-     void seqUnbind(SharedPtr<InPort*> target);
+     void seqUnbind(SeqTarget* target);
+
+     /**
+      * Remove a data seq connection
+      *
+      * No exception is thrown
+      */
+     void seqUnbind(SeqSource* source);
 
      /**
       * Function to be called when new data is ready on an OutPort

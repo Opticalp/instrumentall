@@ -31,16 +31,14 @@
 
 #include "DataSource.h"
 
-#include "Poco/RWLock.h"
+#include "Poco/Mutex.h"
 #include "Poco/SharedPtr.h"
 
-#include <vector>
+#include <set>
 
-using Poco::RWLock;
 using Poco::SharedPtr;
 
-class InDataPort;
-class InPort;
+class SeqTarget;
 
 /**
  * SeqSource
@@ -54,12 +52,12 @@ class SeqSource: public DataSource
 public:
 	SeqSource(int datatype): DataSource(datatype) { }
 	SeqSource() { }
-	virtual ~SeqSource() { }
+	virtual ~SeqSource();
 
     /**
      * Retrieve the data sequence target ports
      */
-    std::vector< SharedPtr<InPort*> > getSeqTargetPorts();
+    std::set<SeqTarget*> getSeqTargets();
 
 protected:
     /**
@@ -70,7 +68,7 @@ protected:
      * The Dispatcher is requested to get the shared pointer
      * on the InDataPort.
      */
-    void addSeqTargetPort(InDataPort* port);
+    void addSeqTarget(SeqTarget* target);
 
     /**
      * Remove a sequence re-combiner target port
@@ -78,13 +76,13 @@ protected:
      * Should not throw an exception if the port is not present
      * in the seqTargetPorts
      */
-    void removeSeqTargetPort(InDataPort* port);
+    void removeSeqTarget(SeqTarget* target);
 
-    /// list of target ports for data sequence re-combination
-    std::vector< SharedPtr<InPort*> > seqTargetPorts;
-    RWLock seqTargetPortsLock; ///< lock for seqTargetPorts operations
+private:
+    std::set<SeqTarget*> seqTargets; ///< list of data sequence targets
+    Poco::FastMutex seqTargetsLock; ///< recursive mutex for seqTargets operations
 
-    friend class InDataPort;
+    friend class SeqTarget;
 };
 
 #endif /* SRC_SEQSOURCE_H_ */

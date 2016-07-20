@@ -1,12 +1,7 @@
 /**
- * detailed comment
- * 
- * @file	/Instrumentall-Debug@instru-git-debug/[Source directory]/src/SeqSource.cpp
- * @brief	short comment
- * @date	15 juil. 2016
+ * @file	/src/SeqTarget.cpp
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
- *
- * $Id$
  */
 
 /*
@@ -31,34 +26,33 @@
  THE SOFTWARE.
  */
 
-#include "SeqSource.h"
-
 #include "SeqTarget.h"
-#include "Dispatcher.h"
 
-#include "Poco/Util/Application.h"
-
-SeqSource::~SeqSource()
+SeqTarget::~SeqTarget()
 {
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-						.seqUnbind(this);
+	releaseSeqSource();
 }
 
-std::set<SeqTarget*> SeqSource::getSeqTargets()
+SeqSource* SeqTarget::getSeqSource()
 {
-	Poco::ScopedReadRWLock lock(seqTargetsLock);
-    return seqTargets;
+	Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
+	return seqSource;
 }
 
-void SeqSource::addSeqTarget(SeqTarget* target)
+void SeqTarget::setSeqSource(SeqSource* source)
 {
-	Poco::ScopedLock<Poco::FastMutex> lock(seqTargetsLock);
-	seqTargets.insert(target);
+    Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
+
+	if (seqSource)
+		seqSource->removeSeqTarget(this);
+
+	seqSource = source;
+
+	if (seqSource)
+		seqSource->addSeqTarget(this);
 }
 
-void SeqSource::removeSeqTarget(SeqTarget* target)
+void SeqTarget::releaseSeqSource()
 {
-	Poco::ScopedLock<Poco::FastMutex> lock(seqTargetsLock);
-	seqTargets.erase(target);
+	setSeqSource(NULL);
 }

@@ -106,7 +106,7 @@ private:
     void removeDataTarget(DataTarget* target);
 
     std::set<DataTarget*> dataTargets;
-    Poco::Mutex targetLock; ///< recursive mutex for data target operations
+    Poco::FastMutex targetLock; ///< non-recursive mutex for data target operations
 
     bool expired;
 

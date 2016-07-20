@@ -45,7 +45,6 @@ DataTarget::~DataTarget()
 DataSource* DataTarget::getDataSource()
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
-
 	return dataSource;
 }
 

@@ -66,13 +66,13 @@ void DataSource::releaseBrokenData()
 
 std::set<DataTarget*> DataSource::getDataTargets()
 {
-    Poco::Mutex::ScopedLock lock(targetLock);
+    Poco::ScopedLock<Poco::FastMutex> lock(targetLock);
     return dataTargets;
 }
 
 void DataSource::addDataTarget(DataTarget* target)
 {
-    Poco::Mutex::ScopedLock lock(targetLock);
+	Poco::ScopedLock<Poco::FastMutex> lock(targetLock);
     dataTargets.insert(target);
 }
 
@@ -99,6 +99,6 @@ void DataSource::resetTargets()
 
 void DataSource::removeDataTarget(DataTarget* target)
 {
-    Poco::Mutex::ScopedLock lock(targetLock);
+	Poco::ScopedLock<Poco::FastMutex> lock(targetLock);
     dataTargets.erase(target);
 }
