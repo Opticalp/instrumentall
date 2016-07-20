@@ -66,16 +66,16 @@ std::vector<SharedPtr<InPort*> > DataSource::getTargetPorts()
 {
     std::vector<SharedPtr<InPort*> > list;
 
-    targetPortsLock.readLock();
+    targetLock.readLock();
     list = targetPorts;
-    targetPortsLock.unlock();
+    targetLock.unlock();
 
     return list;
 }
 
 void DataSource::addTargetPort(InPort* port)
 {
-    Poco::ScopedRWLock lock(targetPortsLock, true);
+    Poco::ScopedRWLock lock(targetLock, true);
 
     SharedPtr<InPort*> sharedPort =
         Poco::Util::Application::instance()
@@ -89,13 +89,13 @@ void DataSource::expire()
 	expired = true;
 
 	// forward the expiration
-    targetPortsLock.readLock();
+    targetLock.readLock();
 
     for( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
             ite = targetPorts.end(); it != ite; it++ )
         (**it)->parent()->expireOutData();
 
-    targetPortsLock.unlock();
+    targetLock.unlock();
 }
 
 void DataSource::resetTargets()
@@ -107,7 +107,7 @@ void DataSource::resetTargets()
 
 void DataSource::removeTargetPort(InPort* port)
 {
-    Poco::ScopedRWLock lock(targetPortsLock, true);
+    Poco::ScopedRWLock lock(targetLock, true);
 
     for (std::vector< SharedPtr<InPort*> >::iterator it=targetPorts.begin(),
             ite=targetPorts.end(); it != ite; it++ )

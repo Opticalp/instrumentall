@@ -30,6 +30,7 @@
 #define SRC_INPORT_H_
 
 #include "Port.h"
+#include "DataTarget.h"
 
 #include "Poco/Mutex.h"
 #include "Poco/SharedPtr.h"
@@ -45,7 +46,7 @@ class Dispatcher;
  *
  * Parent class for InDataPort and TrigPort
  */
-class InPort: public Port
+class InPort: public Port, public DataTarget
 {
 public:
     InPort(Module* parent,
@@ -160,6 +161,11 @@ protected:
 
 private:
     int mType; ///< port data type
+
+    bool isSupportedDataType(int dataType)
+    	{ return (dataType == mType); }
+
+    int supportedDataType();
 
     SharedPtr<OutPort*> mSourcePort;
 

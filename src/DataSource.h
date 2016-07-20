@@ -107,7 +107,7 @@ private:
     void removeTargetPort(InPort* port);
 
     std::vector< SharedPtr<InPort*> > targetPorts;
-    RWLock targetPortsLock; ///< lock for targetPorts operations
+    RWLock targetLock; ///< lock for data target operations
 
     bool expired;
 

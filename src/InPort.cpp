@@ -121,3 +121,10 @@ void InPort::releaseSourcePort()
                                     .getEmptyOutPort()       ) );
     plugged = false;
 }
+
+int InPort::supportedDataType()
+{
+	std::set<int> ret;
+	ret.insert(mType);
+	return ret;
+}
