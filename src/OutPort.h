@@ -75,6 +75,20 @@ public:
     virtual ~OutPort();
 
     /**
+     * Implementation of DataSource::name
+     *
+     * as explicit inheritance from Port::name
+     */
+    std::string name() { return Port::name(); }
+
+    /**
+     * Implementation of DataSource::description
+     *
+     * as explicit inheritance from Port::description
+     */
+    std::string description() { return Port::description(); }
+
+    /**
      * Notify the dispatcher that the new data is ready
      *
      * With the given attributes,

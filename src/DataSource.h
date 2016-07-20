@@ -54,6 +54,10 @@ public:
 	DataSource(int datatype = typeUndefined);
 	virtual ~DataSource();
 
+	virtual std::string name() { return "emptyDataSource"; };
+	virtual std::string description()
+		{ return "empty data source to be used when a data source was just deleted"; } ;
+
     /**
      * Retrieve the target ports
      */
