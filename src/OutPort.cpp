@@ -38,7 +38,7 @@ OutPort::OutPort(Module* parent,
         std::string description,
         int datatype,
         size_t index):
-    Port(parent, name, description, datatype, index),
+    Port(parent, name, description, index),
 	SeqSource(datatype)
 {
 //    // notify the DataManager of the creation
@@ -51,8 +51,7 @@ OutPort::OutPort():
         Port(Poco::Util::Application::instance()
                     .getSubsystem<ModuleManager>()
                     .getEmptyModule(),
-                "emptyOut", "replace an expired port",
-                DataItem::typeUndefined, 0)
+                "emptyOut", "replace an expired port", 0)
 {
     // nothing to do
 }

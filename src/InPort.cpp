@@ -37,7 +37,8 @@
 
 InPort::InPort(Module* parent, std::string name, std::string description,
         int datatype, size_t index, bool trig):
-        Port(parent, name, description, datatype, index),
+        Port(parent, name, description, index),
+		mType(datatype),
         used(true), plugged(false),
         isTrigFlag(trig)
 {
@@ -51,8 +52,8 @@ InPort::InPort(OutPort* emptySourcePort, std::string name,
         std::string description, bool trig):
                 Port(Poco::Util::Application::instance()
                     .getSubsystem<ModuleManager>()
-                    .getEmptyModule(), name, description,
-                    DataItem::typeUndefined, 0),
+                    .getEmptyModule(), name, description, 0),
+				mType(DataItem::typeUndefined),
                 used(false), plugged(false),
                 isTrigFlag(trig)
 {

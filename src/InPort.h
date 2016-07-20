@@ -65,6 +65,12 @@ public:
 
     virtual ~InPort() { }
 
+    /// get port data type
+    int dataType() { return mType; }
+    /// get port data type as a character string
+    std::string dataTypeStr() { return DataItem::dataTypeStr(mType); }
+    /// get port indexing at the parent module
+
     /// Retrieve the source port
     SharedPtr<OutPort*> getSourcePort()
         { return mSourcePort; }
@@ -153,6 +159,8 @@ protected:
     void newDataUnlock() { newDataMutex.unlock(); }
 
 private:
+    int mType; ///< port data type
+
     SharedPtr<OutPort*> mSourcePort;
 
     bool used;

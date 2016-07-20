@@ -74,9 +74,6 @@ public:
      */
     virtual ~OutPort();
 
-    /// FIXME: transitional
-    int dataType() { return TypeNeutralData::dataType(); }
-
     /**
      * Notify the dispatcher that the new data is ready
      *
