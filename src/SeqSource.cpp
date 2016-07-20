@@ -34,20 +34,20 @@
 #include "SeqSource.h"
 
 #include "SeqTarget.h"
+#include "DataAttributeOut.h"
 #include "Dispatcher.h"
 
 #include "Poco/Util/Application.h"
 
 SeqSource::~SeqSource()
 {
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-						.seqUnbind(this);
+	if (seqTargets.size())
+		poco_bugcheck_msg("SeqSource destruction: seqTargets is not empty");
 }
 
 std::set<SeqTarget*> SeqSource::getSeqTargets()
 {
-	Poco::ScopedReadRWLock lock(seqTargetsLock);
+	Poco::ScopedLock<Poco::FastMutex> lock(seqTargetsLock);
     return seqTargets;
 }
 
@@ -55,6 +55,22 @@ void SeqSource::addSeqTarget(SeqTarget* target)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(seqTargetsLock);
 	seqTargets.insert(target);
+}
+
+void SeqSource::notifyReady(DataAttributeOut attribute)
+{
+    if (attribute.isSettingSequence())
+    {
+        seqTargetsLock.lock();
+
+        for( std::set<SeqTarget*>::iterator it = seqTargets.begin(),
+                ite = seqTargets.end(); it != ite; it++ )
+            attribute.appendSeqTarget(*it);
+
+        seqTargetsLock.unlock();
+    }
+
+    DataSource::notifyReady(attribute);
 }
 
 void SeqSource::removeSeqTarget(SeqTarget* target)

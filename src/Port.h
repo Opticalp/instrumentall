@@ -52,6 +52,12 @@ public:
                 pParent(parent),
                 mName(name), mDescription(description),
                 mIndex(index) { }
+
+    /**
+     * Constructor to be used by empty ports
+     */
+    Port(std::string name, std::string description);
+
     /// Destructor
     virtual ~Port() { }
 

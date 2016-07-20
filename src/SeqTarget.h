@@ -31,6 +31,9 @@
 
 #include "DataTarget.h"
 
+class SeqSource;
+class DataAttributeIn;
+
 /**
  * SeqTarget
  *
@@ -41,13 +44,21 @@
 class SeqTarget: public DataTarget
 {
 public:
-	SeqTarget() { }
+	SeqTarget(): seqSource(NULL) { }
 	virtual ~SeqTarget();
 
 	/**
 	 * Retrieve the data sequence source port
 	 */
 	SeqSource* getSeqSource();
+
+    /**
+     * Read the data attribute of the incoming data
+     *
+     * The port shall have been previously locked using
+     * tryLock, with return value == true.
+     */
+	void readDataAttribute(DataAttributeIn* pAttr);
 
 protected:
 	/**
@@ -70,7 +81,7 @@ protected:
 
 private:
     SeqSource* seqSource;
-    Poco::FastMutex sourceLock; ///< lock for the seqSource operations
+    Poco::FastMutex seqSourceLock; ///< lock for the seqSource operations
 
     friend class Dispatcher;
 };

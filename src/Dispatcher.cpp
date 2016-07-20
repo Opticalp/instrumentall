@@ -45,8 +45,8 @@ Dispatcher::Dispatcher():
     VerboseEntity(name()),
     initialized(false),
     emptyOutPort(),
-    emptyInPort(&emptyOutPort),
-    emptyTrigPort(&emptyOutPort)
+    emptyInPort(),
+    emptyTrigPort()
 {
     // nothing else to do
 }
@@ -229,15 +229,13 @@ void Dispatcher::removeInPort(InPort* port)
         if (port == **it)
         {
             unbind(port);
+            seqUnbind(port);
 
             // replace the pointed port by something throwing exceptions
             if ((**it)->isTrig())
                 **it = &emptyTrigPort;
             else
-            {
-                reinterpret_cast<InDataPort*>(**it)->releaseSeqSourcePort();
                 **it = &emptyInPort;
-            }
 
             allInPorts.erase((it+1).base());
             // poco_information(logger(),
@@ -274,11 +272,7 @@ void Dispatcher::removeOutPort(OutPort* port)
             std::vector< SharedPtr<InPort*> > targets;
 
             unbind(port);
-
-            targets = port->getSeqTargets();
-            for (std::vector< SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-                    tgtIte = targets.end() ; tgtIt != tgtIte ; tgtIt++)
-                reinterpret_cast<InDataPort*>(**tgtIt)->releaseSeqSourcePort();
+            seqUnbind(port);
 
             **it = &emptyOutPort; // replace the pointed factory by something throwing exceptions
             allOutPorts.erase((it+1).base());
@@ -345,24 +339,28 @@ void Dispatcher::seqUnbind(SeqSource* source)
 	}
 }
 
-void Dispatcher::lockInPorts(OutPort* port)
+void Dispatcher::lockTargets(DataSource* source)
 {
-    std::set<DataTarget*> targets = port->getDataTargets();
-    for ( std::vector< SharedPtr<InPort*> >::iterator it = targets.begin(),
+    std::set<DataTarget*> targets = source->getDataTargets();
+    for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
-        (**it)->newDataLock();
+        (*it)->newDataLock();
 }
 
-void Dispatcher::setOutPortDataReady(OutPort* port)
+void Dispatcher::setOutputDataReady(DataSource* source)
 {
 //    poco_information(logger(), port->name() + " data ready");
 
+	OutPort* tmpOut = dynamic_cast<OutPort*>(source);
+	if (tmpOut == NULL)
+		return;
+
 	// loggers
 
-    if (port->hasLoggers())
+    if (tmpOut->hasLoggers())
     {
 //        poco_information(logger(), port->name() + " has loggers");
-		std::set< SharedPtr<DataLogger*> > itemLoggers = port->loggers();
+		std::set< SharedPtr<DataLogger*> > itemLoggers = tmpOut->loggers();
 
 		for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
 				ite = itemLoggers.end(); it != ite; it++ )
@@ -380,7 +378,7 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
 
 	// modules
 
-	std::set<DataTarget*> targets = port->getDataTargets();
+	std::set<DataTarget*> targets = source->getDataTargets();
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     {
@@ -396,10 +394,10 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
                                         .getSubsystem<ModuleManager>()
                                         .getModule(tmpPort->parent());
 
-        poco_information(logger(),port->parent()->name() + " port " + port->name()
+        poco_information(logger(),tmpOut->parent()->name() + " port " + source->name()
                 + " STARTS " + tmpPort->parent()->name() );
 
-        enqueueModuleTask(new ModuleTask(*shdMod, **it));
+        enqueueModuleTask(new ModuleTask(*shdMod, tmpPort));
     }
 }
 

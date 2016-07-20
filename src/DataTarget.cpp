@@ -28,8 +28,6 @@
 
 #include "DataTarget.h"
 
-#include "DataAttributeIn.h"
-
 DataTarget::DataTarget():
 	dataSource(NULL),
 	used(true)
@@ -50,7 +48,7 @@ DataSource* DataTarget::getDataSource()
 
 void DataTarget::setDataSource(DataSource* source)
 {
-    if (!isSupportedDataType(source->dataType()))
+    if (source && !isSupportedDataType(source->dataType()))
         throw Poco::DataFormatException("setDataSource",
                 "The target does not support this data type: "
         		+ DataItem::dataTypeStr(source->dataType()));
@@ -87,10 +85,9 @@ void DataTarget::setNew(bool value)
     }
 }
 
-void DataTarget::readDataAttribute(DataAttributeIn* pAttr)
+void DataTarget::readDataAttribute(DataAttribute* pAttr)
 {
-	*pAttr = DataAttributeIn(
-		getDataSource()->getDataAttribute(), this);
+	*pAttr = getDataSource()->getDataAttribute();
 }
 
 void DataTarget::release()

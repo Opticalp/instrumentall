@@ -1,6 +1,6 @@
 /**
- * @file	src/TrigPort.h
- * @date	apr. 2016
+ * @file	/src/Port.cpp
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,52 +26,18 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_TRIGPORT_H_
-#define SRC_TRIGPORT_H_
+#include "Port.h"
 
-#include "InPort.h"
+#include "ModuleManager.h"
+#include "Poco/Util/Application.h"
 
-/**
- * TrigPort
- *
- * InPort that accepts any type of data. This kind of port is used to
- * trig the runTask (see Dispatcher::setOutPortDataReady)
- *
- * It can even accept seq info, e.g. to trig a sequenced acquisition
- */
-class TrigPort: public InPort
+Port::Port(std::string name, std::string description):
+	pParent(Poco::Util::Application::instance()
+		.getSubsystem<ModuleManager>()
+		.getEmptyModule()),
+	mName(name), mDescription(description),
+	mIndex(0)
 {
-public:
-    TrigPort(Module* parent,
-            std::string name,
-            std::string description,
-            size_t index);
 
-    /**
-     * Special constructor for the empty TrigPort
-     */
-    TrigPort();
+}
 
-    virtual ~TrigPort() { }
-
-    /**
-     * Do not accept held data. Only new data is allowed.
-     *
-     * @see InPort::tryLock
-     */
-    bool tryLock();
-
-    /**
-     * tryDataAttribute is tryLock + readDataAttribute
-     */
-    bool tryDataAttribute(DataAttributeIn* pAttr);
-
-private:
-    bool isSupportedDataType(int dataType)
-    	{ return true; }
-
-    std::set<int> supportedDataType()
-    	{ return std::set<int>(); }
-};
-
-#endif /* SRC_TRIGPORT_H_ */

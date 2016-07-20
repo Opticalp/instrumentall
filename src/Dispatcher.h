@@ -177,14 +177,12 @@ public:
      void seqUnbind(SeqSource* source);
 
      /**
-      * Function to be called when new data is ready on an OutPort
+      * Function to be called when new data is ready at a data source
       *
-      *  - Translate the DataAttributeOut attribute into a DataAttribute
-      *  by checking the sequence targets
-      *  - readLock the data for every target InPort
+      *  - readLock the data for every data target
       *  - notify the Modules corresponding to the target Ports (push)
       */
-     void setOutPortDataReady(OutPort* port);
+     void setOutputDataReady(DataSource* source);
 
      /**
       * Dispatching function for module reset when a task failed.
@@ -196,18 +194,19 @@ public:
      void dispatchTargetReset(DataSource* port);
 
      /**
-      * Lock the input ports
+      * Lock the data targets
       *
-      * to avoid its usage (mainly InPort::tryLock)
+      * to avoid their usage (mainly DataTarget::tryLock)
       * during the data update.
       *
-      *  - To be called by the OutPort when new data is ready on an OutPort
+      *  - To be called by the DataSource when new data is ready
       *  - the lock is released on new data
       *
-      * @see OutPort::notifyReady
-      * @see InPort::setNew
+      * @see DataSource::notifyReady
+      * @see SeqSource::notifyReady
+      * @see DataTarget::setNew
       */
-     void lockInPorts(OutPort* port);
+     void lockTargets(DataSource* source);
 
      /**
       * Launch a module task

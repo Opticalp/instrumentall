@@ -142,9 +142,20 @@ PyObject* pyOutPortParent(OutPortMembers* self)
 
 PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
 {
-    std::vector< Poco::SharedPtr<InPort*> > targets;
+    std::set< Poco::SharedPtr<InPort*> > targetPorts;
 
-    targets = (**self->outPort)->getDataTargets();
+    std::set<DataTarget*> targets = (**self->outPort)->getDataTargets();
+
+    for (std::set<DataTarget*>::iterator it = targets.begin(),
+    		ite = targets.end(); it != ite; it++)
+    {
+        InPort* tmpPort = dynamic_cast<InPort*>(*it);
+
+        if (tmpPort)
+            targetPorts.insert(Poco::Util::Application::instance()
+				.getSubsystem<Dispatcher>()
+				.getInPort(tmpPort));
+    }
 
     // prepare python list
     PyObject* pyPorts = PyList_New(0);
@@ -158,8 +169,8 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
     }
 
 
-    for ( std::vector< Poco::SharedPtr<InPort*> >::iterator it = targets.begin(),
-            ite = targets.end(); it != ite; it++ )
+    for ( std::set< Poco::SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
     {
         // create the python object
         InPortMembers* pyPort =
@@ -197,9 +208,20 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
 
 PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
 {
-    std::vector< Poco::SharedPtr<InPort*> > targets;
+    std::set< Poco::SharedPtr<InPort*> > targetPorts;
 
-    targets = (**self->outPort)->getSeqTargets();
+    std::set<SeqTarget*> targets = (**self->outPort)->getSeqTargets();
+
+    for (std::set<SeqTarget*>::iterator it = targets.begin(),
+    		ite = targets.end(); it != ite; it++)
+    {
+        InPort* tmpPort = dynamic_cast<InPort*>(*it);
+
+        if (tmpPort)
+            targetPorts.insert(Poco::Util::Application::instance()
+				.getSubsystem<Dispatcher>()
+				.getInPort(tmpPort));
+    }
 
     // prepare python list
     PyObject* pyPorts = PyList_New(0);
@@ -213,8 +235,8 @@ PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
     }
 
 
-    for ( std::vector< Poco::SharedPtr<InPort*> >::iterator it = targets.begin(),
-            ite = targets.end(); it != ite; it++ )
+    for ( std::set< Poco::SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
     {
         // create the python object
         InPortMembers* pyPort =

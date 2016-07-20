@@ -89,6 +89,14 @@ public:
      */
     void resetTargets();
 
+    /**
+     * Notify the dispatcher that the new data is ready
+     *
+     * With the given attributes,
+     * and release the lock acquired with tryData
+     */
+    void notifyReady(DataAttribute attribute);
+
 private:
     /**
      * Add a data target

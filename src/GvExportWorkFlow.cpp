@@ -134,12 +134,13 @@ void GvExportWorkFlow::exportSeqEdges(std::ostream& out)
     {
         out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
 
-        std::vector<SharedPtr<InPort*> > targets = (**it)->getSeqTargets();
-
-        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
-
+// FIXME
+//        std::vector<SharedPtr<InPort*> > targets = (**it)->getSeqTargets();
+//
+//        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
+//                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
+//            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
+//
         out << "}[style=dotted];" << std::endl;
     }
 

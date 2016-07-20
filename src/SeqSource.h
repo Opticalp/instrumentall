@@ -30,6 +30,7 @@
 #define SRC_SEQSOURCE_H_
 
 #include "DataSource.h"
+#include "DataAttributeOut.h"
 
 #include "Poco/Mutex.h"
 #include "Poco/SharedPtr.h"
@@ -59,6 +60,17 @@ public:
      */
     std::set<SeqTarget*> getSeqTargets();
 
+    /**
+     * Notify the dispatcher that the new data is ready
+     *
+     * With the given attributes,
+     * and release the lock acquired with tryData
+     *
+     * This method calls DataSource::notifyReady after having
+     * prepared the data attribute with sequence information
+     */
+    void notifyReady(DataAttributeOut attribute);
+
 protected:
     /**
      * Add a sequence re-combiner target port
@@ -80,7 +92,7 @@ protected:
 
 private:
     std::set<SeqTarget*> seqTargets; ///< list of data sequence targets
-    Poco::FastMutex seqTargetsLock; ///< recursive mutex for seqTargets operations
+    Poco::FastMutex seqTargetsLock; ///< mutex for seqTargets operations
 
     friend class SeqTarget;
 };

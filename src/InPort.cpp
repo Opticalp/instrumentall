@@ -31,9 +31,6 @@
 #include "InDataPort.h"
 #include "OutPort.h"
 #include "Dispatcher.h"
-#include "ModuleManager.h"
-
-#include "Poco/Util/Application.h"
 
 InPort::InPort(Module* parent, std::string name, std::string description,
         size_t index, bool trig):
@@ -43,12 +40,9 @@ InPort::InPort(Module* parent, std::string name, std::string description,
 
 }
 
-InPort::InPort(OutPort* emptySourcePort, std::string name,
-        std::string description, bool trig):
-                Port(Poco::Util::Application::instance()
-                    .getSubsystem<ModuleManager>()
-                    .getEmptyModule(), name, description, 0),
+InPort::InPort(std::string name, std::string description, bool trig):
+                Port(name, description),
                 isTrigFlag(trig)
 {
-	setNew();
+	// used = false; // why?
 }

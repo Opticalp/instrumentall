@@ -47,9 +47,8 @@ DataSource::DataSource(int datatype):
 
 DataSource::~DataSource()
 {
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-						.unbind(this);
+	if (dataTargets.size())
+		poco_bugcheck_msg("DataSource destruction: dataTargets is not empty");
 }
 
 void DataSource::releaseNewData()
@@ -95,6 +94,20 @@ void DataSource::resetTargets()
     Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()
                         .dispatchTargetReset(this);
+}
+
+void DataSource::notifyReady(DataAttribute attribute)
+{
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .lockTargets(this);
+
+    setDataAttribute(attribute);
+    releaseNewData();
+
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .setOutputDataReady(this);
 }
 
 void DataSource::removeDataTarget(DataTarget* target)

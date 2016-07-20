@@ -141,12 +141,7 @@ PyObject* pyInPortGetSourcePort(InPortMembers* self)
     OutPort* tmpPort = dynamic_cast<OutPort*>((**self->inPort)->getDataSource());
 
     if (tmpPort == NULL)
-    {
-        PyErr_SetString(PyExc_ReferenceError,
-                "This input port has no source, "
-                "or the source is not an OutPort");
-        return NULL;
-    }
+        Py_RETURN_NONE;
 
     sharedSource = Poco::Util::Application::instance()
 		.getSubsystem<Dispatcher>()
@@ -184,22 +179,16 @@ PyObject* pyInPortGetSourcePort(InPortMembers* self)
 
 PyObject* pyInPortGetSeqSourcePort(InPortMembers* self)
 {
-    if ((**self->inPort)->isTrig())
-        Py_RETURN_NONE;
-
     Poco::SharedPtr<OutPort*> sharedSource;
 
-    sharedSource = reinterpret_cast<InDataPort*>(**self->inPort)->getSeqSourcePort();
+    OutPort* tmpPort = dynamic_cast<OutPort*>((**self->inPort)->getSeqSource());
 
-    // check if connected
-    if ( *sharedSource == Poco::Util::Application::instance()
-                            .getSubsystem<Dispatcher>()
-                            .getEmptyOutPort() )
-    {
-        PyErr_SetString(PyExc_ReferenceError,
-                "This input port has no source");
-        return NULL;
-    }
+    if (tmpPort == NULL)
+        Py_RETURN_NONE;
+
+    sharedSource = Poco::Util::Application::instance()
+		.getSubsystem<Dispatcher>()
+		.getOutPort(tmpPort);
 
     // prepare OutPort python type
     if (PyType_Ready(&PythonOutPort) < 0)

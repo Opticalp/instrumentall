@@ -91,14 +91,6 @@ public:
     std::string description() { return Port::description(); }
 
     /**
-     * Notify the dispatcher that the new data is ready
-     *
-     * With the given attributes,
-     * and release the lock acquired with tryData
-     */
-    void notifyReady(DataAttributeOut attribute);
-
-    /**
      * Release the output port data lock
      *
      * Without notifying the dispatcher.

@@ -30,7 +30,7 @@
 #define SRC_INPORT_H_
 
 #include "Port.h"
-#include "DataTarget.h"
+#include "SeqTarget.h"
 
 #include "Poco/Mutex.h"
 #include "Poco/SharedPtr.h"
@@ -57,9 +57,7 @@ public:
      *
      * Either empty TrigPort or empty InDataPort
      */
-    InPort(OutPort* emptySourcePort,
-            std::string name,
-            std::string description, bool trig = false);
+    InPort(std::string name, std::string description, bool trig = false);
 
     virtual ~InPort() { }
 

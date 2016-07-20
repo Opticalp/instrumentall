@@ -56,7 +56,7 @@ public:
     /**
      * Special constructor for the empty InDataPort
      */
-    InDataPort(OutPort* emptySourcePort);
+    InDataPort();
 
     /**
      * Destructor

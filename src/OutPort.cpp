@@ -28,10 +28,11 @@
 
 #include "OutPort.h"
 
-#include "ModuleManager.h"
 #include "Dispatcher.h"
 #include "DataManager.h"
 #include "DataLogger.h"
+
+#include "Poco/Util/Application.h"
 
 OutPort::OutPort(Module* parent,
         std::string name,
@@ -48,37 +49,9 @@ OutPort::OutPort(Module* parent,
 }
 
 OutPort::OutPort():
-        Port(Poco::Util::Application::instance()
-                    .getSubsystem<ModuleManager>()
-                    .getEmptyModule(),
-                "emptyOut", "replace an expired port", 0)
+        Port("emptyOut", "replace an expired port")
 {
     // nothing to do
-}
-
-void OutPort::notifyReady(DataAttributeOut attribute)
-{
-    if (attribute.isSettingSequence())
-    {
-        seqTargetsLock.readLock();
-
-        for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargets.begin(),
-                ite = seqTargets.end(); it != ite; it++ )
-            attribute.appendSeqPortTarget(reinterpret_cast<InDataPort*>(**it));
-
-        seqTargetsLock.unlock();
-    }
-
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .lockInPorts(this);
-
-    setDataAttribute(attribute);
-    releaseNewData();
-
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .setOutPortDataReady(this);
 }
 
 std::set<SharedPtr<DataLogger*> > OutPort::loggers()

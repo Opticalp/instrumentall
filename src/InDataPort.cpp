@@ -37,18 +37,16 @@ InDataPort::InDataPort(Module* parent,
         size_t index):
     InPort(parent, name, description, index),
 	mType(datatype),
-    held(false), mSeqSourcePort(NULL)
+    held(false)
 {
 
 }
 
-InDataPort::InDataPort(OutPort* emptySourcePort):
-        InPort( emptySourcePort,
-                "emptyIn", "replace an expired port"),
+InDataPort::InDataPort():
+        InPort("emptyIn", "replace an expired port"),
 		mType(DataItem::typeUndefined),
 		held(false)
 {
-    mSeqSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
 }
 
 std::set<int> InDataPort::supportedDataType()
@@ -56,38 +54,6 @@ std::set<int> InDataPort::supportedDataType()
 	std::set<int> ret;
 	ret.insert(mType);
 	return ret;
-}
-
-void InDataPort::setSeqSourcePort(SharedPtr<OutPort*> port)
-{
-    (*mSeqSourcePort)->removeSeqTarget(this);
-    mSeqSourcePort = port;
-    try
-    {
-        (*mSeqSourcePort)->addSeqTarget(this);
-    }
-    catch (Poco::Exception& e)
-    {
-        mSeqSourcePort = SharedPtr<OutPort*>(
-                new (OutPort*)( Poco::Util::Application::instance()
-                                        .getSubsystem<Dispatcher>()
-                                        .getEmptyOutPort()       ) );
-        e.rethrow();
-    }
-}
-
-void InDataPort::releaseSeqSourcePort()
-{
-    (*mSeqSourcePort)->removeSeqTarget(this);
-    mSeqSourcePort = SharedPtr<OutPort*>(
-            new (OutPort*)( Poco::Util::Application::instance()
-                                    .getSubsystem<Dispatcher>()
-                                    .getEmptyOutPort()       ) );
-}
-
-SharedPtr<OutPort*> InDataPort::getSeqSourcePort()
-{
-    return mSeqSourcePort;
 }
 
 bool InDataPort::tryLock()

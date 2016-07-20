@@ -308,7 +308,7 @@ pythonDispatchBind(PyObject* self, PyObject* args)
     {
         Poco::Util::Application::instance()
             .getSubsystem<Dispatcher>()
-            .bind(*pyOutPort->outPort,*pyInPort->inPort);
+            .bind(**pyOutPort->outPort,**pyInPort->inPort);
     }
     catch (Poco::Exception& e)
     {
@@ -342,7 +342,7 @@ pythonDispatchUnbind(PyObject* self, PyObject* args)
 
     Poco::Util::Application::instance()
         .getSubsystem<Dispatcher>()
-        .unbind(*pyPort->inPort);
+        .unbind(**pyPort->inPort);
 
     Py_RETURN_NONE;
 }
@@ -381,7 +381,7 @@ pythonDispatchSeqBind(PyObject* self, PyObject* args)
     {
         Poco::Util::Application::instance()
             .getSubsystem<Dispatcher>()
-            .seqBind(*pyOutPort->outPort,*pyInPort->inPort);
+            .seqBind(**pyOutPort->outPort,**pyInPort->inPort);
     }
     catch (Poco::Exception& e)
     {
@@ -415,7 +415,7 @@ pythonDispatchSeqUnbind(PyObject* self, PyObject* args)
 
     Poco::Util::Application::instance()
         .getSubsystem<Dispatcher>()
-        .seqUnbind(*pyPort->inPort);
+        .seqUnbind(**pyPort->inPort);
 
     Py_RETURN_NONE;
 }

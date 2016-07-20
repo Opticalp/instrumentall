@@ -35,7 +35,7 @@
 
 #include <set>
 
-class DataAttributeIn;
+class DataAttribute;
 //class OutPort;
 class Dispatcher;
 
@@ -86,8 +86,16 @@ public:
      *
      * The port shall have been previously locked using
      * tryLock, with return value == true.
+     *
+     * The object is not a seq Target, it is not supposed
+     * to interpret the attribute as a DataAttributeIn.
+     *
+     * This method should only be used to forward a data
+     * attribute.
+     *
+     * @see SeqTarget::readDataAttribute
      */
-    void readDataAttribute(DataAttributeIn* pAttr);
+    void readDataAttribute(DataAttribute* pAttr);
 
     /**
      * Store that the data has been used and can be released.

@@ -28,6 +28,9 @@
 
 #include "SeqTarget.h"
 
+#include "SeqSource.h"
+#include "DataAttributeIn.h"
+
 SeqTarget::~SeqTarget()
 {
 	releaseSeqSource();
@@ -35,13 +38,13 @@ SeqTarget::~SeqTarget()
 
 SeqSource* SeqTarget::getSeqSource()
 {
-	Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
+	Poco::ScopedLock<Poco::FastMutex> lock(seqSourceLock);
 	return seqSource;
 }
 
 void SeqTarget::setSeqSource(SeqSource* source)
 {
-    Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
+    Poco::ScopedLock<Poco::FastMutex> lock(seqSourceLock);
 
 	if (seqSource)
 		seqSource->removeSeqTarget(this);
@@ -50,6 +53,12 @@ void SeqTarget::setSeqSource(SeqSource* source)
 
 	if (seqSource)
 		seqSource->addSeqTarget(this);
+}
+
+void SeqTarget::readDataAttribute(DataAttributeIn* pAttr)
+{
+	*pAttr = DataAttributeIn(
+		getDataSource()->getDataAttribute(), this);
 }
 
 void SeqTarget::releaseSeqSource()
