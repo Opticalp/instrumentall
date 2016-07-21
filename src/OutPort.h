@@ -91,14 +91,6 @@ public:
     std::string description() { return Port::description(); }
 
     /**
-     * Release the output port data lock
-     *
-     * Without notifying the dispatcher.
-     * To be used in case of failure.
-     */
-    void releaseOnFailure() { releaseBrokenData(); }
-
-    /**
      * Retrieve the data loggers
      *
      * This function calls the DataManager::getDataLogger

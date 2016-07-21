@@ -39,8 +39,7 @@
 #include "Poco/Util/Application.h"
 
 DataSource::DataSource(int datatype):
-		DataItem(datatype),
-		expired(true)
+		DataItem(datatype)
 {
 
 }
@@ -51,59 +50,49 @@ DataSource::~DataSource()
 		poco_bugcheck_msg("DataSource destruction: dataTargets is not empty");
 }
 
-void DataSource::releaseNewData()
+void DataSource::releaseWrite()
 {
-	expired = false;
+	// TODO
+	// setDataOk();
     unlockData();
 }
 
-void DataSource::releaseBrokenData()
+void DataSource::releaseWriteOnFailure()
 {
-    expired = true;
-    unlockData();
+	// TODO
+	// setDataOk(false);  // DataItem::setDataOk
+	unlockData();
+}
+
+
+void DataSource::targetReleaseRead(DataTarget* target)
+{
+	// check that the target is not in the pending targets anymore
+	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(pendingTargetsLock);
+	if (pendingDataTargets.erase(target))
+		poco_bugcheck_msg("call to targetReleaseRead without "
+				"previous call to tryCatchSource");
+	lock.unlock();
+
+	unlockData();
 }
 
 std::set<DataTarget*> DataSource::getDataTargets()
 {
-    Poco::ScopedLock<Poco::FastMutex> lock(targetLock);
+    Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);
     return dataTargets;
 }
 
 void DataSource::addDataTarget(DataTarget* target)
 {
-	Poco::ScopedLock<Poco::FastMutex> lock(targetLock);
+	Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);
     dataTargets.insert(target);
-}
-
-void DataSource::expire()
-{
-	expired = true;
-
-//	// forward the expiration
-//    targetLock.lock();
-//
-//    for( std::set<DataTargets*>::iterator it = dataTargets.begin(),
-//            ite = dataTargets.end(); it != ite; it++ )
-//        (**it)->parent()->expireOutData();
-//
-//    targetLock.unlock();
-}
-
-void DataSource::resetTargets()
-{
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .dispatchTargetReset(this);
 }
 
 void DataSource::notifyReady(DataAttribute attribute)
 {
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .lockTargets(this);
-
     setDataAttribute(attribute);
-    releaseNewData();
+    releaseWrite();
 
     Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()
@@ -112,6 +101,38 @@ void DataSource::notifyReady(DataAttribute attribute)
 
 void DataSource::removeDataTarget(DataTarget* target)
 {
-	Poco::ScopedLock<Poco::FastMutex> lock(targetLock);
+	Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);
     dataTargets.erase(target);
+}
+
+void DataSource::registerPendingTarget(DataTarget* target)
+{
+    readDataLock();
+
+    pendingTargetsLock.lock();
+    pendingDataTargets.insert(target);
+    pendingTargetsLock.unlock();
+}
+
+bool DataSource::tryWriteDataLock()
+{
+	bool ret = DataItem::tryWriteDataLock();
+
+	if (ret)
+	{
+		Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
+		if (pendingDataTargets.size())
+			poco_bugcheck_msg((name() + " pending targets is not empty, "
+					"write lock should not have been possible").c_str());
+
+		return true;
+	}
+	else
+		return false;
+}
+
+bool DataSource::tryCatchRead(DataTarget* target)
+{
+	Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
+	return pendingDataTargets.erase(target);
 }

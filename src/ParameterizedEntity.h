@@ -104,11 +104,6 @@ public:
      */
     template<typename T> void setParameterValue(std::string paramName, T value);
 
-    /**
-     * Expire output data
-     */
-    virtual void expireOutData() = 0;
-
 protected:
 	/**
 	 * Change the prefix key

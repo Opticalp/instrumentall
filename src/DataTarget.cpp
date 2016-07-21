@@ -29,8 +29,7 @@
 #include "DataTarget.h"
 
 DataTarget::DataTarget():
-	dataSource(NULL),
-	used(true)
+	dataSource(NULL)
 {
 
 }
@@ -43,12 +42,17 @@ DataTarget::~DataTarget()
 DataSource* DataTarget::getDataSource()
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
-	return dataSource;
+
+	if (dataSource)
+		return dataSource;
+	else
+		throw Poco::NullPointerException("getDataSource",
+				"no data source");
 }
 
 void DataTarget::setDataSource(DataSource* source)
 {
-    if (source && !isSupportedDataType(source->dataType()))
+    if (source && !isSupportedInputDataType(source->dataType()))
         throw Poco::DataFormatException("setDataSource",
                 "The target does not support this data type: "
         		+ DataItem::dataTypeStr(source->dataType()));
@@ -64,25 +68,18 @@ void DataTarget::setDataSource(DataSource* source)
 		dataSource->addDataTarget(this);
 }
 
+bool DataTarget::tryCatchSource()
+{
+    Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
+	if (dataSource)
+		return dataSource->tryCatchRead(this);
+	else
+		return false;
+}
+
 void DataTarget::releaseDataSource()
 {
 	setDataSource(NULL);
-}
-
-void DataTarget::setNew(bool value)
-{
-    if (value)
-    {
-        getDataSource()->readDataLock();
-        used = false;
-        newDataUnlock();
-    }
-    else
-    {
-    	// no need to newDataLock() since the only caller is InPort::release(),
-    	// then, new data can not be written
-    	used = true;
-    }
 }
 
 void DataTarget::readDataAttribute(DataAttribute* pAttr)
@@ -90,8 +87,7 @@ void DataTarget::readDataAttribute(DataAttribute* pAttr)
 	*pAttr = getDataSource()->getDataAttribute();
 }
 
-void DataTarget::release()
+void DataTarget::releaseRead()
 {
-    setNew(false);
-    getDataSource()->unlockData();
+    getDataSource()->targetReleaseRead(this);
 }

@@ -179,12 +179,10 @@ void Module::run(ModuleTask* pTask)
 
 	try
 	{
-		expireOutData();
-
 		setRunningState(ModuleTask::retrievingInDataLocks);
 		int startCond = startCondition();
 
-		mergeTasks(portsWithNewData());
+		mergeTasks(inPortCoughts());
 
 		setRunningState(ModuleTask::processing);
 		process(startCond);

@@ -79,50 +79,50 @@ def myMain():
     print "Wait for them to finish"
     waitAll()
     
-    print "hold input port A (from module X)"
-    demo2.inPort("portA").holdData("on")
-    print "change Y to 3.14"
-    Y.setParameterValue("value", 314)
-    print "re-run"
-    runModule(Y)
-
-    waitAll()
-
-    print "change X to 6.22 >> expired"
-    X.setParameterValue("value", 62.2)
-    print "re-run Y"
-    task = runModule(Y)
-
-    # waitAll here freezes the execution since ASI is waiting for X _and_ Y
-    print "wait end task >> demo 2 does not run, X is expired"    
-    task.wait()
-
-    time.sleep(1) # 1 sec sleep
-
-    print "run X >> should run now. "
-    runModule(X)
-    waitAll()
-
-    print "change Y to 6.22"
-    Y.setParameterValue("value", 62.2)
-    print "re-run Y >> X is still held"
-    runModule(Y)
-
-    waitAll()
-    
-    print "port A (X) hold off"
-    demo2.inPort("portA").holdData("off")
-
-    print "re-run Y"
-    task = runModule(Y)
-
-    # waitAll here freezes the execution since ASI is waiting for X _and_ Y
-    print "wait task >> no run, X is not held"    
-    task.wait()
-    
-    print "run X >> should run now. "
-    runModule(X)
-    waitAll()
+##    print "hold input port A (from module X)"
+##    demo2.inPort("portA").holdData("on")
+##    print "change Y to 3.14"
+##    Y.setParameterValue("value", 314)
+##    print "re-run"
+##    runModule(Y)
+##
+##    waitAll()
+##
+##    print "change X to 6.22 >> expired"
+##    X.setParameterValue("value", 62.2)
+##    print "re-run Y"
+##    task = runModule(Y)
+##
+##    # waitAll here freezes the execution since ASI is waiting for X _and_ Y
+##    print "wait end task >> demo 2 does not run, X is expired"    
+##    task.wait()
+##
+##    time.sleep(1) # 1 sec sleep
+##
+##    print "run X >> should run now. "
+##    runModule(X)
+##    waitAll()
+##
+##    print "change Y to 6.22"
+##    Y.setParameterValue("value", 62.2)
+##    print "re-run Y >> X is still held"
+##    runModule(Y)
+##
+##    waitAll()
+##    
+##    print "port A (X) hold off"
+##    demo2.inPort("portA").holdData("off")
+##
+##    print "re-run Y"
+##    task = runModule(Y)
+##
+##    # waitAll here freezes the execution since ASI is waiting for X _and_ Y
+##    print "wait task >> no run, X is not held"    
+##    task.wait()
+##    
+##    print "run X >> should run now. "
+##    runModule(X)
+##    waitAll()
 
     print "End of script taskSyncTest.py"
     

@@ -66,28 +66,26 @@ public:
     std::set<DataTarget*> getDataTargets();
 
     /**
-     * Release newly created data
+     * Lock the data to write
      *
-     *  - Release the lock
-     *  - Notify the data manager that will acquire a read lock if necessary
+     * Check the pendingDataTargets, then forward to DataItem::tryWriteDataLock
      */
-    void releaseNewData();
+    bool tryWriteDataLock();
 
     /**
-     * Release data that failed to be created
+     * Release output data
      *
      *  - Release the lock
-     *  - expire the data
      */
-    void releaseBrokenData();
-
-    void expire();
-    bool isExpired() { return expired; }
+    void releaseWrite();
 
     /**
-     * Dispatch Module::resetWithSeqTargets
+     * Release the output data lock
+     *
+     * To be used in case of failure.
+     * Could disable the data reading.
      */
-    void resetTargets();
+    void releaseWriteOnFailure();
 
     /**
      * Notify the dispatcher that the new data is ready
@@ -96,6 +94,12 @@ public:
      * and release the lock acquired with tryData
      */
     void notifyReady(DataAttribute attribute);
+
+    /**
+     * Lock (read) the data
+     * and add the target to the pendingDataTargets
+     */
+    void registerPendingTarget(DataTarget* target);
 
 private:
     /**
@@ -113,10 +117,23 @@ private:
      */
     void removeDataTarget(DataTarget* target);
 
-    std::set<DataTarget*> dataTargets;
-    Poco::FastMutex targetLock; ///< non-recursive mutex for data target operations
+    /**
+     * Release the read lock from the given target
+     *
+     * to be called by DataTarget::releaseRead
+     */
+    void targetReleaseRead(DataTarget* target);
 
-    bool expired;
+    /**
+     * Check if the source data is available for the given target
+     */
+    bool tryCatchRead(DataTarget* target);
+
+    std::set<DataTarget*> dataTargets;
+    Poco::FastMutex targetsLock; ///< non-recursive mutex for data target operations
+
+    std::set<DataTarget*> pendingDataTargets;
+    Poco::FastMutex pendingTargetsLock;
 
     friend class DataTarget;
 };

@@ -98,7 +98,7 @@ protected:
      *
      * @see getDataToWrite
      */
-    bool tryWriteDataLock()
+    virtual bool tryWriteDataLock()
     	{ return dataLock.tryWriteLock(); }
 
     /**

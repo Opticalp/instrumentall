@@ -70,16 +70,14 @@ public:
 	 */
 	DataSource* getDataSource();
 
-    bool isPlugged() { return (dataSource != 0); }
-
-    bool isNew() { return !used; }
-
     /**
-     * Try to lock the input port to get the incoming data
+     * Check if data is available at this source
      *
-     * @return true if success
+     * Signal to the source that the data will be consumed
+     *
+     * @return true if data available
      */
-    virtual bool tryLock() = 0;
+    bool tryCatchSource();
 
     /**
      * Read the data attribute of the incoming data
@@ -103,7 +101,7 @@ public:
      * Release the corresponding locks, record that the data is not new
      * any more
      */
-    virtual void release();
+    virtual void releaseRead();
 
 protected:
 	/**
@@ -129,7 +127,7 @@ protected:
      * To be overridden in the implementations
      * @see DataItem for the data type definitions
      */
-    virtual bool isSupportedDataType(int dataType) = 0;
+    virtual bool isSupportedInputDataType(int dataType) = 0;
 
     /**
      * Return the supported data types
@@ -138,42 +136,13 @@ protected:
      *
      * @see isSupportedDataType
      */
-    virtual std::set<int> supportedDataType() = 0;
+    virtual std::set<int> supportedInputDataType() = 0;
 
-    /**
-     * To be called by the dispatcher
-     *
-     * when new data is available, just before the push.
-     *
-     * Release the lock that was initiated by Dispatcher::lockInPorts
-     */
-    void setNew(bool value = true);
-
-    /**
-     * Lock the newDataMutex
-     *
-     * to insure that nobody tryLock the data during
-     * the data update
-     *
-     * To be called by Dispatcher::lockInPorts
-     * and to be released by `InPort::setNew(true)` called
-     * by Dispatcher::setOutPortDataReady
-     */
-    void newDataLock() { newDataMutex.lock(); }
-
-    /**
-     * Unlock the newDataMutex
-     *
-     * @see newDataLock
-     */
-    void newDataUnlock() { newDataMutex.unlock(); }
+    bool isSourcePlugged() { return (dataSource != 0); }
 
 private:
     DataSource* dataSource;
     Poco::FastMutex sourceLock; ///< lock for the dataSource operations
-
-    bool used;
-    Poco::FastMutex newDataMutex;
 
     friend class Dispatcher;
 };

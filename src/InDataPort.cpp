@@ -36,69 +36,27 @@ InDataPort::InDataPort(Module* parent,
         int datatype,
         size_t index):
     InPort(parent, name, description, index),
-	mType(datatype),
-    held(false)
+	mType(datatype)
 {
 
 }
 
 InDataPort::InDataPort():
         InPort("emptyIn", "replace an expired port"),
-		mType(DataItem::typeUndefined),
-		held(false)
+		mType(DataItem::typeUndefined)
 {
 }
 
-std::set<int> InDataPort::supportedDataType()
+std::set<int> InDataPort::supportedInputDataType()
 {
 	std::set<int> ret;
 	ret.insert(mType);
 	return ret;
 }
 
-bool InDataPort::tryLock()
+void InDataPort::releaseRead()
 {
-    if (!isPlugged())
-        throw Poco::RuntimeException("InPort",
-                "The port is not plugged. Not able to get data. ");
-
-    newDataLock();
-    if (!isNew())
-    {
-        // try to get the lock
-        if (!getDataSource()->tryReadDataLock())
-        {
-        	newDataUnlock();
-        	return false;
-        }
-
-        // check if the data is up to date
-        if (!isUpToDate())
-        {
-            getDataSource()->unlockData();
-        	newDataUnlock();
-            return false;
-        }
-    }
-    //else: nothing to do, the lock is already activated (by the dispatcher)
-
-	newDataUnlock();
-    return true;
-}
-
-void InDataPort::release()
-{
-    InPort::release();
+    InPort::releaseRead();
 
     // TODO: update expiration information?
-}
-
-bool InDataPort::isUpToDate()
-{
-	// TODO: should check if the input data is in a sequence?
-	// inside a sequence, the holding should be impossible?
-	if (!held)
-		return false;
-	else
-		return (!getDataSource()->isExpired());
 }

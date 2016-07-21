@@ -77,16 +77,6 @@ public:
     /// get port indexing at the parent module
 
     /**
-     * Try to lock the input port to read its data and attribute
-     *
-     * call isUpToDate() to check if the data is valid
-     *
-     * @return false if the lock can not be acquired or if the data
-     * is not up to date
-     */
-    bool tryLock();
-
-    /**
      * Read the incoming data
      *
      * The port shall have been previously locked using
@@ -95,7 +85,7 @@ public:
     template<typename T> void readData(T*& pData);
 
     /**
-     * Combination of tryLock, readDataAttribute, and readData
+     * Combination of tryCatchSource, readDataAttribute, and readData
      */
     template<typename T> bool tryData(T*& pData, DataAttributeIn* pAttr);
 
@@ -105,34 +95,17 @@ public:
      * release the corresponding locks, notify that the data is not new
      * any more, set expiration information...
      */
-    void release();
-
-    /**
-     * Request to hold the data that came to this port
-     *
-     * The port will re-use the previous data if it is not expired.
-     */
-    void hold(bool status = true) { held = status; }
+    void releaseRead();
 
 private:
     int mType; ///< port data type
 
-    bool isSupportedDataType(int dataType)
+    bool isSupportedInputDataType(int dataType)
     	{ return (dataType == mType); }
 
-    std::set<int> supportedDataType();
+    std::set<int> supportedInputDataType();
 
-    /**
-     * Determine if the data of this port are up to date
-     *
-     * To be used before getting the data to be sure not to retrieve
-     * expired data.
-     */
-    bool isUpToDate();
-
-    bool held;
-
-    friend class Dispatcher;
+    // friend class Dispatcher;
 };
 
 #include "InDataPort.ipp"

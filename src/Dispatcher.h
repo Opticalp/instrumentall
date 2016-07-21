@@ -194,21 +194,6 @@ public:
      void dispatchTargetReset(DataSource* port);
 
      /**
-      * Lock the data targets
-      *
-      * to avoid their usage (mainly DataTarget::tryLock)
-      * during the data update.
-      *
-      *  - To be called by the DataSource when new data is ready
-      *  - the lock is released on new data
-      *
-      * @see DataSource::notifyReady
-      * @see SeqSource::notifyReady
-      * @see DataTarget::setNew
-      */
-     void lockTargets(DataSource* source);
-
-     /**
       * Launch a module task
       *
       * to be called by the UI or by any mean, but without new

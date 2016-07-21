@@ -57,11 +57,6 @@ public:
 	std::vector<OutPort*> getOutPorts() { return outPorts; }
 	OutPort* getOutPort(std::string portName);
 
-    /**
-     * Expire output data
-     */
-    void expireOutData();
-
 protected:
     /**
      * Set the outPorts list size

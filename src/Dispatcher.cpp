@@ -339,21 +339,14 @@ void Dispatcher::seqUnbind(SeqSource* source)
 	}
 }
 
-void Dispatcher::lockTargets(DataSource* source)
-{
-    std::set<DataTarget*> targets = source->getDataTargets();
-    for ( std::set<DataTarget*>::iterator it = targets.begin(),
-            ite = targets.end(); it != ite; it++ )
-        (*it)->newDataLock();
-}
-
 void Dispatcher::setOutputDataReady(DataSource* source)
 {
 //    poco_information(logger(), port->name() + " data ready");
 
 	OutPort* tmpOut = dynamic_cast<OutPort*>(source);
 	if (tmpOut == NULL)
-		return;
+		poco_bugcheck_msg("data source different than OutPort "
+				"is not implemented yet");
 
 	// loggers
 
@@ -382,12 +375,18 @@ void Dispatcher::setOutputDataReady(DataSource* source)
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     {
-        (*it)->setNew();
-
         InPort* tmpPort = dynamic_cast<InPort*>(*it);
 
         if (tmpPort == NULL)
+        {
+        	poco_warning(logger(), "The target: "
+        			+ (*it)->name() +
+        			" is not a module input port");
         	continue;
+        }
+
+        // readlock
+        source->registerPendingTarget(*it);
 
         // get module from module manager
         SharedPtr<Module*> shdMod = Poco::Util::Application::instance()

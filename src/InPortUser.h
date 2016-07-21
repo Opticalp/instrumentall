@@ -158,6 +158,9 @@ protected:
     size_t inPortCaughtsCount()
     	{ return caughts->size(); }
 
+	std::set<size_t> inPortCoughts()
+		{ return caughts.get(); }
+
     /// Start states as to be returned by startCondition
     enum baseStartStates
 	{
@@ -213,8 +216,6 @@ protected:
 	 * Implemented in Module by forwarding the request to the running task.
 	 */
 	virtual InPort* triggingPort() = 0;
-
-	std::set<size_t> portsWithNewData();
 
 private:
 	bool tryLockIn() { return inMutex.tryLock(); }
