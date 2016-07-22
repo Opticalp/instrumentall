@@ -237,6 +237,11 @@ void ThreadManager::waitAll()
 
 void ThreadManager::registerNewModuleTask(ModuleTask* pTask)
 {
+	if (cancellingAll)
+		throw Poco::RuntimeException("Cancelling, "
+				"can not register the new task: "
+				+ pTask->name());
+
 	Poco::ScopedWriteRWLock lock(taskListLock);
 
 	Poco::AutoPtr<ModuleTask> taskPtr(pTask);
@@ -270,6 +275,9 @@ void ThreadManager::cancelAll()
 		poco_information(logger(), "cancelling " + tsk->name());
 		tsk->cancel();
 	}
+
+	while (count())
+		Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
 
 	cancellingAll = false;
 }
