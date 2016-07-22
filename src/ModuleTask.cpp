@@ -122,15 +122,11 @@ void ModuleTask::leaveTask()
 
 void ModuleTask::cancel()
 {
-	if ((coreModule) && (getState() == TASK_RUNNING))
-	{
+	if (coreModule)
+		coreModule->condCancel();
+
+	if (!isCancelled())
 		MergeableTask::cancel();
-		coreModule->cancel();
-	}
-	else
-	{
-		MergeableTask::cancel();
-	}
 }
 
 void ModuleTask::resetModule()

@@ -285,6 +285,23 @@ void Module::enqueueTask(ModuleTask* task)
 //		poco_information(logger(), name() + ": a task is already running");
 }
 
+void Module::condCancel()
+{
+	if (isCancelling)
+		return;
+
+	isCancelling = true;
+	// cancel all module tasks
+	taskMngtMutex.lock();
+	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
+			ite = allTasks.end(); it != ite; it++)
+		(*it)->cancel();
+	taskMngtMutex.unlock();
+
+	cancel();
+	isCancelling = false;
+}
+
 void Module::resetWithTargets()
 {
 	if (reseting || resetDone)
@@ -293,7 +310,7 @@ void Module::resetWithTargets()
 	reseting = true;
 
 	if (seqRunning())
-		cancel();
+		condCancel();
 
 	// reset this module
 	reset();
@@ -307,6 +324,8 @@ void Module::resetWithTargets()
 
 bool Module::taskIsRunning()
 {
+	Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
+
 	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
 			ite = allTasks.end(); it != ite; it++)
 	{

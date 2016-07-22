@@ -87,7 +87,8 @@ public:
 	      mParent(parent), ParameterizedEntity("module." + name),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
-		  reseting (false), resetDone(false)
+		  reseting (false), resetDone(false),
+		  isCancelling(false)
 	{
 	}
 
@@ -263,6 +264,9 @@ protected:
 	 * 	- or from Module::resetWithSeqTargets when reset
 	 * 	is called while a seq is running. Module::seqRunning
 	 * 	should be implemented, then.
+	 *
+	 * The call is issued via Module::condCancel that checks
+	 * if the module is not already canceling
 	 *
 	 * @see Module::reset
 	 * @see Module::seqRunning
@@ -444,10 +448,18 @@ private:
 	/**
 	 * Check if a task is already running (or at least started)
 	 * for this module
-	 *
-	 * taskMngtMutex should be locked prior to calling this method
 	 */
 	bool taskIsRunning();
+
+	/**
+	 * Conditional cancel
+	 *
+	 * Check if the module is already canceling.
+	 * If not, call Module::cancel and cancel all the module tasks
+	 */
+	void condCancel();
+
+	bool isCancelling; ///< used by Module::condCancel
 
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
 	std::set<ModuleTask*> allTasks;
