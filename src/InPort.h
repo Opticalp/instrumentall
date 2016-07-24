@@ -84,6 +84,8 @@ public:
     bool isTrig() { return isTrigFlag; }
 
 private:
+    void runTarget() { }
+
     bool isTrigFlag;
 };
 

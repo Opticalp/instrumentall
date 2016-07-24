@@ -73,7 +73,7 @@ void SeqSource::notifyReady(DataAttributeOut attribute)
     DataSource::notifyReady(attribute);
 }
 
-void SeqSource::removeSeqTarget(SeqTarget* target)
+void SeqSource::detachSeqTarget(SeqTarget* target)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(seqTargetsLock);
 	seqTargets.erase(target);

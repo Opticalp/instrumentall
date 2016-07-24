@@ -58,7 +58,7 @@ public:
      * The port shall have been previously locked using
      * tryLock, with return value == true.
      */
-	void readDataAttribute(DataAttributeIn* pAttr);
+	void readInputDataAttribute(DataAttributeIn* pAttr);
 
 protected:
 	/**
@@ -77,7 +77,7 @@ protected:
 	 *
 	 * and replace it by NULL
 	 */
-	void releaseSeqSource();
+	void detachSeqSource();
 
 private:
     SeqSource* seqSource;

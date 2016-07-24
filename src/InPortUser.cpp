@@ -91,7 +91,7 @@ void InPortUser::readInPortDataAttribute(size_t portIndex,
     if (!isInPortCaught(portIndex))
     	poco_bugcheck_msg("try to read an input port that was not previously locked");
 
-    inPorts[portIndex]->readDataAttribute(pAttr);
+    inPorts[portIndex]->readInputDataAttribute(pAttr);
 }
 
 bool InPortUser::tryInPortDataAttribute(size_t portIndex,
@@ -123,7 +123,7 @@ void InPortUser::releaseInPort(size_t portIndex)
 {
     if (isInPortCaught(portIndex))
     {
-        inPorts[portIndex]->releaseRead();
+        inPorts[portIndex]->releaseInputData();
 
 		caughts->erase(portIndex);
 		if (caughts->empty())

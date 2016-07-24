@@ -33,7 +33,7 @@
 
 SeqTarget::~SeqTarget()
 {
-	releaseSeqSource();
+	detachSeqSource();
 }
 
 SeqSource* SeqTarget::getSeqSource()
@@ -47,7 +47,7 @@ void SeqTarget::setSeqSource(SeqSource* source)
     Poco::ScopedLock<Poco::FastMutex> lock(seqSourceLock);
 
 	if (seqSource)
-		seqSource->removeSeqTarget(this);
+		seqSource->detachSeqTarget(this);
 
 	seqSource = source;
 
@@ -55,13 +55,13 @@ void SeqTarget::setSeqSource(SeqSource* source)
 		seqSource->addSeqTarget(this);
 }
 
-void SeqTarget::readDataAttribute(DataAttributeIn* pAttr)
+void SeqTarget::readInputDataAttribute(DataAttributeIn* pAttr)
 {
 	*pAttr = DataAttributeIn(
 		getDataSource()->getDataAttribute(), this);
 }
 
-void SeqTarget::releaseSeqSource()
+void SeqTarget::detachSeqSource()
 {
 	setSeqSource(NULL);
 }

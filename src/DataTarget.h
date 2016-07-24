@@ -91,19 +91,26 @@ public:
      * This method should only be used to forward a data
      * attribute.
      *
-     * @see SeqTarget::readDataAttribute
+     * @see SeqTarget::readInputDataAttribute
      */
-    void readDataAttribute(DataAttribute* pAttr);
+    void readInputDataAttribute(DataAttribute* pAttr);
 
     /**
      * Store that the data has been used and can be released.
      *
-     * Release the corresponding locks, record that the data is not new
-     * any more
+     * Release the corresponding lock
      */
-    virtual void releaseRead();
+    void releaseInputData();
 
 protected:
+    /**
+     * Main logic to launch the target action
+     *
+     * This method is called synchronously, but it can launch
+     * itself a thread.
+     */
+    virtual void runTarget() = 0;
+
 	/**
 	 * Register a new data source
 	 *
@@ -119,7 +126,7 @@ protected:
 	 *
 	 * and replace it by NULL
 	 */
-	void releaseDataSource();
+	void detachDataSource();
 
     /**
      * Check if the given data type is supported

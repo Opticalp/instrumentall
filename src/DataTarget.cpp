@@ -36,7 +36,7 @@ DataTarget::DataTarget():
 
 DataTarget::~DataTarget()
 {
-	releaseDataSource();
+	detachDataSource();
 }
 
 DataSource* DataTarget::getDataSource()
@@ -60,7 +60,7 @@ void DataTarget::setDataSource(DataSource* source)
     Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
 
 	if (dataSource)
-		dataSource->removeDataTarget(this);
+		dataSource->detachDataTarget(this);
 
 	dataSource = source;
 
@@ -77,17 +77,17 @@ bool DataTarget::tryCatchSource()
 		return false;
 }
 
-void DataTarget::releaseDataSource()
+void DataTarget::detachDataSource()
 {
 	setDataSource(NULL);
 }
 
-void DataTarget::readDataAttribute(DataAttribute* pAttr)
+void DataTarget::readInputDataAttribute(DataAttribute* pAttr)
 {
 	*pAttr = getDataSource()->getDataAttribute();
 }
 
-void DataTarget::releaseRead()
+void DataTarget::releaseInputData()
 {
     getDataSource()->targetReleaseRead(this);
 }

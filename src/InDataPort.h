@@ -89,14 +89,6 @@ public:
      */
     template<typename T> bool tryData(T*& pData, DataAttributeIn* pAttr);
 
-    /**
-     * Notify that the data has been used and can be released.
-     *
-     * release the corresponding locks, notify that the data is not new
-     * any more, set expiration information...
-     */
-    void releaseRead();
-
 private:
     int mType; ///< port data type
 
@@ -104,8 +96,6 @@ private:
     	{ return (dataType == mType); }
 
     std::set<int> supportedInputDataType();
-
-    // friend class Dispatcher;
 };
 
 #include "InDataPort.ipp"

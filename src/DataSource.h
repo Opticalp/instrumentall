@@ -115,7 +115,7 @@ private:
      * Should not throw an exception if the target is not present
      * in the dataTargets
      */
-    void removeDataTarget(DataTarget* target);
+    void detachDataTarget(DataTarget* target);
 
     /**
      * Release the read lock from the given target

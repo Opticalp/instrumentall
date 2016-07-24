@@ -99,7 +99,7 @@ void DataSource::notifyReady(DataAttribute attribute)
                         .setOutputDataReady(this);
 }
 
-void DataSource::removeDataTarget(DataTarget* target)
+void DataSource::detachDataTarget(DataTarget* target)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);
     dataTargets.erase(target);

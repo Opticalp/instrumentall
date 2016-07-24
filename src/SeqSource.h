@@ -88,7 +88,7 @@ protected:
      * Should not throw an exception if the port is not present
      * in the seqTargetPorts
      */
-    void removeSeqTarget(SeqTarget* target);
+    void detachSeqTarget(SeqTarget* target);
 
 private:
     std::set<SeqTarget*> seqTargets; ///< list of data sequence targets

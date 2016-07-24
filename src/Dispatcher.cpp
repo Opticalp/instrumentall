@@ -302,7 +302,7 @@ void Dispatcher::bind(DataSource* source, DataTarget* target)
 
 void Dispatcher::unbind(DataTarget* target)
 {
-    target->releaseDataSource();
+    target->detachDataSource();
 }
 
 void Dispatcher::unbind(DataSource* source)
@@ -324,7 +324,7 @@ void Dispatcher::seqBind(SeqSource* source, SeqTarget* target)
 
 void Dispatcher::seqUnbind(SeqTarget* target)
 {
-	target->releaseSeqSource();
+	target->detachSeqSource();
 }
 
 void Dispatcher::seqUnbind(SeqSource* source)

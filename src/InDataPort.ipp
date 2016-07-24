@@ -41,7 +41,7 @@ template<typename T> inline bool InDataPort::tryData(T*& pData, DataAttributeIn*
 {
 	if (tryCatchSource())
 	{
-		readDataAttribute(pAttr);
+		readInputDataAttribute(pAttr);
 		readData(pData);
 		return true;
 	}

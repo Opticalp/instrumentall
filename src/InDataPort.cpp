@@ -53,10 +53,3 @@ std::set<int> InDataPort::supportedInputDataType()
 	ret.insert(mType);
 	return ret;
 }
-
-void InDataPort::releaseRead()
-{
-    InPort::releaseRead();
-
-    // TODO: update expiration information?
-}
