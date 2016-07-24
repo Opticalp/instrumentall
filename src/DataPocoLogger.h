@@ -31,14 +31,12 @@
 
 #include "DataLogger.h"
 
-#include "DataItem.h"
-
 #include "Poco/Logger.h"
 
 /**
  * DataPocoLogger
  *
- * Very simple data logger that ouputs data into a Poco::Logger
+ * Very simple data logger that outputs data into a Poco::Logger
  */
 class DataPocoLogger: public DataLogger
 {
@@ -47,7 +45,7 @@ public:
 
     virtual ~DataPocoLogger() { }
 
-    std::string name() { return "DataPocoLogger"; }
+    std::string name() { return mName; }
 
     static std::string description()
         { return "Output data into a Poco::Logger"; }
@@ -55,12 +53,17 @@ public:
     void log();
 
 private:
-    bool isSupportedDataType(int datatype);
+    static size_t refCount;
+    std::string mName;
+
+    bool isSupportedInputDataType(int datatype);
+
+    std::set<int> supportedInputDataType();
 
     /**
      * Set the local logger
      */
-    void setLogger(std::string loggerName)
+    void setRecLogger(std::string loggerName)
     {
         pLogger = &Poco::Logger::get(loggerName);
     }
@@ -68,7 +71,7 @@ private:
     /**
      * Get the local logger
      */
-    Poco::Logger& logger()
+    Poco::Logger& recLogger()
     {
         poco_check_ptr(pLogger);
         return *pLogger;

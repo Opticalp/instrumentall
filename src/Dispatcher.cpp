@@ -348,55 +348,31 @@ void Dispatcher::setOutputDataReady(DataSource* source)
 		poco_bugcheck_msg("data source different than OutPort "
 				"is not implemented yet");
 
-	// loggers
-
-    if (tmpOut->hasLoggers())
-    {
-//        poco_information(logger(), port->name() + " has loggers");
-		std::set< SharedPtr<DataLogger*> > itemLoggers = tmpOut->loggers();
-
-		for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
-				ite = itemLoggers.end(); it != ite; it++ )
-			(**it)->acquireLock();
-
-		for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
-				ite = itemLoggers.end(); it != ite; it++ )
-		{
-			// launch logger threads via thread manager.
-			Poco::Util::Application::instance()
-				.getSubsystem<ThreadManager>()
-				.startDataLogger(**it);
-		}
-    }
-
-	// modules
-
 	std::set<DataTarget*> targets = source->getDataTargets();
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     {
-        InPort* tmpPort = dynamic_cast<InPort*>(*it);
-
-        if (tmpPort == NULL)
-        {
-        	poco_warning(logger(), "The target: "
-        			+ (*it)->name() +
-        			" is not a module input port");
-        	continue;
-        }
-
         // readlock
         source->registerPendingTarget(*it);
 
-        // get module from module manager
-        SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
-                                        .getSubsystem<ModuleManager>()
-                                        .getModule(tmpPort->parent());
+        // modules
+        InPort* tmpPort = dynamic_cast<InPort*>(*it);
+        if (tmpPort)
+        {
+			// get module from module manager
+			SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
+											.getSubsystem<ModuleManager>()
+											.getModule(tmpPort->parent());
 
-        poco_information(logger(),tmpOut->parent()->name() + " port " + source->name()
-                + " STARTS " + tmpPort->parent()->name() );
+			poco_information(logger(),tmpOut->parent()->name() + " port " + source->name()
+					+ " STARTS " + tmpPort->parent()->name() );
 
-        enqueueModuleTask(new ModuleTask(*shdMod, tmpPort));
+			enqueueModuleTask(new ModuleTask(*shdMod, tmpPort));
+        }
+        else
+        {
+        	(*it)->runTarget();
+        }
     }
 }
 

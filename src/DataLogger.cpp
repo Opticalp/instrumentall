@@ -27,101 +27,24 @@
  */
 
 #include "DataLogger.h"
-#include "OutPort.h"
 
-DataLogger::~DataLogger()
+#include "ThreadManager.h"
+
+#include "Poco/Util/Application.h"
+
+void DataLogger::runTarget()
 {
-    detach();
-}
-
-void DataLogger::detach()
-{
-    dataLock.lock();
-    detachNoLock();
-    dataLock.unlock();
-}
-
-void DataLogger::detachNoLock()
-{
-    if (pSourcePort)
-    {
-        pSourcePort->detachLogger(this);
-        pSourcePort = NULL;
-    }
-}
-
-void DataLogger::registerSourcePort(OutPort* port)
-{
-    if (empty)
-        throw Poco::InvalidAccessException(name(),
-                "The logger was deleted");
-
-    dataLock.lock();
-
-    if (!isSupportedDataType(port->dataType()))
-    {
-        dataLock.unlock();
-        throw Poco::RuntimeException("registerLogger",
-                "This logger do not support this data type");
-    }
-
-    // deregister previous parent
-    detachNoLock();
-
-    // bind to data
-    port->registerLogger(this);
-    pSourcePort = port;
-
-    dataLock.unlock();
-}
-
-void DataLogger::acquireLock()
-{
-    dataLock.lock(); // regular recursive mutex. ok with multiple locks. see data().
-    if (pSourcePort)
-        data()->readDataLock();
-
-    dataLock.unlock();
-}
-
-void DataLogger::setEmpty()
-{
-    dataLock.lock();
-
-    detachNoLock();
-    empty = true;
-
-    dataLock.unlock();
-}
-
-DataSource* DataLogger::data()
-{
-    DataSource* tmp;
-
-    // lock in case somebody else already locks
-    dataLock.lock();
-    tmp =  pSourcePort;
-    dataLock.unlock();
-
-    return tmp;
+	Poco::Util::Application::instance()
+		.getSubsystem<ThreadManager>()
+		.startDataLogger(this);
 }
 
 void DataLogger::run()
 {
-    Poco::Mutex::ScopedLock localLock(dataLock);
+	if (!tryCatchSource())
+		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
 
-    if (data() == NULL)
-        return;
+	log();
 
-    try
-    {
-        log();
-    }
-    catch (Poco::Exception& e)
-    {
-        data()->unlockData();
-        e.rethrow();
-    }
-
-    data()->unlockData();
+	releaseInputData();
 }
