@@ -75,7 +75,7 @@ def myMain():
     loggers = dataLoggers()
     print str(len(loggers)) + " loggers available"
     
-    print "logger#0 is of class: " + loggers[0].name 
+    print "logger#0 is of class: " + loggers[0].name + " (" + loggers[0].description + ")"
     
     print "Register the first logger to mod2 output"
     mod2.outPorts()[0].register(logger)

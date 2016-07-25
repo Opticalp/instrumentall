@@ -120,21 +120,9 @@ public:
     SharedPtr<DataLogger*> getDataLogger(DataLogger* dataLogger);
 
     /**
-     * Register a logger to a data item
-     */
-    void registerLogger(SharedPtr<OutPort*> port, SharedPtr<DataLogger*> dataLogger);
-
-    /**
      * Get the source data of a logger
      */
     SharedPtr<OutPort*> getSourcePort(SharedPtr<DataLogger*> dataLogger);
-
-    /**
-     * Delete a DataLogger
-     *
-     * Do nothing if the DataLogger is the empty data logger
-     */
-    void removeDataLogger(SharedPtr<DataLogger*> logger);
 
 private:
     std::vector< SharedPtr<DataSource*> > allData; ///< data corresponding to each OutPort

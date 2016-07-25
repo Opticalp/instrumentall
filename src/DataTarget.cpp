@@ -77,6 +77,15 @@ bool DataTarget::tryCatchSource()
 		return false;
 }
 
+int DataTarget::sourceDataType()
+{
+	if (dataSource == NULL)
+		throw Poco::InvalidAccessException(name(),
+				"This target has no source");
+	else
+		return dataSource->dataType();
+}
+
 void DataTarget::detachDataSource()
 {
 	setDataSource(NULL);

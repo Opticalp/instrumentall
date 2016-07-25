@@ -266,11 +266,6 @@ void Dispatcher::removeOutPort(OutPort* port)
     {
         if (port == **it)
         {
-            // release connections (find targets and act on targets)
-            // nb: this is a simple precaution, since all the connections
-            // should already be broken by the deletion of the inPorts.
-            std::vector< SharedPtr<InPort*> > targets;
-
             unbind(port);
             seqUnbind(port);
 

@@ -543,7 +543,7 @@ pythonDataManDataLoggers(PyObject *self, PyObject *args)
                     .dataLoggers();
 
     if (loggers.size() == 0)
-        return Py_BuildValue("");
+        Py_RETURN_NONE;
 
     // construct the list to return
     PyObject* pyLoggers = PyList_New(0);
@@ -579,15 +579,8 @@ pythonDataManDataLoggers(PyObject *self, PyObject *args)
         pyLogger->name = PyString_FromString((**it)->name().c_str());
         Py_XDECREF(tmp);
 
-        std::map<std::string, std::string>::iterator loggerClass = classes.find((**it)->name());
-        if (loggerClass == classes.end())
-        {
-            PyErr_SetString(PyExc_RuntimeError, "Logger description not found" );
-            return NULL;
-        }
-
         tmp = pyLogger->description;
-        pyLogger->description = PyString_FromString(loggerClass->second.c_str());
+        pyLogger->description = PyString_FromString((**it)->description().c_str());
         Py_XDECREF(tmp);
 
         // set Logger reference
@@ -631,8 +624,8 @@ pythonDataManRemoveDataLogger(PyObject *self, PyObject *args)
     DataLoggerMembers* pyLogger = reinterpret_cast<DataLoggerMembers*>(pyObj);
 
     Poco::Util::Application::instance()
-                            .getSubsystem<DataManager>()
-                            .removeDataLogger(*pyLogger->logger);
+                            .getSubsystem<Dispatcher>()
+                            .unbind(**pyLogger->logger);
 
     Py_RETURN_NONE;
 }

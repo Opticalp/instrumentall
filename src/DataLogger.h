@@ -42,8 +42,9 @@ using Poco::Mutex;
  * Base class to implement data loggers that are called when receiving
  * new data.
  *
- * The derived classes should implement DataTarget::description as a
- * static method
+ * The derived classes shall implement a classDescription
+ * static method. DataTarget::description can be implemented
+ * as linking to this method.
  */
 class DataLogger: public Poco::Runnable, public DataTarget
 {

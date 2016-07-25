@@ -71,10 +71,8 @@ public:
      * is called, then the Dispatcher::removeModule is called,
      * then this output port is deleted from Dispatcher::allOutPorts
      * after this removeTargetPort has been called.
-     *
-     * Detach loggers
      */
-    virtual ~OutPort();
+    virtual ~OutPort() { }
 
     /**
      * Implementation of DataSource::name
@@ -89,30 +87,6 @@ public:
      * as explicit inheritance from Port::description
      */
     std::string description() { return Port::description(); }
-
-    /**
-     * Retrieve the data loggers
-     *
-     * This function calls the DataManager::getDataLogger
-     * to retrieve the shared pointers
-     */
-    std::set< SharedPtr<DataLogger*> > loggers();
-
-    /**
-     * Check if loggers are registered
-     */
-    bool hasLoggers() { return (allLoggers.size()>0); }
-
-private:
-    void registerLogger(DataLogger* logger);
-    void detachLogger(DataLogger* logger);
-
-    std::set<DataLogger*> allLoggers;
-    RWLock loggersLock;
-
-//    friend class InPort;
-//    friend class InDataPort;
-    friend class DataLogger;
 };
 
 #endif /* SRC_OUTPORT_H_ */

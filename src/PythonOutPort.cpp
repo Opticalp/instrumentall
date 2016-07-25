@@ -533,8 +533,8 @@ PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args)
     try
     {
         Poco::Util::Application::instance()
-                                .getSubsystem<DataManager>()
-                                .registerLogger(sharedPort, *pyLogger->logger);
+                                .getSubsystem<Dispatcher>()
+                                .bind(*sharedPort, **pyLogger->logger);
     }
     catch (Poco::NotFoundException& e)
     {
@@ -549,26 +549,25 @@ PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args)
         return NULL;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 PyObject* pyOutPortLoggers(OutPortMembers *self)
 {
     std::set< SharedPtr<DataLogger*> > loggers;
-    try
-    {
-        loggers = (**self->outPort)->loggers();
-    }
-    catch (Poco::NotFoundException& e)
-    {
-        PyErr_SetString( PyExc_RuntimeError,
-                e.displayText().c_str() );
-        return NULL;
-    }
 
-    if (loggers.size() == 0)
-        return Py_BuildValue("");
+    std::set<DataTarget*> targets = (**self->outPort)->getDataTargets();
+
+    for (std::set<DataTarget*>::iterator it = targets.begin(),
+    		ite = targets.end(); it != ite; it++)
+    {
+        DataLogger* tmpLogger = dynamic_cast<DataLogger*>(*it);
+
+        if (tmpLogger)
+            loggers.insert(Poco::Util::Application::instance()
+				.getSubsystem<DataManager>()
+				.getDataLogger(tmpLogger));
+    }
 
     // construct the list to return
     PyObject* pyLoggers = PyList_New(0);

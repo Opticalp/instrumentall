@@ -44,7 +44,7 @@ DataManager::DataManager():
     // Register data loggers in the factory using the C++ class name
 
     loggerFactory.registerClass<DataPocoLogger>("DataPocoLogger");
-    loggerClasses.insert(classPair("DataPocoLogger", DataPocoLogger::description()));
+    loggerClasses.insert(classPair("DataPocoLogger", DataPocoLogger::classDescription()));
 }
 
 DataManager::~DataManager()
@@ -127,35 +127,4 @@ SharedPtr<DataLogger*> DataManager::getDataLogger(DataLogger* dataLogger)
     throw Poco::NotFoundException("DataManager",
             "The given data logger was not found");
 
-}
-
-void DataManager::registerLogger(SharedPtr<OutPort*> port,
-		SharedPtr<DataLogger*> dataLogger)
-{
-    (*dataLogger)->registerSourcePort(*port);
-}
-
-SharedPtr<OutPort*> DataManager::getSourcePort(
-        SharedPtr<DataLogger*> dataLogger)
-{
-    OutPort* port = (*dataLogger)->sourcePort();
-
-    if (port)
-        return     Poco::Util::Application::instance()
-    					.getSubsystem<Dispatcher>()
-						.getOutPort(port);
-    else
-        throw Poco::NotFoundException("DataManager::getsourcePort",
-                "No source port found. "
-                "The logger may be detached. ");
-}
-
-
-void DataManager::removeDataLogger(SharedPtr<DataLogger*> logger)
-{
-    // switch the logger into empty state
-    (*logger)->setEmpty();
-
-    // remove the data logger from loggers. nothing to delete.
-    loggers.erase(logger);
 }

@@ -47,7 +47,9 @@ public:
 
     std::string name() { return mName; }
 
-    static std::string description()
+    std::string description() { return classDescription(); }
+
+    static std::string classDescription()
         { return "Output data into a Poco::Logger"; }
 
     void log();

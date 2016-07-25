@@ -102,6 +102,12 @@ public:
      */
     void releaseInputData();
 
+    /**
+     * Return the data type of the data source
+     * plugged to this target.
+     */
+    int sourceDataType();
+
 protected:
     /**
      * Main logic to launch the target action

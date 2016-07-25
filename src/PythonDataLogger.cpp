@@ -135,8 +135,9 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
     try
     {
         tmpPort = (*Poco::Util::Application::instance()
-                          .getSubsystem<DataManager>()
-                          .getSourcePort( *self->logger ));
+                          .getSubsystem<Dispatcher>()
+                          .getOutPort(
+                        		  dynamic_cast<OutPort*>((**self->logger)->getDataSource()) ));
     }
     catch (Poco::NotFoundException& e)
     {
@@ -147,8 +148,7 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
 
     if (tmpPort == NULL)
     {
-    	Py_INCREF(Py_None);
-    	return Py_None;
+    	Py_RETURN_NONE;
     }
 
     Poco::SharedPtr<OutPort*> sharedPort = Poco::Util::Application::instance()
@@ -187,10 +187,11 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
 
 PyObject* pyDataLoggerDetach(DataLoggerMembers* self)
 {
-    (**self->logger)->detach();
+	Poco::Util::Application::instance()
+			  .getSubsystem<Dispatcher>()
+			  .unbind(**self->logger);
 
-    Py_INCREF(Py_None);
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 #endif /* HAVE_PYTHON27 */

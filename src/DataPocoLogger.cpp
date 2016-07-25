@@ -34,15 +34,15 @@ size_t DataPocoLogger::refCount = 0;
 
 void DataPocoLogger::log()
 {
-    int dataType = dataType();
+    int datatype = sourceDataType();
 
-    if (DataItem::isVector(dataType))
+    if (DataItem::isVector(datatype))
     {
-        logVectorValue(DataItem::noContainerDataType(dataType));
+        logVectorValue(DataItem::noContainerDataType(datatype));
     }
     else
     {
-        switch (DataItem::noContainerDataType(dataType))
+        switch (DataItem::noContainerDataType(datatype))
         {
         case DataItem::typeInt32:
             poco_information(recLogger(),
