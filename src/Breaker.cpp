@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.cpp
- * @date	feb. 2016
+ * @file	src/Breaker.cpp
+ * @date	jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,32 +26,43 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleA.h"
-#include "Poco/NumberFormatter.h"
+#include "Breaker.h"
 
-size_t DemoModuleA::refCount = 0;
+#include "DataSource.h"
+#include "DataTarget.h"
 
-DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
-                Module(parent)
+#include "Dispatcher.h"
+
+#include "Poco/Util/Application.h"
+
+void Breaker::breakAllTargetsFromSource(DataSource* source)
 {
-    // poco_information(logger(),"Creating a new demo module A");
+	std::set<DataTarget*> targets = source->getDataTargets();
+	for (std::set<DataTarget*>::iterator it = targets.begin(),
+			ite = targets.end(); it != ite; it++)
+		breakSourceToTarget(*it);
+}
 
-    setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
-    setLogger("module." + name());
+void Breaker::breakSourceToTarget(DataTarget* target)
+{
+	DataSource* source = target->getDataSource();
 
-    // ports
-    setInPortCount(inPortCnt);
-    setOutPortCount(outPortCnt);
+	Poco::Util::Application::instance()
+		.getSubsystem<Dispatcher>()
+		.unbind(target);
 
-    addInPort("inPortA", "demo port that transmits nothing", DataItem::typeInteger, inPortA);
-    addInPort("inPortB", "demo port that transmits nothing", DataItem::typeInteger, inPortB);
-    addInPort("inPortC", "demo port that transmits nothing", DataItem::typeFloat, inPortC);
+	edges.insert(Edge(target, source));
+}
 
-    addOutPort("outPortA", "demo port that transmits nothing", DataItem::typeInteger, outPortA);
+void Breaker::releaseBreaks()
+{
+	while (edges.size())
+	{
+		Poco::Util::Application::instance()
+			.getSubsystem<Dispatcher>()
+			.bind(edges.begin()->second,
+			      edges.begin()->first);
 
-    notifyCreation();
-
-    // if nothing failed
-    refCount++;
+		edges.erase(edges.begin());
+	}
 }

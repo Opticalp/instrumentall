@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.cpp
- * @date	feb. 2016
+ * @file	src/Breaker.h
+ * @date	jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,32 +26,46 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleA.h"
-#include "Poco/NumberFormatter.h"
+#ifndef SRC_BREAKER_H_
+#define SRC_BREAKER_H_
 
-size_t DemoModuleA::refCount = 0;
+#include <map>
 
-DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
-                Module(parent)
+class DataSource;
+class DataTarget;
+
+/**
+ * Breaker
+ *
+ * Temporary data flow breaker
+ */
+class Breaker
 {
-    // poco_information(logger(),"Creating a new demo module A");
+public:
+	Breaker() { }
+	virtual ~Breaker() { releaseBreaks(); }
 
-    setInternalName("DemoModuleA" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
-    setLogger("module." + name());
+	/**
+	 * Catch all the source to target connections
+	 * from the given source
+	 */
+	void breakAllTargetsFromSource(DataSource* source);
 
-    // ports
-    setInPortCount(inPortCnt);
-    setOutPortCount(outPortCnt);
+	/**
+	 * Catch only the source to target connection
+	 * for the given target
+	 */
+	void breakSourceToTarget(DataTarget* target);
 
-    addInPort("inPortA", "demo port that transmits nothing", DataItem::typeInteger, inPortA);
-    addInPort("inPortB", "demo port that transmits nothing", DataItem::typeInteger, inPortB);
-    addInPort("inPortC", "demo port that transmits nothing", DataItem::typeFloat, inPortC);
+	/**
+	 * Release the breaks on the edges recorded in Breaker::edges
+	 */
+	void releaseBreaks();
 
-    addOutPort("outPortA", "demo port that transmits nothing", DataItem::typeInteger, outPortA);
+private:
+	typedef std::pair<DataTarget*, DataSource*> Edge;
 
-    notifyCreation();
+	std::map<DataTarget*, DataSource*> edges; ///< broken edges
+};
 
-    // if nothing failed
-    refCount++;
-}
+#endif /* SRC_BREAKER_H_ */
