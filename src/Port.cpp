@@ -1,6 +1,6 @@
 /**
- * @file	src/DataLogger.cpp
- * @date	Mar 2016
+ * @file	/src/Port.cpp
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,25 +26,18 @@
  THE SOFTWARE.
  */
 
-#include "DataLogger.h"
+#include "Port.h"
 
-#include "ThreadManager.h"
-
+#include "ModuleManager.h"
 #include "Poco/Util/Application.h"
 
-void DataLogger::runTarget()
+Port::Port(std::string name, std::string description):
+	pParent(Poco::Util::Application::instance()
+		.getSubsystem<ModuleManager>()
+		.getEmptyModule()),
+	mName(name), mDescription(description),
+	mIndex(0)
 {
-	Poco::Util::Application::instance()
-		.getSubsystem<ThreadManager>()
-		.startDataLogger(this);
+
 }
 
-void DataLogger::run()
-{
-	if (!tryCatchSource())
-		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
-
-	log();
-
-	releaseInputData();
-}

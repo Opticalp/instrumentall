@@ -1,7 +1,12 @@
 /**
- * @file	src/DataLogger.cpp
- * @date	Mar 2016
+ * detailed comment
+ * 
+ * @file	/Instrumentall-Debug@instru-git-debug/[Source directory]/src/SeqSource.cpp
+ * @brief	short comment
+ * @date	15 juil. 2016
  * @author	PhRG - opticalp.fr
+ *
+ * $Id$
  */
 
 /*
@@ -26,25 +31,50 @@
  THE SOFTWARE.
  */
 
-#include "DataLogger.h"
+#include "SeqSource.h"
 
-#include "ThreadManager.h"
+#include "SeqTarget.h"
+#include "DataAttributeOut.h"
+#include "Dispatcher.h"
 
 #include "Poco/Util/Application.h"
 
-void DataLogger::runTarget()
+SeqSource::~SeqSource()
 {
-	Poco::Util::Application::instance()
-		.getSubsystem<ThreadManager>()
-		.startDataLogger(this);
+	if (seqTargets.size())
+		poco_bugcheck_msg("SeqSource destruction: seqTargets is not empty");
 }
 
-void DataLogger::run()
+std::set<SeqTarget*> SeqSource::getSeqTargets()
 {
-	if (!tryCatchSource())
-		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
+	Poco::ScopedLock<Poco::FastMutex> lock(seqTargetsLock);
+    return seqTargets;
+}
 
-	log();
+void SeqSource::addSeqTarget(SeqTarget* target)
+{
+	Poco::ScopedLock<Poco::FastMutex> lock(seqTargetsLock);
+	seqTargets.insert(target);
+}
 
-	releaseInputData();
+void SeqSource::notifyReady(DataAttributeOut attribute)
+{
+    if (attribute.isSettingSequence())
+    {
+        seqTargetsLock.lock();
+
+        for( std::set<SeqTarget*>::iterator it = seqTargets.begin(),
+                ite = seqTargets.end(); it != ite; it++ )
+            attribute.appendSeqTarget(*it);
+
+        seqTargetsLock.unlock();
+    }
+
+    DataSource::notifyReady(attribute);
+}
+
+void SeqSource::detachSeqTarget(SeqTarget* target)
+{
+	Poco::ScopedLock<Poco::FastMutex> lock(seqTargetsLock);
+	seqTargets.erase(target);
 }

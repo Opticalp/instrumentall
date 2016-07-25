@@ -29,12 +29,12 @@
 #ifndef SRC_DATALOGGER_H_
 #define SRC_DATALOGGER_H_
 
+#include "DataTarget.h"
+
 #include "Poco/Runnable.h"
 #include "Poco/Mutex.h"
 
 using Poco::Mutex;
-
-class DataItem;
 
 /**
  * DataLogger
@@ -42,101 +42,51 @@ class DataItem;
  * Base class to implement data loggers that are called when receiving
  * new data.
  *
- * The derived classes should implement the static methods name() and
- * description().
+ * The derived classes shall implement a classDescription
+ * static method. DataTarget::description can be implemented
+ * as linking to this method.
  */
-class DataLogger: public Poco::Runnable
+class DataLogger: public Poco::Runnable, public DataTarget
 {
 public:
-    DataLogger():
-        pData(NULL),
-        empty(false) { }
-    virtual ~DataLogger();
+	/**
+	 * Constructor
+	 *
+	 * In the implementations, the constructor could set
+	 * the unique name of the logger.
+	 */
+    DataLogger() { }
+    virtual ~DataLogger() { }
 
     /**
-     * Get the name of the derived DataLogger class
+     * Lock the main mutex and launch log()
      *
-     * This name should be the C++ class name of the derived class
+     * This method release the data after the logging.
      */
-    virtual std::string name() = 0;
+    void run();
 
-    // could have been implemented with CRTP
-//    /**
-//     * Description of the data logger
-//     *
-//     * Should be static too.
-//     * @see name()
-//     */
-//    virtual std::string description() = 0;
-
+protected:
     /**
-     * Detach the logger from its parent data
-     *
-     * Lock the dataLock and call detachNoLock()
+     * Launch run() in a new thread using the ThreadManager
      */
-    void detach();
-
-    /**
-     * Acquire the read lock of the data
-     *
-     * To be called before launching the thread
-     * with runTask()
-     */
-    void acquireLock();
-
-    /**
-     * Main logic
-     *
-     * Log the data.
-     * The default implementation calls the log() method.
-     * A custom implementation shall release the input data lock.
-     */
-    virtual void run();
+    void runTarget();
 
     /**
      * Log the data
      *
      * Function to override in implementations.
      * This function is called by the default implementation of run()
-     */
-    virtual void log() { }
-
-protected:
-    /**
-     * Retrieve parent data item
-     */
-    DataItem* data();
-
-    /**
-     * Bind the logger to its data item
-     */
-    void registerData(DataItem* data);
-
-    /**
-     * Check if the given data type is supported
      *
-     * To be overridden in the implementations
-     * @see DataItem for the data type definitions
-     */
-    virtual bool isSupportedDataType(int dataType) = 0;
-
-    /**
-     * Detach the data logger from its data
+     * The data to log should be accessed using
      *
-     * Without locking the dataLock.
-     * @warning: do not notify the parent data.
+     *     T* getDataSource()->getData<T>();
+     *
+     * The data is released by the calling function.
      */
-    void detachNoLock();
-
-    void setEmpty();
-
-    friend class DataManager;
+    virtual void log() = 0;
 
 private:
-    DataItem* pData; ///< registered data
-    Mutex dataLock;
-
-    bool empty; ///< check if the data logger is activable
+    Poco::FastMutex mutex; ///< data logger main mutex
 };
 
 #endif /* SRC_DATALOGGER_H_ */

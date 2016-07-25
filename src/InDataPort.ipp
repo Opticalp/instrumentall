@@ -34,14 +34,14 @@ THE SOFTWARE.
 template<typename T>
 void InDataPort::readData(T*& pData)
 {
-	pData = (*getSourcePort())->dataItem()->getDataToRead<T>();
+	pData = getDataSource()->getData<T>();
 }
 
 template<typename T> inline bool InDataPort::tryData(T*& pData, DataAttributeIn* pAttr)
 {
-	if (tryLock())
+	if (tryCatchSource())
 	{
-		readDataAttribute(pAttr);
+		readInputDataAttribute(pAttr);
 		readData(pData);
 		return true;
 	}

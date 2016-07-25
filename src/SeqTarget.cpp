@@ -1,6 +1,6 @@
 /**
- * @file	src/DataLogger.cpp
- * @date	Mar 2016
+ * @file	/src/SeqTarget.cpp
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,25 +26,42 @@
  THE SOFTWARE.
  */
 
-#include "DataLogger.h"
+#include "SeqTarget.h"
 
-#include "ThreadManager.h"
+#include "SeqSource.h"
+#include "DataAttributeIn.h"
 
-#include "Poco/Util/Application.h"
-
-void DataLogger::runTarget()
+SeqTarget::~SeqTarget()
 {
-	Poco::Util::Application::instance()
-		.getSubsystem<ThreadManager>()
-		.startDataLogger(this);
+	detachSeqSource();
 }
 
-void DataLogger::run()
+SeqSource* SeqTarget::getSeqSource()
 {
-	if (!tryCatchSource())
-		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
+	Poco::ScopedLock<Poco::FastMutex> lock(seqSourceLock);
+	return seqSource;
+}
 
-	log();
+void SeqTarget::setSeqSource(SeqSource* source)
+{
+    Poco::ScopedLock<Poco::FastMutex> lock(seqSourceLock);
 
-	releaseInputData();
+	if (seqSource)
+		seqSource->detachSeqTarget(this);
+
+	seqSource = source;
+
+	if (seqSource)
+		seqSource->addSeqTarget(this);
+}
+
+void SeqTarget::readInputDataAttribute(DataAttributeIn* pAttr)
+{
+	*pAttr = DataAttributeIn(
+		getDataSource()->getDataAttribute(), this);
+}
+
+void SeqTarget::detachSeqSource()
+{
+	setSeqSource(NULL);
 }

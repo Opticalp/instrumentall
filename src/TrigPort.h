@@ -35,7 +35,7 @@
  * TrigPort
  *
  * InPort that accepts any type of data. This kind of port is used to
- * trig the runTask (see Dispatcher::setOutPortDataReady)
+ * trig the runTask (see Dispatcher::setOutputDataReady)
  *
  * It can even accept seq info, e.g. to trig a sequenced acquisition
  */
@@ -50,21 +50,21 @@ public:
     /**
      * Special constructor for the empty TrigPort
      */
-    TrigPort(OutPort* emptySourcePort);
+    TrigPort();
 
     virtual ~TrigPort() { }
 
     /**
-     * Do not accept held data. Only new data is allowed.
-     *
-     * @see InPort::tryLock
-     */
-    bool tryLock();
-
-    /**
-     * tryDataAttribute is tryLock + readDataAttribute
+     * tryDataAttribute is tryCatchSource + readDataAttribute
      */
     bool tryDataAttribute(DataAttributeIn* pAttr);
+
+private:
+    bool isSupportedInputDataType(int dataType)
+    	{ return true; }
+
+    std::set<int> supportedInputDataType()
+    	{ return std::set<int>(); }
 };
 
 #endif /* SRC_TRIGPORT_H_ */

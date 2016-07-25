@@ -201,12 +201,6 @@ public:
     virtual void setProcMode(ProcessingMode mode) { procMode = mode; }
     ProcessingMode getProcMode() { return procMode; }
 
-    /**
-     * Parameterized entity needs this definition to be able
-     * to use OutPortUser::expireOutData
-     */
-    void expireOutData() { OutPortUser::expireOutData(); }
-
 	/**
 	 * Reset the module by calling Module::reset(),
 	 * but reset also all the targets.

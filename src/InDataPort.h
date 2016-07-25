@@ -56,7 +56,7 @@ public:
     /**
      * Special constructor for the empty InDataPort
      */
-    InDataPort(OutPort* emptySourcePort);
+    InDataPort();
 
     /**
      * Destructor
@@ -70,18 +70,11 @@ public:
      */
     virtual ~InDataPort() { }
 
-    /// Retrieve the data sequence source port
-    SharedPtr<OutPort*> getSeqSourcePort();
-
-    /**
-     * Try to lock the input port to read its data and attribute
-     *
-     * call isUpToDate() to check if the data is valid
-     *
-     * @return false if the lock can not be acquired or if the data
-     * is not up to date
-     */
-    bool tryLock();
+    /// get port data type
+    int dataType() { return mType; }
+    /// get port data type as a character string
+    std::string dataTypeStr() { return DataItem::dataTypeStr(mType); }
+    /// get port indexing at the parent module
 
     /**
      * Read the incoming data
@@ -92,58 +85,17 @@ public:
     template<typename T> void readData(T*& pData);
 
     /**
-     * Combination of tryLock, readDataAttribute, and readData
+     * Combination of tryCatchSource, readDataAttribute, and readData
      */
     template<typename T> bool tryData(T*& pData, DataAttributeIn* pAttr);
 
-    /**
-     * Notify that the data has been used and can be released.
-     *
-     * release the corresponding locks, notify that the data is not new
-     * any more, set expiration information...
-     */
-    void release();
-
-    /**
-     * Request to hold the data that came to this port
-     *
-     * The port will re-use the previous data if it is not expired.
-     */
-    void hold(bool status = true) { held = status; }
-
 private:
-    /**
-     * Set the data sequence source port
-     *
-     * This function should only be called by the dispatcher.
-     *
-     * If the source port was not the empty port,
-     * the port that was previously bound is notified
-     */
-    void setSeqSourcePort(SharedPtr<OutPort*> port);
+    int mType; ///< port data type
 
-    /**
-     * Release the data sequence source port
-     *
-     * And replace it by the empty port.
-     * If the source port was not the empty port,
-     * the port that was previously bound is notified
-     */
-    void releaseSeqSourcePort();
+    bool isSupportedInputDataType(int dataType)
+    	{ return (dataType == mType); }
 
-    SharedPtr<OutPort*> mSeqSourcePort;
-
-    /**
-     * Determine if the data of this port are up to date
-     *
-     * To be used before getting the data to be sure not to retrieve
-     * expired data.
-     */
-    bool isUpToDate();
-
-    bool held;
-
-    friend class Dispatcher;
+    std::set<int> supportedInputDataType();
 };
 
 #include "InDataPort.ipp"

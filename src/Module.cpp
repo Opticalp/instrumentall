@@ -179,12 +179,10 @@ void Module::run(ModuleTask* pTask)
 
 	try
 	{
-		expireOutData();
-
 		setRunningState(ModuleTask::retrievingInDataLocks);
 		int startCond = startCondition();
 
-		mergeTasks(portsWithNewData());
+		mergeTasks(inPortCoughts());
 
 		setRunningState(ModuleTask::processing);
 		process(startCond);
@@ -296,7 +294,7 @@ void Module::resetWithTargets()
 	// reset this module
 	reset();
 
-	// reset the sequence targets
+	// reset the targets (imply sequence targets)
 	resetTargets();
 
 	reseting = false;

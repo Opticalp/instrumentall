@@ -28,6 +28,9 @@
 
 #include "OutPortUser.h"
 
+#include "Dispatcher.h"
+
+#include "Poco/Util/Application.h"
 #include "Poco/NumberFormatter.h"
 
 void OutPortUser::addOutPort(Module* parent,
@@ -62,7 +65,7 @@ bool OutPortUser::tryOutPortLock(size_t portIndex)
     if (isOutPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an output port that was already locked? ");
 
-    if (outPort->tryLock())
+    if (outPort->tryWriteDataLock())
     {
     	caughts->insert(portIndex);
     	return true;
@@ -115,7 +118,11 @@ void OutPortUser::releaseAllOutPorts()
 
 	for (std::set<size_t>::iterator it = caughts->begin(),
 			ite = caughts->end(); it != ite; it++)
-            outPorts[*it]->releaseOnFailure();
+	{
+		poco_warning(logger(), outPorts[*it]->name()
+				+ " was not cleanly released");
+        outPorts[*it]->releaseWriteOnFailure();
+	}
 
 	caughts->clear();
 	unlockOut();
@@ -135,7 +142,9 @@ void OutPortUser::resetTargets()
 {
     for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
             it!=ite; it++)
-    	(*it)->resetSeqTargets();
+        Poco::Util::Application::instance()
+                            .getSubsystem<Dispatcher>()
+                            .dispatchTargetReset(*it);
 }
 
 void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
@@ -241,17 +250,6 @@ void OutPortUser::reserveOutPort(size_t output)
 	}
 
 	setRunningState(oldState);
-}
-
-void OutPortUser::expireOutData()
-{
-	// reserveLockOut is not used here, since this method can be called
-	// from outer a module task.
-	Poco::Mutex::ScopedLock lock(outMutex);
-
-    for (size_t portIndex = 0, cnt = outPorts.size();
-    		portIndex < cnt; portIndex++)
-        outPorts[portIndex]->expire();
 }
 
 OutPortUser::~OutPortUser()

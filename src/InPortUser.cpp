@@ -69,12 +69,12 @@ InPort* InPortUser::getInPort(std::string portName)
             + "in: " + name());
 }
 
-bool InPortUser::tryInPortLock(size_t portIndex)
+bool InPortUser::tryInPortCatchSource(size_t portIndex)
 {
     if (isInPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
 
-    if (inPorts[portIndex]->tryLock())
+    if (inPorts[portIndex]->tryCatchSource())
     {
     	caughts->insert(portIndex);
     	return true;
@@ -91,7 +91,7 @@ void InPortUser::readInPortDataAttribute(size_t portIndex,
     if (!isInPortCaught(portIndex))
     	poco_bugcheck_msg("try to read an input port that was not previously locked");
 
-    inPorts[portIndex]->readDataAttribute(pAttr);
+    inPorts[portIndex]->readInputDataAttribute(pAttr);
 }
 
 bool InPortUser::tryInPortDataAttribute(size_t portIndex,
@@ -123,7 +123,7 @@ void InPortUser::releaseInPort(size_t portIndex)
 {
     if (isInPortCaught(portIndex))
     {
-        inPorts[portIndex]->release();
+        inPorts[portIndex]->releaseInputData();
 
 		caughts->erase(portIndex);
 		if (caughts->empty())
@@ -169,7 +169,7 @@ int InPortUser::startCondition()
 				if (isInPortCaught(port))
 					continue;
 
-				if (!tryInPortLock(port))
+				if (!tryInPortCatchSource(port))
 				{
 					allPresent = false;
 				}
@@ -215,24 +215,6 @@ int InPortUser::startCondition()
 		unlockIn();
 		return noDataStartState;
 	}
-}
-
-std::set<size_t> InPortUser::portsWithNewData()
-{
-	std::set<size_t> portSet;
-
-	for (std::set<size_t>::iterator it = caughts->begin(),
-			ite = caughts->end(); it != ite; it++)
-		if (inPorts[*it]->isNew())
-			portSet.insert(*it);
-
-	poco_information(logger(), Poco::NumberFormatter::format(portSet.size())
-		+ " port(s) with new data");
-	//for (std::set<size_t>::iterator it = portSet.begin(),
-	//		ite = portSet.end(); it != ite; it++)
-	//		poco_information(logger(), "port #" + Poco::NumberFormatter::format(*it));
-
-	return portSet;
 }
 
 InPortUser::~InPortUser()

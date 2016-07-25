@@ -29,7 +29,7 @@
 #ifndef SRC_OUTPORT_H_
 #define SRC_OUTPORT_H_
 
-#include "DataItem.h"
+#include "SeqSource.h"
 #include "DataAttributeOut.h"
 #include "Port.h"
 
@@ -40,8 +40,7 @@
 using Poco::RWLock;
 using Poco::SharedPtr;
 
-class InDataPort;
-class InPort;
+class DataLogger;
 
 /**
  * OutPort
@@ -49,7 +48,7 @@ class InPort;
  * Data output module port.
  * Contain links to the target ports
  */
-class OutPort: public Port
+class OutPort: public Port, public SeqSource
 {
 public:
     OutPort(Module* parent,
@@ -76,120 +75,18 @@ public:
     virtual ~OutPort() { }
 
     /**
-     * Retrieve the target ports
-     */
-    std::vector< SharedPtr<InPort*> > getTargetPorts();
-
-    /**
-     * Retrieve the data sequence target ports
-     */
-    std::vector< SharedPtr<InPort*> > getSeqTargetPorts();
-
-    /**
-     * Try to lock the output port to retrieve a pointer on
-     * the data to be written
+     * Implementation of DataSource::name
      *
-     * @return true if success
+     * as explicit inheritance from Port::name
      */
-    bool tryLock()
-    	{ return dataItem()->tryLockToWrite(); }
+    std::string name() { return Port::name(); }
 
     /**
-     * Retrieve a pointer on the data to be written
+     * Implementation of DataSource::description
      *
-     * The port shall have been previously locked using
-     * tryLock, with return value == true.
+     * as explicit inheritance from Port::description
      */
-    template<typename T> void getDataToWrite(T*& pData)
-    	{ dataItem()->getDataToWrite(pData); }
-
-    /**
-     * Try to retrieve a pointer on the data to be written
-     *
-     * @return false if the lock cannot be acquired
-     */
-    template<typename T> bool tryData(T*& pData)
-        { return dataItem()->tryGetDataToWrite<T>(pData); }
-
-    /**
-     * Notify the dispatcher that the new data is ready
-     *
-     * With the given attributes,
-     * and release the lock acquired with tryData
-     */
-    void notifyReady(DataAttributeOut attribute);
-
-    /**
-     * Release the output port data lock
-     *
-     * Without notifying the dispatcher.
-     * To be used in case of failure.
-     */
-    void releaseOnFailure() { dataItem()->releaseBrokenData(); }
-
-    /**
-     * Dispatch Module::resetWithSeqTargets
-     */
-    void resetSeqTargets();
-
-    /**
-     * Get the DataItem for this OutPort
-     */
-    DataItem* dataItem() { return &data; }
-
-    /**
-     * Expire port data
-     */
-    void expire();
-
-private:
-    /**
-     * Add a target port
-     *
-     * This function should only be called by the target InPort.
-     *
-     * The Dispatcher is requested to get the shared pointer
-     * on the InPort.
-     */
-    void addTargetPort(InPort* port);
-
-    /**
-     * Remove a target port
-     *
-     * Should not throw an exception if the port is not present
-     * in the targetPorts
-     */
-    void removeTargetPort(InPort* port);
-
-    std::vector< SharedPtr<InPort*> > targetPorts;
-    RWLock targetPortsLock; ///< lock for targetPorts operations
-
-    /**
-     * Add a sequence re-combiner target port
-     *
-     * This function should only be called by the seq target InDataPort.
-     *
-     * The Dispatcher is requested to get the shared pointer
-     * on the InDataPort.
-     */
-    void addSeqTargetPort(InDataPort* port);
-
-    /**
-     * Remove a sequence re-combiner target port
-     *
-     * Should not throw an exception if the port is not present
-     * in the seqTargetPorts
-     */
-    void removeSeqTargetPort(InDataPort* port);
-
-    /// list of target ports for data sequence re-combination
-    std::vector< SharedPtr<InPort*> > seqTargetPorts;
-    RWLock seqTargetPortsLock; ///< lock for seqTargetPorts operations
-
-    friend class InPort;
-    friend class InDataPort;
-
-    DataItem data;
+    std::string description() { return Port::description(); }
 };
 
 #endif /* SRC_OUTPORT_H_ */

@@ -41,6 +41,15 @@
 class Module;
 class OutPort;
 
+/**
+ * Class managing multiple OutPorts
+ *
+ * Deal with all the output-related operations of @ref Module.
+ *
+ *  - OutPorts creation,
+ *  - thread local access control (locks, write)
+ *  - release (notifyReady)
+ */
 class OutPortUser: public virtual VerboseEntity
 {
 public:
@@ -56,11 +65,6 @@ public:
 	 */
 	std::vector<OutPort*> getOutPorts() { return outPorts; }
 	OutPort* getOutPort(std::string portName);
-
-    /**
-     * Expire output data
-     */
-    void expireOutData();
 
 protected:
     /**

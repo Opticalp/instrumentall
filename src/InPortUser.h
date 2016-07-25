@@ -41,6 +41,19 @@ class Module;
 class InPort;
 class DataAttributeIn;
 
+/**
+ * Class managing multiple InPorts
+ *
+ * Deal with all the input-related operations of @ref Module.
+ *
+ *  - InPorts creation,
+ *  - thread local access control: startCondition, tryCatch, read
+ *  - release
+ *
+ * InPortUser::startCondition is a semi-automated method (virtual,
+ * can be overloaded), that manages the possible module task starting
+ * conditions.
+ */
 class InPortUser: public virtual VerboseEntity
 {
 public:
@@ -112,7 +125,7 @@ protected:
      * To be called by startCondition.
      * The inMutex is managed by the caller.
      */
-    bool tryInPortLock(size_t portIndex);
+    bool tryInPortCatchSource(size_t portIndex);
 
     /**
      * Forward readData for the given port
@@ -157,6 +170,9 @@ protected:
      */
     size_t inPortCaughtsCount()
     	{ return caughts->size(); }
+
+	std::set<size_t> inPortCoughts()
+		{ return caughts.get(); }
 
     /// Start states as to be returned by startCondition
     enum baseStartStates
@@ -213,8 +229,6 @@ protected:
 	 * Implemented in Module by forwarding the request to the running task.
 	 */
 	virtual InPort* triggingPort() = 0;
-
-	std::set<size_t> portsWithNewData();
 
 private:
 	bool tryLockIn() { return inMutex.tryLock(); }

@@ -111,8 +111,6 @@ void ParameterizedEntity::setParameterValue<long>(std::string paramName, long va
 {
     // TODO: scoped mainMutex
 
-	expireOutData();
-
     size_t paramIndex = getParameterIndex(paramName);
 
     switch (paramSet[paramIndex].datatype)
@@ -138,8 +136,6 @@ template <> inline
 void ParameterizedEntity::setParameterValue<double>(std::string paramName, double value)
 {
     // TODO: scoped mainMutex
-
-	expireOutData();
 
     size_t paramIndex = getParameterIndex(paramName);
 
@@ -167,8 +163,6 @@ template <> inline
 void ParameterizedEntity::setParameterValue<std::string>(std::string paramName, std::string value)
 {
     // TODO: scoped mainMutex
-
-	expireOutData();
 
     size_t paramIndex = getParameterIndex(paramName);
 

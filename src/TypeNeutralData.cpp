@@ -1,6 +1,6 @@
 /**
- * @file	src/DataItem.cpp
- * @date	Feb. 2016
+ * @file	src/TypeNeutralData.cpp
+ * @date	june 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,17 +26,10 @@
  THE SOFTWARE.
  */
 
-#include "DataItem.h"
-#include "DataLogger.h"
-#include "DataManager.h"
+#include "TypeNeutralData.h"
 
-#include "Poco/Types.h"
-#include "Poco/Util/Application.h"
-
-DataItem::DataItem(int dataType, OutPort* parent):
-        mDataType(dataType),
-        mParentPort(parent),
-		expired(true)
+TypeNeutralData::TypeNeutralData(int datatype):
+	mDataType(datatype)
 {
     switch (mDataType)
     {
@@ -95,10 +88,8 @@ DataItem::DataItem(int dataType, OutPort* parent):
     }
 }
 
-DataItem::~DataItem()
+TypeNeutralData::~TypeNeutralData()
 {
-    // The loggers are detached by DataManager::removeOutPort()
-
     switch (mDataType)
     {
     // scalar containers
@@ -154,64 +145,7 @@ DataItem::~DataItem()
     }
 }
 
-void DataItem::releaseNewData()
-{
-	expired = false;
-    releaseData();
-
-    Poco::Util::Application::instance()
-            .getSubsystem<DataManager>()
-            .newData(this);
-}
-
-void DataItem::releaseBrokenData()
-{
-    expired = true;
-    releaseData();
-}
-
-void DataItem::registerLogger(DataLogger* logger)
-{
-    loggersLock.writeLock();
-    allLoggers.insert(logger);
-    loggersLock.unlock();
-}
-
-std::set<SharedPtr<DataLogger*> > DataItem::loggers()
-{
-    std::set<SharedPtr<DataLogger*> > tmpList;
-
-    loggersLock.readLock();
-
-    for (std::set< DataLogger* >::iterator it = allLoggers.begin(),
-            ite = allLoggers.end(); it != ite; it++ )
-    {
-        tmpList.insert( Poco::Util::Application::instance()
-                            .getSubsystem<DataManager>()
-                            .getDataLogger(*it) );
-    }
-
-    loggersLock.unlock();
-
-    return tmpList;
-}
-
-void DataItem::detachLogger(DataLogger* logger)
-{
-    loggersLock.writeLock();
-    allLoggers.erase(logger);
-    loggersLock.unlock();
-}
-
-void DataItem::checkDataType(int datatype)
-{
-    if ((datatype & ~contVector) == (mDataType & ~contVector))
-        return;
-
-    throw Poco::DataFormatException(dataTypeStr(mDataType) + " is expected");
-}
-
-std::string DataItem::dataTypeShortStr(int datatype)
+std::string TypeNeutralData::dataTypeShortStr(int datatype)
 {
     if (datatype == typeUndefined)
         return "undef";
@@ -251,7 +185,7 @@ std::string DataItem::dataTypeShortStr(int datatype)
     return desc;
 }
 
-int DataItem::getTypeFromShortStr(std::string typeName)
+int TypeNeutralData::getTypeFromShortStr(std::string typeName)
 {
     int retType = 0;
     std::string tmp(typeName);
@@ -280,5 +214,13 @@ int DataItem::getTypeFromShortStr(std::string typeName)
         retType |= typeString;
 
     return retType;
+}
+
+void TypeNeutralData::checkDataType(int datatype)
+{
+    if ((datatype & ~contVector) == (mDataType & ~contVector))
+        return;
+
+    throw Poco::DataFormatException(dataTypeStr(mDataType) + " is expected");
 }
 

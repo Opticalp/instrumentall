@@ -78,7 +78,7 @@
 class DataAttributeIn: public DataAttribute
 {
 public:
-    DataAttributeIn(DataAttribute attribute, InPort* parent):
+    DataAttributeIn(DataAttribute attribute, SeqTarget* parent):
         DataAttribute(attribute), mParent(parent) { }
 
     DataAttributeIn(const DataAttributeIn& other):
@@ -122,7 +122,7 @@ private:
      */
     void checkSequence(size_t seqIndex);
 
-    InPort* mParent;
+    SeqTarget* mParent;
 };
 
 #endif /* SRC_DATAATTRIBUTEIN_H_ */

@@ -31,6 +31,7 @@
 
 #include "OutPort.h"
 #include "DataItem.h"
+#include "Dispatcher.h"
 
 #include "DataPocoLogger.h"
 
@@ -43,7 +44,7 @@ DataManager::DataManager():
     // Register data loggers in the factory using the C++ class name
 
     loggerFactory.registerClass<DataPocoLogger>("DataPocoLogger");
-    loggerClasses.insert(classPair("DataPocoLogger", DataPocoLogger::description()));
+    loggerClasses.insert(classPair("DataPocoLogger", DataPocoLogger::classDescription()));
 }
 
 DataManager::~DataManager()
@@ -67,68 +68,10 @@ void DataManager::uninitialize()
     // TODO: empty all data (expired, etc)
 }
 
-void DataManager::addOutPort(OutPort* port)
-{
-    allDataLock.writeLock();
-    allData.push_back(SharedPtr<DataItem*>(new DataItem*(port->dataItem())));
-    allDataLock.unlock();
-}
-
-void DataManager::removeOutPort(OutPort* port)
-{
-    allDataLock.writeLock();
-
-    for (std::vector< SharedPtr<DataItem*> >::iterator it = allData.begin(),
-            ite = allData.end(); it != ite; it++)
-    {
-        if (port->dataItem() == **it)
-        {
-            // unregister data item loggers
-            std::set< SharedPtr<DataLogger*> > itemLoggers = port->dataItem()->loggers();
-            for (std::set< SharedPtr<DataLogger*> >::iterator setIt = itemLoggers.begin(),
-                    setIte = itemLoggers.end(); setIt != setIte; setIt++ )
-                (**setIt)->detach();
-
-            // replace the pointed data item by something throwing exceptions
-            **it = &emptyDataItem;
-            allData.erase(it);
-            // poco_information(logger(), port->name() + " port DataItem "
-            //         "erased from DataManager::allData. ");
-            allDataLock.unlock();
-            return;
-        }
-    }
-
-    allDataLock.unlock();
-    poco_error(logger(), "removeOutPort(): "
-            "the port was not found");
-}
-
-void DataManager::newData(DataItem* self)
-{
-    if (!self->hasLoggers())
-        return;
-
-    std::set< SharedPtr<DataLogger*> > itemLoggers = self->loggers();
-
-    for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
-            ite = itemLoggers.end(); it != ite; it++ )
-        (**it)->acquireLock();
-
-    for (std::set< SharedPtr<DataLogger*> >::iterator it = itemLoggers.begin(),
-            ite = itemLoggers.end(); it != ite; it++ )
-    {
-        // launch logger threads via thread manager.
-        Poco::Util::Application::instance()
-            .getSubsystem<ThreadManager>()
-            .startDataLogger(**it);
-    }
-}
-
-SharedPtr<DataItem*> DataManager::getDataItem(DataItem* dataItem)
+SharedPtr<DataSource*> DataManager::getDataItem(DataSource* dataItem)
 {
     allDataLock.readLock();
-    for (std::vector< SharedPtr<DataItem*> >::iterator it = allData.begin(),
+    for (std::vector< SharedPtr<DataSource*> >::iterator it = allData.begin(),
             ite = allData.end(); it != ite; it++)
     {
         if (dataItem==**it)
@@ -184,37 +127,4 @@ SharedPtr<DataLogger*> DataManager::getDataLogger(DataLogger* dataLogger)
     throw Poco::NotFoundException("DataManager",
             "The given data logger was not found");
 
-}
-
-void DataManager::registerLogger(SharedPtr<DataItem*> data,
-        SharedPtr<DataLogger*> dataLogger)
-{
-    if (*data == &emptyDataItem)
-        throw Poco::NotFoundException("registerLogger",
-                                        "Data item not found");
-
-    (*dataLogger)->registerData(*data);
-}
-
-SharedPtr<DataItem*> DataManager::getSourceDataItem(
-        SharedPtr<DataLogger*> dataLogger)
-{
-    DataItem* data = (*dataLogger)->data();
-
-    if (data)
-        return getDataItem(data);
-    else
-        throw Poco::NotFoundException("DataManager::getsourceDataItem",
-                "No source data item found. "
-                "The logger may be detached. ");
-}
-
-
-void DataManager::removeDataLogger(SharedPtr<DataLogger*> logger)
-{
-    // switch the logger into empty state
-    (*logger)->setEmpty();
-
-    // remove the data logger from loggers. nothing to delete.
-    loggers.erase(logger);
 }
