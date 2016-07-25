@@ -69,7 +69,7 @@ InPort* InPortUser::getInPort(std::string portName)
             + "in: " + name());
 }
 
-bool InPortUser::tryInPortLock(size_t portIndex)
+bool InPortUser::tryInPortCatchSource(size_t portIndex)
 {
     if (isInPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
@@ -169,7 +169,7 @@ int InPortUser::startCondition()
 				if (isInPortCaught(port))
 					continue;
 
-				if (!tryInPortLock(port))
+				if (!tryInPortCatchSource(port))
 				{
 					allPresent = false;
 				}
