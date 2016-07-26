@@ -54,6 +54,14 @@ class DataSource: public DataItem
 {
 public:
 	DataSource(int datatype = typeUndefined);
+
+	/**
+	 * Copy constructor
+	 *
+	 * Used by DuplicatedSource
+	 */
+	DataSource(DataSource* source): DataItem(*source) { }
+
 	virtual ~DataSource();
 
 	virtual std::string name() { return "emptyDataSource"; };

@@ -1,6 +1,6 @@
 /**
- * @file	src/Breaker.cpp
- * @date	jul. 2016
+ * @file	src/DuplicatedSource.cpp
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,59 +26,25 @@
  THE SOFTWARE.
  */
 
-#include "Breaker.h"
-
-#include "DataSource.h"
-#include "DataTarget.h"
+#include "DuplicatedSource.h"
 
 #include "Dispatcher.h"
-
 #include "Poco/Util/Application.h"
 
-Breaker::Breaker(DataSource* source)
+DuplicatedSource::DuplicatedSource(DataSource* source):
+	DataSource(source), breaker(source)
 {
-	breakAllTargetsFromSource(source);
 }
 
-Breaker::Breaker(DataSource* source, DataTarget* target)
+DuplicatedSource::DuplicatedSource(DataSource* source, DataTarget* target):
+	DataSource(source), breaker(source, target)
 {
-	if (target->getDataSource() != source)
-		throw Poco::RuntimeException("Breaker", "The given source "
-				+ source->name()
-				+ " has no target "
-				+ target->name());
-
-	breakSourceToTarget(target);
 }
 
-void Breaker::breakAllTargetsFromSource(DataSource* source)
+void DuplicatedSource::trigTargets()
 {
-	std::set<DataTarget*> targets = source->getDataTargets();
-	for (std::set<DataTarget*>::iterator it = targets.begin(),
-			ite = targets.end(); it != ite; it++)
-		breakSourceToTarget(*it);
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .setOutputDataReady(this);
 }
 
-void Breaker::breakSourceToTarget(DataTarget* target)
-{
-	DataSource* source = target->getDataSource();
-
-	Poco::Util::Application::instance()
-		.getSubsystem<Dispatcher>()
-		.unbind(target);
-
-	edges.insert(Edge(target, source));
-}
-
-void Breaker::releaseBreaks()
-{
-	while (edges.size())
-	{
-		Poco::Util::Application::instance()
-			.getSubsystem<Dispatcher>()
-			.bind(edges.begin()->second,
-			      edges.begin()->first);
-
-		edges.erase(edges.begin());
-	}
-}

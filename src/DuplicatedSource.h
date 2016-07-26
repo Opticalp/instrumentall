@@ -1,6 +1,6 @@
 /**
- * @file	src/Breaker.h
- * @date	jul. 2016
+ * @file	src/DuplicatedSource.h
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,58 +26,56 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_BREAKER_H_
-#define SRC_BREAKER_H_
+#ifndef SRC_DUPLICATEDSOURCE_H_
+#define SRC_DUPLICATEDSOURCE_H_
 
-#include <map>
+#include "DataSource.h"
 
-class DataSource;
+#include "Breaker.h"
+
+#include "Poco/RefCountedObject.h"
+
 class DataTarget;
 
 /**
- * Breaker
+ * DuplicatedSource
  *
- * Temporary data flow breaker
+ * Special data source to be used by a UI to replace temporary a dynamic
+ * data source.
+ * The data item is duplicated and the binding is broken using a breaker.
+ * 
+ * The lifetime of the object should be managed using a Poco::AutoPtr
  */
-class Breaker
+class DuplicatedSource: public DataSource, public Poco::RefCountedObject
 {
 public:
 	/**
-	 * Construct a breaker, catching all the connections
-	 * issuing from the given source
+	 * Replace the source and break all the outgoing connections
 	 */
-	Breaker(DataSource* source);
+	DuplicatedSource(DataSource* source);
 
 	/**
-	 * Construct a breaker, catching only the connection
-	 * from the given source to the given target
+	 * Replace the source and break only the connection to target
 	 */
-	Breaker(DataSource* source, DataTarget* target);
-
-	Breaker() { }
-	virtual ~Breaker() { releaseBreaks(); }
+	DuplicatedSource(DataSource* source, DataTarget* target);
 
 	/**
-	 * Catch all the source to target connections
-	 * from the given source
+	 * Release the connections
 	 */
-	void breakAllTargetsFromSource(DataSource* source);
+	virtual ~DuplicatedSource() { }
 
 	/**
-	 * Catch only the source to target connection
-	 * for the given target
+	 * Launch the targets processes
 	 */
-	void breakSourceToTarget(DataTarget* target);
-
-	/**
-	 * Release the breaks on the edges recorded in Breaker::edges
-	 */
-	void releaseBreaks();
+	void trigTargets();
 
 private:
-	typedef std::pair<DataTarget*, DataSource*> Edge;
+	/**
+	 * Std Constructor. Should not be used.
+	 */
+	DuplicatedSource();
 
-	std::map<DataTarget*, DataSource*> edges; ///< broken edges
+	Breaker breaker; ///< connection breaker
 };
 
-#endif /* SRC_BREAKER_H_ */
+#endif /* SRC_DUPLICATEDSOURCE_H_ */

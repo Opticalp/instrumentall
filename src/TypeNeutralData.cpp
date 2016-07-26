@@ -88,6 +88,108 @@ TypeNeutralData::TypeNeutralData(int datatype):
     }
 }
 
+TypeNeutralData::TypeNeutralData(TypeNeutralData& other):
+		mDataType(other.mDataType)
+{
+    switch (mDataType)
+    {
+    // scalar containers
+    case (typeInt32 | contScalar):
+		{
+    	Poco::Int32* tmp = new Poco::Int32(*reinterpret_cast<Poco::Int32*>(other.dataStore));
+        dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeUInt32 | contScalar):
+		{
+		Poco::UInt32* tmp = new Poco::UInt32(*reinterpret_cast<Poco::UInt32*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeInt64 | contScalar):
+		{
+		Poco::Int64* tmp = new Poco::Int64(*reinterpret_cast<Poco::Int64*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeUInt64 | contScalar):
+		{
+		Poco::UInt64* tmp = new Poco::UInt64(*reinterpret_cast<Poco::UInt64*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeFloat | contScalar):
+		{
+        float* tmp = new float(*reinterpret_cast<float*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeDblFloat | contScalar):
+		{
+        double* tmp = new double(*reinterpret_cast<double*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeString | contScalar):
+		{
+        std::string* tmp = new std::string(*reinterpret_cast<std::string*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+
+    // vector containers
+    case (typeInt32 | contVector):
+		{
+    	std::vector<Poco::Int32>* tmp = new std::vector<Poco::Int32>(*reinterpret_cast< std::vector<Poco::Int32>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeUInt32 | contVector):
+		{
+    	std::vector<Poco::UInt32>* tmp = new std::vector<Poco::UInt32>(*reinterpret_cast< std::vector<Poco::UInt32>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeInt64 | contVector):
+		{
+    	std::vector<Poco::Int64>* tmp = new std::vector<Poco::Int64>(*reinterpret_cast< std::vector<Poco::Int64>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeUInt64 | contVector):
+		{
+    	std::vector<Poco::UInt64>* tmp = new std::vector<Poco::UInt64>(*reinterpret_cast< std::vector<Poco::UInt64>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeFloat | contVector):
+		{
+    	std::vector<float>* tmp = new std::vector<float>(*reinterpret_cast< std::vector<float>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeDblFloat | contVector):
+		{
+    	std::vector<double>* tmp = new std::vector<double>(*reinterpret_cast< std::vector<double>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeString | contVector):
+		{
+    	std::vector<std::string>* tmp = new std::vector<std::string>(*reinterpret_cast< std::vector<std::string>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+
+    // others
+    case typeUndefined:
+        break;
+    default:
+        poco_bugcheck_msg("DataItem::DataItem: unknown requested data type");
+        throw Poco::BugcheckException();
+    }
+}
+
 TypeNeutralData::~TypeNeutralData()
 {
     switch (mDataType)
