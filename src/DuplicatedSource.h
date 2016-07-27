@@ -64,6 +64,8 @@ public:
 	 */
 	virtual ~DuplicatedSource() { }
 
+	std::string name() { return mName; }
+
 	/**
 	 * Launch the targets processes
 	 */
@@ -76,6 +78,8 @@ private:
 	DuplicatedSource();
 
 	Breaker breaker; ///< connection breaker
+
+	std::string mName;
 };
 
 #endif /* SRC_DUPLICATEDSOURCE_H_ */

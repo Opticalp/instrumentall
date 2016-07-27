@@ -46,6 +46,7 @@ THE SOFTWARE.
 #include "PythonOutPort.h"
 #include "PythonDataLogger.h"
 #include "PythonBreaker.h"
+#include "PythonDataHolder.h"
 
 /**
  * array to bind to-be-exposed methods (C to Python wrappers)
@@ -135,6 +136,9 @@ void PythonManager::exposeAPI()
     if (PyType_Ready(&PythonBreaker) < 0)
         return;
 
+    if (PyType_Ready(&PythonDataHolder) < 0)
+        return;
+
     PyObject* m;
 
     m = Py_InitModule3("instru", EmbMethods,
@@ -166,6 +170,9 @@ void PythonManager::exposeAPI()
 
     Py_INCREF(&PythonBreaker);
     PyModule_AddObject(m, "Breaker", (PyObject *)&PythonBreaker);
+
+    Py_INCREF(&PythonDataHolder);
+    PyModule_AddObject(m, "DataHolder", (PyObject *)&PythonDataHolder);
 }
 
 

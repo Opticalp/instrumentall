@@ -292,6 +292,8 @@ void Dispatcher::addOutPort(OutPort* port)
 
 void Dispatcher::bind(DataSource* source, DataTarget* target)
 {
+//	poco_information(logger(), "bind source " + source->name()
+//			+ " to target " + target->name());
 	target->setDataSource(source);
 }
 
@@ -339,9 +341,6 @@ void Dispatcher::setOutputDataReady(DataSource* source)
 //    poco_information(logger(), port->name() + " data ready");
 
 	OutPort* tmpOut = dynamic_cast<OutPort*>(source);
-	if (tmpOut == NULL)
-		poco_bugcheck_msg("data source different than OutPort "
-				"is not implemented yet");
 
 	std::set<DataTarget*> targets = source->getDataTargets();
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
@@ -359,7 +358,11 @@ void Dispatcher::setOutputDataReady(DataSource* source)
 											.getSubsystem<ModuleManager>()
 											.getModule(tmpPort->parent());
 
-			poco_information(logger(),tmpOut->parent()->name() + " port " + source->name()
+			if (tmpOut)
+				poco_information(logger(),tmpOut->parent()->name() + " port " + source->name()
+					+ " STARTS " + tmpPort->parent()->name() );
+			else
+				poco_information(logger(), source->name()
 					+ " STARTS " + tmpPort->parent()->name() );
 
 			enqueueModuleTask(new ModuleTask(*shdMod, tmpPort));

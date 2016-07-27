@@ -32,13 +32,26 @@
 #include "Poco/Util/Application.h"
 
 DuplicatedSource::DuplicatedSource(DataSource* source):
-	DataSource(source), breaker(source)
+	DataSource(source), mName("duplicated" + source->name())
 {
+	std::set<DataTarget*> targets(source->getDataTargets());
+
+	breaker.breakAllTargetsFromSource(source);
+
+	for (std::set<DataTarget*>::iterator it = targets.begin(),
+			ite = targets.end(); it != ite; it++)
+		Poco::Util::Application::instance()
+	                        .getSubsystem<Dispatcher>()
+	                        .bind(this, *it);
 }
 
 DuplicatedSource::DuplicatedSource(DataSource* source, DataTarget* target):
-	DataSource(source), breaker(source, target)
+	DataSource(source), breaker(source, target),
+	mName("duplicated" + source->name())
 {
+	Poco::Util::Application::instance()
+	                        .getSubsystem<Dispatcher>()
+	                        .bind(this, target);
 }
 
 void DuplicatedSource::trigTargets()

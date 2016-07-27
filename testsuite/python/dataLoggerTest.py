@@ -108,8 +108,10 @@ def myMain():
     removeDataLogger(logger)
    
     print "Check the registered loggers at the mod2 output port" 
-    if mod2.outPorts()[0].loggers() is None:
+    if mod2.outPorts()[0].loggers() == list():
         print "Ok, no more logger is registered"
+    else:
+        raise RuntimeError("a logger is still registered")
 
     print "And re-run..."
     runModule(mod1)
