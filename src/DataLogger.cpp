@@ -44,7 +44,15 @@ void DataLogger::run()
 	if (!tryCatchSource())
 		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
 
-	log();
+	try
+	{
+		log();
+	}
+	catch (...)
+	{
+		releaseInputData();
+		throw;
+	}
 
 	releaseInputData();
 }

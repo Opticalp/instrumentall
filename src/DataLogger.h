@@ -67,11 +67,6 @@ public:
 
 protected:
     /**
-     * Launch run() in a new thread using the ThreadManager
-     */
-    void runTarget();
-
-    /**
      * Log the data
      *
      * Function to override in implementations.
@@ -86,6 +81,11 @@ protected:
     virtual void log() = 0;
 
 private:
+    /**
+     * Launch run() in a new thread using the ThreadManager
+     */
+    void runTarget();
+
     Poco::FastMutex mutex; ///< data logger main mutex
 };
 
