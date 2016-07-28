@@ -292,6 +292,8 @@ void Dispatcher::addOutPort(OutPort* port)
 
 void Dispatcher::bind(DataSource* source, DataTarget* target)
 {
+//	poco_information(logger(), "bind source " + source->name()
+//			+ " to target " + target->name());
 	target->setDataSource(source);
 }
 
@@ -339,9 +341,6 @@ void Dispatcher::setOutputDataReady(DataSource* source)
 //    poco_information(logger(), port->name() + " data ready");
 
 	OutPort* tmpOut = dynamic_cast<OutPort*>(source);
-	if (tmpOut == NULL)
-		poco_bugcheck_msg("data source different than OutPort "
-				"is not implemented yet");
 
 	std::set<DataTarget*> targets = source->getDataTargets();
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
@@ -350,24 +349,23 @@ void Dispatcher::setOutputDataReady(DataSource* source)
         // readlock
         source->registerPendingTarget(*it);
 
-        // modules
-        InPort* tmpPort = dynamic_cast<InPort*>(*it);
-        if (tmpPort)
+        if (logger().information())
         {
-			// get module from module manager
-			SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
-											.getSubsystem<ModuleManager>()
-											.getModule(tmpPort->parent());
-
-			poco_information(logger(),tmpOut->parent()->name() + " port " + source->name()
-					+ " STARTS " + tmpPort->parent()->name() );
-
-			enqueueModuleTask(new ModuleTask(*shdMod, tmpPort));
+			// modules
+			InPort* tmpPort = dynamic_cast<InPort*>(*it);
+			if (tmpPort)
+			{
+				if (tmpOut)
+					logger().information(tmpOut->parent()->name()
+						+ " port " + source->name()
+						+ " STARTS " + tmpPort->parent()->name() );
+				else
+					logger().information(source->name()
+						+ " STARTS " + tmpPort->parent()->name() );
+			}
         }
-        else
-        {
-        	(*it)->runTarget();
-        }
+
+        (*it)->runTarget();
     }
 }
 
@@ -386,22 +384,4 @@ void Dispatcher::dispatchTargetReset(DataSource* port)
     			+ tmpPort->parent()->name());
     	tmpPort->parent()->resetWithTargets();
     }
-}
-
-Poco::AutoPtr<ModuleTask> Dispatcher::runModule(SharedPtr<Module*> ppModule)
-{
-    Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(*ppModule), true);
-    enqueueModuleTask(taskPtr);
-
-    return taskPtr;
-}
-
-void Dispatcher::runModule(Module* pModule)
-{
-	enqueueModuleTask(new ModuleTask(pModule));
-}
-
-void Dispatcher::enqueueModuleTask(ModuleTask* pTask)
-{
-	pTask->module()->enqueueTask(pTask);
 }

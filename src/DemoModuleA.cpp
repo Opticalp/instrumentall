@@ -45,7 +45,8 @@ DemoModuleA::DemoModuleA(ModuleFactory* parent, std::string customName):
     setOutPortCount(outPortCnt);
 
     addInPort("inPortA", "demo port that transmits nothing", DataItem::typeInteger, inPortA);
-    addInPort("inPortB", "demo port that transmits nothing", DataItem::typeFloat, inPortB);
+    addInPort("inPortB", "demo port that transmits nothing", DataItem::typeInteger, inPortB);
+    addInPort("inPortC", "demo port that transmits nothing", DataItem::typeFloat, inPortC);
 
     addOutPort("outPortA", "demo port that transmits nothing", DataItem::typeInteger, outPortA);
 

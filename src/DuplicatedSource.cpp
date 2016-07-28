@@ -1,6 +1,6 @@
 /**
- * @file	src/InPort.cpp
- * @date	Apr. 2016
+ * @file	src/DuplicatedSource.cpp
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,30 +26,38 @@
  THE SOFTWARE.
  */
 
-#include "InPort.h"
+#include "DuplicatedSource.h"
 
-#include "Module.h"
-#include "ModuleTask.h"
 #include "Dispatcher.h"
-
 #include "Poco/Util/Application.h"
 
-InPort::InPort(Module* parent, std::string name, std::string description,
-        size_t index, bool trig):
-        Port(parent, name, description, index),
-        isTrigFlag(trig)
+DuplicatedSource::DuplicatedSource(DataSource* source):
+	DataSource(source), mName("duplicated" + source->name())
 {
+	std::set<DataTarget*> targets(source->getDataTargets());
 
+	breaker.breakAllTargetsFromSource(source);
+
+	for (std::set<DataTarget*>::iterator it = targets.begin(),
+			ite = targets.end(); it != ite; it++)
+		Poco::Util::Application::instance()
+	                        .getSubsystem<Dispatcher>()
+	                        .bind(this, *it);
 }
 
-InPort::InPort(std::string name, std::string description, bool trig):
-                Port(name, description),
-                isTrigFlag(trig)
+DuplicatedSource::DuplicatedSource(DataSource* source, DataTarget* target):
+	DataSource(source), breaker(source, target),
+	mName("duplicated" + source->name())
 {
-	// used = false; // why?
+	Poco::Util::Application::instance()
+	                        .getSubsystem<Dispatcher>()
+	                        .bind(this, target);
 }
 
-void InPort::runTarget()
+void DuplicatedSource::trigTargets()
 {
-	parent()->enqueueTask(new ModuleTask(parent(), this));
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .setOutputDataReady(this);
 }
+

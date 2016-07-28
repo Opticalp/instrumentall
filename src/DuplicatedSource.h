@@ -1,6 +1,6 @@
 /**
- * @file	src/DemoModuleA.h
- * @date	Feb. 2016
+ * @file	src/DuplicatedSource.h
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,45 +26,60 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DEMOMODULEA_H_
-#define SRC_DEMOMODULEA_H_
+#ifndef SRC_DUPLICATEDSOURCE_H_
+#define SRC_DUPLICATEDSOURCE_H_
 
-#include "Module.h"
+#include "DataSource.h"
+
+#include "Breaker.h"
+
+#include "Poco/RefCountedObject.h"
+
+class DataTarget;
 
 /**
- * DemoModuleA
+ * DuplicatedSource
  *
- * Very simple demo module, but implementing some ports
+ * Special data source to be used by a UI to replace temporary a dynamic
+ * data source.
+ * The data item is duplicated and the binding is broken using a breaker.
+ * 
+ * The lifetime of the object should be managed using a Poco::AutoPtr
  */
-class DemoModuleA: public Module
+class DuplicatedSource: public DataSource, public Poco::RefCountedObject
 {
 public:
-    DemoModuleA(ModuleFactory* parent, std::string customName);
-    virtual ~DemoModuleA() { }
+	/**
+	 * Replace the source and break all the outgoing connections
+	 */
+	DuplicatedSource(DataSource* source);
 
-    std::string description()
-    {
-        return "Very basic demo Module exhibiting some ports. ";
-    }
+	/**
+	 * Replace the source and break only the connection to target
+	 */
+	DuplicatedSource(DataSource* source, DataTarget* target);
+
+	/**
+	 * Release the connections
+	 */
+	virtual ~DuplicatedSource() { }
+
+	std::string name() { return mName; }
+
+	/**
+	 * Launch the targets processes
+	 */
+	void trigTargets();
 
 private:
-    static size_t refCount; ///< reference counter to generate a unique internal name
+	/**
+	 * Std Constructor. Should not be used.
+	 */
+	DuplicatedSource();
 
-    /// Indexes of the input ports
-    enum inPorts
-    {
-        inPortA,
-        inPortB,
-		inPortC,
-        inPortCnt
-    };
+	Breaker breaker; ///< connection breaker
 
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        outPortA,
-        outPortCnt
-    };
+	std::string mName;
 };
 
-#endif /* SRC_DEMOMODULEA_H_ */
+#endif /* SRC_DUPLICATEDSOURCE_H_ */

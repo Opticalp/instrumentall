@@ -1,6 +1,6 @@
 /**
- * @file	src/InPort.cpp
- * @date	Apr. 2016
+ * @file	src/Breaker.h
+ * @date	jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,30 +26,58 @@
  THE SOFTWARE.
  */
 
-#include "InPort.h"
+#ifndef SRC_BREAKER_H_
+#define SRC_BREAKER_H_
 
-#include "Module.h"
-#include "ModuleTask.h"
-#include "Dispatcher.h"
+#include <map>
 
-#include "Poco/Util/Application.h"
+class DataSource;
+class DataTarget;
 
-InPort::InPort(Module* parent, std::string name, std::string description,
-        size_t index, bool trig):
-        Port(parent, name, description, index),
-        isTrigFlag(trig)
+/**
+ * Breaker
+ *
+ * Temporary data flow breaker
+ */
+class Breaker
 {
+public:
+	/**
+	 * Construct a breaker, catching all the connections
+	 * issuing from the given source
+	 */
+	Breaker(DataSource* source);
 
-}
+	/**
+	 * Construct a breaker, catching only the connection
+	 * from the given source to the given target
+	 */
+	Breaker(DataSource* source, DataTarget* target);
 
-InPort::InPort(std::string name, std::string description, bool trig):
-                Port(name, description),
-                isTrigFlag(trig)
-{
-	// used = false; // why?
-}
+	Breaker() { }
+	virtual ~Breaker() { releaseBreaks(); }
 
-void InPort::runTarget()
-{
-	parent()->enqueueTask(new ModuleTask(parent(), this));
-}
+	/**
+	 * Catch all the source to target connections
+	 * from the given source
+	 */
+	void breakAllTargetsFromSource(DataSource* source);
+
+	/**
+	 * Catch only the source to target connection
+	 * for the given target
+	 */
+	void breakSourceToTarget(DataTarget* target);
+
+	/**
+	 * Release the breaks on the edges recorded in Breaker::edges
+	 */
+	void releaseBreaks();
+
+private:
+	typedef std::pair<DataTarget*, DataSource*> Edge;
+
+	std::map<DataTarget*, DataSource*> edges; ///< broken edges
+};
+
+#endif /* SRC_BREAKER_H_ */

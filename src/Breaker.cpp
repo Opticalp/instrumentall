@@ -1,6 +1,6 @@
 /**
- * @file	src/InPort.cpp
- * @date	Apr. 2016
+ * @file	src/Breaker.cpp
+ * @date	jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,30 +26,59 @@
  THE SOFTWARE.
  */
 
-#include "InPort.h"
+#include "Breaker.h"
 
-#include "Module.h"
-#include "ModuleTask.h"
+#include "DataSource.h"
+#include "DataTarget.h"
+
 #include "Dispatcher.h"
 
 #include "Poco/Util/Application.h"
 
-InPort::InPort(Module* parent, std::string name, std::string description,
-        size_t index, bool trig):
-        Port(parent, name, description, index),
-        isTrigFlag(trig)
+Breaker::Breaker(DataSource* source)
 {
-
+	breakAllTargetsFromSource(source);
 }
 
-InPort::InPort(std::string name, std::string description, bool trig):
-                Port(name, description),
-                isTrigFlag(trig)
+Breaker::Breaker(DataSource* source, DataTarget* target)
 {
-	// used = false; // why?
+	if (target->getDataSource() != source)
+		throw Poco::RuntimeException("Breaker", "The given source "
+				+ source->name()
+				+ " has no target "
+				+ target->name());
+
+	breakSourceToTarget(target);
 }
 
-void InPort::runTarget()
+void Breaker::breakAllTargetsFromSource(DataSource* source)
 {
-	parent()->enqueueTask(new ModuleTask(parent(), this));
+	std::set<DataTarget*> targets = source->getDataTargets();
+	for (std::set<DataTarget*>::iterator it = targets.begin(),
+			ite = targets.end(); it != ite; it++)
+		breakSourceToTarget(*it);
+}
+
+void Breaker::breakSourceToTarget(DataTarget* target)
+{
+	DataSource* source = target->getDataSource();
+
+	Poco::Util::Application::instance()
+		.getSubsystem<Dispatcher>()
+		.unbind(target);
+
+	edges.insert(Edge(target, source));
+}
+
+void Breaker::releaseBreaks()
+{
+	while (edges.size())
+	{
+		Poco::Util::Application::instance()
+			.getSubsystem<Dispatcher>()
+			.bind(edges.begin()->second,
+			      edges.begin()->first);
+
+		edges.erase(edges.begin());
+	}
 }

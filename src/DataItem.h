@@ -53,21 +53,23 @@ class DataItem: public TypeNeutralData
 {
 public:
     DataItem(int datatype = typeUndefined): TypeNeutralData(datatype) { }
+
+    /**
+     * Copy constructor
+     *
+     * Used by DuplicatedSource.
+     * The duplication can not be made when a module is running.
+     * No lock verification is requested, then...
+     */
+    DataItem(DataItem& other):
+    	attribute(other.attribute),
+		TypeNeutralData(other)
+    {
+    }
+
     virtual ~DataItem() { }
 
     DataAttribute getDataAttribute() { return attribute; }
-
-    /**
-     * Retrieve a pointer on the data
-     *
-     * @warning The lock (read or write) has to have been previously acquired
-     * @throw Poco::DataFormatException forwarded from checkType()
-     */
-    template <typename T> T* getData()
-    {
-        checkType<T>();
-        return reinterpret_cast<T*>(dataStore);
-    }
 
     /**
      * Forward the tryReadLock() call to the data RWLock
@@ -113,7 +115,7 @@ protected:
 
         if (dataLock.tryWriteLock())
         {
-            pData = reinterpret_cast<T*>(dataStore);
+            pData = getDataNoTypeCheck<T>();
             return true;
         }
         else
@@ -125,9 +127,6 @@ protected:
 private:
     DataAttribute attribute; ///< data attribute
     RWLock dataLock; ///< lock to manage the access to the data
-
-    // FIXME: transitional?
-    friend class OutPortUser;
 };
 
 #endif /* SRC_DATAITEM_H_ */

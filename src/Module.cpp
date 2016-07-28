@@ -450,3 +450,11 @@ void Module::mergeTasks(std::set<size_t> inPortIndexes)
 
 	taskMngtMutex.unlock();
 }
+
+Poco::AutoPtr<ModuleTask> Module::runModule()
+{
+    Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(this), true);
+    enqueueTask(taskPtr);
+
+    return taskPtr;
+}

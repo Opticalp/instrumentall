@@ -141,6 +141,17 @@ public:
 	ModuleFactory* parent();
 
     /**
+     * Launch a module task
+     *
+     * to be called by the UI or by any mean, but without new
+     * input port data.
+     *
+     * @return The task created for the module to run. The
+     * task can be used to check the state of the execution.
+     */
+	Poco::AutoPtr<ModuleTask> runModule();
+
+    /**
      * Enqueue a new task
      *
      * for this module. and pop it, if no task is running for this module.

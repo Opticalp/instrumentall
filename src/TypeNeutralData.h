@@ -35,6 +35,9 @@
  * TypeNeutralData
  *
  * Encapsulate any data transfered in the workflow.
+ *
+ * The locking mechanism has to be managed via the implementations
+ * @see DataItem
  */
 class TypeNeutralData
 {
@@ -81,6 +84,12 @@ public:
     };
 
 	TypeNeutralData(int datatype = typeUndefined);
+
+	/**
+	 * Copy constructor
+	 */
+	TypeNeutralData(TypeNeutralData& other);
+
 	virtual ~TypeNeutralData();
 
     /**
@@ -125,10 +134,29 @@ public:
      */
     int dataType() { return mDataType; }
 
+    /**
+     * Retrieve a pointer on the data
+     *
+     * @throw Poco::DataFormatException forwarded from checkType()
+     */
+    template <typename T> T* getData()
+    {
+        checkType<T>();
+        return reinterpret_cast<T*>(dataStore);
+    }
+
 protected:
-    void* dataStore; ///< pointer to the data
+    /**
+     * Retrieve a pointer on the data without checking the type
+     */
+    template <typename T> T* getDataNoTypeCheck()
+    {
+        return reinterpret_cast<T*>(dataStore);
+    }
 
 private:
+    void* dataStore; ///< pointer to the data
+
     /**
      * Data type
      *
