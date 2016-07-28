@@ -350,24 +350,20 @@ void Dispatcher::setOutputDataReady(DataSource* source)
         // readlock
         source->registerPendingTarget(*it);
 
-        // modules
-        InPort* tmpPort = dynamic_cast<InPort*>(*it);
-        if (tmpPort)
+        if (logger().information())
         {
-			// get module from module manager
-			SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
-											.getSubsystem<ModuleManager>()
-											.getModule(tmpPort->parent());
-
-			poco_information(logger(),tmpOut->parent()->name() + " port " + source->name()
-					+ " STARTS " + tmpPort->parent()->name() );
-
-			enqueueModuleTask(new ModuleTask(*shdMod, tmpPort));
+			// modules
+			InPort* tmpPort = dynamic_cast<InPort*>(*it);
+			if (tmpPort)
+			{
+				logger().information(
+						tmpOut->parent()->name()
+						+ " port " + source->name()
+						+ " STARTS " + tmpPort->parent()->name() );
+			}
         }
-        else
-        {
-        	(*it)->runTarget();
-        }
+
+        (*it)->runTarget();
     }
 }
 

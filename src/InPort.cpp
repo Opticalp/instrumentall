@@ -28,9 +28,10 @@
 
 #include "InPort.h"
 
-#include "InDataPort.h"
-#include "OutPort.h"
+#include "ModuleTask.h"
 #include "Dispatcher.h"
+
+#include "Poco/Util/Application.h"
 
 InPort::InPort(Module* parent, std::string name, std::string description,
         size_t index, bool trig):
@@ -45,4 +46,11 @@ InPort::InPort(std::string name, std::string description, bool trig):
                 isTrigFlag(trig)
 {
 	// used = false; // why?
+}
+
+void InPort::runTarget()
+{
+	Poco::Util::Application::instance()
+		.getSubsystem<Dispatcher>()
+		.enqueueModuleTask(new ModuleTask(parent(), this));
 }
