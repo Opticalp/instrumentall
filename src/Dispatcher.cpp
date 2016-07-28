@@ -384,17 +384,12 @@ void Dispatcher::dispatchTargetReset(DataSource* port)
     }
 }
 
-Poco::AutoPtr<ModuleTask> Dispatcher::runModule(SharedPtr<Module*> ppModule)
+Poco::AutoPtr<ModuleTask> Dispatcher::runModule(Module* pModule)
 {
-    Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(*ppModule), true);
+    Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(pModule), true);
     enqueueModuleTask(taskPtr);
 
     return taskPtr;
-}
-
-void Dispatcher::runModule(Module* pModule)
-{
-	enqueueModuleTask(new ModuleTask(pModule));
 }
 
 void Dispatcher::enqueueModuleTask(ModuleTask* pTask)

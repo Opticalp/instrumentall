@@ -202,15 +202,7 @@ public:
       * @return The task created for the module to run. The
       * task can be used to check the state of the execution.
       */
-     Poco::AutoPtr<ModuleTask> runModule(SharedPtr<Module*> ppModule);
-
-     /**
-      * Launch a module task
-      *
-      * Direct version: to be called by the module itself.
-      * E.g. following a parameter set
-      */
-     void runModule(Module* pModule);
+     Poco::AutoPtr<ModuleTask> runModule(Module* pModule);
 
      /**
       * Enqueue a new module task
