@@ -443,9 +443,7 @@ pythonDispatchRunModule(PyObject *self, PyObject *args)
 
     ModMembers* pyMod = reinterpret_cast<ModMembers*>(pyObj);
 
-    Poco::AutoPtr<ModuleTask> task = Poco::Util::Application::instance()
-        .getSubsystem<Dispatcher>()
-        .runModule(**pyMod->module);
+    Poco::AutoPtr<ModuleTask> task = (**pyMod->module)->runModule();
 
     // alloc
     if (PyType_Ready(&PythonTask) < 0)

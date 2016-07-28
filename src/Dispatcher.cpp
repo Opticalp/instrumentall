@@ -383,16 +383,3 @@ void Dispatcher::dispatchTargetReset(DataSource* port)
     	tmpPort->parent()->resetWithTargets();
     }
 }
-
-Poco::AutoPtr<ModuleTask> Dispatcher::runModule(Module* pModule)
-{
-    Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(pModule), true);
-    enqueueModuleTask(taskPtr);
-
-    return taskPtr;
-}
-
-void Dispatcher::enqueueModuleTask(ModuleTask* pTask)
-{
-	pTask->module()->enqueueTask(pTask);
-}

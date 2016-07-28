@@ -28,6 +28,7 @@
 
 #include "InPort.h"
 
+#include "Module.h"
 #include "ModuleTask.h"
 #include "Dispatcher.h"
 
@@ -50,7 +51,5 @@ InPort::InPort(std::string name, std::string description, bool trig):
 
 void InPort::runTarget()
 {
-	Poco::Util::Application::instance()
-		.getSubsystem<Dispatcher>()
-		.enqueueModuleTask(new ModuleTask(parent(), this));
+	parent()->enqueueTask(new ModuleTask(parent(), this));
 }

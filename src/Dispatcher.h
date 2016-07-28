@@ -193,25 +193,6 @@ public:
       */
      void dispatchTargetReset(DataSource* port);
 
-     /**
-      * Launch a module task
-      *
-      * to be called by the UI or by any mean, but without new
-      * input port data.
-      *
-      * @return The task created for the module to run. The
-      * task can be used to check the state of the execution.
-      */
-     Poco::AutoPtr<ModuleTask> runModule(Module* pModule);
-
-     /**
-      * Enqueue a new module task
-      *
-      * and launch it if possible.
-      * Register the task in the Module
-      */
-     void enqueueModuleTask(ModuleTask* pTask);
-
 private:
      /**
       * Remove a port from the allInPorts list
