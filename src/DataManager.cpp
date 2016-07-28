@@ -33,10 +33,27 @@
 #include "DataItem.h"
 #include "Dispatcher.h"
 
+// loggers
 #include "DataPocoLogger.h"
+
+// proxies
+#include "DataBuffer.h"
 
 #include "Poco/Exception.h"
 #include "Poco/Util/Application.h"
+
+enum
+{
+	contScalar = TypeNeutralData::contScalar,
+	contVector = TypeNeutralData::contVector,
+	typeInt32 = TypeNeutralData::typeInt32,
+	typeUInt32 = TypeNeutralData::typeUInt32,
+	typeInt64 = TypeNeutralData::typeInt64,
+	typeUInt64 = TypeNeutralData::typeUInt64,
+	typeFloat = TypeNeutralData::typeFloat,
+	typeDblFloat = TypeNeutralData::typeDblFloat,
+	typeString = TypeNeutralData::typeString
+};
 
 DataManager::DataManager():
     VerboseEntity(name())
@@ -45,6 +62,67 @@ DataManager::DataManager():
 
     loggerFactory.registerClass<DataPocoLogger>("DataPocoLogger");
     loggerClasses.insert(classPair("DataPocoLogger", DataPocoLogger::classDescription()));
+
+    std::string proxyName;
+
+    proxyName = "DataBuffer";
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt32),
+    		new DataProxyInstantiator<DataBuffer>(typeInt32));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt32),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt32),
+    		new DataProxyInstantiator<DataBuffer>(typeUInt32));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt32),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt64),
+    		new DataProxyInstantiator<DataBuffer>(typeInt64));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt64),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt64),
+    		new DataProxyInstantiator<DataBuffer>(typeUInt64));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt64),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeFloat),
+    		new DataProxyInstantiator<DataBuffer>(typeFloat));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeFloat),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeDblFloat),
+    		new DataProxyInstantiator<DataBuffer>(typeDblFloat));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeDblFloat),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeString),
+    		new DataProxyInstantiator<DataBuffer>(typeString));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeString),
+    		DataBuffer::classDescription()));
+
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt32|contVector),
+    		new DataProxyInstantiator<DataBuffer>(typeInt32|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt32|contVector),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt32|contVector),
+    		new DataProxyInstantiator<DataBuffer>(typeUInt32|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt32|contVector),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt64|contVector),
+    		new DataProxyInstantiator<DataBuffer>(typeInt64|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt64|contVector),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt64|contVector),
+    		new DataProxyInstantiator<DataBuffer>(typeUInt64|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt64|contVector),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeFloat|contVector),
+    		new DataProxyInstantiator<DataBuffer>(typeFloat|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeFloat|contVector),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeDblFloat|contVector),
+    		new DataProxyInstantiator<DataBuffer>(typeDblFloat|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeDblFloat|contVector),
+    		DataBuffer::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeString|contVector),
+    		new DataProxyInstantiator<DataBuffer>(typeString|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeString|contVector),
+    		DataBuffer::classDescription()));
 }
 
 DataManager::~DataManager()

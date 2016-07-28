@@ -69,6 +69,8 @@ protected:
 	bool yield() { Poco::Thread::yield(); return false; }
 
 private:
+	DataProxy();
+
 	/**
 	 * Launch the conversion (sync run)
 	 *
