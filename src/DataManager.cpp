@@ -68,24 +68,6 @@ void DataManager::uninitialize()
     // TODO: empty all data (expired, etc)
 }
 
-SharedPtr<DataSource*> DataManager::getDataItem(DataSource* dataItem)
-{
-    allDataLock.readLock();
-    for (std::vector< SharedPtr<DataSource*> >::iterator it = allData.begin(),
-            ite = allData.end(); it != ite; it++)
-    {
-        if (dataItem==**it)
-        {
-            allDataLock.unlock();
-            return *it;
-        }
-    }
-
-    allDataLock.unlock();
-    throw Poco::NotFoundException("getDataItem", "Data not found: "
-            "Should have been deleted during the query");
-}
-
 SharedPtr<DataLogger*> DataManager::newDataLogger(std::string className)
 {
     DataLogger* logger = loggerFactory.createInstance(className);
@@ -126,5 +108,42 @@ SharedPtr<DataLogger*> DataManager::getDataLogger(DataLogger* dataLogger)
     loggersLock.unlock();
     throw Poco::NotFoundException("DataManager",
             "The given data logger was not found");
+}
 
+SharedPtr<DataProxy*> DataManager::newDataProxy(std::string className)
+{
+    DataProxy* proxy = proxyFactory.createInstance(className);
+    SharedPtr<DataProxy*> tmpPtr(new (DataProxy*)(proxy));
+
+    proxiesLock.writeLock();
+    proxies.insert(tmpPtr);
+    proxiesLock.unlock();
+
+    return tmpPtr;
+}
+
+std::set<SharedPtr<DataProxy*> > DataManager::dataProxies()
+{
+	Poco::ScopedReadRWLock lock(proxiesLock);
+    return proxies;
+}
+
+SharedPtr<DataProxy*> DataManager::getDataProxy(DataProxy* dataProxy)
+{
+    proxiesLock.readLock();
+
+    for (std::set< SharedPtr<DataProxy*> >::iterator it = proxies.begin(),
+            ite = proxies.end(); it != ite; it++ )
+    {
+        if (**it == dataProxy)
+        {
+            SharedPtr<DataProxy*> tmp = *it;
+            proxiesLock.unlock();
+            return tmp;
+        }
+    }
+
+    proxiesLock.unlock();
+    throw Poco::NotFoundException("DataManager",
+            "The given data proxy was not found");
 }

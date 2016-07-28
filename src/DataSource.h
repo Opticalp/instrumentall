@@ -74,7 +74,7 @@ public:
     std::set<DataTarget*> getDataTargets();
 
     /**
-     * Lock the data to write
+     * Try to lock the data to write
      *
      * Check the pendingDataTargets, then forward to DataItem::tryWriteDataLock
      */

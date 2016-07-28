@@ -45,6 +45,7 @@
 using Poco::SharedPtr;
 
 class DataLogger;
+class DataProxy;
 
 /**
  * DataManager
@@ -92,11 +93,6 @@ public:
 //    void defineOptions(Poco::Util::OptionSet & options);
 
     /**
-     * Get a shared pointer on a data source
-     */
-    SharedPtr<DataSource*> getDataItem(DataSource* dataItem);
-
-    /**
      * Get the data loggers class names
      *
      * To be used to create new loggers using the factory
@@ -120,28 +116,48 @@ public:
     SharedPtr<DataLogger*> getDataLogger(DataLogger* dataLogger);
 
     /**
-     * Get the source data of a logger
+     * Get the data proxies class names
+     *
+     * To be used to create new proxies using the factory
      */
-    SharedPtr<OutPort*> getSourcePort(SharedPtr<DataLogger*> dataLogger);
+    std::map<std::string, std::string> dataProxyClasses()
+        { return proxyClasses; }
+
+    /**
+     * Create a new data proxy of the given type
+     */
+    SharedPtr<DataProxy*> newDataProxy(std::string className);
+
+    /**
+     * Get all the current data proxies
+     */
+    std::set< SharedPtr<DataProxy*> > dataProxies();
+
+    /**
+     * Retrieve the shared pointer of a data proxy
+     */
+    SharedPtr<DataProxy*> getDataProxy(DataProxy* dataProxy);
 
 private:
-    std::vector< SharedPtr<DataSource*> > allData; ///< data corresponding to each OutPort
-    Poco::RWLock allDataLock;
-
     Poco::DynamicFactory<DataLogger> loggerFactory;
     // TODO: use unordered map for c++11-able compilers
     std::map<std::string, std::string> loggerClasses;
-    /// To be used with loggerClasses
+    /// To be used with loggerClasses and proxyClasses
     typedef std::pair<std::string,std::string> classPair;
+
+    Poco::DynamicFactory<DataProxy> proxyFactory;
+    // TODO: use unordered map for c++11-able compilers
+    std::map<std::string, std::string> proxyClasses;
 
     // all loggers
     std::set< SharedPtr<DataLogger*> > loggers;
     Poco::RWLock loggersLock;
 
-    DataSource emptyDataSource;
+    // all proxies
+    std::set< SharedPtr<DataProxy*> > proxies;
+    Poco::RWLock proxiesLock;
 
-    // TODO: any volatile data storage here that is used by the UI
-    // to push data (one shot) into a given InPort
+    DataSource emptyDataSource;
 };
 
 //
