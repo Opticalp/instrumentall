@@ -115,7 +115,7 @@ protected:
 
         if (dataLock.tryWriteLock())
         {
-            pData = reinterpret_cast<T*>(dataStore);
+            pData = getDataNoTypeCheck<T>();
             return true;
         }
         else

@@ -145,6 +145,15 @@ public:
         return reinterpret_cast<T*>(dataStore);
     }
 
+protected:
+    /**
+     * Retrieve a pointer on the data without checking the type
+     */
+    template <typename T> T* getDataNoTypeCheck()
+    {
+        return reinterpret_cast<T*>(dataStore);
+    }
+
 private:
     void* dataStore; ///< pointer to the data
 
