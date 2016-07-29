@@ -316,23 +316,6 @@ static PyMethodDef pyMethodDataManDataLoggerClasses =
 };
 
 /**
- * @brief Python wrapper to retrieve the existing data loggers
- *
- * Call DataManager::dataLoggers() method
- *
- */
-extern "C" PyObject*
-pythonDataManDataLoggers(PyObject *self, PyObject *args);
-
-static PyMethodDef pyMethodDataManDataLoggers =
-{
-    "dataLoggers",
-    pythonDataManDataLoggers,
-    METH_NOARGS,
-    "Retrieve the existing data loggers"
-};
-
-/**
  * @brief Python wrapper to delete a data logger
  *
  * Call DataManager::removeDataLogger() method

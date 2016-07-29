@@ -33,6 +33,7 @@
 
 #include "Poco/Runnable.h"
 #include "Poco/Mutex.h"
+#include "Poco/RefCountedObject.h"
 
 using Poco::Mutex;
 
@@ -46,7 +47,7 @@ using Poco::Mutex;
  * static method. DataTarget::description can be implemented
  * as linking to this method.
  */
-class DataLogger: public Poco::Runnable, public DataTarget
+class DataLogger: public DataTarget, public Poco::Runnable, public Poco::RefCountedObject
 {
 public:
 	/**
@@ -85,6 +86,9 @@ private:
      * Launch run() in a new thread using the ThreadManager
      */
     void runTarget();
+
+	size_t incUser() { duplicate(); return referenceCount(); }
+	size_t decUser() { release();   return referenceCount(); }
 
     Poco::FastMutex mutex; ///< data logger main mutex
 };

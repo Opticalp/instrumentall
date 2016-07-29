@@ -534,7 +534,7 @@ PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args)
     {
         Poco::Util::Application::instance()
                                 .getSubsystem<Dispatcher>()
-                                .bind(*sharedPort, **pyLogger->logger);
+                                .bind(*sharedPort, *pyLogger->logger);
     }
     catch (Poco::NotFoundException& e)
     {
@@ -554,7 +554,7 @@ PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args)
 
 PyObject* pyOutPortLoggers(OutPortMembers *self)
 {
-    std::set< SharedPtr<DataLogger*> > loggers;
+    std::set< AutoPtr<DataLogger> > loggers;
 
     std::set<DataTarget*> targets = (**self->outPort)->getDataTargets();
 
@@ -564,9 +564,7 @@ PyObject* pyOutPortLoggers(OutPortMembers *self)
         DataLogger* tmpLogger = dynamic_cast<DataLogger*>(*it);
 
         if (tmpLogger)
-            loggers.insert(Poco::Util::Application::instance()
-				.getSubsystem<DataManager>()
-				.getDataLogger(tmpLogger));
+            loggers.insert( AutoPtr<DataLogger>(tmpLogger, true) );
     }
 
     // construct the list to return
@@ -586,7 +584,7 @@ PyObject* pyOutPortLoggers(OutPortMembers *self)
                         .getSubsystem<DataManager>()
                         .dataLoggerClasses();
 
-    for (std::set< SharedPtr<DataLogger*> >::iterator it = loggers.begin(),
+    for (std::set< AutoPtr<DataLogger> >::iterator it = loggers.begin(),
             ite = loggers.end(); it != ite; it++ )
     {
         // create the python object
@@ -600,10 +598,11 @@ PyObject* pyOutPortLoggers(OutPortMembers *self)
         // init
         // retrieve name and description
         tmp = pyLogger->name;
-        pyLogger->name = PyString_FromString((**it)->name().c_str());
+        DataLogger* tmpLogger = const_cast<DataLogger*>(it->get());
+        pyLogger->name = PyString_FromString(tmpLogger->name().c_str());
         Py_XDECREF(tmp);
 
-        std::map<std::string, std::string>::iterator loggerClass = classes.find((**it)->name());
+        std::map<std::string, std::string>::iterator loggerClass = classes.find(tmpLogger->name());
         if (loggerClass == classes.end())
         {
             PyErr_SetString(PyExc_RuntimeError, "Logger description not found" );

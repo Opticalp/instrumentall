@@ -39,7 +39,7 @@
 #include "Poco/Util/Application.h"
 
 DataSource::DataSource(int datatype):
-		DataItem(datatype)
+		DataItem(datatype), users(0)
 {
 
 }
@@ -86,7 +86,8 @@ std::set<DataTarget*> DataSource::getDataTargets()
 void DataSource::addDataTarget(DataTarget* target)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);
-    dataTargets.insert(target);
+    if (dataTargets.insert(target).second)
+    	incUser();
 }
 
 void DataSource::notifyReady(DataAttribute attribute)
@@ -101,8 +102,12 @@ void DataSource::notifyReady(DataAttribute attribute)
 
 void DataSource::detachDataTarget(DataTarget* target)
 {
-	Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);
-    dataTargets.erase(target);
+	targetsLock.lock();
+	size_t tmp = dataTargets.erase(target);
+	targetsLock.unlock();
+
+    if (tmp)
+    	decUser();
 }
 
 void DataSource::registerPendingTarget(DataTarget* target)

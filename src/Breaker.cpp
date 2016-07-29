@@ -63,6 +63,12 @@ void Breaker::breakSourceToTarget(DataTarget* target)
 {
 	DataSource* source = target->getDataSource();
 
+	if (source == NULL)
+		return;
+
+	target->incUser();
+	source->incUser();
+
 	Poco::Util::Application::instance()
 		.getSubsystem<Dispatcher>()
 		.unbind(target);
@@ -78,6 +84,9 @@ void Breaker::releaseBreaks()
 			.getSubsystem<Dispatcher>()
 			.bind(edges.begin()->second,
 			      edges.begin()->first);
+
+		edges.begin()->first->decUser();
+		edges.begin()->second->decUser();
 
 		edges.erase(edges.begin());
 	}

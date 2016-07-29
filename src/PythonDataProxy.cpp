@@ -68,7 +68,7 @@ extern "C" PyObject* pyDataProxyNew(PyTypeObject* type, PyObject* args, PyObject
             return NULL;
           }
 
-        self->proxy = new Poco::SharedPtr<DataProxy*>;
+        self->proxy = new AutoPtr<DataProxy>;
       }
 
     return (PyObject *) self;
@@ -86,7 +86,7 @@ extern "C" int pyDataProxyInit(DataProxyMembers* self, PyObject *args, PyObject 
 
     std::string className(charClassName);
 
-    SharedPtr<DataProxy*> newProxy;
+    AutoPtr<DataProxy> newProxy;
 
     try
     {
@@ -104,7 +104,7 @@ extern "C" int pyDataProxyInit(DataProxyMembers* self, PyObject *args, PyObject 
 
     // retrieve name
     tmp = self->name;
-    self->name = PyString_FromString((**self->proxy)->name().c_str());
+    self->name = PyString_FromString((*self->proxy)->name().c_str());
     Py_XDECREF(tmp);
 
 
@@ -137,7 +137,7 @@ PyObject* pyDataProxySource(DataProxyMembers* self)
         tmpPort = (*Poco::Util::Application::instance()
                           .getSubsystem<Dispatcher>()
                           .getOutPort(
-                        		  dynamic_cast<OutPort*>((**self->proxy)->getDataSource()) ));
+                        		  dynamic_cast<OutPort*>((*self->proxy)->getDataSource()) ));
     }
     catch (Poco::NotFoundException& e)
     {
@@ -190,11 +190,11 @@ PyObject* pyDataProxyDetach(DataProxyMembers* self)
 {
 	Poco::Util::Application::instance()
 			  .getSubsystem<Dispatcher>()
-			  .unbind(reinterpret_cast<DataSource*>(**self->proxy));
+			  .unbind(reinterpret_cast<DataSource*>((*self->proxy).get()));
 
 	Poco::Util::Application::instance()
 			  .getSubsystem<Dispatcher>()
-			  .unbind(reinterpret_cast<DataTarget*>(**self->proxy));
+			  .unbind(reinterpret_cast<DataTarget*>((*self->proxy).get()));
 
 	Py_RETURN_NONE;
 }

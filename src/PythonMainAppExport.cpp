@@ -331,11 +331,11 @@ pythonDispatchBind(PyObject* self, PyObject* args)
 
 			Poco::Util::Application::instance()
 				.getSubsystem<Dispatcher>()
-				.bind(**pyOutPort->outPort,**proxy->proxy);
+				.bind(**pyOutPort->outPort,*proxy->proxy);
 
 			Poco::Util::Application::instance()
 				.getSubsystem<Dispatcher>()
-				.bind(**proxy->proxy,**pyInPort->inPort);
+				.bind(*proxy->proxy,**pyInPort->inPort);
     	}
     }
     catch (Poco::Exception& e)
@@ -557,69 +557,6 @@ pythonDataManDataLoggerClasses(PyObject *self, PyObject *args)
 
 #include "PythonDataLogger.h"
 
-extern "C" PyObject*
-pythonDataManDataLoggers(PyObject *self, PyObject *args)
-{
-    std::set< SharedPtr<DataLogger*> > loggers;
-    loggers = Poco::Util::Application::instance()
-                    .getSubsystem<DataManager>()
-                    .dataLoggers();
-
-    // construct the list to return
-    PyObject* pyLoggers = PyList_New(0);
-
-    // prepare DataLogger python type
-    if (PyType_Ready(&PythonDataLogger) < 0)
-    {
-        PyErr_SetString(PyExc_ImportError,
-                "Not able to create the DataLogger Type");
-        return NULL;
-    }
-
-    // to retrieve the logger description
-    std::map<std::string, std::string> classes;
-    classes = Poco::Util::Application::instance()
-                        .getSubsystem<DataManager>()
-                        .dataLoggerClasses();
-
-    for (std::set< SharedPtr<DataLogger*> >::iterator it = loggers.begin(),
-            ite = loggers.end(); it != ite; it++ )
-    {
-        // create the python object
-        DataLoggerMembers* pyLogger =
-            reinterpret_cast<DataLoggerMembers*>(
-                pyDataLoggerNew(
-                    reinterpret_cast<PyTypeObject*>(&PythonDataLogger), NULL, NULL) );
-
-        PyObject* tmp=NULL;
-
-        // init
-        // retrieve name and description
-        tmp = pyLogger->name;
-        pyLogger->name = PyString_FromString((**it)->name().c_str());
-        Py_XDECREF(tmp);
-
-        tmp = pyLogger->description;
-        pyLogger->description = PyString_FromString((**it)->description().c_str());
-        Py_XDECREF(tmp);
-
-        // set Logger reference
-        *(pyLogger->logger) = *it;
-
-        // create the dict entry
-        if (0 > PyList_Append(
-                pyLoggers,
-                reinterpret_cast<PyObject*>(pyLogger)))
-        {
-            // appending the item failed
-            PyErr_SetString(PyExc_RuntimeError,
-                    "Not able to build the return list");
-            return NULL;
-        }
-    }
-
-    return pyLoggers;
-}
 
 extern "C" PyObject*
 pythonDataManRemoveDataLogger(PyObject *self, PyObject *args)
@@ -645,7 +582,7 @@ pythonDataManRemoveDataLogger(PyObject *self, PyObject *args)
 
     Poco::Util::Application::instance()
                             .getSubsystem<Dispatcher>()
-                            .unbind(**pyLogger->logger);
+                            .unbind(*pyLogger->logger);
 
     Py_RETURN_NONE;
 }

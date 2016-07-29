@@ -35,14 +35,14 @@
 #include "VerboseEntity.h"
 
 #include "Poco/Util/Subsystem.h"
-#include "Poco/SharedPtr.h"
+#include "Poco/AutoPtr.h"
 
 #include "Poco/DynamicFactory.h"
 
 #include <map>
 #include <set>
 
-using Poco::SharedPtr;
+using Poco::AutoPtr;
 
 class DataLogger;
 class DataProxy;
@@ -103,17 +103,7 @@ public:
     /**
      * Create a new data logger of the given type
      */
-    SharedPtr<DataLogger*> newDataLogger(std::string className);
-
-    /**
-     * Get all the current data loggers
-     */
-    std::set< SharedPtr<DataLogger*> > dataLoggers();
-
-    /**
-     * Retrieve the shared pointer of a data logger
-     */
-    SharedPtr<DataLogger*> getDataLogger(DataLogger* dataLogger);
+    AutoPtr<DataLogger> newDataLogger(std::string className);
 
     /**
      * Get the data proxies class names
@@ -126,17 +116,7 @@ public:
     /**
      * Create a new data proxy of the given type
      */
-    SharedPtr<DataProxy*> newDataProxy(std::string className);
-
-    /**
-     * Get all the current data proxies
-     */
-    std::set< SharedPtr<DataProxy*> > dataProxies();
-
-    /**
-     * Retrieve the shared pointer of a data proxy
-     */
-    SharedPtr<DataProxy*> getDataProxy(DataProxy* dataProxy);
+    AutoPtr<DataProxy> newDataProxy(std::string className);
 
 private:
     Poco::DynamicFactory<DataLogger> loggerFactory;
@@ -148,16 +128,6 @@ private:
     Poco::DynamicFactory<DataProxy> proxyFactory;
     // TODO: use unordered map for c++11-able compilers
     std::map<std::string, std::string> proxyClasses;
-
-    // all loggers
-    std::set< SharedPtr<DataLogger*> > loggers;
-    Poco::RWLock loggersLock;
-
-    // all proxies
-    std::set< SharedPtr<DataProxy*> > proxies;
-    Poco::RWLock proxiesLock;
-
-    DataSource emptyDataSource;
 };
 
 //

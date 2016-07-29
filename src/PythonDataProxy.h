@@ -49,7 +49,7 @@ typedef struct
     PyObject_HEAD ///< a refcount and a pointer to a type object (convenience python/C API macro)
     PyObject* name;  ///< name attribute
     PyObject* description;  ///< description attribute
-    Poco::SharedPtr<DataProxy*>* proxy; ///< pointer to the C++ internal DataProxy object
+    Poco::AutoPtr<DataProxy>* proxy; ///< pointer to the C++ internal DataProxy object
 } DataProxyMembers;
 
 /// Description of the DataProxyMembers structure

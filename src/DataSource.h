@@ -109,6 +109,25 @@ public:
      */
     void registerPendingTarget(DataTarget* target);
 
+    /**
+     * Increment the user count
+     *
+     * Should be overloaded in inherited classes that implement
+     * Poco::RefCountedObject.
+     *
+     * @see DataProxy
+     * @see DataLogger
+     */
+    virtual size_t incUser() { return ++users; }
+
+    /**
+     * Decrement the user count
+     *
+     * Should be overloaded in inherited classes that implement
+     * Poco::RefCountedObject
+     */
+    virtual size_t decUser() { return --users; }
+
 private:
     /**
      * Add a data target
@@ -142,6 +161,8 @@ private:
 
     std::set<DataTarget*> pendingDataTargets;
     Poco::FastMutex pendingTargetsLock;
+
+    size_t users;
 
     friend class DataTarget;
 };

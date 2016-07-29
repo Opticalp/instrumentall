@@ -29,7 +29,7 @@
 #include "DataTarget.h"
 
 DataTarget::DataTarget():
-	dataSource(NULL)
+	dataSource(NULL), users(0)
 {
 
 }
@@ -57,15 +57,28 @@ void DataTarget::setDataSource(DataSource* source)
                 "The target does not support this data type: "
         		+ DataItem::dataTypeStr(source->dataType()));
 
-    Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
+	bool dec = false; // decrementator flag
 
-	if (dataSource)
-		dataSource->detachDataTarget(this);
+    // scoped locked block
+    {
+		Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
 
-	dataSource = source;
+		if (dataSource)
+			dataSource->detachDataTarget(this);
 
-	if (dataSource)
-		dataSource->addDataTarget(this);
+		if (source && (dataSource == NULL))
+			incUser();
+		else if ((source == NULL) && dataSource)
+			dec = true;
+
+		dataSource = source;
+
+		if (dataSource)
+			dataSource->addDataTarget(this);
+    }
+
+	if (dec)
+		decUser();
 }
 
 bool DataTarget::tryCatchSource()

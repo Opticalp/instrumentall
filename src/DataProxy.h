@@ -33,6 +33,7 @@
 #include "DataTarget.h"
 
 #include "Poco/Thread.h"
+#include "Poco/RefCountedObject.h"
 
 /**
  * DataProxy
@@ -44,7 +45,7 @@
  * static method. DataTarget::description can be implemented
  * as linking to this method.
  */
-class DataProxy: public DataTarget, public DataSource
+class DataProxy: public DataTarget, public DataSource, public Poco::RefCountedObject
 {
 public:
 	/**
@@ -80,6 +81,9 @@ private:
 	 *  - release the inputs and notify the outputs
 	 */
 	void runTarget();
+
+	size_t incUser() { duplicate(); return referenceCount(); }
+	size_t decUser() { release();   return referenceCount(); }
 };
 
 #include "Poco/DynamicFactory.h"

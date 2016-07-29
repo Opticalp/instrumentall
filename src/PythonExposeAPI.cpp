@@ -80,7 +80,6 @@ static PyMethodDef EmbMethods[] =
 
     // data manager
     pyMethodDataManDataLoggerClasses,
-    pyMethodDataManDataLoggers,
     pyMethodDataManRemoveDataLogger,
 
     pyMethodDataManDataProxyClasses,
