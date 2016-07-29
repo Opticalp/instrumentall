@@ -38,6 +38,7 @@
 
 // proxies
 #include "DataBuffer.h"
+#include "SimpleNumConverter.h"
 
 #include "Poco/Exception.h"
 #include "Poco/Util/Application.h"
@@ -123,6 +124,57 @@ DataManager::DataManager():
     		new DataProxyInstantiator<DataBuffer>(typeString|contVector));
     proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeString|contVector),
     		DataBuffer::classDescription()));
+
+    proxyName = "SimpleNumConverter";
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt32),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeInt32));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt32),
+    		SimpleNumConverter::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt32),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeUInt32));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt32),
+    		SimpleNumConverter::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt64),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeInt64));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt64),
+    		SimpleNumConverter::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt64),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeUInt64));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt64),
+    		SimpleNumConverter::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeFloat),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeFloat));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeFloat),
+    		SimpleNumConverter::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeDblFloat),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeDblFloat));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeDblFloat),
+    		SimpleNumConverter::classDescription()));
+
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt32|contVector),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeInt32|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt32|contVector),
+    		SimpleNumConverter::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt32|contVector),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeUInt32|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt32|contVector),
+    		SimpleNumConverter::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt64|contVector),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeInt64|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt64|contVector),
+    		SimpleNumConverter::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt64|contVector),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeUInt64|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt64|contVector),
+    		SimpleNumConverter::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeFloat|contVector),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeFloat|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeFloat|contVector),
+    		SimpleNumConverter::classDescription()));
+    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeDblFloat|contVector),
+    		new DataProxyInstantiator<SimpleNumConverter>(typeDblFloat|contVector));
+    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeDblFloat|contVector),
+    		SimpleNumConverter::classDescription()));
 }
 
 DataManager::~DataManager()
