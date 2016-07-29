@@ -82,8 +82,9 @@ private:
 	 */
 	void runTarget();
 
-	size_t incUser() { duplicate(); return referenceCount(); }
-	size_t decUser() { release();   return referenceCount(); }
+	void incUser() { duplicate(); }
+	void decUser() { release();   }
+	size_t userCnt() { return referenceCount(); }
 };
 
 #include "Poco/DynamicFactory.h"

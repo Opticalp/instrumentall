@@ -118,7 +118,7 @@ public:
      * @see DataProxy
      * @see DataLogger
      */
-    virtual size_t incUser() { return ++users; }
+    virtual void incUser() { ++users; }
 
     /**
      * Decrement the user count
@@ -126,7 +126,8 @@ public:
      * Should be overloaded in inherited classes that implement
      * Poco::RefCountedObject
      */
-    virtual size_t decUser() { return --users; }
+    virtual void decUser() { --users; }
+    virtual size_t userCnt() { return users; }
 
 private:
     /**
