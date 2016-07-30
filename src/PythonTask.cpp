@@ -217,6 +217,11 @@ PyObject* pyTaskState(TaskMembers* self)
         	case ModuleTask::processing:
         		state = "processing";
         		break;
+        	case ModuleTask::NotAvailableRunningState:
+        		state = "not available";
+        		PyErr_WarnEx(PyExc_RuntimeWarning,
+        				"The task state changed during the query", 0);
+        		break;
         	default:
             	poco_bugcheck_msg("unknown task running state");
             	throw Poco::BugcheckException();
