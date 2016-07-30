@@ -1,6 +1,6 @@
 /**
- * @file	src/PythonDataLogger.cpp
- * @date	Mar 2016
+ * @file	src/PythonDataProxy.cpp
+ * @date	Jul 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -30,30 +30,28 @@ THE SOFTWARE.
 
 #include "DataManager.h"
 #include "Dispatcher.h"
-#include "PythonDataLogger.h"
+#include "PythonDataProxy.h"
 #include "PythonOutPort.h"
 
 #include "Poco/Util/Application.h"
 
-using Poco::AutoPtr;
-
-extern "C" void pyDataLoggerDealloc(DataLoggerMembers* self)
+extern "C" void pyDataProxyDealloc(DataProxyMembers* self)
 {
     // "name" and "description" are python objects,
     // so we decrement the references on them,
     // instead of deleting it directly.
     Py_XDECREF(self->name);
     Py_XDECREF(self->description);
-    delete self->logger;
+    delete self->proxy;
 
     self->ob_type->tp_free((PyObject*) self); // free the object’s memory
 }
 
-extern "C" PyObject* pyDataLoggerNew(PyTypeObject* type, PyObject* args, PyObject* kwds)
+extern "C" PyObject* pyDataProxyNew(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
-    DataLoggerMembers* self;
+    DataProxyMembers* self;
 
-    self = (DataLoggerMembers*) type->tp_alloc(type, 0);
+    self = (DataProxyMembers*) type->tp_alloc(type, 0);
     if (self != NULL)
       {
         self->name = PyString_FromString("");
@@ -70,13 +68,13 @@ extern "C" PyObject* pyDataLoggerNew(PyTypeObject* type, PyObject* args, PyObjec
             return NULL;
           }
 
-        self->logger = new AutoPtr<DataLogger>;
+        self->proxy = new AutoPtr<DataProxy>;
       }
 
     return (PyObject *) self;
 }
 
-extern "C" int pyDataLoggerInit(DataLoggerMembers* self, PyObject *args, PyObject *kwds)
+extern "C" int pyDataProxyInit(DataProxyMembers* self, PyObject *args, PyObject *kwds)
 {
     PyObject* tmp=NULL;
 
@@ -88,13 +86,13 @@ extern "C" int pyDataLoggerInit(DataLoggerMembers* self, PyObject *args, PyObjec
 
     std::string className(charClassName);
 
-    AutoPtr<DataLogger> newLogger;
+    AutoPtr<DataProxy> newProxy;
 
     try
     {
-        newLogger = Poco::Util::Application::instance()
+        newProxy = Poco::Util::Application::instance()
                               .getSubsystem<DataManager>()
-                              .newDataLogger(className);
+                              .newDataProxy(className);
     }
     catch (Poco::NotFoundException& e)
     {
@@ -102,11 +100,11 @@ extern "C" int pyDataLoggerInit(DataLoggerMembers* self, PyObject *args, PyObjec
         return -1;
     }
 
-    *self->logger = newLogger;
+    *self->proxy = newProxy;
 
     // retrieve name
     tmp = self->name;
-    self->name = PyString_FromString((*self->logger)->name().c_str());
+    self->name = PyString_FromString((*self->proxy)->name().c_str());
     Py_XDECREF(tmp);
 
 
@@ -114,7 +112,7 @@ extern "C" int pyDataLoggerInit(DataLoggerMembers* self, PyObject *args, PyObjec
     std::map<std::string, std::string> classes;
     classes = Poco::Util::Application::instance()
                         .getSubsystem<DataManager>()
-                        .dataLoggerClasses();
+                        .dataProxyClasses();
 
     std::map<std::string, std::string>::iterator it = classes.find(className);
     if (it == classes.end())
@@ -130,7 +128,7 @@ extern "C" int pyDataLoggerInit(DataLoggerMembers* self, PyObject *args, PyObjec
     return 0;
 }
 
-PyObject* pyDataLoggerSource(DataLoggerMembers* self)
+PyObject* pyDataProxySource(DataProxyMembers* self)
 {
     OutPort* tmpPort;
 
@@ -139,7 +137,7 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
         tmpPort = (*Poco::Util::Application::instance()
                           .getSubsystem<Dispatcher>()
                           .getOutPort(
-                        		  dynamic_cast<OutPort*>((*self->logger)->getDataSource()) ));
+                        		  dynamic_cast<OutPort*>((*self->proxy)->getDataSource()) ));
     }
     catch (Poco::NotFoundException& e)
     {
@@ -187,11 +185,16 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
     return reinterpret_cast<PyObject*>(pyPort);
 }
 
-PyObject* pyDataLoggerDetach(DataLoggerMembers* self)
+
+PyObject* pyDataProxyDetach(DataProxyMembers* self)
 {
 	Poco::Util::Application::instance()
 			  .getSubsystem<Dispatcher>()
-			  .unbind(*self->logger);
+			  .unbind(reinterpret_cast<DataSource*>((*self->proxy).get()));
+
+	Poco::Util::Application::instance()
+			  .getSubsystem<Dispatcher>()
+			  .unbind(reinterpret_cast<DataTarget*>((*self->proxy).get()));
 
 	Py_RETURN_NONE;
 }

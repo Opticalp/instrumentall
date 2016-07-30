@@ -1,6 +1,6 @@
 /**
- * @file	src/DataLogger.h
- * @date	Mar 2016
+ * @file	src/DataProxy.h
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,72 +26,89 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DATALOGGER_H_
-#define SRC_DATALOGGER_H_
+#ifndef SRC_DATAPROXY_H_
+#define SRC_DATAPROXY_H_
 
+#include "DataSource.h"
 #include "DataTarget.h"
 
-#include "Poco/Runnable.h"
-#include "Poco/Mutex.h"
+#include "Poco/Thread.h"
 #include "Poco/RefCountedObject.h"
 
-using Poco::Mutex;
-
 /**
- * DataLogger
+ * DataProxy
  *
- * Base class to implement data loggers that are called when receiving
- * new data.
+ * Data converter used between a data source and a data target of incompatible
+ * type. The conversion is done synchronously (no new thread).
  *
  * The derived classes shall implement a classDescription
  * static method. DataTarget::description can be implemented
  * as linking to this method.
  */
-class DataLogger: public DataTarget, public Poco::Runnable, public Poco::RefCountedObject
+class DataProxy: public DataTarget, public DataSource, public Poco::RefCountedObject
 {
 public:
 	/**
 	 * Constructor
 	 *
 	 * In the implementations, the constructor could set
-	 * the unique name of the logger.
+	 * the unique name of the data proxy.
 	 */
-    DataLogger() { }
-    virtual ~DataLogger() { }
+	DataProxy(int datatype):
+		DataSource(datatype) { }
 
-    /**
-     * Lock the main mutex and launch log()
-     *
-     * This method release the data after the logging.
-     */
-    void run();
+	virtual ~DataProxy() { }
+
+	virtual std::string name() = 0;
 
 protected:
-    /**
-     * Log the data
-     *
-     * Function to override in implementations.
-     * This function is called by the default implementation of run()
-     *
-     * The data to log should be accessed using
-     *
-     *     T* getDataSource()->getData<T>();
-     *
-     * The data is released by the calling function.
-     */
-    virtual void log() = 0;
+	/**
+	 * Convert the input data into the desired data type
+	 */
+	virtual void convert() = 0;
+
+	bool yield() { Poco::Thread::yield(); return false; }
 
 private:
-    /**
-     * Launch run() in a new thread using the ThreadManager
-     */
-    void runTarget();
+	DataProxy();
+
+	/**
+	 * Launch the conversion (sync run)
+	 *
+	 *  - lock the outputs, tryCatch the input
+	 *  - launch the conversion
+	 *  - forward the data attributes
+	 *  - release the inputs and notify the outputs
+	 */
+	void runTarget();
 
 	void incUser() { duplicate(); }
 	void decUser() { release();   }
 	size_t userCnt() { return referenceCount(); }
-
-    Poco::FastMutex mutex; ///< data logger main mutex
 };
 
-#endif /* SRC_DATALOGGER_H_ */
+#include "Poco/DynamicFactory.h"
+
+/**
+ * DataProxy instantiator
+ *
+ * Allow the data proxies to be constructed easily using the Poco::DynamicFactory
+ *
+ * Proxy is a class derived from DataProxy
+ */
+template <class Proxy> class DataProxyInstantiator:
+		public Poco::AbstractInstantiator<DataProxy>
+{
+public:
+	DataProxyInstantiator(int datatype): mDatatype(datatype) { }
+
+	DataProxy* createInstance() const
+	{
+		return new Proxy(mDatatype);
+	}
+
+private:
+	int mDatatype;
+};
+
+#endif /* SRC_DATAPROXY_H_ */

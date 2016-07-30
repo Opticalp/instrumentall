@@ -82,7 +82,7 @@ void Dispatcher::uninitialize()
 {
     initialized = false;
 
-    // poco_information(logger(), "Dispatcher un-initialization.");
+    poco_information(logger(), "Dispatcher uninit...");
 
     // TODO: data man un-init
 
@@ -100,8 +100,12 @@ void Dispatcher::uninitialize()
     inPortsLock.writeLock();
     outPortsLock.writeLock();
 
+//    poco_information(logger(), "remove dispatcher-stored input ports");
+
     while( allInPorts.size() )
         removeInPort(*allInPorts.back());
+
+//    poco_information(logger(), "remove dispatcher-stored output ports");
 
     while( allOutPorts.size() )
         removeOutPort(*allOutPorts.back());
@@ -271,10 +275,10 @@ void Dispatcher::removeOutPort(OutPort* port)
 
             **it = &emptyOutPort; // replace the pointed factory by something throwing exceptions
             allOutPorts.erase((it+1).base());
-            // poco_information(logger(),
-            //         port->name() + " output port from module "
-            //         + port->parent()->name() + " is erased "
-            //                 "from Dispatcher::allInPorts. ");
+//            poco_information(logger(),
+//                     port->name() + " output port from module "
+//                     + port->parent()->name() + " is erased "
+//                             "from Dispatcher::allInPorts. ");
             return;
         }
     }
@@ -299,12 +303,16 @@ void Dispatcher::bind(DataSource* source, DataTarget* target)
 
 void Dispatcher::unbind(DataTarget* target)
 {
+//	poco_information(logger(), "unbinding target: " + target->name());
+
     target->detachDataSource();
 }
 
 void Dispatcher::unbind(DataSource* source)
 {
 	std::set<DataTarget*> targets = source->getDataTargets();
+
+//	poco_information(logger(), "unbinding source: " + source->name());
 
 	while (targets.size())
 	{

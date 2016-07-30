@@ -39,7 +39,8 @@
 #include "Poco/Util/Application.h"
 
 DataSource::DataSource(int datatype):
-		DataItem(datatype)
+		DataItem(datatype),
+		notifying(0), users(0)
 {
 
 }
@@ -86,23 +87,38 @@ std::set<DataTarget*> DataSource::getDataTargets()
 void DataSource::addDataTarget(DataTarget* target)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);
-    dataTargets.insert(target);
+    if (dataTargets.insert(target).second)
+    	incUser();
 }
 
 void DataSource::notifyReady(DataAttribute attribute)
 {
     setDataAttribute(attribute);
-    releaseWrite();
 
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .setOutputDataReady(this);
+    notifying = true;
+    try
+    {
+		releaseWrite();
+		Poco::Util::Application::instance()
+							.getSubsystem<Dispatcher>()
+							.setOutputDataReady(this);
+    }
+    catch (...)
+    {
+        notifying = false;
+        throw;
+    }
+    notifying = false;
 }
 
 void DataSource::detachDataTarget(DataTarget* target)
 {
-	Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);
-    dataTargets.erase(target);
+	targetsLock.lock();
+	size_t tmp = dataTargets.erase(target);
+	targetsLock.unlock();
+
+    if (tmp)
+    	decUser();
 }
 
 void DataSource::registerPendingTarget(DataTarget* target)
@@ -116,6 +132,9 @@ void DataSource::registerPendingTarget(DataTarget* target)
 
 bool DataSource::tryWriteDataLock()
 {
+	if (notifying)
+		return false;
+
 	bool ret = DataItem::tryWriteDataLock();
 
 	if (ret)

@@ -60,7 +60,10 @@ public:
 	 *
 	 * Used by DuplicatedSource
 	 */
-	DataSource(DataSource* source): DataItem(*source) { }
+	DataSource(DataSource* source):
+		DataItem(*source), notifying(false), users(0)
+	{
+	}
 
 	virtual ~DataSource();
 
@@ -74,7 +77,7 @@ public:
     std::set<DataTarget*> getDataTargets();
 
     /**
-     * Lock the data to write
+     * Try to lock the data to write
      *
      * Check the pendingDataTargets, then forward to DataItem::tryWriteDataLock
      */
@@ -109,6 +112,26 @@ public:
      */
     void registerPendingTarget(DataTarget* target);
 
+    /**
+     * Increment the user count
+     *
+     * Should be overloaded in inherited classes that implement
+     * Poco::RefCountedObject.
+     *
+     * @see DataProxy
+     * @see DataLogger
+     */
+    virtual void incUser() { ++users; }
+
+    /**
+     * Decrement the user count
+     *
+     * Should be overloaded in inherited classes that implement
+     * Poco::RefCountedObject
+     */
+    virtual void decUser() { --users; }
+    virtual size_t userCnt() { return users; }
+
 private:
     /**
      * Add a data target
@@ -142,6 +165,16 @@ private:
 
     std::set<DataTarget*> pendingDataTargets;
     Poco::FastMutex pendingTargetsLock;
+
+    size_t users;
+
+    /**
+     * Cheap safety
+     *
+     * Lock the data access betw. write lock release and
+     * read lock acquisition
+     */
+    bool notifying;
 
     friend class DataTarget;
 };

@@ -47,6 +47,7 @@ THE SOFTWARE.
 #include "PythonDataLogger.h"
 #include "PythonBreaker.h"
 #include "PythonDataHolder.h"
+#include "PythonDataProxy.h"
 
 /**
  * array to bind to-be-exposed methods (C to Python wrappers)
@@ -79,8 +80,9 @@ static PyMethodDef EmbMethods[] =
 
     // data manager
     pyMethodDataManDataLoggerClasses,
-    pyMethodDataManDataLoggers,
     pyMethodDataManRemoveDataLogger,
+
+    pyMethodDataManDataProxyClasses,
 
     // sentinel
     {NULL, NULL, 0, NULL}
@@ -139,6 +141,9 @@ void PythonManager::exposeAPI()
     if (PyType_Ready(&PythonDataHolder) < 0)
         return;
 
+    if (PyType_Ready(&PythonDataProxy) < 0)
+        return;
+
     PyObject* m;
 
     m = Py_InitModule3("instru", EmbMethods,
@@ -173,6 +178,9 @@ void PythonManager::exposeAPI()
 
     Py_INCREF(&PythonDataHolder);
     PyModule_AddObject(m, "DataHolder", (PyObject *)&PythonDataHolder);
+
+    Py_INCREF(&PythonDataProxy);
+    PyModule_AddObject(m, "DataProxy", (PyObject *)&PythonDataProxy);
 }
 
 

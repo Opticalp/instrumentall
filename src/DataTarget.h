@@ -108,6 +108,26 @@ public:
      */
     int sourceDataType();
 
+    /**
+     * Increment the user count
+     *
+     * Should be overloaded in inherited classes that implement
+     * Poco::RefCountedObject.
+     *
+     * @see DataProxy
+     * @see DataLogger
+     */
+    virtual void incUser() { ++users; }
+
+    /**
+     * Decrement the user count
+     *
+     * Should be overloaded in inherited classes that implement
+     * Poco::RefCountedObject
+     */
+    virtual void decUser() { --users; }
+    virtual size_t userCnt() { return users; }
+
 protected:
     /**
      * Main logic to launch the target action
@@ -124,6 +144,8 @@ protected:
 	 * previous data source.
 	 *
 	 * Call DataSource::AddDataTarget
+	 *
+	 * Add a user using incUser
 	 */
 	void setDataSource(DataSource* source);
 
@@ -131,6 +153,8 @@ protected:
 	 * Release the data source
 	 *
 	 * and replace it by NULL
+	 *
+	 * Remove a user using decUser
 	 */
 	void detachDataSource();
 
@@ -156,6 +180,8 @@ protected:
 private:
     DataSource* dataSource;
     Poco::FastMutex sourceLock; ///< lock for the dataSource operations
+
+    size_t users;
 
     friend class Dispatcher;
 };

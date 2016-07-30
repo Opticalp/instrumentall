@@ -1,6 +1,6 @@
 /**
- * @file	src/DataLogger.cpp
- * @date	Mar 2016
+ * @file	src/DataBuffer.h
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,33 +26,55 @@
  THE SOFTWARE.
  */
 
-#include "DataLogger.h"
+#ifndef SRC_DATABUFFER_H_
+#define SRC_DATABUFFER_H_
 
-#include "ThreadManager.h"
+#include "DataProxy.h"
 
-#include "Poco/Util/Application.h"
-
-void DataLogger::runTarget()
+/**
+ * DataBuffer
+ *
+ * This is a special proxy that does not convert the data type.
+ * Its only role is to buffer the data.
+ */
+class DataBuffer: public DataProxy
 {
-	Poco::Util::Application::instance()
-		.getSubsystem<ThreadManager>()
-		.startDataLogger(this);
-}
+public:
+	DataBuffer(int datatype);
+	virtual ~DataBuffer() { }
 
-void DataLogger::run()
-{
-	if (!tryCatchSource())
-		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
+	std::string name() { return mName; }
 
-	try
+    std::string description() { return classDescription(); }
+
+    static std::string classDescription()
+        { return "Buffer data without any conversion. "
+        		"To be used to release earlier data sources"; }
+
+private:
+	DataBuffer();
+
+	static size_t refCount;
+	std::string mName;
+
+    bool isSupportedInputDataType(int datatype)
+    {
+    	return (datatype == mDatatype);
+    }
+
+    std::set<int> supportedInputDataType()
 	{
-		log();
-	}
-	catch (...)
-	{
-		releaseInputData();
-		throw;
+		std::set<int> ret;
+		ret.insert(mDatatype);
+		return ret;
 	}
 
-	releaseInputData();
-}
+    /**
+     * No conversion. Copy the input to the output.
+     */
+    void convert();
+
+	int mDatatype;
+};
+
+#endif /* SRC_DATABUFFER_H_ */

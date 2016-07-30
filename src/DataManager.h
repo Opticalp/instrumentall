@@ -35,16 +35,17 @@
 #include "VerboseEntity.h"
 
 #include "Poco/Util/Subsystem.h"
-#include "Poco/SharedPtr.h"
+#include "Poco/AutoPtr.h"
 
 #include "Poco/DynamicFactory.h"
 
 #include <map>
 #include <set>
 
-using Poco::SharedPtr;
+using Poco::AutoPtr;
 
 class DataLogger;
+class DataProxy;
 
 /**
  * DataManager
@@ -92,11 +93,6 @@ public:
 //    void defineOptions(Poco::Util::OptionSet & options);
 
     /**
-     * Get a shared pointer on a data source
-     */
-    SharedPtr<DataSource*> getDataItem(DataSource* dataItem);
-
-    /**
      * Get the data loggers class names
      *
      * To be used to create new loggers using the factory
@@ -107,41 +103,31 @@ public:
     /**
      * Create a new data logger of the given type
      */
-    SharedPtr<DataLogger*> newDataLogger(std::string className);
+    AutoPtr<DataLogger> newDataLogger(std::string className);
 
     /**
-     * Get all the current data loggers
+     * Get the data proxies class names
+     *
+     * To be used to create new proxies using the factory
      */
-    std::set< SharedPtr<DataLogger*> > dataLoggers();
+    std::map<std::string, std::string> dataProxyClasses()
+        { return proxyClasses; }
 
     /**
-     * Retrieve the shared pointer of a data logger
+     * Create a new data proxy of the given type
      */
-    SharedPtr<DataLogger*> getDataLogger(DataLogger* dataLogger);
-
-    /**
-     * Get the source data of a logger
-     */
-    SharedPtr<OutPort*> getSourcePort(SharedPtr<DataLogger*> dataLogger);
+    AutoPtr<DataProxy> newDataProxy(std::string className);
 
 private:
-    std::vector< SharedPtr<DataSource*> > allData; ///< data corresponding to each OutPort
-    Poco::RWLock allDataLock;
-
     Poco::DynamicFactory<DataLogger> loggerFactory;
     // TODO: use unordered map for c++11-able compilers
     std::map<std::string, std::string> loggerClasses;
-    /// To be used with loggerClasses
+    /// To be used with loggerClasses and proxyClasses
     typedef std::pair<std::string,std::string> classPair;
 
-    // all loggers
-    std::set< SharedPtr<DataLogger*> > loggers;
-    Poco::RWLock loggersLock;
-
-    DataSource emptyDataSource;
-
-    // TODO: any volatile data storage here that is used by the UI
-    // to push data (one shot) into a given InPort
+    Poco::DynamicFactory<DataProxy> proxyFactory;
+    // TODO: use unordered map for c++11-able compilers
+    std::map<std::string, std::string> proxyClasses;
 };
 
 //

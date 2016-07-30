@@ -1,6 +1,6 @@
 /**
- * @file	src/DataLogger.cpp
- * @date	Mar 2016
+ * @file	src/DataProxy.cpp
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,33 +26,33 @@
  THE SOFTWARE.
  */
 
-#include "DataLogger.h"
+#include "DataProxy.h"
 
-#include "ThreadManager.h"
-
-#include "Poco/Util/Application.h"
-
-void DataLogger::runTarget()
-{
-	Poco::Util::Application::instance()
-		.getSubsystem<ThreadManager>()
-		.startDataLogger(this);
-}
-
-void DataLogger::run()
+void DataProxy::runTarget()
 {
 	if (!tryCatchSource())
 		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
 
+	DataAttribute attr = getDataAttribute();
+
+	while (!tryWriteDataLock())
+	{
+		if (yield())
+			throw Poco::RuntimeException("DataProxy::runTarget",
+					"Task cancellation upon user request");
+	}
+
 	try
 	{
-		log();
+		convert();
 	}
 	catch (...)
 	{
 		releaseInputData();
+		releaseWriteOnFailure();
 		throw;
 	}
 
 	releaseInputData();
+	notifyReady(attr);
 }

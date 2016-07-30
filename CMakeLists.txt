@@ -43,6 +43,10 @@ add_executable (
   
 add_definitions ( -DCMAKE_VERSION="${CMAKE_VERSION}" -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER_ID}" )
 
+if (MSVC)
+  add_definitions ( -DNOMINMAX )
+endif (MSVC)
+
 ## configure dependencies
 
 find_package ( Threads REQUIRED )

@@ -123,7 +123,7 @@ extern "C" PyObject* pyBreakerBreakSource(BreakerMembers* self, PyObject* args)
     }
     else if (typeName.compare("instru.DataLogger") == 0)
     {
-    	target = **reinterpret_cast<DataLoggerMembers*>(pyObj)->logger;
+    	target = *reinterpret_cast<DataLoggerMembers*>(pyObj)->logger;
     }
     else
     {

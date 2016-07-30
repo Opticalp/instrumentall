@@ -272,15 +272,17 @@ PyObject* pythonModManExportFacTreeGraphviz(PyObject* self, PyObject* args)
 #include "Dispatcher.h"
 #include "PythonInPort.h"
 #include "PythonOutPort.h"
+#include "PythonDataProxy.h"
 #include <algorithm> // std::swap
 
 extern "C" PyObject*
 pythonDispatchBind(PyObject* self, PyObject* args)
 {
     PyObject *pyObj1, *pyObj2;
+    PyObject *pyProxy = NULL;
 
     // arguments parsing
-    if (!PyArg_ParseTuple(args, "OO:bind", &pyObj1, &pyObj2))
+    if (!PyArg_ParseTuple(args, "OO|O:bind", &pyObj1, &pyObj2, &pyProxy))
         return NULL;
 
     // check the type of the object.
@@ -301,14 +303,40 @@ pythonDispatchBind(PyObject* self, PyObject* args)
         return NULL;
     }
 
+    if (pyProxy)
+    {
+    	std::string typeName(pyProxy->ob_type->tp_name);
+    	if (typeName.compare("instru.DataProxy"))
+    	{
+            PyErr_SetString(PyExc_TypeError,
+                    "The third argument must be a DataProxy");
+            return NULL;
+    	}
+    }
+
     InPortMembers* pyInPort = reinterpret_cast<InPortMembers*>(pyObj1);
     OutPortMembers* pyOutPort = reinterpret_cast<OutPortMembers*>(pyObj2);
 
     try
     {
-        Poco::Util::Application::instance()
-            .getSubsystem<Dispatcher>()
-            .bind(**pyOutPort->outPort,**pyInPort->inPort);
+    	if (pyProxy == NULL)
+    	{
+			Poco::Util::Application::instance()
+				.getSubsystem<Dispatcher>()
+				.bind(**pyOutPort->outPort,**pyInPort->inPort);
+    	}
+    	else
+    	{
+    		DataProxyMembers* proxy = reinterpret_cast<DataProxyMembers*>(pyProxy);
+
+			Poco::Util::Application::instance()
+				.getSubsystem<Dispatcher>()
+				.bind(**pyOutPort->outPort,*proxy->proxy);
+
+			Poco::Util::Application::instance()
+				.getSubsystem<Dispatcher>()
+				.bind(*proxy->proxy,**pyInPort->inPort);
+    	}
     }
     catch (Poco::Exception& e)
     {
@@ -503,9 +531,6 @@ pythonDataManDataLoggerClasses(PyObject *self, PyObject *args)
                         .getSubsystem<DataManager>()
                         .dataLoggerClasses();
 
-    if (loggerClasses.size() == 0)
-        return Py_BuildValue("");
-
     // create a dict
     PyObject* pyLoggerClasses = PyDict_New();
 
@@ -532,72 +557,6 @@ pythonDataManDataLoggerClasses(PyObject *self, PyObject *args)
 
 #include "PythonDataLogger.h"
 
-extern "C" PyObject*
-pythonDataManDataLoggers(PyObject *self, PyObject *args)
-{
-    std::set< SharedPtr<DataLogger*> > loggers;
-    loggers = Poco::Util::Application::instance()
-                    .getSubsystem<DataManager>()
-                    .dataLoggers();
-
-    if (loggers.size() == 0)
-        Py_RETURN_NONE;
-
-    // construct the list to return
-    PyObject* pyLoggers = PyList_New(0);
-
-    // prepare DataLogger python type
-    if (PyType_Ready(&PythonDataLogger) < 0)
-    {
-        PyErr_SetString(PyExc_ImportError,
-                "Not able to create the DataLogger Type");
-        return NULL;
-    }
-
-    // to retrieve the logger description
-    std::map<std::string, std::string> classes;
-    classes = Poco::Util::Application::instance()
-                        .getSubsystem<DataManager>()
-                        .dataLoggerClasses();
-
-    for (std::set< SharedPtr<DataLogger*> >::iterator it = loggers.begin(),
-            ite = loggers.end(); it != ite; it++ )
-    {
-        // create the python object
-        DataLoggerMembers* pyLogger =
-            reinterpret_cast<DataLoggerMembers*>(
-                pyDataLoggerNew(
-                    reinterpret_cast<PyTypeObject*>(&PythonDataLogger), NULL, NULL) );
-
-        PyObject* tmp=NULL;
-
-        // init
-        // retrieve name and description
-        tmp = pyLogger->name;
-        pyLogger->name = PyString_FromString((**it)->name().c_str());
-        Py_XDECREF(tmp);
-
-        tmp = pyLogger->description;
-        pyLogger->description = PyString_FromString((**it)->description().c_str());
-        Py_XDECREF(tmp);
-
-        // set Logger reference
-        *(pyLogger->logger) = *it;
-
-        // create the dict entry
-        if (0 > PyList_Append(
-                pyLoggers,
-                reinterpret_cast<PyObject*>(pyLogger)))
-        {
-            // appending the item failed
-            PyErr_SetString(PyExc_RuntimeError,
-                    "Not able to build the return list");
-            return NULL;
-        }
-    }
-
-    return pyLoggers;
-}
 
 extern "C" PyObject*
 pythonDataManRemoveDataLogger(PyObject *self, PyObject *args)
@@ -623,9 +582,42 @@ pythonDataManRemoveDataLogger(PyObject *self, PyObject *args)
 
     Poco::Util::Application::instance()
                             .getSubsystem<Dispatcher>()
-                            .unbind(**pyLogger->logger);
+                            .unbind(*pyLogger->logger);
 
     Py_RETURN_NONE;
+}
+
+extern "C" PyObject*
+pythonDataManDataProxyClasses(PyObject *self, PyObject *args)
+{
+    std::map<std::string, std::string> proxyClasses;
+
+    proxyClasses = Poco::Util::Application::instance()
+                        .getSubsystem<DataManager>()
+                        .dataProxyClasses();
+
+    // create a dict
+    PyObject* pyProxyClasses = PyDict_New();
+
+    if (pyProxyClasses == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Not able to create the dict");
+        return NULL;
+    }
+
+    for (std::map<std::string, std::string>::iterator it = proxyClasses.begin(),
+            ite = proxyClasses.end(); it != ite; it++)
+    {
+        if (-1 == PyDict_SetItemString( pyProxyClasses,
+                it->first.c_str(),
+                PyString_FromString(it->second.c_str()) ) )
+        {
+            PyErr_SetString(PyExc_MemoryError, "Not able to insert a new pair in the dict");
+            return NULL;
+        }
+    }
+
+    return pyProxyClasses;
 }
 
 #endif /* HAVE_PYTHON27 */
