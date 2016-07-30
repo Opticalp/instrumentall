@@ -53,7 +53,7 @@ extern "C" PyObject* stderr_write(PyObject *self, PyObject *args)
             .getSubsystem<PythonManager>()
             .errorMessage("[Py stderr] " + std::string(what));
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 #endif /* HAVE_PYTHON27 */
