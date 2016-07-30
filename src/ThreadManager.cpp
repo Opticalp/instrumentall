@@ -209,7 +209,7 @@ void ThreadManager::waitAll()
     // joinAll does not work here,
     // since it seems that it locks the recursive creation of new threads...
     // We use an event instead.
-    while (count())
+    while (count() || threadPool.used())
     {
         //Poco::TaskManager::TaskList list = taskManager.taskList();
         //std::string nameList("\n");
