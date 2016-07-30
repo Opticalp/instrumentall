@@ -534,21 +534,21 @@ PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args)
         {
             long value = PyLong_AsLong(pyValue);
             if (PyErr_Occurred()) { return NULL; }
-            (**self->module)->setParameterValue<long>(paramName, value);
+            (**self->module)->setParameterValue<long>(paramName, value, true);
             break;
         }
         case ParamItem::typeFloat:
         {
             double value = PyFloat_AsDouble(pyValue);
             if (PyErr_Occurred()) { return NULL; }
-            (**self->module)->setParameterValue<double>(paramName, value);
+            (**self->module)->setParameterValue<double>(paramName, value, true);
             break;
         }
         case ParamItem::typeString:
         {
             std::string value(PyString_AsString(pyValue)) ;
             if (PyErr_Occurred()) { return NULL; }
-            (**self->module)->setParameterValue<std::string>(paramName, value);
+            (**self->module)->setParameterValue<std::string>(paramName, value, true);
             break;
         }
         default:
@@ -563,7 +563,7 @@ PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args)
         return NULL;
     }
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 PyObject* pyModSetVerbosity(ModMembers* self, PyObject* args)

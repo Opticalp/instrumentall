@@ -179,6 +179,8 @@ void Module::run(ModuleTask* pTask)
 
 	try
 	{
+		applyParameters();
+
 		setRunningState(ModuleTask::retrievingInDataLocks);
 		int startCond = startCondition();
 
