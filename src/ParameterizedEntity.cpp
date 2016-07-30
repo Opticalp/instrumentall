@@ -47,7 +47,7 @@ void ParameterizedEntity::addParameter(size_t index, std::string name, std::stri
     switch (datatype)
     {
     case (ParamItem::typeInteger):
-		paramValues[index] = Poco::Any(long(0));
+		paramValues[index] = Poco::Any(Poco::Int64(0));
     	break;
     case (ParamItem::typeFloat):
 		paramValues[index] = Poco::Any(double(0));
@@ -92,10 +92,10 @@ std::string ParameterizedEntity::getParameterDefaultValue(size_t index)
                                         "no default value found");
 }
 
-long ParameterizedEntity::getIntParameterDefaultValue(size_t index)
+Poco::Int64 ParameterizedEntity::getIntParameterDefaultValue(size_t index)
 {
     std::string strValue = getParameterDefaultValue(index);
-    return static_cast<long>(Poco::NumberParser::parse64(strValue));
+    return static_cast<Poco::Int64>(Poco::NumberParser::parse64(strValue));
 }
 
 double ParameterizedEntity::getFloatParameterDefaultValue(size_t index)
@@ -141,7 +141,7 @@ ParamItem::ParamType ParameterizedEntity::getParameterType(std::string paramName
 
 using Poco::AnyCast;
 
-bool ParameterizedEntity::getInternalIntParameterValue(size_t paramIndex, long& value)
+bool ParameterizedEntity::getInternalIntParameterValue(size_t paramIndex, Poco::Int64& value)
 {
     Poco::Mutex::ScopedLock lock(mutex);
 
@@ -166,7 +166,7 @@ bool ParameterizedEntity::getInternalIntParameterValue(size_t paramIndex, long& 
 				"out of range parameter index");
 	}
 
-	value = AnyCast<long>(paramValues[paramIndex]);
+	value = AnyCast<Poco::Int64>(paramValues[paramIndex]);
 
 	bool ret = needApplication[paramIndex];
 	needApplication[paramIndex] = false;
@@ -243,7 +243,7 @@ void ParameterizedEntity::applyParameters()
 		{
 		case (ParamItem::typeInteger):
 			{
-				long tmp;
+				Poco::Int64 tmp;
 				if (getInternalIntParameterValue(index, tmp))
 					setIntParameterValue(index, tmp);
 				break;

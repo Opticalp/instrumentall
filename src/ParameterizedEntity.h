@@ -33,6 +33,7 @@
 
 #include "ParameterSet.h"
 
+#include "Poco/Types.h"
 #include "Poco/Util/Application.h" // layered configuration
 #include "Poco/Mutex.h"
 #include "Poco/Any.h"
@@ -94,6 +95,11 @@ public:
 	 * @throw Poco::DataFormatException if the parameter format does not fit
 	 */
     template<typename T> T getParameterValue(std::string paramName);
+
+    /**
+     * Retrieve the value of the parameter given by its index
+     */
+    template<typename T> T getParameterValue(size_t paramIndex);
 
     /**
      * Set the value of the parameter given by its name
@@ -174,11 +180,11 @@ protected:
      * - if not found...
      * @throw Poco::NotFoundException
      */
-    long getIntParameterDefaultValue(size_t index);
+    Poco::Int64 getIntParameterDefaultValue(size_t index);
     double getFloatParameterDefaultValue(size_t index);
     std::string getStrParameterDefaultValue(size_t index);
 
-    virtual long getIntParameterValue(size_t paramIndex)
+    virtual Poco::Int64 getIntParameterValue(size_t paramIndex)
     {
         poco_bugcheck_msg("getIntParameterValue not implemented for this module");
         throw Poco::BugcheckException();
@@ -205,7 +211,7 @@ protected:
      * @param[out] value parameter value from the internal storage
      * @return needApplication flag
      */
-    bool getInternalIntParameterValue(size_t paramIndex, long& value);
+    bool getInternalIntParameterValue(size_t paramIndex, Poco::Int64& value);
 
     /// @see getInternalIntParameterValue
     bool getInternalFloatParameterValue(size_t paramIndex, double& value);
@@ -213,7 +219,7 @@ protected:
     /// @see getInternalIntParameterValue
     bool getInternalStrParameterValue(size_t paramIndex, std::string& value);
 
-    virtual void setIntParameterValue(size_t paramIndex, long value)
+    virtual void setIntParameterValue(size_t paramIndex, Poco::Int64 value)
         { poco_bugcheck_msg("setIntParameterValue not implemented"); }
 
     virtual void setFloatParameterValue(size_t paramIndex, double value)

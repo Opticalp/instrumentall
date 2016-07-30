@@ -30,14 +30,19 @@
 
 #include "ParameterizedEntity.h"
 
+template <typename T> inline
+T ParameterizedEntity::getParameterValue(std::string paramName)
+{
+    size_t paramIndex = getParameterIndex(paramName);
+    return getParameterValue<T>(paramIndex);
+}
+
 template <> inline
-long ParameterizedEntity::getParameterValue<long>(std::string paramName)
+Poco::Int64 ParameterizedEntity::getParameterValue<Poco::Int64>(size_t paramIndex)
 {
     Poco::Mutex::ScopedLock lock(mutex);
 
     applyParameters(); // "mutex" is a recursive mutex... OK then.
-
-    size_t paramIndex = getParameterIndex(paramName);
 
     switch (paramSet[paramIndex].datatype)
     {
@@ -45,11 +50,11 @@ long ParameterizedEntity::getParameterValue<long>(std::string paramName)
         return getIntParameterValue(paramIndex);
     case ParamItem::typeFloat:
         throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramName + " has float type. "
+                "The parameter " + paramSet[paramIndex].name + " has float type. "
                 "Integer was requested. ");
     case ParamItem::typeString:
         throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramName + " has string type. "
+                "The parameter " + paramSet[paramIndex].name + " has string type. "
                 "Integer was requested. ");
     default:
         poco_bugcheck_msg("unrecognized parameter type");
@@ -58,25 +63,23 @@ long ParameterizedEntity::getParameterValue<long>(std::string paramName)
 }
 
 template <> inline
-double ParameterizedEntity::getParameterValue<double>(std::string paramName)
+double ParameterizedEntity::getParameterValue<double>(size_t paramIndex)
 {
     Poco::Mutex::ScopedLock lock(mutex);
 
     applyParameters(); // "mutex" is a recursive mutex... OK then.
 
-    size_t paramIndex = getParameterIndex(paramName);
-
     switch (paramSet[paramIndex].datatype)
     {
     case ParamItem::typeInteger:
         throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramName + " has integer type. "
+                "The parameter " + paramSet[paramIndex].name + " has integer type. "
                 "Float was requested. ");
     case ParamItem::typeFloat:
         return getFloatParameterValue(paramIndex);
     case ParamItem::typeString:
         throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramName + " has string type. "
+                "The parameter " + paramSet[paramIndex].name + " has string type. "
                 "Float was requested. ");
     default:
         poco_bugcheck_msg("unrecognized parameter type");
@@ -86,23 +89,21 @@ double ParameterizedEntity::getParameterValue<double>(std::string paramName)
 
 /// ParameterizedEntity::getParameter specialization for string parameters
 template <> inline
-std::string ParameterizedEntity::getParameterValue<std::string>(std::string paramName)
+std::string ParameterizedEntity::getParameterValue<std::string>(size_t paramIndex)
 {
     Poco::Mutex::ScopedLock lock(mutex);
 
     applyParameters(); // "mutex" is a recursive mutex... OK then.
 
-    size_t paramIndex = getParameterIndex(paramName);
-
     switch (paramSet[paramIndex].datatype)
     {
     case ParamItem::typeInteger:
         throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramName + " has integer type. "
+                "The parameter " + paramSet[paramIndex].name + " has integer type. "
                 "String was requested. ");
     case ParamItem::typeFloat:
         throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramName + " has float type. "
+                "The parameter " + paramSet[paramIndex].name + " has float type. "
                 "String was requested. ");
     case ParamItem::typeString:
         return getStrParameterValue(paramIndex);
@@ -113,7 +114,7 @@ std::string ParameterizedEntity::getParameterValue<std::string>(std::string para
 }
 
 template <> inline
-void ParameterizedEntity::setParameterValue<long>(std::string paramName, long value, bool immediateApply)
+void ParameterizedEntity::setParameterValue<Poco::Int64>(std::string paramName, Poco::Int64 value, bool immediateApply)
 {
     size_t paramIndex = getParameterIndex(paramName);
 
@@ -208,7 +209,7 @@ void ParameterizedEntity::setParameterValue<std::string>(std::string paramName, 
 //
 
 template <typename T> inline
-T ParameterizedEntity::getParameterValue(std::string paramName)
+T ParameterizedEntity::getParameterValue(size_t paramIndex)
 {
     // report a bug to the developer
     poco_bugcheck_msg("ParameterizedEntity::getParameterValue<T>(): Wrong type T. ");

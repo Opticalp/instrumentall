@@ -488,7 +488,7 @@ PyObject* pyModGetParameterValue(ModMembers *self, PyObject *args)
         case ParamItem::typeInteger:
         {
             long value =
-                    (**self->module)->getParameterValue<long>(paramName);
+                    (**self->module)->getParameterValue<Poco::Int64>(paramName);
             return PyLong_FromLong(value);
         }
         case ParamItem::typeFloat:
@@ -534,7 +534,7 @@ PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args)
         {
             long value = PyLong_AsLong(pyValue);
             if (PyErr_Occurred()) { return NULL; }
-            (**self->module)->setParameterValue<long>(paramName, value, true);
+            (**self->module)->setParameterValue<Poco::Int64>(paramName, value, true);
             break;
         }
         case ParamItem::typeFloat:
