@@ -32,9 +32,10 @@
 #include "DataSource.h"
 #include "DataTarget.h"
 
-#include "ParameterizedEntity.h"
-
 #include "Poco/RefCountedObject.h"
+#include "Poco/Thread.h"
+
+class ParameterizedEntity;
 
 /**
  * ParameterGetter

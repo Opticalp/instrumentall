@@ -31,6 +31,7 @@
 
 #include "VerboseEntity.h"
 #include "ParameterizedEntity.h"
+#include "ParameterizedWithGetters.h"
 #include "InPortUser.h"
 #include "OutPortUser.h"
 #include "ModuleTask.h"
@@ -63,6 +64,7 @@ class ModuleFactory;
  */
 class Module: public VerboseEntity,
 	public ParameterizedEntity,
+	public ParameterizedWithGetters,
 	public InPortUser, public OutPortUser
 {
 public:
@@ -84,7 +86,9 @@ public:
 	 * if customName or internalName is already in use.
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
-	      mParent(parent), ParameterizedEntity("module." + name),
+	      mParent(parent),
+		  ParameterizedEntity("module." + name),
+		  ParameterizedWithGetters(this),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false)

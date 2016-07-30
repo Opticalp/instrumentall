@@ -27,6 +27,7 @@
  */
 
 #include "ParameterGetter.h"
+#include "ParameterizedEntity.h"
 
 #include "Poco/NumberFormatter.h"
 
