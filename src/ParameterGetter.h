@@ -34,20 +34,39 @@
 
 #include "ParameterizedEntity.h"
 
+#include "Poco/RefCountedObject.h"
+
 /**
  * ParameterGetter
  *
  * Emit data retrieved via getParameterValue when trigged by the
  * input.
  */
-class ParameterGetter: public DataSource, public DataTarget
+class ParameterGetter:
+		public DataSource,
+		public DataTarget,
+		public Poco::RefCountedObject
 {
 public:
 	ParameterGetter(ParameterizedEntity* parameterized, size_t paramIndex);
 	virtual ~ParameterGetter() { }
 
+	std::string name() { return mName; }
+	std::string description();
+
+	/**
+	 * Called by the owner (parameterized entity)
+	 * to release the parameter getter.
+	 */
+	void invalidate()
+		{ parent = NULL; }
+
+	ParameterizedEntity* getParent() { return parent; }
+
 private:
 	ParameterGetter();
+
+	static size_t refCount;
 
 	/**
 	 * getParameterValue and send it as dataSource
@@ -75,8 +94,13 @@ private:
 	 */
 	static int paramDataType(ParameterizedEntity* parameterized, size_t paramIndex);
 
+	std::string mName;
 	ParameterizedEntity* parent;
 	size_t mParamIndex;
+
+	void incUser() { duplicate(); }
+	void decUser() { release();   }
+	size_t userCnt() { return referenceCount(); }
 };
 
 #endif /* SRC_PARAMETERGETTER_H_ */

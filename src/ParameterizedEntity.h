@@ -69,6 +69,8 @@ public:
 	{
 	}
 
+	virtual std::string name() = 0;
+
 	/**
 	 * Retrieve a copy of the parameter set of the module
 	 *

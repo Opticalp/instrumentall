@@ -28,6 +28,10 @@
 
 #include "ParameterGetter.h"
 
+#include "Poco/NumberFormatter.h"
+
+size_t ParameterGetter::refCount = 0;
+
 int ParameterGetter::paramDataType(ParameterizedEntity* parameterized,
 		size_t paramIndex)
 {
@@ -63,9 +67,26 @@ ParameterGetter::ParameterGetter(ParameterizedEntity* parameterized,
 		size_t paramIndex):
 				DataSource(paramDataType(parameterized, paramIndex)),
 				parent(parameterized),
-				mParamIndex(paramIndex)
+				mParamIndex(paramIndex),
+				mName(parent->name() + "ParameterGetter")
 {
+	if (refCount)
+		mName += Poco::NumberFormatter::format(refCount);
 
+	refCount++;
+}
+
+std::string ParameterGetter::description()
+{
+	if (parent)
+	{
+		ParameterSet tmp;
+		parent->getParameterSet(&tmp);
+		return "Get the parameter: " + tmp.at(mParamIndex).name
+				+ " from " + parent->name();
+	}
+	else
+		return "Expired parameter getter. You should consider deleting it. ";
 }
 
 void ParameterGetter::runTarget()
@@ -73,6 +94,13 @@ void ParameterGetter::runTarget()
 	if (!tryCatchSource())
 		poco_bugcheck_msg("ParameterGetter::runTarget, "
 				"not able to catch the source");
+
+	if (parent == NULL)
+	{
+		releaseInputData();
+		throw Poco::InvalidAccessException("ParameterGetter",
+				"The parent is no more valid");
+	}
 
 	DataAttribute attr;
 	readInputDataAttribute(&attr);
