@@ -60,7 +60,10 @@ public:
 	 *
 	 * Used by DuplicatedSource
 	 */
-	DataSource(DataSource* source): DataItem(*source) { }
+	DataSource(DataSource* source):
+		DataItem(*source), notifying(false), users(0)
+	{
+	}
 
 	virtual ~DataSource();
 
@@ -164,6 +167,14 @@ private:
     Poco::FastMutex pendingTargetsLock;
 
     size_t users;
+
+    /**
+     * Cheap safety
+     *
+     * Lock the data access betw. write lock release and
+     * read lock acquisition
+     */
+    bool notifying;
 
     friend class DataTarget;
 };

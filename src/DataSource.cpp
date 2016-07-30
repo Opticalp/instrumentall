@@ -39,7 +39,8 @@
 #include "Poco/Util/Application.h"
 
 DataSource::DataSource(int datatype):
-		DataItem(datatype), users(0)
+		DataItem(datatype),
+		notifying(0), users(0)
 {
 
 }
@@ -93,11 +94,21 @@ void DataSource::addDataTarget(DataTarget* target)
 void DataSource::notifyReady(DataAttribute attribute)
 {
     setDataAttribute(attribute);
-    releaseWrite();
 
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .setOutputDataReady(this);
+    notifying = true;
+    try
+    {
+		releaseWrite();
+		Poco::Util::Application::instance()
+							.getSubsystem<Dispatcher>()
+							.setOutputDataReady(this);
+    }
+    catch (...)
+    {
+        notifying = false;
+        throw;
+    }
+    notifying = false;
 }
 
 void DataSource::detachDataTarget(DataTarget* target)
@@ -121,6 +132,9 @@ void DataSource::registerPendingTarget(DataTarget* target)
 
 bool DataSource::tryWriteDataLock()
 {
+	if (notifying)
+		return false;
+
 	bool ret = DataItem::tryWriteDataLock();
 
 	if (ret)
