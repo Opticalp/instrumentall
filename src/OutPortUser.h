@@ -29,11 +29,10 @@
 #ifndef SRC_OUTPORTUSER_H_
 #define SRC_OUTPORTUSER_H_
 
-#include "VerboseEntity.h"
-
 #include "DataAttributeOut.h"
 #include "ModuleTask.h"
 
+#include "Poco/Logger.h"
 #include "Poco/ThreadLocal.h"
 #include "Poco/Thread.h"
 #include "Poco/Mutex.h"
@@ -50,7 +49,7 @@ class OutPort;
  *  - thread local access control (locks, write)
  *  - release (notifyReady)
  */
-class OutPortUser: public virtual VerboseEntity
+class OutPortUser
 {
 public:
 	OutPortUser() { }
@@ -214,6 +213,8 @@ protected:
 
     virtual ModuleTask::RunningStates getRunningState() = 0;
     virtual void setRunningState(ModuleTask::RunningStates state) = 0;
+
+    virtual Poco::Logger& logger() = 0;
 
 private:
 	bool tryLockOut() { return outMutex.tryLock(); }

@@ -61,7 +61,7 @@ class ModuleFactory;
  * the tasks when needed. The tasks are the only one to run the
  * modules (after having set runningTask).
  */
-class Module: public virtual VerboseEntity,
+class Module: public VerboseEntity,
 	public ParameterizedEntity,
 	public InPortUser, public OutPortUser
 {
@@ -401,6 +401,8 @@ protected:
 	 * in the Dispatcher
 	 */
 	void notifyCreation();
+
+	Poco::Logger& logger() { return VerboseEntity::logger(); }
 
 private:
     /// enum to be returned by checkName

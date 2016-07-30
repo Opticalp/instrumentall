@@ -29,11 +29,10 @@
 #ifndef SRC_PARAMETERIZEDENTITY_H_
 #define SRC_PARAMETERIZEDENTITY_H_
 
-#include "VerboseEntity.h"
-
 #include "ParameterSet.h"
 
 #include "Poco/Types.h"
+#include "Poco/Logger.h"
 #include "Poco/Util/Application.h" // layered configuration
 #include "Poco/Mutex.h"
 #include "Poco/Any.h"
@@ -47,7 +46,7 @@
  *
  * applyParameters is now mandatory to effectively set the parameters
  */
-class ParameterizedEntity: public virtual VerboseEntity
+class ParameterizedEntity
 {
 public:
 	/**
@@ -136,7 +135,7 @@ public:
     virtual void applyParameters();
 
 protected:
-	/**
+    /**
 	 * Change the prefix key
 	 */
 	void setPrefixKey(std::string prefixKey)
@@ -230,9 +229,11 @@ protected:
     virtual void setStrParameterValue(size_t paramIndex, std::string value)
         { poco_bugcheck_msg("setStrParameterValue not implemented"); }
 
+    virtual Poco::Logger& logger() = 0;
 
 private:
-	ParameterizedEntity();
+    ParameterizedEntity();
+
 	std::string confPrefixKey;
 
 	ParameterSet paramSet;
