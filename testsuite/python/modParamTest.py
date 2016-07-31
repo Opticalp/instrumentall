@@ -32,7 +32,7 @@ from os.path import *
 def myMain():
     """Main function. Run the tests. """
     
-    print "Test the basic features of the module ports. "
+    print "Test the basic features of the module parameters. "
     
     fac = Factory("DemoRootFactory")
     print "Retrieved factory: " + fac.name
