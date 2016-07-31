@@ -179,9 +179,9 @@ static PyMethodDef pyMethodDispatchBind =
     "bind",
     pythonDispatchBind,
     METH_VARARGS,
-    "bind(portA, portB): Bind a data output source port portA "
-    "to a data input target port portB. \n"
-    "bind(portA, portB, proxy): Bind portA to portB using the "
+    "bind(source, target): Bind a data source (e.g. output port) "
+    "to a data target (e.g. input port). \n"
+    "bind(source, target, proxy): Bind source to target using the "
     "given data proxy."
 };
 

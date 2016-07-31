@@ -80,14 +80,10 @@ private:
 	void runTarget();
 
 	bool isSupportedInputDataType(int datatype)
-		{ return (datatype == dataType()); }
+		{ return true; }
 
     std::set<int> supportedInputDataType()
-	{
-		std::set<int> ret;
-		ret.insert(dataType());
-		return ret;
-	}
+		{ return std::set<int>(); }
 
 	bool yield() { Poco::Thread::yield(); return false; }
 

@@ -56,7 +56,7 @@ def myMain():
     print "Querying mod2.outPort(\"" + outPortA.name + "\")... "
     print "got: " + mod2.outPort(outPortA.name).name + ". "
     
-    bind(inPortA, outPortA)
+    bind(outPortA, inPortA)
     unbind(inPortA)
     bind(outPortA, inPortA)
     
