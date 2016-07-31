@@ -69,7 +69,7 @@ ParameterGetter::ParameterGetter(ParameterizedEntity* parameterized,
 				DataSource(paramDataType(parameterized, paramIndex)),
 				parent(parameterized),
 				mParamIndex(paramIndex),
-				mName(parent->name() + "ParameterGetter")
+				mName(parameterized->name() + "ParameterGetter")
 {
 	if (refCount)
 		mName += Poco::NumberFormatter::format(refCount);
@@ -141,3 +141,15 @@ void ParameterGetter::runTarget()
 	notifyReady(attr);
 }
 
+std::string ParameterGetter::getParameterName()
+{
+	if (parent)
+	{
+		ParameterSet tmp;
+		parent->getParameterSet(&tmp);
+		return tmp.at(mParamIndex).name;
+	}
+	else
+		throw Poco::InvalidAccessException("getParameterName",
+				"Invalidated parameter getter");
+}

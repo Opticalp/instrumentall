@@ -28,6 +28,8 @@
 
 #include "ParameterizedWithGetters.h"
 
+#include "ParameterizedEntity.h"
+
 using Poco::AutoPtr;
 
 ParameterizedWithGetters::~ParameterizedWithGetters()
@@ -45,4 +47,10 @@ AutoPtr<ParameterGetter> ParameterizedWithGetters::buildParameterGetter(
 	AutoPtr<ParameterGetter> ptr(new ParameterGetter(self, paramIndex));
 	getters.insert(ptr);
 	return ptr;
+}
+
+Poco::AutoPtr<ParameterGetter> ParameterizedWithGetters::buildParameterGetter(
+		std::string paramName)
+{
+	return buildParameterGetter(self->getParameterIndex(paramName));
 }

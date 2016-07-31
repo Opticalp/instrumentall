@@ -585,4 +585,36 @@ PyObject* pyModGetVerbosity(ModMembers* self, PyObject* args)
 	return PyInt_FromLong(prio);
 }
 
+#include "PythonParameterGetter.h"
+
+PyObject* pyModBuildParamGetter(ModMembers* self, PyObject* args)
+{
+	char* charParamName;
+
+    if (!PyArg_ParseTuple(args, "s:setVerbosity", &charParamName))
+        return NULL;
+
+    std::string paramName(charParamName);
+
+    Poco::AutoPtr<ParameterGetter> getter =
+    		(**self->module)->buildParameterGetter(paramName);
+
+    // prepare OutPort python type
+    if (PyType_Ready(&PythonParameterGetter) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the ParameterGetter Type");
+        return NULL;
+    }
+
+    // create the python object
+    ParameterGetterMembers* pyGetter =
+        (ParameterGetterMembers*)(pyParameterGetterNew((PyTypeObject*)&PythonParameterGetter, NULL, NULL) );
+
+    // set InPort reference
+    *(pyGetter->getter) = getter;
+
+    return reinterpret_cast<PyObject*>(pyGetter);
+}
+
 #endif /* HAVE_PYTHON27 */

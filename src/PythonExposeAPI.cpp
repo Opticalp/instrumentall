@@ -41,6 +41,8 @@ THE SOFTWARE.
 
 #include "PythonModuleFactory.h"
 #include "PythonModule.h"
+//#include "PythonDataSource.h"
+//#include "PythonDataTarget.h"
 #include "PythonTask.h"
 #include "PythonInPort.h"
 #include "PythonOutPort.h"
@@ -48,6 +50,8 @@ THE SOFTWARE.
 #include "PythonBreaker.h"
 #include "PythonDataHolder.h"
 #include "PythonDataProxy.h"
+#include "PythonParameterGetter.h"
+//#include "PythonParameterSetter.h"
 
 /**
  * array to bind to-be-exposed methods (C to Python wrappers)
@@ -126,6 +130,12 @@ void PythonManager::exposeAPI()
     if (PyType_Ready(&PythonTask) < 0)
         return;
 
+//    if (PyType_Ready(&PythonDataSource) < 0)
+//        return;
+//
+//    if (PyType_Ready(&PythonDataTarget) < 0)
+//        return;
+//
     if (PyType_Ready(&PythonInPort) < 0)
         return;
 
@@ -143,6 +153,12 @@ void PythonManager::exposeAPI()
 
     if (PyType_Ready(&PythonDataProxy) < 0)
         return;
+
+    if (PyType_Ready(&PythonParameterGetter) < 0)
+        return;
+
+//    if (PyType_Ready(&PythonParameterSetter) < 0)
+//        return;
 
     PyObject* m;
 
@@ -164,6 +180,12 @@ void PythonManager::exposeAPI()
     Py_INCREF(&PythonTask);
     PyModule_AddObject(m, "Task", (PyObject *)&PythonTask);
 
+//    Py_INCREF(&PythonDataSource);
+//    PyModule_AddObject(m, "DataSource", (PyObject *)&PythonDataSource);
+//
+//    Py_INCREF(&PythonDataTarget);
+//    PyModule_AddObject(m, "DataTarget", (PyObject *)&PythonDataTarget);
+//
     Py_INCREF(&PythonInPort);
     PyModule_AddObject(m, "InPort", (PyObject *)&PythonInPort);
 
@@ -181,6 +203,12 @@ void PythonManager::exposeAPI()
 
     Py_INCREF(&PythonDataProxy);
     PyModule_AddObject(m, "DataProxy", (PyObject *)&PythonDataProxy);
+
+    Py_INCREF(&PythonParameterGetter);
+    PyModule_AddObject(m, "ParameterGetter", (PyObject *)&PythonParameterGetter);
+
+//    Py_INCREF(&PythonParameterSetter);
+//    PyModule_AddObject(m, "ParameterSetter", (PyObject *)&PythonParameterSetter);
 }
 
 

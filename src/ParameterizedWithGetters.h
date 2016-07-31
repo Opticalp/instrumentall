@@ -64,6 +64,17 @@ public:
 	 */
 	Poco::AutoPtr<ParameterGetter> buildParameterGetter(size_t paramIndex);
 
+	/**
+	 * Create a ParameterGetter and takes ownership of it
+	 */
+	Poco::AutoPtr<ParameterGetter> buildParameterGetter(std::string paramName);
+
+	/**
+	 * Retrieve the existing parameter getters
+	 */
+	std::set< Poco::AutoPtr<ParameterGetter> > getParameterGetters()
+		{ return getters; }
+
 private:
 	ParameterizedEntity* self;
 	std::set< Poco::AutoPtr<ParameterGetter> > getters;

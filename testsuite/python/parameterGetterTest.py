@@ -58,9 +58,14 @@ def myMain():
     modParam.setParameterValue("strParam", "mojo")
 
     print "Build param getters using those parameters..."
-    getInt = modParam.buildGetter("intParam")
-    getFloat = modParam.buildGetter("floatParam")
-    getStr = modParam.buildGetter("strParam")
+    getInt = modParam.buildParameterGetter("intParam")
+    getFloat = modParam.buildParameterGetter("floatParam")
+    getStr = modParam.buildParameterGetter("strParam")
+
+    print "Parameter names: "
+    print " - " + getInt.parameterName()
+    print " - " + getFloat.parameterName()
+    print " - " + getStr.parameterName()
 
     print "Create a module to trig the parameter getters"
     trigger = Factory("DataGenFactory").select("float").create("trigger")

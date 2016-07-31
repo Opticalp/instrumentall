@@ -85,6 +85,13 @@ public:
     ParamItem::ParamType getParameterType(std::string paramName);
 
 	/**
+	 * Retrieve a parameter index from its name
+	 *
+	 * The main mutex should be locked before calling this function
+	 */
+	size_t getParameterIndex(std::string paramName);
+
+	/**
 	 * Retrieve the value of the parameter given by its name
 	 *
 	 * Check the parameter type and call one of:
@@ -239,13 +246,6 @@ private:
 	ParameterSet paramSet;
 	std::vector<Poco::Any> paramValues;
 	std::vector<bool> needApplication;
-
-	/**
-	 * Retrieve a parameter index from its name
-	 *
-	 * The main mutex has to be locked before calling this function
-	 */
-	size_t getParameterIndex(std::string paramName);
 
 	/**
 	 * Table of hard-coded values

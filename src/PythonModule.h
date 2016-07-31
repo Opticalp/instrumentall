@@ -208,6 +208,32 @@ static PyMethodDef pyMethodModGetVerbosity =
     "getVerbosity: set the module logger verbosity"
 };
 
+/// Module::buildParameterGetter python wrapper
+extern "C"
+PyObject* pyModBuildParamGetter(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModBuildParamGetter =
+{
+    "buildParameterGetter",
+    (PyCFunction)pyModBuildParamGetter,
+    METH_VARARGS,
+    "buildParameterGetter(paramName): "
+    "build a parameter getter for the given parameter"
+};
+
+/// Module::buildParameterSetter python wrapper
+//extern "C"
+//PyObject* pyModBuildParamSetter(ModMembers *self, PyObject *args);
+//
+//static PyMethodDef pyMethodModBuildParamSetter =
+//{
+//    "buildParameterSetter",
+//    (PyCFunction)pyModBuildParamSetter,
+//    METH_VARARGS,
+//    "buildParameterSetter(paramName): "
+//    "build a parameter setter for the given parameter"
+//};
+
 /// exported methods
 static PyMethodDef pyModMethods[] = {
 	pyMethodModParent,
@@ -223,6 +249,9 @@ static PyMethodDef pyModMethods[] = {
 
 	pyMethodModSetVerbosity,
 	pyMethodModGetVerbosity,
+
+	pyMethodModBuildParamGetter,
+//	pyMethodModBuildParamSetter,
 
 	{NULL} // sentinel
 };

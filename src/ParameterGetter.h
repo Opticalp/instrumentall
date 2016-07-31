@@ -64,6 +64,11 @@ public:
 
 	ParameterizedEntity* getParent() { return parent; }
 
+	/**
+	 * Retrieve the name of the pointed parameter
+	 */
+	std::string getParameterName();
+
 private:
 	ParameterGetter();
 
