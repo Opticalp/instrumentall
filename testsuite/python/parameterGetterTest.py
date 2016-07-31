@@ -71,25 +71,32 @@ def myMain():
     trigger = Factory("DataGenFactory").select("float").create("trigger")
     trigPort = trigger.outPorts()[0]
 
+    print "Test DataTarget cast"
+    targetInt = DataTarget(getInt)
+    print "target: " + targetInt.name + " (" + targetInt.description + ")"
+
 ##    print "Bind the trigger to the param getters"
 ##    bind(trigPort, DataTarget(getInt))
 ##    bind(trigPort, DataTarget(getFloat))
 ##    bind(trigPort, DataTarget(getStr))
 ##
-##    print "Create Data loggers to print the output of the param getters"
-##    loggerInt = DataLogger("DataPocoLogger")
-##    loggerFloat = DataLogger("DataPocoLogger")
-##    loggerStr = DataLogger("DataPocoLogger")
-##
+##    print "Test param int getter connexion"
+##    print "Source is: " + targetInt.getDataSource().name()
+
+    print "Create Data loggers to print the output of the param getters"
+    loggerInt = DataLogger("DataPocoLogger")
+    loggerFloat = DataLogger("DataPocoLogger")
+    loggerStr = DataLogger("DataPocoLogger")
+
 ##    print "Bind the loggers to the param getters"
 ##    bind(DataSource(getInt), DataTarget(loggerInt))
 ##    bind(DataSource(getFloat), DataTarget(loggerFloat))
 ##    bind(DataSource(getStr), DataTarget(loggerStr))
-##
-##    print "Trig the getters"
-##    runModule(trigger)
-##    waitAll()
-##
+
+    print "Trig the getters"
+    runModule(trigger)
+    waitAll()
+
 ##    if (DataSource(getInt).getDataValue() != 666)
 ##        raise RuntimeError("wrong param getter int forwarded value")
 ##
