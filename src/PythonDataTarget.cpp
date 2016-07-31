@@ -158,15 +158,12 @@ extern "C" int pyDataTargetInit(DataTargetMembers* self, PyObject *args, PyObjec
 #include "Dispatcher.h"
 #include "Poco/Util/Application.h"
 #include "DataSource.h"
+#include "PythonDataSource.h"
 #include "OutPort.h"
 #include "PythonOutPort.h"
-//#include "DataProxy.h"
-//#include "PythonDataProxy.h"
 
 PyObject* pyDataTargetGetDataSource(DataTargetMembers* self)
 {
-    Poco::SharedPtr<OutPort*> sharedSource;
-
     DataSource* tmpSource;
     OutPort* tmpPort;
 
@@ -181,42 +178,72 @@ PyObject* pyDataTargetGetDataSource(DataTargetMembers* self)
 
 	tmpPort = dynamic_cast<OutPort*>(tmpSource);
 
-	// Python DataSource not implemented yet.
-	if (tmpPort == NULL)
-        Py_RETURN_NONE;
+	if (tmpPort)
+	{
+		Poco::SharedPtr<OutPort*> sharedSource = Poco::Util::Application::instance()
+			.getSubsystem<Dispatcher>()
+			.getOutPort(tmpPort);
 
-    sharedSource = Poco::Util::Application::instance()
-		.getSubsystem<Dispatcher>()
-		.getOutPort(tmpPort);
+		// prepare OutPort python type
+		if (PyType_Ready(&PythonOutPort) < 0)
+		{
+			PyErr_SetString(PyExc_ImportError,
+					"Not able to create the OutPort Type");
+			return NULL;
+		}
 
-    // prepare OutPort python type
-    if (PyType_Ready(&PythonOutPort) < 0)
-    {
-        PyErr_SetString(PyExc_ImportError,
-                "Not able to create the OutPort Type");
-        return NULL;
-    }
+		// create the python object
+		OutPortMembers* pyPort =
+			(OutPortMembers*)(pyOutPortNew((PyTypeObject*)&PythonOutPort, NULL, NULL) );
 
-    // create the python object
-    OutPortMembers* pyPort =
-        (OutPortMembers*)(pyOutPortNew((PyTypeObject*)&PythonOutPort, NULL, NULL) );
+		PyObject* tmp=NULL;
 
-    PyObject* tmp=NULL;
+		// init
+		// retrieve name and description
+		tmp = pyPort->name;
+		pyPort->name = PyString_FromString((*sharedSource)->name().c_str());
+		Py_XDECREF(tmp);
 
-    // init
-    // retrieve name and description
-    tmp = pyPort->name;
-    pyPort->name = PyString_FromString((*sharedSource)->name().c_str());
-    Py_XDECREF(tmp);
+		tmp = pyPort->description;
+		pyPort->description = PyString_FromString((*sharedSource)->description().c_str());
+		Py_XDECREF(tmp);
 
-    tmp = pyPort->description;
-    pyPort->description = PyString_FromString((*sharedSource)->description().c_str());
-    Py_XDECREF(tmp);
+		// set ModuleFactory reference
+		*(pyPort->outPort) = sharedSource;
 
-    // set ModuleFactory reference
-    *(pyPort->outPort) = sharedSource;
+		return (PyObject*) pyPort;
+	}
+	else // Python DataSource
+	{
+		// prepare DataSource python type
+		if (PyType_Ready(&PythonDataSource) < 0)
+		{
+			PyErr_SetString(PyExc_ImportError,
+					"Not able to create the DataSource Type");
+			return NULL;
+		}
 
-    return (PyObject*) pyPort;
+		// create the python object
+		DataSourceMembers* pySource =
+			(DataSourceMembers*)(pyDataSourceNew((PyTypeObject*)&PythonDataSource, NULL, NULL) );
+
+		PyObject* tmp=NULL;
+
+		// init
+		// retrieve name and description
+		tmp = pySource->name;
+		pySource->name = PyString_FromString(tmpSource->name().c_str());
+		Py_XDECREF(tmp);
+
+		tmp = pySource->description;
+		pySource->description = PyString_FromString(tmpSource->description().c_str());
+		Py_XDECREF(tmp);
+
+		// set DataSource reference
+		pySource->source = tmpSource;
+
+		return (PyObject*) pySource;
+	}
 }
 
 #endif /* HAVE_PYTHON27 */

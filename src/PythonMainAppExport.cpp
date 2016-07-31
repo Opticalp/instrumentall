@@ -273,7 +273,7 @@ PyObject* pythonModManExportFacTreeGraphviz(PyObject* self, PyObject* args)
 #include "PythonInPort.h"
 #include "PythonOutPort.h"
 #include "PythonDataProxy.h"
-//#include "PythonDataSource.h"
+#include "PythonDataSource.h"
 #include "PythonDataTarget.h"
 
 extern "C" PyObject*
@@ -301,8 +301,8 @@ pythonDispatchBind(PyObject* self, PyObject* args)
     }
     else if (typeNameSource.compare("instru.DataSource") == 0)
     {
-//        DataSourceMembers* pyDataSource = reinterpret_cast<DataSourceMembers*>(pySource);
-//        source = pyDataSource->source;
+        DataSourceMembers* pyDataSource = reinterpret_cast<DataSourceMembers*>(pySource);
+        source = pyDataSource->source;
     }
     else
     {

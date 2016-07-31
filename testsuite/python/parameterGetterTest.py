@@ -92,25 +92,29 @@ def myMain():
     targetLogger = DataTarget(loggerInt)
     print "target: " + targetLogger.name + " (" + targetLogger.description + ")"
 
-##    print "Bind the loggers to the param getters"
-##    bind(DataSource(getInt), DataTarget(loggerInt))
-##    bind(DataSource(getFloat), DataTarget(loggerFloat))
-##    bind(DataSource(getStr), DataTarget(loggerStr))
+    print "Test DataSource cast (ParameterGetter)"
+    sourceInt = DataSource(getInt)
+    print "source: " + sourceInt.name + " (" + sourceInt.description + ")"
+
+    print "Bind the loggers to the param getters"
+    bind(DataSource(getInt), DataTarget(loggerInt))
+    bind(DataSource(getFloat), DataTarget(loggerFloat))
+    bind(DataSource(getStr), DataTarget(loggerStr))
 
     print "Trig the getters"
     runModule(trigger)
     waitAll()
 
-##    if (DataSource(getInt).getDataValue() != 666)
-##        raise RuntimeError("wrong param getter int forwarded value")
-##
-##    if (abs(DataSource(getFloat).getDataValue()) > 0.1)
-##        raise RuntimeError("wrong param getter float forwarded value")
-##    
-##    if (DataSource(getStr).getDataValue() != "mojo")
-##        raise RuntimeError("wrong param getter str forwarded value")
-##
-##    print "Returned values OK"
+    if (DataSource(getInt).getDataValue() != 666):
+        raise RuntimeError("wrong param getter int forwarded value")
+
+    if (abs(DataSource(getFloat).getDataValue()) > 0.1):
+        raise RuntimeError("wrong param getter float forwarded value")
+    
+    if (DataSource(getStr).getDataValue() != "mojo"):
+        raise RuntimeError("wrong param getter str forwarded value")
+
+    print "Returned values OK"
 
     print "The data attribute forwarding is not tested here..."
 

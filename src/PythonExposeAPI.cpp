@@ -41,7 +41,7 @@ THE SOFTWARE.
 
 #include "PythonModuleFactory.h"
 #include "PythonModule.h"
-//#include "PythonDataSource.h"
+#include "PythonDataSource.h"
 #include "PythonDataTarget.h"
 #include "PythonTask.h"
 #include "PythonInPort.h"
@@ -130,8 +130,8 @@ void PythonManager::exposeAPI()
     if (PyType_Ready(&PythonTask) < 0)
         return;
 
-//    if (PyType_Ready(&PythonDataSource) < 0)
-//        return;
+    if (PyType_Ready(&PythonDataSource) < 0)
+        return;
 
     if (PyType_Ready(&PythonDataTarget) < 0)
         return;
@@ -180,8 +180,8 @@ void PythonManager::exposeAPI()
     Py_INCREF(&PythonTask);
     PyModule_AddObject(m, "Task", (PyObject *)&PythonTask);
 
-//    Py_INCREF(&PythonDataSource);
-//    PyModule_AddObject(m, "DataSource", (PyObject *)&PythonDataSource);
+    Py_INCREF(&PythonDataSource);
+    PyModule_AddObject(m, "DataSource", (PyObject *)&PythonDataSource);
 
     Py_INCREF(&PythonDataTarget);
     PyModule_AddObject(m, "DataTarget", (PyObject *)&PythonDataTarget);
