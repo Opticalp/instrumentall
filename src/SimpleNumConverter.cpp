@@ -328,7 +328,7 @@ void SimpleNumConverter::convert()
 			switch (getDataSource()->dataType()) // input ?
 			{
 			case (typeInt32 ):
-				*getData<Poco::UInt32>() = getUInt32<Poco::Int32>(*getDataSource()->getData<Poco::UInt32>());
+				*getData<Poco::UInt32>() = getUInt32<Poco::Int32>(*getDataSource()->getData<Poco::Int32>());
 				break;
 			case (typeUInt32):
 				*getData<Poco::UInt32>() = getUInt32<Poco::UInt32>(*getDataSource()->getData<Poco::UInt32>());
@@ -354,7 +354,7 @@ void SimpleNumConverter::convert()
 			switch (getDataSource()->dataType()) // input ?
 			{
 			case (typeInt32 ):
-				*getData<Poco::Int64>() = getInt64<Poco::Int32>(*getDataSource()->getData<Poco::Int64>());
+				*getData<Poco::Int64>() = getInt64<Poco::Int32>(*getDataSource()->getData<Poco::Int32>());
 				break;
 			case (typeUInt32):
 				*getData<Poco::Int64>() = getInt64<Poco::UInt32>(*getDataSource()->getData<Poco::UInt32>());
@@ -380,7 +380,7 @@ void SimpleNumConverter::convert()
 			switch (getDataSource()->dataType()) // input ?
 			{
 			case (typeInt32 ):
-				*getData<Poco::UInt64>() = getUInt64<Poco::Int32>(*getDataSource()->getData<Poco::UInt64>());
+				*getData<Poco::UInt64>() = getUInt64<Poco::Int32>(*getDataSource()->getData<Poco::Int32>());
 				break;
 			case (typeUInt32):
 				*getData<Poco::UInt64>() = getUInt64<Poco::UInt32>(*getDataSource()->getData<Poco::UInt32>());
@@ -406,7 +406,7 @@ void SimpleNumConverter::convert()
 			switch (getDataSource()->dataType()) // input ?
 			{
 			case (typeInt32 ):
-				*getData<float>() = getFloat<Poco::Int32>(*getDataSource()->getData<float>());
+				*getData<float>() = getFloat<Poco::Int32>(*getDataSource()->getData<Poco::Int32>());
 				break;
 			case (typeUInt32):
 				*getData<float>() = getFloat<Poco::UInt32>(*getDataSource()->getData<Poco::UInt32>());
@@ -432,7 +432,7 @@ void SimpleNumConverter::convert()
 			switch (getDataSource()->dataType()) // input ?
 			{
 			case (typeInt32 ):
-				*getData<double>() = getDblFloat<Poco::Int32>(*getDataSource()->getData<double>());
+				*getData<double>() = getDblFloat<Poco::Int32>(*getDataSource()->getData<Poco::Int32>());
 				break;
 			case (typeUInt32):
 				*getData<double>() = getDblFloat<Poco::UInt32>(*getDataSource()->getData<Poco::UInt32>());
