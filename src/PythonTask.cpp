@@ -208,6 +208,9 @@ PyObject* pyTaskState(TaskMembers* self)
         case MergeableTask::TASK_RUNNING:
         	switch ((*self->task)->getRunningState())
         	{
+        	case ModuleTask::applyingParameters:
+        		state = "retrieving and applying parameters";
+        		break;
         	case ModuleTask::retrievingInDataLocks:
         		state = "retrieving input locks";
         		break;

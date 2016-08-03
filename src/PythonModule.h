@@ -222,6 +222,19 @@ static PyMethodDef pyMethodModBuildParamGetter =
 };
 
 /// Module::buildParameterSetter python wrapper
+extern "C"
+PyObject* pyModBuildParamSetter(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModBuildParamSetter =
+{
+    "buildParameterSetter",
+    (PyCFunction)pyModBuildParamSetter,
+    METH_VARARGS,
+    "buildParameterSetter(paramName): "
+    "build a parameter setter for the given parameter"
+};
+
+/// Module::buildParameterSetter python wrapper
 //extern "C"
 //PyObject* pyModBuildParamSetter(ModMembers *self, PyObject *args);
 //
@@ -251,7 +264,7 @@ static PyMethodDef pyModMethods[] = {
 	pyMethodModGetVerbosity,
 
 	pyMethodModBuildParamGetter,
-//	pyMethodModBuildParamSetter,
+	pyMethodModBuildParamSetter,
 
 	{NULL} // sentinel
 };

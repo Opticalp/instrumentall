@@ -51,7 +51,7 @@ THE SOFTWARE.
 #include "PythonDataHolder.h"
 #include "PythonDataProxy.h"
 #include "PythonParameterGetter.h"
-//#include "PythonParameterSetter.h"
+#include "PythonParameterSetter.h"
 
 /**
  * array to bind to-be-exposed methods (C to Python wrappers)
@@ -157,8 +157,8 @@ void PythonManager::exposeAPI()
     if (PyType_Ready(&PythonParameterGetter) < 0)
         return;
 
-//    if (PyType_Ready(&PythonParameterSetter) < 0)
-//        return;
+    if (PyType_Ready(&PythonParameterSetter) < 0)
+        return;
 
     PyObject* m;
 
@@ -207,8 +207,8 @@ void PythonManager::exposeAPI()
     Py_INCREF(&PythonParameterGetter);
     PyModule_AddObject(m, "ParameterGetter", (PyObject *)&PythonParameterGetter);
 
-//    Py_INCREF(&PythonParameterSetter);
-//    PyModule_AddObject(m, "ParameterSetter", (PyObject *)&PythonParameterSetter);
+    Py_INCREF(&PythonParameterSetter);
+    PyModule_AddObject(m, "ParameterSetter", (PyObject *)&PythonParameterSetter);
 }
 
 

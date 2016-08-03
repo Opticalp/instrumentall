@@ -591,7 +591,7 @@ PyObject* pyModBuildParamGetter(ModMembers* self, PyObject* args)
 {
 	char* charParamName;
 
-    if (!PyArg_ParseTuple(args, "s:setVerbosity", &charParamName))
+    if (!PyArg_ParseTuple(args, "s:buildParameterGetter", &charParamName))
         return NULL;
 
     std::string paramName(charParamName);
@@ -615,6 +615,38 @@ PyObject* pyModBuildParamGetter(ModMembers* self, PyObject* args)
     *(pyGetter->getter) = getter;
 
     return reinterpret_cast<PyObject*>(pyGetter);
+}
+
+#include "PythonParameterSetter.h"
+
+PyObject* pyModBuildParamSetter(ModMembers* self, PyObject* args)
+{
+	char* charParamName;
+
+    if (!PyArg_ParseTuple(args, "s:buildParameterSetter", &charParamName))
+        return NULL;
+
+    std::string paramName(charParamName);
+
+    Poco::AutoPtr<ParameterSetter> setter =
+    		(**self->module)->buildParameterSetter(paramName);
+
+    // prepare OutPort python type
+    if (PyType_Ready(&PythonParameterSetter) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the ParameterSetter Type");
+        return NULL;
+    }
+
+    // create the python object
+    ParameterSetterMembers* pySetter =
+        (ParameterSetterMembers*)(pyParameterSetterNew((PyTypeObject*)&PythonParameterSetter, NULL, NULL) );
+
+    // set InPort reference
+    *(pySetter->setter) = setter;
+
+    return reinterpret_cast<PyObject*>(pySetter);
 }
 
 #endif /* HAVE_PYTHON27 */

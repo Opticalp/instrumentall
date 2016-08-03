@@ -68,6 +68,7 @@ extern "C" PyObject* pyDataTargetNew(PyTypeObject* type, PyObject* args, PyObjec
 }
 
 #include "PythonParameterGetter.h"
+#include "PythonParameterSetter.h"
 #include "PythonDataProxy.h"
 #include "PythonDataLogger.h"
 
@@ -90,68 +91,46 @@ extern "C" int pyDataTargetInit(DataTargetMembers* self, PyObject *args, PyObjec
         DataLoggerMembers* pyLogger = reinterpret_cast<DataLoggerMembers*>(pyArg);
 
         self->target = const_cast<DataLogger*>(pyLogger->logger->get());
-
-        PyObject* tmp;
-
-        // retrieve name
-        tmp = self->name;
-        self->name = PyString_FromString(self->target->name().c_str());
-        Py_XDECREF(tmp);
-
-        // retrieve description
-        tmp = self->description;
-        self->description = PyString_FromString(self->target->description().c_str());
-        Py_XDECREF(tmp);
-
-    	return 0;
     }
-
-    if (typeName.compare("instru.DataProxy") == 0)
+    else if (typeName.compare("instru.DataProxy") == 0)
     {
         DataProxyMembers* pyProxy = reinterpret_cast<DataProxyMembers*>(pyArg);
 
         self->target = const_cast<DataProxy*>(pyProxy->proxy->get());
-
-        PyObject* tmp;
-
-        // retrieve name
-        tmp = self->name;
-        self->name = PyString_FromString(self->target->name().c_str());
-        Py_XDECREF(tmp);
-
-        // retrieve description
-        tmp = self->description;
-        self->description = PyString_FromString(self->target->description().c_str());
-        Py_XDECREF(tmp);
-
-    	return 0;
     }
-
-    if (typeName.compare("instru.ParameterGetter") == 0)
+    else if (typeName.compare("instru.ParameterGetter") == 0)
     {
         ParameterGetterMembers* pyGetter = reinterpret_cast<ParameterGetterMembers*>(pyArg);
 
         self->target = const_cast<ParameterGetter*>(pyGetter->getter->get());
+    }
+    else if (typeName.compare("instru.ParameterSetter") == 0)
+    {
+        ParameterSetterMembers* pySetter = reinterpret_cast<ParameterSetterMembers*>(pyArg);
 
-        PyObject* tmp;
-
-        // retrieve name
-        tmp = self->name;
-        self->name = PyString_FromString(self->target->name().c_str());
-        Py_XDECREF(tmp);
-
-        // retrieve description
-        tmp = self->description;
-        self->description = PyString_FromString(self->target->description().c_str());
-        Py_XDECREF(tmp);
-
-    	return 0;
+        self->target = const_cast<ParameterSetter*>(pySetter->setter->get());
+    }
+    else
+    {
+		PyErr_SetString(PyExc_TypeError,
+				"The cast can only be done from a ParameterGetter, "
+				"DataLogger or DataProxy");
+		return -1;
     }
 
-	PyErr_SetString(PyExc_TypeError,
-			"The cast can only be done from a ParameterGetter, "
-			"DataLogger or DataProxy");
-	return -1;
+    PyObject* tmp;
+
+    // retrieve name
+    tmp = self->name;
+    self->name = PyString_FromString(self->target->name().c_str());
+    Py_XDECREF(tmp);
+
+    // retrieve description
+    tmp = self->description;
+    self->description = PyString_FromString(self->target->description().c_str());
+    Py_XDECREF(tmp);
+
+	return 0;
 }
 
 
