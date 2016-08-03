@@ -76,11 +76,8 @@ extern "C" int pyDataTargetInit(DataTargetMembers* self, PyObject *args, PyObjec
 {
     PyObject* pyArg;
 
-    char* charClassName;
     if (!PyArg_ParseTuple(args, "O", &pyArg))
-    {
         return -1;
-    }
 
     // check the type of the object.
     // the comparison uses type name (str)

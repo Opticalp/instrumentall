@@ -487,8 +487,8 @@ PyObject* pyModGetParameterValue(ModMembers *self, PyObject *args)
         {
         case ParamItem::typeInteger:
         {
-            long value =
-                    (**self->module)->getParameterValue<Poco::Int64>(paramName);
+            long value = static_cast<long>(
+                    (**self->module)->getParameterValue<Poco::Int64>(paramName) );
             return PyLong_FromLong(value);
         }
         case ParamItem::typeFloat:

@@ -52,6 +52,7 @@ int ParameterWorker::paramDataType(ParameterizedEntity* parameterized,
 		default:
 			poco_bugcheck_msg("ParameterGetter::paramDataType, "
 					"unknown parameter type");
+			throw Poco::BugcheckException();
 		}
 	}
 	catch (std::out_of_range&)

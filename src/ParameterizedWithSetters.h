@@ -31,6 +31,8 @@
 
 #include "ParameterSetter.h"
 
+#include "Poco/AutoPtr.h"
+
 #include <set>
 
 class ParameterizedEntity;

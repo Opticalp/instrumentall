@@ -103,11 +103,11 @@ private:
 
     Poco::RWLock dataLock; ///< general lock for any data of this module
 
-    long getIntParameterValue(size_t paramIndex);
+    Poco::Int64 getIntParameterValue(size_t paramIndex);
     double getFloatParameterValue(size_t paramIndex);
     std::string getStrParameterValue(size_t paramIndex);
 
-    void setIntParameterValue(size_t paramIndex, long value);
+    void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
     void setFloatParameterValue(size_t paramIndex, double value);
     void setStrParameterValue(size_t paramIndex, std::string value);
 

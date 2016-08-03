@@ -331,7 +331,7 @@ void DataGen::sendData()
 	poco_information(logger(),"DataGen: data sent");
 }
 
-long DataGen::getIntParameterValue(size_t paramIndex)
+Poco::Int64 DataGen::getIntParameterValue(size_t paramIndex)
 {
     long ret;
 	dataLock.readLock();
@@ -375,7 +375,7 @@ std::string DataGen::getStrParameterValue(size_t paramIndex)
 	return tmp;
 }
 
-void DataGen::setIntParameterValue(size_t paramIndex, long value)
+void DataGen::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
 {
 	dataLock.writeLock();
 

@@ -153,5 +153,5 @@ bool DataSource::tryWriteDataLock()
 bool DataSource::tryCatchRead(DataTarget* target)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
-	return pendingDataTargets.erase(target);
+	return (pendingDataTargets.erase(target) != 0);
 }

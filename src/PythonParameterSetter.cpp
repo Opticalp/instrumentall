@@ -56,11 +56,8 @@ extern "C" int pyParameterSetterInit(ParameterSetterMembers* self, PyObject *arg
 {
     PyObject* tmp=NULL;
 
-    char* charClassName;
     if (!PyArg_ParseTuple(args, ""))
-    {
         return -1;
-    }
 
 	PyErr_SetString(PyExc_NotImplementedError,
 			"Initializer not implemented. "
