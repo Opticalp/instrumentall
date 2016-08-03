@@ -49,12 +49,8 @@ ParameterGetter::ParameterGetter(ParameterizedEntity* parameterized,
 std::string ParameterGetter::description()
 {
 	if (getParent())
-	{
-		ParameterSet tmp;
-		getParent()->getParameterSet(&tmp);
-		return "Get the parameter: " + tmp.at(getParameterIndex()).name
+		return "Get the parameter: " + getParameterName()
 				+ " from " + getParent()->name();
-	}
 	else
 		return "Expired parameter getter. You should consider deleting it. ";
 }

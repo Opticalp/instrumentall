@@ -179,7 +179,8 @@ void Module::run(ModuleTask* pTask)
 
 	try
 	{
-		applyParameters();
+		setRunningState(ModuleTask::applyingParameters);
+		waitParameters();
 
 		setRunningState(ModuleTask::retrievingInDataLocks);
 		int startCond = startCondition();
@@ -191,11 +192,13 @@ void Module::run(ModuleTask* pTask)
 	}
 	catch (...)
 	{
+		parametersTreated();
 		releaseAllInPorts();
 		releaseAllOutPorts();
 		throw;
 	}
 
+	parametersTreated();
 	releaseAllInPorts();
 	releaseAllOutPorts();
 }
@@ -459,4 +462,16 @@ Poco::AutoPtr<ModuleTask> Module::runModule()
     enqueueTask(taskPtr);
 
     return taskPtr;
+}
+
+void Module::waitParameters()
+{
+	while (!tryAllParametersSet())
+	{
+		if (yield())
+			throw Poco::RuntimeException(name(),
+					"Apply parameters: Cancelation upon user request");
+	}
+
+	applyParameters();
 }

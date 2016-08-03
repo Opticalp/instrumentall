@@ -28,14 +28,18 @@
 
 #include "ParameterSetter.h"
 #include "ParameterizedEntity.h"
+#include "ParameterizedWithSetters.h"
 
 #include "Poco/NumberFormatter.h"
 
 size_t ParameterSetter::refCount = 0;
 
 ParameterSetter::ParameterSetter(ParameterizedEntity* parameterized,
-		size_t paramIndex, bool immediate):
+		size_t paramIndex,
+		ParameterizedWithSetters* handler,
+		bool immediate):
 			ParameterWorker(parameterized, paramIndex),
+			settersHandler(handler),
 			mName(getParent()->name() + "ParameterSetter"),
 			immediateApply(immediate)
 {
@@ -48,12 +52,8 @@ ParameterSetter::ParameterSetter(ParameterizedEntity* parameterized,
 std::string ParameterSetter::description()
 {
 	if (getParent())
-	{
-		ParameterSet tmp;
-		getParent()->getParameterSet(&tmp);
-		return "Set the parameter: " + tmp.at(getParameterIndex()).name
+		return "Set the parameter: " + getParameterName()
 				+ " of " + getParent()->name();
-	}
 	else
 		return "Expired parameter setter. You should consider deleting it. ";
 }
@@ -76,6 +76,16 @@ void ParameterSetter::runTarget()
 		releaseInputData();
 		throw Poco::InvalidAccessException("ParameterSetter",
 				"The parent is no more valid");
+	}
+
+	while (!settersHandler->trySetParameter(getParameterIndex()))
+	{
+		if (yield())
+		{
+			releaseInputData();
+			throw Poco::RuntimeException("ParameterSetter::runTarget",
+					"Task cancellation upon user request");
+		}
 	}
 
 	try

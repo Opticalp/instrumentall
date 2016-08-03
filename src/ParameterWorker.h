@@ -29,6 +29,8 @@
 #ifndef SRC_PARAMETERWORKER_H_
 #define SRC_PARAMETERWORKER_H_
 
+#include "Poco/Thread.h"
+
 #include <string>
 
 class ParameterizedEntity;
@@ -77,6 +79,8 @@ protected:
 	 * @return TypeNeutralData::DataTypeEnum of the given parameter
 	 */
 	static int paramDataType(ParameterizedEntity* parameterized, size_t paramIndex);
+
+	bool yield() { Poco::Thread::yield(); return false; }
 
 private:
 	ParameterWorker();

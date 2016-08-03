@@ -34,7 +34,6 @@
 #include "ParameterWorker.h"
 
 #include "Poco/RefCountedObject.h"
-#include "Poco/Thread.h"
 
 class ParameterizedEntity;
 
@@ -72,8 +71,6 @@ private:
 
     std::set<int> supportedInputDataType()
 		{ return std::set<int>(); }
-
-	bool yield() { Poco::Thread::yield(); return false; }
 
 	std::string mName;
 

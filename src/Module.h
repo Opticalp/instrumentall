@@ -32,6 +32,7 @@
 #include "VerboseEntity.h"
 #include "ParameterizedEntity.h"
 #include "ParameterizedWithGetters.h"
+#include "ParameterizedWithSetters.h"
 #include "InPortUser.h"
 #include "OutPortUser.h"
 #include "ModuleTask.h"
@@ -65,6 +66,7 @@ class ModuleFactory;
 class Module: public VerboseEntity,
 	public ParameterizedEntity,
 	public ParameterizedWithGetters,
+	public ParameterizedWithSetters,
 	public InPortUser, public OutPortUser
 {
 public:
@@ -89,6 +91,18 @@ public:
 	      mParent(parent),
 		  ParameterizedEntity("module." + name),
 		  ParameterizedWithGetters(this),
+		  ParameterizedWithSetters(this),
+		  procMode(fullBufferedProcessing),
+		  startSyncPending(false),
+		  reseting (false)
+	{
+	}
+
+	Module(ModuleFactory* parent, std::string name, bool applyParametersFromSettersWhenAllSet):
+	      mParent(parent),
+		  ParameterizedEntity("module." + name),
+		  ParameterizedWithGetters(this),
+		  ParameterizedWithSetters(this, applyParametersFromSettersWhenAllSet),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false)
@@ -458,6 +472,8 @@ private:
 	 * taskMngtMutex should be locked prior to calling this method
 	 */
 	bool taskIsRunning();
+
+	void waitParameters();
 
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
 	std::set<ModuleTask*> allTasks;

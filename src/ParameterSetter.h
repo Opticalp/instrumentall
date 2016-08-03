@@ -36,6 +36,7 @@
 #include "Poco/Thread.h"
 
 class ParameterizedEntity;
+class ParameterizedWithSetters;
 
 /**
  * ParameterSetter
@@ -50,7 +51,8 @@ class ParameterSetter:
 public:
 	ParameterSetter(ParameterizedEntity* parameterized,
 			size_t paramIndex,
-			bool immediate = false);
+			ParameterizedWithSetters* handler,
+			bool immediate);
 	virtual ~ParameterSetter() { }
 
 	std::string name() { return mName; }
@@ -73,6 +75,8 @@ private:
 
 	std::string mName;
 	bool immediateApply; ///< flag to apply the set parameter immediately
+
+	ParameterizedWithSetters* settersHandler;
 
 	void incUser() { duplicate(); }
 	void decUser() { release();   }
