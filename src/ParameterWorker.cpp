@@ -69,7 +69,7 @@ ParameterWorker::ParameterWorker(ParameterizedEntity* parameterized,
 {
 }
 
-std::string ParameterWorker::getParameterName()
+std::string ParameterWorker::getParameterName() const
 {
 	if (parent)
 	{

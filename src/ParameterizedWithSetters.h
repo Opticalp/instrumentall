@@ -64,6 +64,9 @@ public:
 
 	/**
 	 * Create a ParameterSetter and takes ownership of it
+	 *
+	 * Invalidate a previous ParameterSetter that can have had
+	 * the same target parameter
 	 */
 	Poco::AutoPtr<ParameterSetter> buildParameterSetter(size_t paramIndex, bool immediateApply = false);
 

@@ -53,21 +53,21 @@ public:
 	void invalidate()
 		{ parent = NULL; }
 
-	ParameterizedEntity* getParent()
+	ParameterizedEntity* getParent() const
 		{ return parent; }
 
 	/**
 	 * Retrieve the name of the pointed parameter
 	 */
-	std::string getParameterName();
+	std::string getParameterName() const;
 
-	size_t getParameterIndex()
+	size_t getParameterIndex() const
 		{ return mParamIndex; }
 
 	/**
 	 * Retrieve the data type of the pointed parameter
 	 */
-	int getParameterDataType()
+	int getParameterDataType() const
 		{ return mDatatype; }
 
 protected:

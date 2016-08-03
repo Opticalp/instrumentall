@@ -44,6 +44,13 @@ ParameterizedWithSetters::~ParameterizedWithSetters()
 AutoPtr<ParameterSetter> ParameterizedWithSetters::buildParameterSetter(
 		size_t paramIndex, bool immediateApply)
 {
+	for (std::set< Poco::AutoPtr<ParameterSetter> >::iterator it = setters.begin(),
+			ite = setters.end(); it != ite; it++)
+	{
+		if (it->get()->getParameterIndex() == paramIndex)
+			const_cast<ParameterSetter*>(it->get())->invalidate();
+	}
+
 	AutoPtr<ParameterSetter> ptr(new ParameterSetter(self, paramIndex, this, immediateApply));
 	setters.insert(ptr);
 	return ptr;
