@@ -113,22 +113,29 @@ std::string ParameterizedEntity::getParameterValue<std::string>(size_t paramInde
     }
 }
 
-template <> inline
-void ParameterizedEntity::setParameterValue<Poco::Int64>(std::string paramName, Poco::Int64 value, bool immediateApply)
+
+template <typename T> inline
+void ParameterizedEntity::setParameterValue(std::string paramName, T value, bool immediateApply)
 {
     size_t paramIndex = getParameterIndex(paramName);
+    setParameterValue<T>(paramIndex, value, immediateApply);
+}
 
+
+template <> inline
+void ParameterizedEntity::setParameterValue<Poco::Int64>(size_t paramIndex, Poco::Int64 value, bool immediateApply)
+{
     switch (paramSet[paramIndex].datatype)
     {
     case ParamItem::typeInteger:
         break;
     case ParamItem::typeFloat:
         throw Poco::DataFormatException("setParameterValue",
-                "The parameter " + paramName + " has float type. "
+                "The parameter " + paramSet[paramIndex].name + " has float type. "
                 "Integer was given. ");
     case ParamItem::typeString:
         throw Poco::DataFormatException("setParameterValue",
-                "The parameter " + paramName + " has string type. "
+                "The parameter " + paramSet[paramIndex].name + " has string type. "
                 "Integer was given. ");
     default:
         poco_bugcheck_msg("unrecognized parameter type");
@@ -144,21 +151,19 @@ void ParameterizedEntity::setParameterValue<Poco::Int64>(std::string paramName, 
 }
 
 template <> inline
-void ParameterizedEntity::setParameterValue<double>(std::string paramName, double value, bool immediateApply)
+void ParameterizedEntity::setParameterValue<double>(size_t paramIndex, double value, bool immediateApply)
 {
-    size_t paramIndex = getParameterIndex(paramName);
-
     switch (paramSet[paramIndex].datatype)
     {
     case ParamItem::typeInteger:
         throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramName + " has integer type. "
+                "The parameter " + paramSet[paramIndex].name + " has integer type. "
                 "Float was given. ");
     case ParamItem::typeFloat:
         break;
     case ParamItem::typeString:
         throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramName + " has string type. "
+                "The parameter " + paramSet[paramIndex].name + " has string type. "
                 "Float was given. ");
     default:
         poco_bugcheck_msg("unrecognized parameter type");
@@ -175,19 +180,17 @@ void ParameterizedEntity::setParameterValue<double>(std::string paramName, doubl
 
 /// ParameterizedEntity::getParameter specialization for string parameters
 template <> inline
-void ParameterizedEntity::setParameterValue<std::string>(std::string paramName, std::string value, bool immediateApply)
+void ParameterizedEntity::setParameterValue<std::string>(size_t paramIndex, std::string value, bool immediateApply)
 {
-    size_t paramIndex = getParameterIndex(paramName);
-
     switch (paramSet[paramIndex].datatype)
     {
     case ParamItem::typeInteger:
         throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramName + " has integer type. "
+                "The parameter " + paramSet[paramIndex].name + " has integer type. "
                 "String was given. ");
     case ParamItem::typeFloat:
         throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramName + " has float type. "
+                "The parameter " + paramSet[paramIndex].name + " has float type. "
                 "String was given. ");
     case ParamItem::typeString:
         break;
@@ -217,12 +220,11 @@ T ParameterizedEntity::getParameterValue(size_t paramIndex)
 }
 
 template <typename T> inline
-void ParameterizedEntity::setParameterValue(std::string paramName, T value, bool immediateApply)
+void ParameterizedEntity::setParameterValue(size_t paramIndex, T value, bool immediateApply)
 {
     // report a bug to the developer
     poco_bugcheck_msg("ParameterizedEntity::setParameterValue<T>(): Wrong type T. ");
     throw Poco::BugcheckException();
 }
-
 
 

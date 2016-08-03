@@ -1,6 +1,6 @@
 /**
- * @file	src/ParameterGetter.h
- * @date	Jul. 2016
+ * @file	src/ParameterSetter.h
+ * @date	Aug. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,10 +26,9 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_PARAMETERGETTER_H_
-#define SRC_PARAMETERGETTER_H_
+#ifndef SRC_PARAMETERSETTER_H_
+#define SRC_PARAMETERSETTER_H_
 
-#include "DataSource.h"
 #include "DataTarget.h"
 #include "ParameterWorker.h"
 
@@ -39,26 +38,26 @@
 class ParameterizedEntity;
 
 /**
- * ParameterGetter
+ * ParameterSetter
  *
- * Emit data retrieved via getParameterValue when trigged by the
- * input.
+ * Set data with setParameterValue
  */
-class ParameterGetter:
+class ParameterSetter:
 		public ParameterWorker,
-		public DataSource,
 		public DataTarget,
 		public Poco::RefCountedObject
 {
 public:
-	ParameterGetter(ParameterizedEntity* parameterized, size_t paramIndex);
-	virtual ~ParameterGetter() { }
+	ParameterSetter(ParameterizedEntity* parameterized,
+			size_t paramIndex,
+			bool immediate = false);
+	virtual ~ParameterSetter() { }
 
 	std::string name() { return mName; }
 	std::string description();
 
 private:
-	ParameterGetter();
+	ParameterSetter();
 
 	static size_t refCount;
 
@@ -68,18 +67,16 @@ private:
 	void runTarget();
 
 	bool isSupportedInputDataType(int datatype)
-		{ return true; }
+		{ return (datatype == getParameterDataType()); }
 
-    std::set<int> supportedInputDataType()
-		{ return std::set<int>(); }
-
-	bool yield() { Poco::Thread::yield(); return false; }
+    std::set<int> supportedInputDataType();
 
 	std::string mName;
+	bool immediateApply; ///< flag to apply the set parameter immediately
 
 	void incUser() { duplicate(); }
 	void decUser() { release();   }
 	size_t userCnt() { return referenceCount(); }
 };
 
-#endif /* SRC_PARAMETERGETTER_H_ */
+#endif /* SRC_PARAMETERSETTER_H_ */

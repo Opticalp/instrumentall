@@ -129,6 +129,7 @@ public:
      * @throw Poco::DataFormatException if the parameter format does not fit
      */
     template<typename T> void setParameterValue(std::string paramName, T value, bool immediateApply = false);
+    template<typename T> void setParameterValue(size_t paramIndex, T value, bool immediateApply = false);
 
     /**
      * Apply the parameters

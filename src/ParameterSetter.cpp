@@ -1,6 +1,6 @@
 /**
- * @file	src/ParameterGetter.cpp
- * @date	Jul. 2016
+ * @file	src/ParameterSetter.cpp
+ * @date	Aug. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,19 +26,18 @@
  THE SOFTWARE.
  */
 
-#include "ParameterGetter.h"
+#include "ParameterSetter.h"
 #include "ParameterizedEntity.h"
 
 #include "Poco/NumberFormatter.h"
 
-size_t ParameterGetter::refCount = 0;
+size_t ParameterSetter::refCount = 0;
 
-ParameterGetter::ParameterGetter(ParameterizedEntity* parameterized,
-		size_t paramIndex):
-				ParameterWorker(parameterized, paramIndex),
-//				DataSource(paramDataType(parameterized, paramIndex)),
-				DataSource(getParameterDataType()),
-				mName(getParent()->name() + "ParameterGetter")
+ParameterSetter::ParameterSetter(ParameterizedEntity* parameterized,
+		size_t paramIndex, bool immediate):
+			ParameterWorker(parameterized, paramIndex),
+			mName(getParent()->name() + "ParameterSetter"),
+			immediateApply(immediate)
 {
 	if (refCount)
 		mName += Poco::NumberFormatter::format(refCount);
@@ -46,66 +45,68 @@ ParameterGetter::ParameterGetter(ParameterizedEntity* parameterized,
 	refCount++;
 }
 
-std::string ParameterGetter::description()
+std::string ParameterSetter::description()
 {
 	if (getParent())
 	{
 		ParameterSet tmp;
 		getParent()->getParameterSet(&tmp);
-		return "Get the parameter: " + tmp.at(getParameterIndex()).name
-				+ " from " + getParent()->name();
+		return "Set the parameter: " + tmp.at(getParameterIndex()).name
+				+ " of " + getParent()->name();
 	}
 	else
-		return "Expired parameter getter. You should consider deleting it. ";
+		return "Expired parameter setter. You should consider deleting it. ";
 }
 
-void ParameterGetter::runTarget()
+std::set<int> ParameterSetter::supportedInputDataType()
+{
+	std::set<int> ret;
+	ret.insert(getParameterDataType());
+	return ret;
+}
+
+void ParameterSetter::runTarget()
 {
 	if (!tryCatchSource())
-		poco_bugcheck_msg("ParameterGetter::runTarget, "
+		poco_bugcheck_msg("ParameterSetter::runTarget, "
 				"not able to catch the source");
 
 	if (getParent() == NULL)
 	{
 		releaseInputData();
-		throw Poco::InvalidAccessException("ParameterGetter",
+		throw Poco::InvalidAccessException("ParameterSetter",
 				"The parent is no more valid");
-	}
-
-	DataAttribute attr;
-	readInputDataAttribute(&attr);
-	releaseInputData();
-
-	while (!tryWriteDataLock())
-	{
-		if (yield())
-			throw Poco::RuntimeException("ParameterGetter::runTarget",
-					"Task cancellation upon user request");
 	}
 
 	try
 	{
-		switch (dataType())
+		switch (getParameterDataType())
 		{
 		case TypeNeutralData::typeInt64:
-			*getData<Poco::Int64>() = getParent()->getParameterValue<Poco::Int64>(getParameterIndex());
+			getParent()->setParameterValue<Poco::Int64>(getParameterIndex(),
+					*getDataSource()->getData<Poco::Int64>(),
+					immediateApply);
 			break;
 		case TypeNeutralData::typeDblFloat:
-			*getData<double>() = getParent()->getParameterValue<double>(getParameterIndex());
+			getParent()->setParameterValue<double>(getParameterIndex(),
+					*getDataSource()->getData<double>(),
+					immediateApply);
 			break;
 		case TypeNeutralData::typeString:
-			*getData<std::string>() = getParent()->getParameterValue<std::string>(getParameterIndex());
+			getParent()->setParameterValue<std::string>(getParameterIndex(),
+					*getDataSource()->getData<std::string>(),
+					immediateApply);
 			break;
 		default:
-			poco_bugcheck_msg("ParameterGetter::runTarget, "
+			poco_bugcheck_msg("ParameterSetter::runTarget, "
 					"unknown parameter type");
 		}
 	}
 	catch (...)
 	{
-		releaseWriteOnFailure();
+		releaseInputData();
 		throw;
 	}
 
-	notifyReady(attr);
+	releaseInputData();
 }
