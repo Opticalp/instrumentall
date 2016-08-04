@@ -276,7 +276,7 @@ PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
 /**
  * Construct a python list from a vector
  */
-PyObject* getVectorValue(DataSource* data)
+PyObject* port_getVectorValue(DataSource* data)
 {
     // construct pyList
     PyObject* list = PyList_New(0);
@@ -442,7 +442,7 @@ PyObject* pyOutPortGetDataValue(OutPortMembers* self)
     int dataType = (**self->outPort)->dataType();
 
     if (DataItem::isVector(dataType))
-        return getVectorValue(**self->outPort);
+        return port_getVectorValue(**self->outPort);
 
     // python object to return
     PyObject* pyObj;

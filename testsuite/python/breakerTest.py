@@ -58,7 +58,7 @@ def myMain():
     print "got: " + mod2.outPort(outPortA.name).name + ". "
 
     print "Bind mod1 input A to mod2 output A"
-    bind(inPortA, outPortA)
+    bind(outPortA, inPortA)
     
     for port in inPorts:
         print ( " - module " + port.parent().name +  
@@ -85,7 +85,7 @@ def myMain():
                 target.parent().name )
        
     print "Bind mod1 input B to mod2 output A"
-    bind(inPortB, outPortA)
+    bind(outPortA, inPortB)
 
     print "Create a breaker to suspend a binding"
     breaker = Breaker()

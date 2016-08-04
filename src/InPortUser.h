@@ -29,8 +29,7 @@
 #ifndef SRC_INPORTUSER_H_
 #define SRC_INPORTUSER_H_
 
-#include "VerboseEntity.h"
-
+#include "Poco/Logger.h"
 #include "Poco/ThreadLocal.h"
 #include "Poco/Thread.h"
 #include "Poco/Mutex.h"
@@ -54,7 +53,7 @@ class DataAttributeIn;
  * can be overloaded), that manages the possible module task starting
  * conditions.
  */
-class InPortUser: public virtual VerboseEntity
+class InPortUser
 {
 public:
 	InPortUser() { }
@@ -229,6 +228,8 @@ protected:
 	 * Implemented in Module by forwarding the request to the running task.
 	 */
 	virtual InPort* triggingPort() = 0;
+
+    virtual Poco::Logger& logger() = 0;
 
 private:
 	bool tryLockIn() { return inMutex.tryLock(); }

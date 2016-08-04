@@ -1,11 +1,11 @@
 /**
- * @file	src/PythonRedirection.cpp
- * @date	nov. 2015
+ * @file	src/ParameterizedWithGetters.cpp
+ * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2015 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,34 +26,31 @@
  THE SOFTWARE.
  */
 
-#ifdef HAVE_PYTHON27
+#include "ParameterizedWithGetters.h"
 
-#include "PythonManager.h"
-#include "PythonRedirection.h"
+#include "ParameterizedEntity.h"
 
-/// Pointer to the function that export the Python standard error
-static forwardingFctPtr stderrFunc = NULL ;
+using Poco::AutoPtr;
 
-
-void setPyStderrForwarder(forwardingFctPtr forwarder)
+ParameterizedWithGetters::~ParameterizedWithGetters()
 {
-    stderrFunc = forwarder;
+	while (getters.size())
+	{
+		const_cast<ParameterGetter*>(getters.begin()->get())->invalidate();
+		getters.erase(getters.begin());
+	}
 }
 
-extern "C" PyObject* stderr_write(PyObject *self, PyObject *args)
+AutoPtr<ParameterGetter> ParameterizedWithGetters::buildParameterGetter(
+		size_t paramIndex)
 {
-    const char *what;
-    if (!PyArg_ParseTuple(args, "s", &what))
-        return NULL;
-
-    if (stderrFunc)
-        (*stderrFunc)(what);
-    else // default error handler
-        Poco::Util::Application::instance()
-            .getSubsystem<PythonManager>()
-            .errorMessage("[Py stderr] " + std::string(what));
-
-    Py_RETURN_NONE;
+	AutoPtr<ParameterGetter> ptr(new ParameterGetter(self, paramIndex));
+	getters.insert(ptr);
+	return ptr;
 }
 
-#endif /* HAVE_PYTHON27 */
+Poco::AutoPtr<ParameterGetter> ParameterizedWithGetters::buildParameterGetter(
+		std::string paramName)
+{
+	return buildParameterGetter(self->getParameterIndex(paramName));
+}

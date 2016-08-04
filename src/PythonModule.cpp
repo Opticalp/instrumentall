@@ -487,8 +487,8 @@ PyObject* pyModGetParameterValue(ModMembers *self, PyObject *args)
         {
         case ParamItem::typeInteger:
         {
-            long value =
-                    (**self->module)->getParameterValue<long>(paramName);
+            long value = static_cast<long>(
+                    (**self->module)->getParameterValue<Poco::Int64>(paramName) );
             return PyLong_FromLong(value);
         }
         case ParamItem::typeFloat:
@@ -534,21 +534,21 @@ PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args)
         {
             long value = PyLong_AsLong(pyValue);
             if (PyErr_Occurred()) { return NULL; }
-            (**self->module)->setParameterValue<long>(paramName, value);
+            (**self->module)->setParameterValue<Poco::Int64>(paramName, value, true);
             break;
         }
         case ParamItem::typeFloat:
         {
             double value = PyFloat_AsDouble(pyValue);
             if (PyErr_Occurred()) { return NULL; }
-            (**self->module)->setParameterValue<double>(paramName, value);
+            (**self->module)->setParameterValue<double>(paramName, value, true);
             break;
         }
         case ParamItem::typeString:
         {
             std::string value(PyString_AsString(pyValue)) ;
             if (PyErr_Occurred()) { return NULL; }
-            (**self->module)->setParameterValue<std::string>(paramName, value);
+            (**self->module)->setParameterValue<std::string>(paramName, value, true);
             break;
         }
         default:
@@ -563,7 +563,7 @@ PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args)
         return NULL;
     }
 
-    return Py_BuildValue("");
+    Py_RETURN_NONE;
 }
 
 PyObject* pyModSetVerbosity(ModMembers* self, PyObject* args)
@@ -583,6 +583,70 @@ PyObject* pyModGetVerbosity(ModMembers* self, PyObject* args)
 	long prio = (**self->module)->getVerbosity();
 
 	return PyInt_FromLong(prio);
+}
+
+#include "PythonParameterGetter.h"
+
+PyObject* pyModBuildParamGetter(ModMembers* self, PyObject* args)
+{
+	char* charParamName;
+
+    if (!PyArg_ParseTuple(args, "s:buildParameterGetter", &charParamName))
+        return NULL;
+
+    std::string paramName(charParamName);
+
+    Poco::AutoPtr<ParameterGetter> getter =
+    		(**self->module)->buildParameterGetter(paramName);
+
+    // prepare OutPort python type
+    if (PyType_Ready(&PythonParameterGetter) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the ParameterGetter Type");
+        return NULL;
+    }
+
+    // create the python object
+    ParameterGetterMembers* pyGetter =
+        (ParameterGetterMembers*)(pyParameterGetterNew((PyTypeObject*)&PythonParameterGetter, NULL, NULL) );
+
+    // set InPort reference
+    *(pyGetter->getter) = getter;
+
+    return reinterpret_cast<PyObject*>(pyGetter);
+}
+
+#include "PythonParameterSetter.h"
+
+PyObject* pyModBuildParamSetter(ModMembers* self, PyObject* args)
+{
+	char* charParamName;
+
+    if (!PyArg_ParseTuple(args, "s:buildParameterSetter", &charParamName))
+        return NULL;
+
+    std::string paramName(charParamName);
+
+    Poco::AutoPtr<ParameterSetter> setter =
+    		(**self->module)->buildParameterSetter(paramName);
+
+    // prepare OutPort python type
+    if (PyType_Ready(&PythonParameterSetter) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the ParameterSetter Type");
+        return NULL;
+    }
+
+    // create the python object
+    ParameterSetterMembers* pySetter =
+        (ParameterSetterMembers*)(pyParameterSetterNew((PyTypeObject*)&PythonParameterSetter, NULL, NULL) );
+
+    // set InPort reference
+    *(pySetter->setter) = setter;
+
+    return reinterpret_cast<PyObject*>(pySetter);
 }
 
 #endif /* HAVE_PYTHON27 */

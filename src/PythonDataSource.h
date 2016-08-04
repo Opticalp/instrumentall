@@ -1,8 +1,8 @@
 /**
- * Definition of the DataProxy python class
+ * Definition of the DataSource python class
  * 
- * @file	src/PythonDataProxy.h
- * @date	Jul 2016
+ * @file	src/PythonDataSource.h
+ * @date	jul. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -29,47 +29,47 @@ THE SOFTWARE.
 */
 
 
-#ifndef SRC_PYTHONDATAPROXY_H_
-#define SRC_PYTHONDATAPROXY_H_
+#ifndef SRC_PYTHONDATASOURCE_H_
+#define SRC_PYTHONDATASOURCE_H_
 
 #ifdef HAVE_PYTHON27
 
 #include "PythonAPI.h"
 #include "structmember.h"
 
-#include "DataProxy.h"
+#include "Poco/SharedPtr.h"
 
-#include "Poco/AutoPtr.h"
+class DataSource;
 
 // -----------------------------------------------------------------------
 // Variables
 // -----------------------------------------------------------------------
 
-/// member variables for the python DataProxy class
+/// member variables for the python DataSource class
 typedef struct
 {
     PyObject_HEAD ///< a refcount and a pointer to a type object (convenience python/C API macro)
     PyObject* name;  ///< name attribute
     PyObject* description;  ///< description attribute
-    Poco::AutoPtr<DataProxy>* proxy; ///< pointer to the C++ internal DataProxy object
-} DataProxyMembers;
+    DataSource* source; ///< pointer to the C++ internal DataSource object
+} DataSourceMembers;
 
-/// Description of the DataProxyMembers structure
-static PyMemberDef pyDataProxyMembers[] =
+/// Description of the DataSourceMembers structure
+static PyMemberDef pyDataSourceMembers[] =
 {
     {
         const_cast<char *>("name"),
         T_OBJECT_EX,
-        offsetof(DataProxyMembers, name),
+        offsetof(DataSourceMembers, name),
         READONLY,
-        const_cast<char *>("DataProxy class name")
+        const_cast<char *>("Input Port name")
     },
     {
         const_cast<char *>("description"),
         T_OBJECT_EX,
-        offsetof(DataProxyMembers, description),
+        offsetof(DataSourceMembers, description),
         READONLY,
-        const_cast<char *>("DataProxy description")
+        const_cast<char *>("Input Port description")
     },
     { NULL } // Sentinel
 };
@@ -81,47 +81,36 @@ static PyMemberDef pyDataProxyMembers[] =
 /**
  * Initializer
  *
- * The python version of this initializer has to be called with the
- * name of the class as argument to create a new proxy
+ * The python version of this initializer do the casts
  */
-extern "C" int pyDataProxyInit(DataProxyMembers* self, PyObject *args, PyObject *kwds);
+extern "C" int pyDataSourceInit(DataSourceMembers* self, PyObject *args, PyObject *kwds);
 
-extern "C" PyObject* pyDataProxySource(DataProxyMembers *self);
+/// python wrapper to get the target ports of the current output port
+extern "C" PyObject* pyDataSourceGetDataTargets(DataSourceMembers *self);
 
-static PyMethodDef pyMethodDataProxySource =
+static PyMethodDef pyMethodDataSourceGetDataTargets =
 {
-    "source",
-    (PyCFunction)pyDataProxySource,
+    "getDataTargets",
+    (PyCFunction)pyDataSourceGetDataTargets,
     METH_NOARGS,
-    "Retrieve the source Port object"
+    "Retrieve the data targets"
 };
 
+/// python wrapper to get the target ports of the current output port
+extern "C" PyObject* pyDataSourceGetDataValue(DataSourceMembers *self);
 
-//extern "C" PyObject* pyDataProxyTargets(DataProxyMembers *self);
-//
-//static PyMethodDef pyMethodDataProxyTargets =
-//{
-//    "targets",
-//    (PyCFunction)pyDataProxyTargets,
-//    METH_NOARGS,
-//    "Retrieve the target Port objects"
-//};
-
-extern "C" PyObject* pyDataProxyDetach(DataProxyMembers *self);
-
-static PyMethodDef pyMethodDataProxyDetach =
+static PyMethodDef pyMethodDataSourceGetDataValue =
 {
-    "detach",
-    (PyCFunction)pyDataProxyDetach,
+    "getDataValue",
+    (PyCFunction)pyDataSourceGetDataValue,
     METH_NOARGS,
-    "Detach the proxy from its source and target"
+    "Retrieve the data handled by this source"
 };
 
 /// exported methods
-static PyMethodDef pyDataProxyMethods[] = {
-        pyMethodDataProxySource,
-		//pyMethodDataProxyTargets,
-        pyMethodDataProxyDetach,
+static PyMethodDef pyDataSourceMethods[] = {
+        pyMethodDataSourceGetDataTargets,
+		pyMethodDataSourceGetDataValue,
 
         {NULL} // sentinel
 };
@@ -133,7 +122,7 @@ static PyMethodDef pyDataProxyMethods[] = {
 /**
  * Deallocator
  */
-extern "C" void pyDataProxyDealloc(DataProxyMembers* self);
+extern "C" void pyDataSourceDealloc(DataSourceMembers* self);
 
 /**
  * Allocator
@@ -141,17 +130,17 @@ extern "C" void pyDataProxyDealloc(DataProxyMembers* self);
  * Initialize "name" and "description" to empty strings instead of
  * NULL because they are python objects.
  */
-extern "C" PyObject* pyDataProxyNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
+extern "C" PyObject* pyDataSourceNew(PyTypeObject* type, PyObject* args, PyObject* kwds);
 
 
 /// Definition of the PyTypeObject
-static PyTypeObject PythonDataProxy = {                  // SPECIFIC
+static PyTypeObject PythonDataSource = {                  // SPECIFIC
     PyObject_HEAD_INIT(NULL)
     0,                          /*ob_size*/
-    "instru.DataProxy",            /*tp_name*/           // SPECIFIC
-    sizeof(DataProxyMembers),      /*tp_basicsize*/      // SPECIFIC
+    "instru.DataSource",            /*tp_name*/           // SPECIFIC
+    sizeof(DataSourceMembers),      /*tp_basicsize*/      // SPECIFIC
     0,                          /*tp_itemsize*/
-    (destructor)pyDataProxyDealloc,/*tp_dealloc*/        // SPECIFIC
+    (destructor)pyDataSourceDealloc,/*tp_dealloc*/        // SPECIFIC
     0,                          /*tp_print*/
     0,                          /*tp_getattr*/
     0,                          /*tp_setattr*/
@@ -168,26 +157,26 @@ static PyTypeObject PythonDataProxy = {                  // SPECIFIC
     0,                          /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT |
         Py_TPFLAGS_BASETYPE,    /*tp_flags*/
-    "DataProxy to convert"
-    "data on-line",             /* tp_doc */          // SPECIFIC
+    "DataSource to be bound "
+    "to a data target",         /* tp_doc */          // SPECIFIC
     0,                          /* tp_traverse */
     0,                          /* tp_clear */
     0,                          /* tp_richcompare */
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-    pyDataProxyMethods,            /* tp_methods */    // SPECIFIC
-    pyDataProxyMembers,            /* tp_members */    // SPECIFIC
+    pyDataSourceMethods,            /* tp_methods */    // SPECIFIC
+    pyDataSourceMembers,            /* tp_members */    // SPECIFIC
     0,                          /* tp_getset */
     0,                          /* tp_base */       // SPECIFIC
     0,                          /* tp_dict */
     0,                          /* tp_descr_get */
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
-    (initproc)pyDataProxyInit,        /* tp_init */       // SPECIFIC
+    (initproc)pyDataSourceInit,        /* tp_init */       // SPECIFIC
     0,                          /* tp_alloc */
-    pyDataProxyNew,                /* tp_new */        // SPECIFIC
+    pyDataSourceNew,                /* tp_new */        // SPECIFIC
 };
 
 #endif /* HAVE_PYTHON27 */
-#endif /* SRC_PYTHONDATAPROXY_H_ */
+#endif /* SRC_PYTHONDATASOURCE_H_ */

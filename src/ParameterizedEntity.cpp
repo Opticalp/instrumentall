@@ -43,6 +43,21 @@ void ParameterizedEntity::addParameter(size_t index, std::string name, std::stri
         poco_bugcheck_msg("addParameter: incorrect index. "
                 "Please check your module constructor");
     }
+
+    switch (datatype)
+    {
+    case (ParamItem::typeInteger):
+		paramValues[index] = Poco::Any(Poco::Int64(0));
+    	break;
+    case (ParamItem::typeFloat):
+		paramValues[index] = Poco::Any(double(0));
+		break;
+    case (ParamItem::typeString):
+		paramValues[index] = Poco::Any(std::string(""));
+		break;
+    default:
+    	poco_bugcheck_msg("unsupported parameter type");
+    }
 }
 
 void ParameterizedEntity::addParameter(size_t index, std::string name, std::string descr,
@@ -77,10 +92,10 @@ std::string ParameterizedEntity::getParameterDefaultValue(size_t index)
                                         "no default value found");
 }
 
-long ParameterizedEntity::getIntParameterDefaultValue(size_t index)
+Poco::Int64 ParameterizedEntity::getIntParameterDefaultValue(size_t index)
 {
     std::string strValue = getParameterDefaultValue(index);
-    return static_cast<long>(Poco::NumberParser::parse64(strValue));
+    return static_cast<Poco::Int64>(Poco::NumberParser::parse64(strValue));
 }
 
 double ParameterizedEntity::getFloatParameterDefaultValue(size_t index)
@@ -96,7 +111,6 @@ std::string ParameterizedEntity::getStrParameterDefaultValue(size_t index)
 
 void ParameterizedEntity::getParameterSet(ParameterSet* pSet)
 {
-    // mainMutex.lock();
     pSet->clear();
     pSet->reserve(paramSet.size());
     for (ParameterSet::iterator it = paramSet.begin(),
@@ -107,7 +121,6 @@ void ParameterizedEntity::getParameterSet(ParameterSet* pSet)
         pSet->back().descr = it->descr;
         pSet->back().datatype = it->datatype;
     }
-    // mainMutex.unlock();
 }
 
 size_t ParameterizedEntity::getParameterIndex(std::string paramName)
@@ -123,6 +136,136 @@ size_t ParameterizedEntity::getParameterIndex(std::string paramName)
 
 ParamItem::ParamType ParameterizedEntity::getParameterType(std::string paramName)
 {
-    // TODO: mainMutex scoped lock
     return paramSet[getParameterIndex(paramName)].datatype;
 }
+
+using Poco::AnyCast;
+
+bool ParameterizedEntity::getInternalIntParameterValue(size_t paramIndex, Poco::Int64& value)
+{
+    Poco::Mutex::ScopedLock lock(mutex);
+
+	try
+	{
+		switch (paramSet.at(paramIndex).datatype)
+		{
+		case (ParamItem::typeInteger):
+			break;
+		case (ParamItem::typeFloat):
+		case (ParamItem::typeString):
+			throw Poco::DataFormatException("getInternalIntParameterValue",
+					"bad parameter type");
+		default:
+			poco_bugcheck_msg("getInternalIntParameterValue, "
+					"unknown parameter type");
+		}
+	}
+	catch (std::out_of_range&)
+	{
+		poco_bugcheck_msg("getInternalIntParameterValue, "
+				"out of range parameter index");
+	}
+
+	value = AnyCast<Poco::Int64>(paramValues[paramIndex]);
+
+	bool ret = needApplication[paramIndex];
+	needApplication[paramIndex] = false;
+	return ret;
+}
+
+bool ParameterizedEntity::getInternalFloatParameterValue(size_t paramIndex, double& value)
+{
+    Poco::Mutex::ScopedLock lock(mutex);
+
+	try
+	{
+		switch (paramSet.at(paramIndex).datatype)
+		{
+		case (ParamItem::typeInteger):
+		case (ParamItem::typeString):
+			throw Poco::DataFormatException("getInternalFloatParameterValue",
+					"bad parameter type");
+		case (ParamItem::typeFloat):
+			break;
+		default:
+			poco_bugcheck_msg("getInternalFloatParameterValue, "
+					"unknown parameter type");
+		}
+	}
+	catch (std::out_of_range&)
+	{
+		poco_bugcheck_msg("getInternalFloatParameterValue, "
+				"out of range parameter index");
+	}
+
+	value = AnyCast<double>(paramValues[paramIndex]);
+
+	bool ret = needApplication[paramIndex];
+	needApplication[paramIndex] = false;
+	return ret;
+}
+
+bool ParameterizedEntity::getInternalStrParameterValue(size_t paramIndex, std::string& value)
+{
+	try
+	{
+		switch (paramSet.at(paramIndex).datatype)
+		{
+		case (ParamItem::typeInteger):
+		case (ParamItem::typeFloat):
+			throw Poco::DataFormatException("getInternalStrParameterValue",
+					"bad parameter type");
+		case (ParamItem::typeString):
+			break;
+		default:
+			poco_bugcheck_msg("getInternalStrParameterValue, "
+					"unknown parameter type");
+		}
+	}
+	catch (std::out_of_range&)
+	{
+		poco_bugcheck_msg("getInternalStrParameterValue, "
+				"out of range parameter index");
+	}
+
+	value = AnyCast<std::string>(paramValues[paramIndex]);
+
+	bool ret = needApplication[paramIndex];
+	needApplication[paramIndex] = false;
+	return ret;
+}
+
+void ParameterizedEntity::applyParameters()
+{
+	for (size_t index = 0; index < paramSet.size(); index++)
+	{
+		switch (paramSet[index].datatype)
+		{
+		case (ParamItem::typeInteger):
+			{
+				Poco::Int64 tmp;
+				if (getInternalIntParameterValue(index, tmp))
+					setIntParameterValue(index, tmp);
+				break;
+			}
+		case (ParamItem::typeFloat):
+			{
+				double tmp;
+				if (getInternalFloatParameterValue(index, tmp))
+					setFloatParameterValue(index, tmp);
+				break;
+			}
+		case (ParamItem::typeString):
+			{
+				std::string tmp;
+				if (getInternalStrParameterValue(index, tmp))
+					setStrParameterValue(index, tmp);
+				break;
+			}
+		default:
+			poco_bugcheck_msg("applyParameters, "
+					"unknown parameter type");
+		}
+	}
+}
+

@@ -31,6 +31,8 @@
 
 #include "VerboseEntity.h"
 #include "ParameterizedEntity.h"
+#include "ParameterizedWithGetters.h"
+#include "ParameterizedWithSetters.h"
 #include "InPortUser.h"
 #include "OutPortUser.h"
 #include "ModuleTask.h"
@@ -61,8 +63,10 @@ class ModuleFactory;
  * the tasks when needed. The tasks are the only one to run the
  * modules (after having set runningTask).
  */
-class Module: public virtual VerboseEntity,
+class Module: public VerboseEntity,
 	public ParameterizedEntity,
+	public ParameterizedWithGetters,
+	public ParameterizedWithSetters,
 	public InPortUser, public OutPortUser
 {
 public:
@@ -84,7 +88,21 @@ public:
 	 * if customName or internalName is already in use.
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
-	      mParent(parent), ParameterizedEntity("module." + name),
+	      mParent(parent),
+		  ParameterizedEntity("module." + name),
+		  ParameterizedWithGetters(this),
+		  ParameterizedWithSetters(this),
+		  procMode(fullBufferedProcessing),
+		  startSyncPending(false),
+		  reseting (false)
+	{
+	}
+
+	Module(ModuleFactory* parent, std::string name, bool applyParametersFromSettersWhenAllSet):
+	      mParent(parent),
+		  ParameterizedEntity("module." + name),
+		  ParameterizedWithGetters(this),
+		  ParameterizedWithSetters(this, applyParametersFromSettersWhenAllSet),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false)
@@ -402,6 +420,8 @@ protected:
 	 */
 	void notifyCreation();
 
+	Poco::Logger& logger() { return VerboseEntity::logger(); }
+
 private:
     /// enum to be returned by checkName
     enum NameStatus
@@ -452,6 +472,8 @@ private:
 	 * taskMngtMutex should be locked prior to calling this method
 	 */
 	bool taskIsRunning();
+
+	void waitParameters();
 
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
 	std::set<ModuleTask*> allTasks;

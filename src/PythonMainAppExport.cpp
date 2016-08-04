@@ -273,33 +273,58 @@ PyObject* pythonModManExportFacTreeGraphviz(PyObject* self, PyObject* args)
 #include "PythonInPort.h"
 #include "PythonOutPort.h"
 #include "PythonDataProxy.h"
-#include <algorithm> // std::swap
+#include "PythonDataSource.h"
+#include "PythonDataTarget.h"
 
 extern "C" PyObject*
 pythonDispatchBind(PyObject* self, PyObject* args)
 {
-    PyObject *pyObj1, *pyObj2;
+    PyObject *pySource, *pyTarget;
     PyObject *pyProxy = NULL;
 
     // arguments parsing
-    if (!PyArg_ParseTuple(args, "OO|O:bind", &pyObj1, &pyObj2, &pyProxy))
+    if (!PyArg_ParseTuple(args, "OO|O:bind", &pySource, &pyTarget, &pyProxy))
         return NULL;
 
     // check the type of the object.
     // the comparison uses type name (str)
-    std::string typeName1(pyObj1->ob_type->tp_name);
-    std::string typeName2(pyObj2->ob_type->tp_name);
+    std::string typeNameSource(pySource->ob_type->tp_name);
+    std::string typeNameTarget(pyTarget->ob_type->tp_name);
 
-    if (typeName2.compare("instru.InPort")==0
-            && typeName1.compare("instru.OutPort")==0)
+    DataSource* source;
+    DataTarget* target;
+
+    if (typeNameSource.compare("instru.OutPort") == 0)
     {
-        std::swap(pyObj1, pyObj2);
+        OutPortMembers* pyOutPort = reinterpret_cast<OutPortMembers*>(pySource);
+        source = *pyOutPort->outPort->get();
     }
-    else if (typeName1.compare("instru.InPort")
-            || typeName2.compare("instru.OutPort"))
+    else if (typeNameSource.compare("instru.DataSource") == 0)
+    {
+        DataSourceMembers* pyDataSource = reinterpret_cast<DataSourceMembers*>(pySource);
+        source = pyDataSource->source;
+    }
+    else
     {
         PyErr_SetString(PyExc_TypeError,
-                "The arguments must be an InPort and an OutPort");
+                "The first argument must be a DataSource");
+        return NULL;
+    }
+
+    if (typeNameTarget.compare("instru.InPort") == 0)
+    {
+        InPortMembers* pyInPort = reinterpret_cast<InPortMembers*>(pyTarget);
+        target = *pyInPort->inPort->get();
+    }
+    else if (typeNameTarget.compare("instru.DataTarget") == 0)
+    {
+        DataTargetMembers* pyDataTarget = reinterpret_cast<DataTargetMembers*>(pyTarget);
+        target = pyDataTarget->target;
+    }
+    else
+    {
+        PyErr_SetString(PyExc_TypeError,
+                "The second argument must be a DataTarget");
         return NULL;
     }
 
@@ -314,16 +339,13 @@ pythonDispatchBind(PyObject* self, PyObject* args)
     	}
     }
 
-    InPortMembers* pyInPort = reinterpret_cast<InPortMembers*>(pyObj1);
-    OutPortMembers* pyOutPort = reinterpret_cast<OutPortMembers*>(pyObj2);
-
     try
     {
     	if (pyProxy == NULL)
     	{
 			Poco::Util::Application::instance()
 				.getSubsystem<Dispatcher>()
-				.bind(**pyOutPort->outPort,**pyInPort->inPort);
+				.bind(source, target);
     	}
     	else
     	{
@@ -331,11 +353,11 @@ pythonDispatchBind(PyObject* self, PyObject* args)
 
 			Poco::Util::Application::instance()
 				.getSubsystem<Dispatcher>()
-				.bind(**pyOutPort->outPort,*proxy->proxy);
+				.bind(source, *proxy->proxy);
 
 			Poco::Util::Application::instance()
 				.getSubsystem<Dispatcher>()
-				.bind(*proxy->proxy,**pyInPort->inPort);
+				.bind(*proxy->proxy, target);
     	}
     }
     catch (Poco::Exception& e)
