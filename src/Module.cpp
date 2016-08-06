@@ -167,8 +167,6 @@ void Module::freeInternalName()
 
 void Module::run(ModuleTask* pTask)
 {
-	resetDone = false;
-
 	setRunningTask(pTask);
 
 	taskMngtMutex.lock();
@@ -181,9 +179,18 @@ void Module::run(ModuleTask* pTask)
 
 	try
 	{
+		if (cancelling)
+			throw Poco::RuntimeException(name() +
+					": can not run a new task, "
+					"the module is cancelling");
+
 		expireOutData();
 
 		setRunningState(ModuleTask::retrievingInDataLocks);
+
+		resetDone = false;
+		cancelDone = false;
+
 		int startCond = startCondition();
 
 		mergeTasks(portsWithNewData());
@@ -287,10 +294,10 @@ void Module::enqueueTask(ModuleTask* task)
 
 void Module::condCancel()
 {
-	if (isCancelling)
+	if (cancelling || cancelDone)
 		return;
 
-	isCancelling = true;
+	cancelling = true;
 	// cancel all module tasks
 	taskMngtMutex.lock();
 	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
@@ -299,7 +306,9 @@ void Module::condCancel()
 	taskMngtMutex.unlock();
 
 	cancel();
-	isCancelling = false;
+
+	cancelDone = true;
+	cancelling = false;
 }
 
 void Module::resetWithTargets()
@@ -318,8 +327,8 @@ void Module::resetWithTargets()
 	// reset the sequence targets
 	resetTargets();
 
-	reseting = false;
 	resetDone = true;
+	reseting = false;
 }
 
 bool Module::taskIsRunning()

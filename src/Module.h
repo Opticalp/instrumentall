@@ -88,7 +88,7 @@ public:
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
-		  isCancelling(false)
+		  cancelling(false), cancelDone(false)
 	{
 	}
 
@@ -459,7 +459,8 @@ private:
 	 */
 	void condCancel();
 
-	bool isCancelling; ///< used by Module::condCancel
+	bool cancelling; ///< used by Module::condCancel
+	bool cancelDone; ///< flag set when a cancellation just occured
 
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
 	std::set<ModuleTask*> allTasks;
