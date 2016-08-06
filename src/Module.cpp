@@ -288,16 +288,32 @@ void Module::enqueueTask(ModuleTask* task)
 
 	if (!taskIsRunning())
 		popTask();
-//	else
-//		poco_information(logger(), name() + ": a task is already running");
+	else
+		poco_information(logger(), name() + ": a task is already running");
 }
 
 void Module::condCancel()
 {
-	if (cancelling || cancelDone)
+	poco_information(logger(), "Entering Module::condCancel()");
+
+//	if (cancelling || cancelDone)
+//		return;
+
+	if (cancelling)
+	{
+		poco_information(logger(), "already cancelling... return");
 		return;
+	}
+
+	if (cancelDone)
+	{
+		poco_information(logger(), "already cancelled... return");
+		return;
+	}
 
 	cancelling = true;
+
+	poco_information(logger(), "cancelling all module tasks");
 	// cancel all module tasks
 	taskMngtMutex.lock();
 	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
@@ -305,7 +321,10 @@ void Module::condCancel()
 		(*it)->cancel();
 	taskMngtMutex.unlock();
 
+	poco_information(logger(), "cancelling the module itself (specific cancel)");
 	cancel();
+
+	poco_information(logger(), "cancel done. ");
 
 	cancelDone = true;
 	cancelling = false;
