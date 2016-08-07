@@ -268,6 +268,8 @@ protected:
 	 * The call is issued via Module::condCancel that checks
 	 * if the module is not already canceling
 	 *
+	 * @warning The implementation should not throw exceptions
+	 *
 	 * @see Module::reset
 	 * @see Module::seqRunning
 	 */
@@ -285,6 +287,8 @@ protected:
 	 *  - reset evtl flags, states,...
 	 *
 	 * Called by Module::resetWithSeqTargets
+	 *
+	 * @warning The implementation should not throw exceptions
 	 *
 	 * @note Locks or mutexes should not be kept locked in case
 	 * of exceptions, then no unlock should be necessary here

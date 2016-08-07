@@ -337,7 +337,15 @@ void Module::condCancel()
 	taskMngtMutex.unlock();
 
 	poco_information(logger(), "cancelling the module itself (specific cancel)");
-	cancel();
+
+	try
+	{
+		cancel();
+	}
+	catch (...)
+	{
+		poco_bugcheck_msg("Module::cancel shall not throw exceptions");
+	}
 
 	poco_information(logger(), "cancel done. ");
 
@@ -356,7 +364,14 @@ void Module::resetWithTargets()
 		condCancel();
 
 	// reset this module
-	reset();
+	try
+	{
+	  reset();
+	}
+	catch (...)
+	{
+		poco_bugcheck_msg("Module::reset shall not throw exceptions");
+	}
 
 	// reset the sequence targets
 	resetTargets();
