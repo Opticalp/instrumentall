@@ -211,20 +211,32 @@ void Module::run(ModuleTask* pTask)
 
 bool Module::sleep(long milliseconds)
 {
-	if (*runningTask)
-		return (*runningTask)->sleep(milliseconds);
+	bool ret = false;
 
-	Poco::Thread::sleep(milliseconds);
-	return false;
+	if (*runningTask)
+		ret = (*runningTask)->sleep(milliseconds);
+	else
+		Poco::Thread::sleep(milliseconds);
+
+	if (cancelling || cancelDone)
+		return true;
+	else
+		return ret;
 }
 
 bool Module::yield()
 {
-	if (*runningTask)
-		return (*runningTask)->yield();
+	bool ret = false;
 
-	Poco::Thread::yield();
-	return false;
+	if (*runningTask)
+		ret = (*runningTask)->yield();
+	else
+		Poco::Thread::yield();
+
+	if (cancelling || cancelDone)
+		return true;
+	else
+		return ret;
 }
 
 void Module::setProgress(float progress)
@@ -237,6 +249,9 @@ void Module::setProgress(float progress)
 
 bool Module::isCancelled()
 {
+	if (cancelling || cancelDone)
+		return true;
+
 	if (*runningTask == NULL)
 		return false;
 
