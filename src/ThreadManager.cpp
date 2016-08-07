@@ -260,11 +260,11 @@ void ThreadManager::unregisterModuleTask(ModuleTask* pTask)
 
 void ThreadManager::cancelAll()
 {
+	cancellingAll = true;
+
 	taskListLock.readLock();
 	std::set< Poco::AutoPtr<ModuleTask> > tempModTasks = pendingModTasks;
 	taskListLock.unlock();
-
-	cancellingAll = true; // we wish that it is an atomic operation
 
 	poco_notice(logger(), "Dispatching cancel() to all active tasks");
 
@@ -276,8 +276,12 @@ void ThreadManager::cancelAll()
 		tsk->cancel();
 	}
 
+	poco_information(logger(), "All active tasks cancelled. Wait for them to delete. ");
+
 	while (count())
 		Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+
+	poco_information(logger(), "No more pending task. cancellAll exiting. ");
 
 	cancellingAll = false;
 }
