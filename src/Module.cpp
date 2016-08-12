@@ -356,7 +356,10 @@ void Module::condCancel()
 void Module::resetWithTargets()
 {
 	if (reseting || resetDone)
+	{
+		poco_information(logger(), name() + " already reseting");
 		return;
+	}
 
 	reseting = true;
 
