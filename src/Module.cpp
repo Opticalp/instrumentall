@@ -179,11 +179,6 @@ void Module::run(ModuleTask* pTask)
 
 	try
 	{
-		if (cancelling)
-			throw Poco::RuntimeException(name() +
-					": can not run a new task, "
-					"the module is cancelling");
-
 		expireOutData();
 
 		setRunningState(ModuleTask::retrievingInDataLocks);
@@ -193,7 +188,15 @@ void Module::run(ModuleTask* pTask)
 
 		int startCond = startCondition();
 
+		// start condition has to be checked before any cancellation test
+		// to allow releaseAllInPorts to be effective
+
 		mergeTasks(portsWithNewData());
+
+		if (cancelling)
+			throw Poco::RuntimeException(name() +
+					": can not run a new task, "
+					"the module is cancelling");
 
 		setRunningState(ModuleTask::processing);
 		process(startCond);
@@ -284,12 +287,12 @@ ModuleTask::RunningStates Module::getRunningState()
 
 void Module::enqueueTask(ModuleTask* task)
 {
-	Poco::Mutex::ScopedLock lock(taskMngtMutex);
-
 	// take ownership of the task.
 	Poco::Util::Application::instance()
 				             .getSubsystem<ThreadManager>()
 				             .registerNewModuleTask(task);
+
+	Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
 	allTasks.insert(task);
 	taskQueue.push_back(task);
@@ -363,7 +366,7 @@ void Module::resetWithTargets()
 
 	reseting = true;
 
-	if (seqRunning())
+//	if (seqRunning())
 		condCancel();
 
 	// reset this module

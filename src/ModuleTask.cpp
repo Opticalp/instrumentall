@@ -125,7 +125,14 @@ void ModuleTask::cancel()
 	if (coreModule)
 		coreModule->condCancel();
 
-	if (!isCancelled())
+	if (getState() == TASK_IDLE)
+	{
+		MergeableTask::cancel();
+
+		if (mTriggingPort)
+			mTriggingPort->release();
+	}
+	else if (!isCancelled())
 		MergeableTask::cancel();
 }
 

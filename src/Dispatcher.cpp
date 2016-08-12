@@ -355,15 +355,26 @@ void Dispatcher::setOutPortDataReady(OutPort* port)
     {
         (**it)->setNew();
 
-        // get module from module manager
-        SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
-                                        .getSubsystem<ModuleManager>()
-                                        .getModule((**it)->parent());
+		try
+		{
+			// get module from module manager
+			SharedPtr<Module*> shdMod = Poco::Util::Application::instance()
+											.getSubsystem<ModuleManager>()
+											.getModule((**it)->parent());
 
-        poco_information(logger(),port->parent()->name() + " port " + port->name()
-                + " STARTS " + (**it)->parent()->name() );
+			poco_information(logger(),port->parent()->name() + " port " + port->name()
+					+ " STARTS " + (**it)->parent()->name() );
 
-        enqueueModuleTask(new ModuleTask(*shdMod, **it));
+			enqueueModuleTask(new ModuleTask(*shdMod, **it));
+		}
+		catch (Poco::Exception& e)
+		{
+			poco_error(logger(), (**it)->parent()->name() + 
+				": " + e.displayText() +
+				" => The task can not be enqueued. ");
+			(**it)->release();
+			e.rethrow();
+		}
     }
 }
 
