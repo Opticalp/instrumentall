@@ -125,15 +125,25 @@ void ModuleTask::cancel()
 	if (coreModule)
 		coreModule->condCancel();
 
-	if (getState() == TASK_IDLE)
+	switch (getState())
 	{
-		MergeableTask::cancel();
+	case TASK_IDLE:
+	case TASK_STARTING:
+		{
+			MergeableTask::cancel();
 
-		if (mTriggingPort)
-			mTriggingPort->release();
+			if (mTriggingPort)
+				mTriggingPort->release();
+
+			break;
+		}
+	case TASK_FALSE_START:
+		poco_bugcheck_msg("unhandeld false start case in module task cancellation");
+		break;
+	default:
+		if (!isCancelled())
+			MergeableTask::cancel();
 	}
-	else if (!isCancelled())
-		MergeableTask::cancel();
 }
 
 void ModuleTask::resetModule()
