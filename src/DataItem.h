@@ -34,6 +34,8 @@
 #include "Poco/RWLock.h"
 #include "Poco/SharedPtr.h"
 
+#include <iostream>
+
 using Poco::RWLock;
 using Poco::SharedPtr;
 
@@ -135,7 +137,18 @@ public:
      *
      * @see getDataToWrite
      */
-    bool tryLockToWrite() { return dataLock.tryWriteLock(); }
+    bool tryLockToWrite()
+    {
+    	if (dataLock.tryWriteLock())
+    	{
+            std::cout << "tryLockToWrite succeeded: " << std::endl;
+    		writeLockCnt++;
+    		lockCntLogger();
+    		return true;
+    	}
+    	else
+    		return false;
+    }
 
     /**
      * Retrieving pointer part of tryGetDataToWrite
@@ -160,6 +173,9 @@ public:
 
         if (dataLock.tryWriteLock())
         {
+            std::cout << "tryGetDataToWrite succeeded: " << std::endl;
+        	writeLockCnt++;
+        	lockCntLogger();
             pData = reinterpret_cast<T*>(dataStore);
             return true;
         }
@@ -186,13 +202,30 @@ public:
      * Forward the tryReadLock() call to the data RWLock
      */
     bool tryReadLock()
-        { return dataLock.tryReadLock(); }
+	{
+		if ( dataLock.tryReadLock())
+		{
+	    	std::cout << "tryReadLock succeeded: " << std::endl;
+			readLockCnt++;
+			lockCntLogger();
+			return true;
+		}
+		else
+			return false;
+	}
 
     /**
      * Forward the readLock() call to the data RWLock
      */
     void readLock()
-        { dataLock.readLock(); }
+	{
+    	std::cout << "entering readLock" << std::endl;
+    	lockCntLogger();
+
+		dataLock.readLock();
+		readLockCnt++;
+		lockCntLogger();
+	}
 
     /**
      * Release newly created data
@@ -217,7 +250,19 @@ public:
      * or tryReadLock()
      */
     void releaseData()
-        { dataLock.unlock(); }
+	{
+    	if (writeLockCnt == 1)
+    		writeLockCnt--;
+    	else if (readLockCnt > 0)
+    		readLockCnt--;
+    	else
+    		poco_bugcheck_msg("DataItem: impossible lock count while releasing");
+
+    	std::cout << "release" << std::endl;
+    	lockCntLogger();
+
+    	dataLock.unlock();
+	}
 
     /**
      * Get the parent port
@@ -283,6 +328,10 @@ private:
     bool expired;
 
     RWLock dataLock; ///< lock to manage the access to the dataStore
+    size_t readLockCnt;
+    size_t writeLockCnt;
+
+    void lockCntLogger();
 
     OutPort* mParentPort; ///< parent output data port.
 

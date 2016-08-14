@@ -30,13 +30,18 @@
 #include "DataLogger.h"
 #include "DataManager.h"
 
+#include "OutPort.h"
+#include "Module.h"
+
 #include "Poco/Types.h"
 #include "Poco/Util/Application.h"
 
 DataItem::DataItem(int dataType, OutPort* parent):
         mDataType(dataType),
         mParentPort(parent),
-		expired(true)
+		expired(true),
+		readLockCnt(0),
+		writeLockCnt(0)
 {
     switch (mDataType)
     {
@@ -194,6 +199,15 @@ std::set<SharedPtr<DataLogger*> > DataItem::loggers()
     loggersLock.unlock();
 
     return tmpList;
+}
+
+void DataItem::lockCntLogger()
+{
+	if (mParentPort == NULL)
+		return;
+
+	std::cout << mParentPort->name() << " of " << mParentPort->parent()->name() << ": "
+	          << " readLock/writeLock == " << readLockCnt << "/" << writeLockCnt << std::endl;
 }
 
 void DataItem::detachLogger(DataLogger* logger)
