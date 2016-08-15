@@ -460,6 +460,10 @@ void Module::popTaskSync()
 		Poco::Util::Application::instance()
 			             .getSubsystem<ThreadManager>()
 			             .startSyncModuleTask(nextTask);
+
+		// if startSyncModuleTask succeeds, 
+		//       taskMngtMutex.unlock();
+		// is called in Module::run according to startSyncPending value. 
 	}
 	catch (...)
 	{
