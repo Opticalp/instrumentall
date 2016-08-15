@@ -73,11 +73,6 @@ ModuleTask::RunningStates ModuleTask::getRunningState()
 
 void ModuleTask::setRunningState(RunningStates state)
 {
-	if (isCancelled())
-		throw Poco::RuntimeException(name() +
-				": can not change running state, "
-				"the task is cancelling");
-
 	runState = state;
 }
 
@@ -128,7 +123,7 @@ void ModuleTask::cancel()
 	switch (getState())
 	{
 	case TASK_IDLE:
-	case TASK_STARTING:
+	case TASK_FALSE_START:
 		{
 			MergeableTask::cancel();
 
@@ -137,12 +132,15 @@ void ModuleTask::cancel()
 
 			break;
 		}
-	case TASK_FALSE_START:
-		poco_bugcheck_msg("unhandeld false start case in module task cancellation");
+	case TASK_STARTING:
+	case TASK_RUNNING:
+		MergeableTask::cancel();
+		break;
+	case TASK_CANCELLING:
+	case TASK_FINISHED:
 		break;
 	default:
-		if (!isCancelled())
-			MergeableTask::cancel();
+		poco_bugcheck_msg("unhandeld task state case in module task cancellation");
 	}
 }
 

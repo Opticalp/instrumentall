@@ -92,6 +92,10 @@ void TaskManager::startSync(TaskPtr pAutoTask)
 	{
 		pAutoTask->run();
 	}
+	catch (Poco::BugcheckException& exc)
+	{
+		throw;
+	}
 	catch (...)
 	{
 		// Make sure that we don't act like we own the task since

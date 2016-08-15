@@ -334,9 +334,17 @@ void Module::cancelWithTargets()
 	poco_information(logger(), "cancelling all module tasks");
 	// cancel all module tasks
 	taskMngtMutex.lock();
-	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
-			ite = allTasks.end(); it != ite; it++)
-		(*it)->cancel();
+	try
+	{
+		for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
+				ite = allTasks.end(); it != ite; it++)
+			(*it)->cancel();
+	}
+	catch (...)
+	{
+		taskMngtMutex.unlock();
+		throw;
+	}
 	taskMngtMutex.unlock();
 
 	poco_information(logger(), "cancelling the module itself (specific cancel)");
@@ -370,8 +378,9 @@ void Module::resetWithTargets()
 
 	reseting = true;
 
+	// if reset comes from a task failure, should cancel first. 
 //	if (seqRunning())
-		cancelWithTargets();
+	cancelWithTargets();
 
 	// reset this module
 	try
@@ -385,6 +394,9 @@ void Module::resetWithTargets()
 
 	// reset the sequence targets
 	resetTargets();
+
+	// clean the task queue
+	taskQueue.clear();
 
 	resetDone = true;
 	reseting = false;
