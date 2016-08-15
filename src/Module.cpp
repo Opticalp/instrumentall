@@ -310,7 +310,7 @@ void Module::enqueueTask(ModuleTask* task)
 		poco_information(logger(), name() + ": a task is already running");
 }
 
-void Module::condCancel()
+void Module::cancelWithTargets()
 {
 	poco_information(logger(), "Entering Module::condCancel()");
 
@@ -350,6 +350,10 @@ void Module::condCancel()
 		poco_bugcheck_msg("Module::cancel shall not throw exceptions");
 	}
 
+	poco_information(logger(), "cancelling the target modules");
+
+	cancelTargets();
+
 	poco_information(logger(), "cancel done. ");
 
 	cancelDone = true;
@@ -367,7 +371,7 @@ void Module::resetWithTargets()
 	reseting = true;
 
 //	if (seqRunning())
-		condCancel();
+		cancelWithTargets();
 
 	// reset this module
 	try

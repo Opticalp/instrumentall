@@ -217,6 +217,15 @@ public:
 	 */
 	void resetWithTargets();
 
+	/**
+	 * Cancel the module by calling Module::condCancel(),
+	 * but cancel also all the targets.
+	 *
+	 * Called by ModuleTask::resetModule,
+	 * and then by Dispatcher::dispatchTargetCancel
+	 */
+	void cancelWithTargets();
+
 protected:
 	void addInPort(
 			std::string name, std::string description,
@@ -455,13 +464,13 @@ private:
 	 */
 	bool taskIsRunning();
 
-	/**
-	 * Conditional cancel
-	 *
-	 * Check if the module is already canceling.
-	 * If not, call Module::cancel and cancel all the module tasks
-	 */
-	void condCancel();
+	///**
+	// * Conditional cancel
+	// *
+	// * Check if the module is already canceling.
+	// * If not, call Module::cancel and cancel all the module tasks
+	// */
+	//void condCancel();
 
 	bool cancelling; ///< used by Module::condCancel
 	bool cancelDone; ///< flag set when a cancellation just occured

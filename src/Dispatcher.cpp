@@ -384,9 +384,21 @@ void Dispatcher::dispatchTargetReset(OutPort* port)
     for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
             ite = targetPorts.end(); it != ite; it++ )
     {
-    	poco_information(logger(), "forwarding module cancellation to "
+    	poco_information(logger(), "forwarding module reseting to "
     			+ (**it)->parent()->name());
     	(**it)->parent()->resetWithTargets();
+    }
+}
+
+void Dispatcher::dispatchTargetCancel(OutPort* port)
+{
+    std::vector< SharedPtr<InPort*> > targetPorts = port->getTargetPorts();
+    for ( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
+    {
+    	poco_information(logger(), "forwarding module cancellation to "
+    			+ (**it)->parent()->name());
+    	(**it)->parent()->cancelWithTargets();
     }
 }
 

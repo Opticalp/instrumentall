@@ -110,6 +110,12 @@ protected:
     void releaseAllOutPorts();
 
     /**
+     * Called by Module::cancelWithTargets to dispatch the cancellation
+     * to the targets
+     */
+    void cancelTargets();
+
+    /**
      * Called by Module::resetWithTargets to dispatch the reseting
      * to the targets
      */

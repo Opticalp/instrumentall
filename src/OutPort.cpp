@@ -170,7 +170,14 @@ void OutPort::expire()
     targetPortsLock.unlock();
 }
 
-void OutPort::resetSeqTargets()
+void OutPort::cancelTargets()
+{
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .dispatchTargetCancel(this);
+}
+
+void OutPort::resetTargets()
 {
     Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()

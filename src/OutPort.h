@@ -128,9 +128,14 @@ public:
     void releaseOnFailure() { dataItem()->releaseBrokenData(); }
 
     /**
-     * Dispatch Module::resetWithSeqTargets
+     * Dispatch Module::cancelWithTargets
      */
-    void resetSeqTargets();
+    void cancelTargets();
+
+    /**
+     * Dispatch Module::resetWithTargets
+     */
+    void resetTargets();
 
     /**
      * Get the DataItem for this OutPort

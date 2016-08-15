@@ -123,7 +123,7 @@ void ModuleTask::leaveTask()
 void ModuleTask::cancel()
 {
 	if (coreModule)
-		coreModule->condCancel();
+		coreModule->cancelWithTargets();
 
 	switch (getState())
 	{

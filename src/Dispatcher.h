@@ -181,6 +181,15 @@ public:
      void dispatchTargetReset(OutPort* port);
 
      /**
+      * Dispatching function for module cancel when a task is canceled.
+      *
+      *  * called by Module::cancelWithTargets
+      *  * call Module::cancelWithTargets
+      *  * Module::cancelling flag avoids the recursions
+      */
+     void dispatchTargetCancel(OutPort* port);
+
+	 /**
       * Lock the input ports
       *
       * to avoid its usage (mainly InPort::tryLock)
