@@ -141,7 +141,7 @@ public:
     {
     	if (dataLock.tryWriteLock())
     	{
-            std::cout << "tryLockToWrite succeeded: " << std::endl;
+//            std::cout << "tryLockToWrite succeeded: " << std::endl;
     		writeLockCnt++;
     		lockCntLogger();
     		return true;
@@ -173,7 +173,7 @@ public:
 
         if (dataLock.tryWriteLock())
         {
-            std::cout << "tryGetDataToWrite succeeded: " << std::endl;
+//            std::cout << "tryGetDataToWrite succeeded: " << std::endl;
         	writeLockCnt++;
         	lockCntLogger();
             pData = reinterpret_cast<T*>(dataStore);
@@ -205,7 +205,7 @@ public:
 	{
 		if ( dataLock.tryReadLock())
 		{
-	    	std::cout << "tryReadLock succeeded: " << std::endl;
+//	    	std::cout << "tryReadLock succeeded: " << std::endl;
 			readLockCnt++;
 			lockCntLogger();
 			return true;
@@ -219,7 +219,7 @@ public:
      */
     void readLock()
 	{
-    	std::cout << "entering readLock" << std::endl;
+//    	std::cout << "entering readLock" << std::endl;
     	lockCntLogger();
 
 		dataLock.readLock();
@@ -249,22 +249,9 @@ public:
      * unlock the data that was previously locked using tryGetDataToWrite
      * or tryReadLock()
      */
-    void releaseData()
-	{
-    	if (writeLockCnt == 1)
-    		writeLockCnt--;
-    	else if (readLockCnt > 0)
-    		readLockCnt--;
-    	else
-    		poco_bugcheck_msg("DataItem: impossible lock count while releasing");
+    void releaseData();
 
-    	std::cout << "release" << std::endl;
-    	lockCntLogger();
-
-    	dataLock.unlock();
-	}
-
-    /**
+	/**
      * Get the parent port
      *
      * @warning the parent port can be NULL

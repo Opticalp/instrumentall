@@ -128,6 +128,10 @@ void MergeableTask::run()
 		state = TASK_RUNNING;
 		runTask();
 	}
+	catch (Poco::BugcheckException& exc)
+	{
+		throw;
+	}
 	catch (Poco::Exception& exc)
 	{
 		if (pTm)

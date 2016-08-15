@@ -159,6 +159,28 @@ DataItem::~DataItem()
     }
 }
 
+void DataItem::releaseData()
+{
+    if (writeLockCnt == 1)
+    	writeLockCnt--;
+    else if (readLockCnt > 0)
+    	readLockCnt--;
+    else
+	{
+		std::ostringstream stringStream;
+		stringStream << "DataItem: impossible lock count while releasing "
+			<< mParentPort->name() << " of " << mParentPort->parent()->name() << ": "
+	        << " readLock/writeLock == " << readLockCnt << "/" << writeLockCnt << std::endl;
+		std::string copyOfStr = stringStream.str();
+    	poco_bugcheck_msg(copyOfStr.c_str());
+	}
+
+    //std::cout << "release" << std::endl;
+    //lockCntLogger();
+
+    dataLock.unlock();
+}
+
 void DataItem::releaseNewData()
 {
 	expired = false;
@@ -206,8 +228,8 @@ void DataItem::lockCntLogger()
 	if (mParentPort == NULL)
 		return;
 
-	std::cout << mParentPort->name() << " of " << mParentPort->parent()->name() << ": "
-	          << " readLock/writeLock == " << readLockCnt << "/" << writeLockCnt << std::endl;
+	//std::cout << mParentPort->name() << " of " << mParentPort->parent()->name() << ": "
+	//          << " readLock/writeLock == " << readLockCnt << "/" << writeLockCnt << std::endl;
 }
 
 void DataItem::detachLogger(DataLogger* logger)
