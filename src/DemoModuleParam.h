@@ -62,7 +62,7 @@ private:
     double fPar; ///< storage for float parameter
     std::string sPar; ///< storage for char string parameter
 
-    long getIntParameterValue(size_t paramIndex)
+    Poco::Int64 getIntParameterValue(size_t paramIndex)
     {
         poco_assert(paramIndex == paramInt);
         return iPar;
@@ -80,7 +80,7 @@ private:
         return sPar;
     }
 
-    void setIntParameterValue(size_t paramIndex, long value)
+    void setIntParameterValue(size_t paramIndex, Poco::Int64 value)
     {
         poco_assert(paramIndex == paramInt);
         iPar = value;

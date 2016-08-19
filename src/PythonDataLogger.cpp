@@ -35,6 +35,8 @@ THE SOFTWARE.
 
 #include "Poco/Util/Application.h"
 
+using Poco::AutoPtr;
+
 extern "C" void pyDataLoggerDealloc(DataLoggerMembers* self)
 {
     // "name" and "description" are python objects,
@@ -68,7 +70,7 @@ extern "C" PyObject* pyDataLoggerNew(PyTypeObject* type, PyObject* args, PyObjec
             return NULL;
           }
 
-        self->logger = new Poco::SharedPtr<DataLogger*>;
+        self->logger = new AutoPtr<DataLogger>;
       }
 
     return (PyObject *) self;
@@ -86,7 +88,7 @@ extern "C" int pyDataLoggerInit(DataLoggerMembers* self, PyObject *args, PyObjec
 
     std::string className(charClassName);
 
-    SharedPtr<DataLogger*> newLogger;
+    AutoPtr<DataLogger> newLogger;
 
     try
     {
@@ -104,7 +106,7 @@ extern "C" int pyDataLoggerInit(DataLoggerMembers* self, PyObject *args, PyObjec
 
     // retrieve name
     tmp = self->name;
-    self->name = PyString_FromString((**self->logger)->name().c_str());
+    self->name = PyString_FromString((*self->logger)->name().c_str());
     Py_XDECREF(tmp);
 
 
@@ -135,9 +137,9 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
     try
     {
         tmpPort = (*Poco::Util::Application::instance()
-                          .getSubsystem<DataManager>()
-                          .getSourceDataItem( *self->logger ))
-						  ->parentPort();
+                          .getSubsystem<Dispatcher>()
+                          .getOutPort(
+                        		  dynamic_cast<OutPort*>((*self->logger)->getDataSource()) ));
     }
     catch (Poco::NotFoundException& e)
     {
@@ -148,8 +150,7 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
 
     if (tmpPort == NULL)
     {
-    	Py_INCREF(Py_None);
-    	return Py_None;
+    	Py_RETURN_NONE;
     }
 
     Poco::SharedPtr<OutPort*> sharedPort = Poco::Util::Application::instance()
@@ -188,10 +189,11 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
 
 PyObject* pyDataLoggerDetach(DataLoggerMembers* self)
 {
-    (**self->logger)->detach();
+	Poco::Util::Application::instance()
+			  .getSubsystem<Dispatcher>()
+			  .unbind(*self->logger);
 
-    Py_INCREF(Py_None);
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 #endif /* HAVE_PYTHON27 */

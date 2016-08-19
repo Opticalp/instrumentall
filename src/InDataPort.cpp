@@ -35,95 +35,21 @@ InDataPort::InDataPort(Module* parent,
         std::string description,
         int datatype,
         size_t index):
-    InPort(parent, name, description, datatype, index),
-    held(false)
+    InPort(parent, name, description, index),
+	mType(datatype)
 {
-    mSeqSourcePort = getSourcePort();
+
 }
 
-InDataPort::InDataPort(OutPort* emptySourcePort):
-        InPort( emptySourcePort,
-                "emptyIn", "replace an expired port"),
-        held(false)
+InDataPort::InDataPort():
+        InPort("emptyIn", "replace an expired port"),
+		mType(DataItem::typeUndefined)
 {
-    mSeqSourcePort = SharedPtr<OutPort*>( new (OutPort*)(emptySourcePort) );
 }
 
-void InDataPort::setSeqSourcePort(SharedPtr<OutPort*> port)
+std::set<int> InDataPort::supportedInputDataType()
 {
-    (*mSeqSourcePort)->removeSeqTargetPort(this);
-    mSeqSourcePort = port;
-    try
-    {
-        (*mSeqSourcePort)->addSeqTargetPort(this);
-    }
-    catch (Poco::Exception& e)
-    {
-        mSeqSourcePort = SharedPtr<OutPort*>(
-                new (OutPort*)( Poco::Util::Application::instance()
-                                        .getSubsystem<Dispatcher>()
-                                        .getEmptyOutPort()       ) );
-        e.rethrow();
-    }
-}
-
-void InDataPort::releaseSeqSourcePort()
-{
-    (*mSeqSourcePort)->removeSeqTargetPort(this);
-    mSeqSourcePort = SharedPtr<OutPort*>(
-            new (OutPort*)( Poco::Util::Application::instance()
-                                    .getSubsystem<Dispatcher>()
-                                    .getEmptyOutPort()       ) );
-}
-
-SharedPtr<OutPort*> InDataPort::getSeqSourcePort()
-{
-    return mSeqSourcePort;
-}
-
-bool InDataPort::tryLock()
-{
-    if (!isPlugged())
-        throw Poco::RuntimeException("InPort",
-                "The port is not plugged. Not able to get data. ");
-
-    newDataLock();
-    if (!isNew())
-    {
-        // try to get the lock
-        if (!(*getSourcePort())->dataItem()->tryReadLock())
-        {
-        	newDataUnlock();
-        	return false;
-        }
-
-        // check if the data is up to date
-        if (!isUpToDate())
-        {
-            (*getSourcePort())->dataItem()->releaseData();
-        	newDataUnlock();
-            return false;
-        }
-    }
-    //else: nothing to do, the lock is already activated (by the dispatcher)
-
-	newDataUnlock();
-    return true;
-}
-
-void InDataPort::release()
-{
-    InPort::release();
-
-    // TODO: update expiration information?
-}
-
-bool InDataPort::isUpToDate()
-{
-	// TODO: should check if the input data is in a sequence?
-	// inside a sequence, the holding should be impossible?
-	if (!held)
-		return false;
-	else
-		return (!(*getSourcePort())->dataItem()->isExpired());
+	std::set<int> ret;
+	ret.insert(mType);
+	return ret;
 }

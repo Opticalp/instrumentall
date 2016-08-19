@@ -128,7 +128,7 @@ void ModuleTask::cancel()
 			MergeableTask::cancel();
 
 			if (mTriggingPort)
-				mTriggingPort->release();
+				mTriggingPort->releaseInputData();
 
 			break;
 		}

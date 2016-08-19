@@ -31,6 +31,8 @@
 
 #include "VerboseEntity.h"
 #include "ParameterizedEntity.h"
+#include "ParameterizedWithGetters.h"
+#include "ParameterizedWithSetters.h"
 #include "InPortUser.h"
 #include "OutPortUser.h"
 #include "ModuleTask.h"
@@ -61,8 +63,10 @@ class ModuleFactory;
  * the tasks when needed. The tasks are the only one to run the
  * modules (after having set runningTask).
  */
-class Module: public virtual VerboseEntity,
+class Module: public VerboseEntity,
 	public ParameterizedEntity,
+	public ParameterizedWithGetters,
+	public ParameterizedWithSetters,
 	public InPortUser, public OutPortUser
 {
 public:
@@ -84,7 +88,22 @@ public:
 	 * if customName or internalName is already in use.
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
-	      mParent(parent), ParameterizedEntity("module." + name),
+	      mParent(parent),
+		  ParameterizedEntity("module." + name),
+		  ParameterizedWithGetters(this),
+		  ParameterizedWithSetters(this),
+		  procMode(fullBufferedProcessing),
+		  startSyncPending(false),
+		  reseting (false), resetDone(false),
+		  cancelling(false), cancelDone(false)
+	{
+	}
+
+	Module(ModuleFactory* parent, std::string name, bool applyParametersFromSettersWhenAllSet):
+	      mParent(parent),
+		  ParameterizedEntity("module." + name),
+		  ParameterizedWithGetters(this),
+		  ParameterizedWithSetters(this, applyParametersFromSettersWhenAllSet),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
@@ -140,6 +159,17 @@ public:
 	 * e.g. to get factory parameters
 	 */
 	ModuleFactory* parent();
+
+    /**
+     * Launch a module task
+     *
+     * to be called by the UI or by any mean, but without new
+     * input port data.
+     *
+     * @return The task created for the module to run. The
+     * task can be used to check the state of the execution.
+     */
+	Poco::AutoPtr<ModuleTask> runModule();
 
     /**
      * Enqueue a new task
@@ -202,12 +232,6 @@ public:
     virtual void setProcMode(ProcessingMode mode) { procMode = mode; }
     ProcessingMode getProcMode() { return procMode; }
 
-    /**
-     * Parameterized entity needs this definition to be able
-     * to use OutPortUser::expireOutData
-     */
-    void expireOutData() { OutPortUser::expireOutData(); }
-
 	/**
 	 * Reset the module by calling Module::reset(),
 	 * but reset also all the targets.
@@ -223,6 +247,10 @@ public:
 	 *
 	 * Called by ModuleTask::resetModule,
 	 * and then by Dispatcher::dispatchTargetCancel
+	 *
+	 * Check if the module is already canceling.
+	 * If not, call Module::cancel and cancel all the module tasks
+	 *
 	 */
 	void cancelWithTargets();
 
@@ -414,6 +442,8 @@ protected:
 	 */
 	void notifyCreation();
 
+	Poco::Logger& logger() { return VerboseEntity::logger(); }
+
 private:
     /// enum to be returned by checkName
     enum NameStatus
@@ -464,16 +494,10 @@ private:
 	 */
 	bool taskIsRunning();
 
-	///**
-	// * Conditional cancel
-	// *
-	// * Check if the module is already canceling.
-	// * If not, call Module::cancel and cancel all the module tasks
-	// */
-	//void condCancel();
-
 	bool cancelling; ///< used by Module::condCancel
 	bool cancelDone; ///< flag set when a cancellation just occured
+
+	void waitParameters();
 
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
 	std::set<ModuleTask*> allTasks;

@@ -138,17 +138,23 @@ PyObject* pyInPortGetSourcePort(InPortMembers* self)
 {
     Poco::SharedPtr<OutPort*> sharedSource;
 
-    sharedSource = (**self->inPort)->getSourcePort();
+    OutPort* tmpPort;
 
-    // check if connected
-    if ( *sharedSource == Poco::Util::Application::instance()
-                            .getSubsystem<Dispatcher>()
-                            .getEmptyOutPort() )
+    try
     {
-        PyErr_SetString(PyExc_ReferenceError,
-                "This input port has no source");
-        return NULL;
+    	tmpPort = dynamic_cast<OutPort*>((**self->inPort)->getDataSource());
     }
+    catch (Poco::NullPointerException&)
+    {
+    	tmpPort = NULL;
+    }
+
+    if (tmpPort == NULL)
+        Py_RETURN_NONE;
+
+    sharedSource = Poco::Util::Application::instance()
+		.getSubsystem<Dispatcher>()
+		.getOutPort(tmpPort);
 
     // prepare OutPort python type
     if (PyType_Ready(&PythonOutPort) < 0)
@@ -182,22 +188,16 @@ PyObject* pyInPortGetSourcePort(InPortMembers* self)
 
 PyObject* pyInPortGetSeqSourcePort(InPortMembers* self)
 {
-    if ((**self->inPort)->isTrig())
-        Py_RETURN_NONE;
-
     Poco::SharedPtr<OutPort*> sharedSource;
 
-    sharedSource = reinterpret_cast<InDataPort*>(**self->inPort)->getSeqSourcePort();
+    OutPort* tmpPort = dynamic_cast<OutPort*>((**self->inPort)->getSeqSource());
 
-    // check if connected
-    if ( *sharedSource == Poco::Util::Application::instance()
-                            .getSubsystem<Dispatcher>()
-                            .getEmptyOutPort() )
-    {
-        PyErr_SetString(PyExc_ReferenceError,
-                "This input port has no source");
-        return NULL;
-    }
+    if (tmpPort == NULL)
+        Py_RETURN_NONE;
+
+    sharedSource = Poco::Util::Application::instance()
+		.getSubsystem<Dispatcher>()
+		.getOutPort(tmpPort);
 
     // prepare OutPort python type
     if (PyType_Ready(&PythonOutPort) < 0)
@@ -229,36 +229,36 @@ PyObject* pyInPortGetSeqSourcePort(InPortMembers* self)
     return (PyObject*) pyPort;
 }
 
-PyObject* pyInPortHoldData(InPortMembers *self, PyObject* args)
-{
-    if ((**self->inPort)->isTrig())
-    {
-        PyErr_SetString(PyExc_RuntimeError,
-                "This port is a trig port. Data can not be hold");
-        return NULL;
-    }
-
-    char* commandChar;
-
-    if (!PyArg_ParseTuple(args, "s:holdData", &commandChar))
-        return NULL;
-
-    std::string command(commandChar);
-
-    if (command.compare("on") == 0)
-        reinterpret_cast<InDataPort*>(**self->inPort)->hold(true);
-    else if (command.compare("off") == 0)
-        reinterpret_cast<InDataPort*>(**self->inPort)->hold(false);
-    else
-    {
-        PyErr_SetString(PyExc_RuntimeError,
-                "Please, pass \"on\" or \"off\" as function argument");
-        return NULL;
-    }
-
-    Py_RETURN_NONE;
-}
-
+//PyObject* pyInPortHoldData(InPortMembers *self, PyObject* args)
+//{
+//    if ((**self->inPort)->isTrig())
+//    {
+//        PyErr_SetString(PyExc_RuntimeError,
+//                "This port is a trig port. Data can not be hold");
+//        return NULL;
+//    }
+//
+//    char* commandChar;
+//
+//    if (!PyArg_ParseTuple(args, "s:holdData", &commandChar))
+//        return NULL;
+//
+//    std::string command(commandChar);
+//
+//    if (command.compare("on") == 0)
+//        reinterpret_cast<InDataPort*>(**self->inPort)->hold(true);
+//    else if (command.compare("off") == 0)
+//        reinterpret_cast<InDataPort*>(**self->inPort)->hold(false);
+//    else
+//    {
+//        PyErr_SetString(PyExc_RuntimeError,
+//                "Please, pass \"on\" or \"off\" as function argument");
+//        return NULL;
+//    }
+//
+//    Py_RETURN_NONE;
+//}
+//
 PyObject* pyInPortIsTrig(InPortMembers *self)
 {
     if ((**self->inPort)->isTrig())

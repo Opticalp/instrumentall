@@ -119,19 +119,19 @@ static PyMethodDef pyMethodInPortGetSeqSourcePort =
     "Retrieve the data sequence source port"
 };
 
-/// python wrapper to hold the data coming from this port
-extern "C" PyObject* pyInPortHoldData(InPortMembers *self, PyObject* args);
+///// python wrapper to hold the data coming from this port
+//extern "C" PyObject* pyInPortHoldData(InPortMembers *self, PyObject* args);
+//
+//static PyMethodDef pyMethodInPortHoldData =
+//{
+//    "holdData",
+//    (PyCFunction)pyInPortHoldData,
+//    METH_VARARGS,
+//    "holdData(\"on\"): re-use the same data if not expired. "
+//    "holdData(\"off\"): release the data holding. "
+//};
 
-static PyMethodDef pyMethodInPortHoldData =
-{
-    "holdData",
-    (PyCFunction)pyInPortHoldData,
-    METH_VARARGS,
-    "holdData(\"on\"): re-use the same data if not expired. "
-    "holdData(\"off\"): release the data holding. "
-};
-
-/// python wrapper to hold the data coming from this port
+/// python wrapper to check if the port is a trig port
 extern "C" PyObject* pyInPortIsTrig(InPortMembers *self);
 
 static PyMethodDef pyMethodInPortIsTrig =
@@ -149,8 +149,8 @@ static PyMethodDef pyInPortMethods[] = {
         pyMethodInPortGetSourcePort,
         pyMethodInPortGetSeqSourcePort,
 
-		pyMethodInPortHoldData,
-
+//		pyMethodInPortHoldData,
+//
 		pyMethodInPortIsTrig,
 
         {NULL} // sentinel

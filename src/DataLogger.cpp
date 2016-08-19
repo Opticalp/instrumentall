@@ -27,100 +27,32 @@
  */
 
 #include "DataLogger.h"
-#include "DataItem.h"
 
-DataLogger::~DataLogger()
+#include "ThreadManager.h"
+
+#include "Poco/Util/Application.h"
+
+void DataLogger::runTarget()
 {
-    detach();
-}
-
-void DataLogger::detach()
-{
-    dataLock.lock();
-    detachNoLock();
-    dataLock.unlock();
-}
-
-void DataLogger::detachNoLock()
-{
-    if (pData)
-    {
-        pData->detachLogger(this);
-        pData = NULL;
-    }
-}
-
-void DataLogger::registerData(DataItem* data)
-{
-    if (empty)
-        throw Poco::InvalidAccessException(name(),
-                "The logger was deleted");
-
-    dataLock.lock();
-
-    if (!isSupportedDataType(data->dataType()))
-    {
-        dataLock.unlock();
-        throw Poco::RuntimeException("registerLogger",
-                "This logger do not support this data type");
-    }
-
-    // deregister previous parent
-    detachNoLock();
-
-    // bind to data
-    data->registerLogger(this);
-    pData = data;
-
-    dataLock.unlock();
-}
-
-void DataLogger::acquireLock()
-{
-    dataLock.lock();
-    if (pData)
-        pData->readLock();
-    dataLock.unlock();
-}
-
-void DataLogger::setEmpty()
-{
-    dataLock.lock();
-
-    detachNoLock();
-    empty = true;
-
-    dataLock.unlock();
-}
-
-DataItem* DataLogger::data()
-{
-    DataItem* tmp;
-
-    // lock in case somebody else already locks
-    dataLock.lock();
-    tmp =  pData;
-    dataLock.unlock();
-
-    return tmp;
+	Poco::Util::Application::instance()
+		.getSubsystem<ThreadManager>()
+		.startDataLogger(this);
 }
 
 void DataLogger::run()
 {
-    Poco::Mutex::ScopedLock localLock(dataLock);
+	if (!tryCatchSource())
+		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
 
-    if (data() == NULL)
-        return;
+	try
+	{
+		log();
+	}
+	catch (...)
+	{
+		releaseInputData();
+		throw;
+	}
 
-    try
-    {
-        log();
-    }
-    catch (Poco::Exception& e)
-    {
-        data()->releaseData();
-        e.rethrow();
-    }
-
-    data()->releaseData();
+	releaseInputData();
 }

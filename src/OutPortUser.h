@@ -29,11 +29,10 @@
 #ifndef SRC_OUTPORTUSER_H_
 #define SRC_OUTPORTUSER_H_
 
-#include "VerboseEntity.h"
-
 #include "DataAttributeOut.h"
 #include "ModuleTask.h"
 
+#include "Poco/Logger.h"
 #include "Poco/ThreadLocal.h"
 #include "Poco/Thread.h"
 #include "Poco/Mutex.h"
@@ -41,7 +40,16 @@
 class Module;
 class OutPort;
 
-class OutPortUser: public virtual VerboseEntity
+/**
+ * Class managing multiple OutPorts
+ *
+ * Deal with all the output-related operations of @ref Module.
+ *
+ *  - OutPorts creation,
+ *  - thread local access control (locks, write)
+ *  - release (notifyReady)
+ */
+class OutPortUser
 {
 public:
 	OutPortUser() { }
@@ -56,11 +64,6 @@ public:
 	 */
 	std::vector<OutPort*> getOutPorts() { return outPorts; }
 	OutPort* getOutPort(std::string portName);
-
-    /**
-     * Expire output data
-     */
-    void expireOutData();
 
 protected:
     /**
@@ -216,6 +219,8 @@ protected:
 
     virtual ModuleTask::RunningStates getRunningState() = 0;
     virtual void setRunningState(ModuleTask::RunningStates state) = 0;
+
+    virtual Poco::Logger& logger() = 0;
 
 private:
 	bool tryLockOut() { return outMutex.tryLock(); }

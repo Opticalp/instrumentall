@@ -39,6 +39,8 @@ THE SOFTWARE.
 
 #include "DataLogger.h"
 
+#include "Poco/AutoPtr.h"
+
 // -----------------------------------------------------------------------
 // Variables
 // -----------------------------------------------------------------------
@@ -49,7 +51,7 @@ typedef struct
     PyObject_HEAD ///< a refcount and a pointer to a type object (convenience python/C API macro)
     PyObject* name;  ///< name attribute
     PyObject* description;  ///< description attribute
-    Poco::SharedPtr<DataLogger*>* logger; ///< pointer to the C++ internal DataLogger object
+    Poco::AutoPtr<DataLogger>* logger; ///< pointer to the C++ internal DataLogger object
 } DataLoggerMembers;
 
 /// Description of the DataLoggerMembers structure

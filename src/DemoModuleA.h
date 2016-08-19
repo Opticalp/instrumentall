@@ -55,6 +55,7 @@ private:
     {
         inPortA,
         inPortB,
+		inPortC,
         inPortCnt
     };
 

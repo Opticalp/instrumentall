@@ -1,6 +1,6 @@
 /**
- * @file	src/DataItem.cpp
- * @date	Feb. 2016
+ * @file	src/TypeNeutralData.cpp
+ * @date	june 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,22 +26,10 @@
  THE SOFTWARE.
  */
 
-#include "DataItem.h"
-#include "DataLogger.h"
-#include "DataManager.h"
+#include "TypeNeutralData.h"
 
-#include "OutPort.h"
-#include "Module.h"
-
-#include "Poco/Types.h"
-#include "Poco/Util/Application.h"
-
-DataItem::DataItem(int dataType, OutPort* parent):
-        mDataType(dataType),
-        mParentPort(parent),
-		expired(true),
-		readLockCnt(0),
-		writeLockCnt(0)
+TypeNeutralData::TypeNeutralData(int datatype):
+	mDataType(datatype)
 {
     switch (mDataType)
     {
@@ -100,10 +88,110 @@ DataItem::DataItem(int dataType, OutPort* parent):
     }
 }
 
-DataItem::~DataItem()
+TypeNeutralData::TypeNeutralData(TypeNeutralData& other):
+		mDataType(other.mDataType)
 {
-    // The loggers are detached by DataManager::removeOutPort()
+    switch (mDataType)
+    {
+    // scalar containers
+    case (typeInt32 | contScalar):
+		{
+    	Poco::Int32* tmp = new Poco::Int32(*reinterpret_cast<Poco::Int32*>(other.dataStore));
+        dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeUInt32 | contScalar):
+		{
+		Poco::UInt32* tmp = new Poco::UInt32(*reinterpret_cast<Poco::UInt32*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeInt64 | contScalar):
+		{
+		Poco::Int64* tmp = new Poco::Int64(*reinterpret_cast<Poco::Int64*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeUInt64 | contScalar):
+		{
+		Poco::UInt64* tmp = new Poco::UInt64(*reinterpret_cast<Poco::UInt64*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeFloat | contScalar):
+		{
+        float* tmp = new float(*reinterpret_cast<float*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeDblFloat | contScalar):
+		{
+        double* tmp = new double(*reinterpret_cast<double*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeString | contScalar):
+		{
+        std::string* tmp = new std::string(*reinterpret_cast<std::string*>(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
 
+    // vector containers
+    case (typeInt32 | contVector):
+		{
+    	std::vector<Poco::Int32>* tmp = new std::vector<Poco::Int32>(*reinterpret_cast< std::vector<Poco::Int32>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeUInt32 | contVector):
+		{
+    	std::vector<Poco::UInt32>* tmp = new std::vector<Poco::UInt32>(*reinterpret_cast< std::vector<Poco::UInt32>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeInt64 | contVector):
+		{
+    	std::vector<Poco::Int64>* tmp = new std::vector<Poco::Int64>(*reinterpret_cast< std::vector<Poco::Int64>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeUInt64 | contVector):
+		{
+    	std::vector<Poco::UInt64>* tmp = new std::vector<Poco::UInt64>(*reinterpret_cast< std::vector<Poco::UInt64>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeFloat | contVector):
+		{
+    	std::vector<float>* tmp = new std::vector<float>(*reinterpret_cast< std::vector<float>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeDblFloat | contVector):
+		{
+    	std::vector<double>* tmp = new std::vector<double>(*reinterpret_cast< std::vector<double>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+    case (typeString | contVector):
+		{
+    	std::vector<std::string>* tmp = new std::vector<std::string>(*reinterpret_cast< std::vector<std::string>* >(other.dataStore));
+    	dataStore = reinterpret_cast<void*>(tmp);
+        break;
+		}
+
+    // others
+    case typeUndefined:
+        break;
+    default:
+        poco_bugcheck_msg("DataItem::DataItem: unknown requested data type");
+        throw Poco::BugcheckException();
+    }
+}
+
+TypeNeutralData::~TypeNeutralData()
+{
     switch (mDataType)
     {
     // scalar containers
@@ -159,95 +247,7 @@ DataItem::~DataItem()
     }
 }
 
-void DataItem::releaseData()
-{
-    if (writeLockCnt == 1)
-    	writeLockCnt--;
-    else if (readLockCnt > 0)
-    	readLockCnt--;
-    else
-	{
-		std::ostringstream stringStream;
-		stringStream << "DataItem: impossible lock count while releasing "
-			<< mParentPort->name() << " of " << mParentPort->parent()->name() << ": "
-	        << " readLock/writeLock == " << readLockCnt << "/" << writeLockCnt << std::endl;
-		std::string copyOfStr = stringStream.str();
-    	poco_bugcheck_msg(copyOfStr.c_str());
-	}
-
-    //std::cout << "release" << std::endl;
-    //lockCntLogger();
-
-    dataLock.unlock();
-}
-
-void DataItem::releaseNewData()
-{
-	expired = false;
-    releaseData();
-
-    Poco::Util::Application::instance()
-            .getSubsystem<DataManager>()
-            .newData(this);
-}
-
-void DataItem::releaseBrokenData()
-{
-    expired = true;
-    releaseData();
-}
-
-void DataItem::registerLogger(DataLogger* logger)
-{
-    loggersLock.writeLock();
-    allLoggers.insert(logger);
-    loggersLock.unlock();
-}
-
-std::set<SharedPtr<DataLogger*> > DataItem::loggers()
-{
-    std::set<SharedPtr<DataLogger*> > tmpList;
-
-    loggersLock.readLock();
-
-    for (std::set< DataLogger* >::iterator it = allLoggers.begin(),
-            ite = allLoggers.end(); it != ite; it++ )
-    {
-        tmpList.insert( Poco::Util::Application::instance()
-                            .getSubsystem<DataManager>()
-                            .getDataLogger(*it) );
-    }
-
-    loggersLock.unlock();
-
-    return tmpList;
-}
-
-void DataItem::lockCntLogger()
-{
-	if (mParentPort == NULL)
-		return;
-
-	//std::cout << mParentPort->name() << " of " << mParentPort->parent()->name() << ": "
-	//          << " readLock/writeLock == " << readLockCnt << "/" << writeLockCnt << std::endl;
-}
-
-void DataItem::detachLogger(DataLogger* logger)
-{
-    loggersLock.writeLock();
-    allLoggers.erase(logger);
-    loggersLock.unlock();
-}
-
-void DataItem::checkDataType(int datatype)
-{
-    if ((datatype & ~contVector) == (mDataType & ~contVector))
-        return;
-
-    throw Poco::DataFormatException(dataTypeStr(mDataType) + " is expected");
-}
-
-std::string DataItem::dataTypeShortStr(int datatype)
+std::string TypeNeutralData::dataTypeShortStr(int datatype)
 {
     if (datatype == typeUndefined)
         return "undef";
@@ -287,7 +287,7 @@ std::string DataItem::dataTypeShortStr(int datatype)
     return desc;
 }
 
-int DataItem::getTypeFromShortStr(std::string typeName)
+int TypeNeutralData::getTypeFromShortStr(std::string typeName)
 {
     int retType = 0;
     std::string tmp(typeName);
@@ -316,5 +316,13 @@ int DataItem::getTypeFromShortStr(std::string typeName)
         retType |= typeString;
 
     return retType;
+}
+
+void TypeNeutralData::checkDataType(int datatype)
+{
+    if ((datatype & ~contVector) == (mDataType & ~contVector))
+        return;
+
+    throw Poco::DataFormatException(dataTypeStr(mDataType) + " is expected");
 }
 

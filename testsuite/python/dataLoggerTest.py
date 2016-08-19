@@ -71,12 +71,6 @@ def myMain():
     print 'And once again: DataLogger("DataPocoLogger")'
     logger1 = DataLogger("DataPocoLogger") 
     
-    print "Retrieve the existing loggers list"
-    loggers = dataLoggers()
-    print str(len(loggers)) + " loggers available"
-    
-    print "logger#0 is of class: " + loggers[0].name 
-    
     print "Register the first logger to mod2 output"
     mod2.outPorts()[0].register(logger)
     
@@ -108,8 +102,10 @@ def myMain():
     removeDataLogger(logger)
    
     print "Check the registered loggers at the mod2 output port" 
-    if mod2.outPorts()[0].loggers() is None:
+    if mod2.outPorts()[0].loggers() == list():
         print "Ok, no more logger is registered"
+    else:
+        raise RuntimeError("a logger is still registered")
 
     print "And re-run..."
     runModule(mod1)

@@ -29,11 +29,13 @@
 #ifndef SRC_PARAMETERIZEDENTITY_H_
 #define SRC_PARAMETERIZEDENTITY_H_
 
-#include "VerboseEntity.h"
-
 #include "ParameterSet.h"
 
+#include "Poco/Types.h"
+#include "Poco/Logger.h"
 #include "Poco/Util/Application.h" // layered configuration
+#include "Poco/Mutex.h"
+#include "Poco/Any.h"
 
 /**
  * ParameterizedEntity
@@ -41,8 +43,10 @@
  * Base class to handle parameters in an entity.
  *
  * Primarily used with modules.
+ *
+ * applyParameters is now mandatory to effectively set the parameters
  */
-class ParameterizedEntity: public virtual VerboseEntity
+class ParameterizedEntity
 {
 public:
 	/**
@@ -64,6 +68,8 @@ public:
 	{
 	}
 
+	virtual std::string name() = 0;
+
 	/**
 	 * Retrieve a copy of the parameter set of the module
 	 *
@@ -79,6 +85,13 @@ public:
     ParamItem::ParamType getParameterType(std::string paramName);
 
 	/**
+	 * Retrieve a parameter index from its name
+	 *
+	 * The main mutex should be locked before calling this function
+	 */
+	size_t getParameterIndex(std::string paramName);
+
+	/**
 	 * Retrieve the value of the parameter given by its name
 	 *
 	 * Check the parameter type and call one of:
@@ -92,6 +105,11 @@ public:
     template<typename T> T getParameterValue(std::string paramName);
 
     /**
+     * Retrieve the value of the parameter given by its index
+     */
+    template<typename T> T getParameterValue(size_t paramIndex);
+
+    /**
      * Set the value of the parameter given by its name
      *
      * Check the parameter type and call one of:
@@ -99,18 +117,33 @@ public:
      *  - setFloatParameterValue
      *  - setStrParameterValue
      *
+     * @param paramName name of the parameter to set
+     * @param value value to set
+     * @param immediateApply if set to true, applyParameters is called
+     * before returning.
+     *
+     * @warning applyParameters applies to all parameters, not only for
+     * the one given by paramName.
+     *
      * @throw Poco::NotFoundException if the name is not found
      * @throw Poco::DataFormatException if the parameter format does not fit
      */
-    template<typename T> void setParameterValue(std::string paramName, T value);
+    template<typename T> void setParameterValue(std::string paramName, T value, bool immediateApply = false);
+    template<typename T> void setParameterValue(size_t paramIndex, T value, bool immediateApply = false);
 
     /**
-     * Expire output data
+     * Apply the parameters
+     *
+     * apply the parameter values stored in the temp storage
+     *
+     * Default behavior: call setIntParameterValue, setFloatParameterValue
+     * or setStringParameterValue for each parameter to keep compatibility
+     * with previous versions.
      */
-    virtual void expireOutData() = 0;
+    virtual void applyParameters();
 
 protected:
-	/**
+    /**
 	 * Change the prefix key
 	 */
 	void setPrefixKey(std::string prefixKey)
@@ -122,7 +155,11 @@ protected:
      * to be called before adding parameters
      */
     void setParameterCount(size_t count)
-        { paramSet.resize(count); }
+    {
+    	paramSet.resize(count);
+    	paramValues.resize(count);
+    	needApplication = std::vector<bool>(count, false);
+    }
 
     /**
      * Add a parameter in the parameter set
@@ -152,11 +189,11 @@ protected:
      * - if not found...
      * @throw Poco::NotFoundException
      */
-    long getIntParameterDefaultValue(size_t index);
+    Poco::Int64 getIntParameterDefaultValue(size_t index);
     double getFloatParameterDefaultValue(size_t index);
     std::string getStrParameterDefaultValue(size_t index);
 
-    virtual long getIntParameterValue(size_t paramIndex)
+    virtual Poco::Int64 getIntParameterValue(size_t paramIndex)
     {
         poco_bugcheck_msg("getIntParameterValue not implemented for this module");
         throw Poco::BugcheckException();
@@ -174,28 +211,42 @@ protected:
         throw Poco::BugcheckException();
     }
 
-    virtual void setIntParameterValue(size_t paramIndex, long value)
-        { poco_bugcheck_msg("setIntParameterValue not implemented for this module"); }
+    /**
+     * Get the internal storage value of the parameter
+     *
+     * Reset the needApplication flag to false
+     *
+     * @param[in] paramIndex parameter index
+     * @param[out] value parameter value from the internal storage
+     * @return needApplication flag
+     */
+    bool getInternalIntParameterValue(size_t paramIndex, Poco::Int64& value);
+
+    /// @see getInternalIntParameterValue
+    bool getInternalFloatParameterValue(size_t paramIndex, double& value);
+
+    /// @see getInternalIntParameterValue
+    bool getInternalStrParameterValue(size_t paramIndex, std::string& value);
+
+    virtual void setIntParameterValue(size_t paramIndex, Poco::Int64 value)
+        { poco_bugcheck_msg("setIntParameterValue not implemented"); }
 
     virtual void setFloatParameterValue(size_t paramIndex, double value)
-        { poco_bugcheck_msg("setFloatParameterValue not implemented for this module"); }
+        { poco_bugcheck_msg("setFloatParameterValue not implemented"); }
 
     virtual void setStrParameterValue(size_t paramIndex, std::string value)
-        { poco_bugcheck_msg("setStrParameterValue not implemented for this module"); }
+        { poco_bugcheck_msg("setStrParameterValue not implemented"); }
 
+    virtual Poco::Logger& logger() = 0;
 
 private:
-	ParameterizedEntity();
+    ParameterizedEntity();
+
 	std::string confPrefixKey;
 
 	ParameterSet paramSet;
-
-	/**
-	 * Retrieve a parameter index from its name
-	 *
-	 * The main mutex has to be locked before calling this function
-	 */
-	size_t getParameterIndex(std::string paramName);
+	std::vector<Poco::Any> paramValues;
+	std::vector<bool> needApplication;
 
 	/**
 	 * Table of hard-coded values
@@ -217,6 +268,7 @@ private:
     Poco::Util::LayeredConfiguration& appConf()
         { return Poco::Util::Application::instance().config(); }
 
+    Poco::Mutex mutex; ///< main mutex (recursive). lock the operations on parameter values
 };
 
 /// templates implementation

@@ -59,7 +59,7 @@ inline void OutPortUser::getDataToWrite(size_t portIndex, T*& pData)
 
     OutPort* outPort = outPorts[portIndex];
 
-    outPort->getDataToWrite(pData);
+    pData = outPort->getData<T>();
 }
 
 

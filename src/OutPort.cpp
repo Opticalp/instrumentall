@@ -28,158 +28,28 @@
 
 #include "OutPort.h"
 
-#include "ModuleManager.h"
 #include "Dispatcher.h"
 #include "DataManager.h"
+#include "DataLogger.h"
+
+#include "Poco/Util/Application.h"
 
 OutPort::OutPort(Module* parent,
         std::string name,
         std::string description,
         int datatype,
         size_t index):
-    Port(parent, name, description, datatype, index),
-    data(datatype, this)
+    Port(parent, name, description, index),
+	SeqSource(datatype)
 {
-    // notify the DataManager of the creation
-    Poco::Util::Application::instance()
-                            .getSubsystem<DataManager>()
-                            .addOutPort(this);
-}
-
-std::vector<SharedPtr<InPort*> > OutPort::getTargetPorts()
-{
-    std::vector<SharedPtr<InPort*> > list;
-
-    targetPortsLock.readLock();
-    list = targetPorts;
-    targetPortsLock.unlock();
-
-    return list;
-}
-
-std::vector<SharedPtr<InPort*> > OutPort::getSeqTargetPorts()
-{
-    std::vector<SharedPtr<InPort*> > list;
-
-    seqTargetPortsLock.readLock();
-    list = seqTargetPorts;
-    seqTargetPortsLock.unlock();
-
-    return list;
-}
-
-void OutPort::addTargetPort(InPort* port)
-{
-    Poco::ScopedRWLock lock(targetPortsLock, true);
-
-    SharedPtr<InPort*> sharedPort =
-        Poco::Util::Application::instance()
-                    .getSubsystem<Dispatcher>()
-                    .getInPort(port);
-    targetPorts.push_back(sharedPort);
-}
-
-void OutPort::removeTargetPort(InPort* port)
-{
-    Poco::ScopedRWLock lock(targetPortsLock, true);
-
-    for (std::vector< SharedPtr<InPort*> >::iterator it=targetPorts.begin(),
-            ite=targetPorts.end(); it != ite; it++ )
-    {
-        if (**it==port)
-        {
-            targetPorts.erase(it);
-            return;
-        }
-    }
-}
-
-void OutPort::addSeqTargetPort(InDataPort* port)
-{
-    Poco::ScopedRWLock lock(seqTargetPortsLock, true);
-
-    SharedPtr<InPort*> sharedPort =
-        Poco::Util::Application::instance()
-                    .getSubsystem<Dispatcher>()
-                    .getInPort(port);
-        seqTargetPorts.push_back(sharedPort);
-}
-
-void OutPort::removeSeqTargetPort(InDataPort* port)
-{
-    Poco::ScopedRWLock lock(seqTargetPortsLock, true);
-
-    for (std::vector< SharedPtr<InPort*> >::iterator it=seqTargetPorts.begin(),
-            ite=seqTargetPorts.end(); it != ite; it++ )
-    {
-        if (**it==port)
-        {
-            seqTargetPorts.erase(it);
-            return;
-        }
-    }
+//    // notify the DataManager of the creation
+//    Poco::Util::Application::instance()
+//                            .getSubsystem<DataManager>()
+//                            .addOutPort(this);
 }
 
 OutPort::OutPort():
-        Port(Poco::Util::Application::instance()
-                    .getSubsystem<ModuleManager>()
-                    .getEmptyModule(),
-                "emptyOut", "replace an expired port",
-                DataItem::typeUndefined, 0)
+        Port("emptyOut", "replace an expired port")
 {
     // nothing to do
-}
-
-void OutPort::notifyReady(DataAttributeOut attribute)
-{
-    if (attribute.isSettingSequence())
-    {
-        seqTargetPortsLock.readLock();
-
-        for( std::vector< SharedPtr<InPort*> >::iterator it = seqTargetPorts.begin(),
-                ite = seqTargetPorts.end(); it != ite; it++ )
-            attribute.appendSeqPortTarget(reinterpret_cast<InDataPort*>(**it));
-
-        seqTargetPortsLock.unlock();
-    }
-
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .lockInPorts(this);
-
-    dataItem()->setDataAttribute(attribute);
-    dataItem()->releaseNewData();
-
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .setOutPortDataReady(this);
-}
-
-void OutPort::expire()
-{
-	// expire self data
-	data.expire();
-
-	// forward the expiration
-    targetPortsLock.readLock();
-
-    for( std::vector< SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
-            ite = targetPorts.end(); it != ite; it++ )
-        (**it)->parent()->expireOutData();
-
-    targetPortsLock.unlock();
-}
-
-void OutPort::cancelTargets()
-{
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .dispatchTargetCancel(this);
-}
-
-void OutPort::resetTargets()
-{
-    Poco::Util::Application::instance()
-                        .getSubsystem<Dispatcher>()
-                        .dispatchTargetReset(this);
 }

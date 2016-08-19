@@ -179,8 +179,10 @@ static PyMethodDef pyMethodDispatchBind =
     "bind",
     pythonDispatchBind,
     METH_VARARGS,
-    "bind(portA, portB): Bind a data output source port portA "
-    "to a data input target port portB"
+    "bind(source, target): Bind a data source (e.g. output port) "
+    "to a data target (e.g. input port). \n"
+    "bind(source, target, proxy): Bind source to target using the "
+    "given data proxy."
 };
 
 /**
@@ -314,23 +316,6 @@ static PyMethodDef pyMethodDataManDataLoggerClasses =
 };
 
 /**
- * @brief Python wrapper to retrieve the existing data loggers
- *
- * Call DataManager::dataLoggers() method
- *
- */
-extern "C" PyObject*
-pythonDataManDataLoggers(PyObject *self, PyObject *args);
-
-static PyMethodDef pyMethodDataManDataLoggers =
-{
-    "dataLoggers",
-    pythonDataManDataLoggers,
-    METH_NOARGS,
-    "Retrieve the existing data loggers"
-};
-
-/**
  * @brief Python wrapper to delete a data logger
  *
  * Call DataManager::removeDataLogger() method
@@ -345,6 +330,24 @@ static PyMethodDef pyMethodDataManRemoveDataLogger =
     pythonDataManRemoveDataLogger,
     METH_VARARGS,
     "removeDataLogger(logger): delete the data logger \"logger\""
+};
+
+/**
+ * @brief Python wrapper to retrieve the DataProxy classes
+ *
+ * Call DataManager::dataProxyClasses() method
+ *
+ */
+extern "C" PyObject*
+pythonDataManDataProxyClasses(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDataManDataProxyClasses =
+{
+    "dataProxyClasses",
+    pythonDataManDataProxyClasses,
+    METH_NOARGS,
+    "Retrieve the names and descriptions "
+    "of the available DataProxy classes"
 };
 
 #endif /* HAVE_PYTHON27 */

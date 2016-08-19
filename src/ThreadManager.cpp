@@ -74,7 +74,8 @@ void ThreadManager::onStarted(TaskStartedNotification* pNf)
 void ThreadManager::onFailed(TaskFailedNotification* pNf)
 {
     Poco::Exception e(pNf->reason());
-	poco_error(logger(), pNf->task()->name() + ": " + e.displayText());
+    poco_error(logger(), pNf->task()->name()
+    		+ ": " + e.displayText());
 
     ModuleTask* modTask = dynamic_cast<ModuleTask*>(pNf->task());
     modTask->resetModule();
@@ -211,7 +212,7 @@ void ThreadManager::waitAll()
     // joinAll does not work here,
     // since it seems that it locks the recursive creation of new threads...
     // We use an event instead.
-    while (count() || cancellingAll)
+    while (count() || threadPool.used() || cancellingAll)
     {
         //Poco::TaskManager::TaskList list = taskManager.taskList();
         //std::string nameList("\n");

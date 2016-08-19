@@ -208,6 +208,9 @@ PyObject* pyTaskState(TaskMembers* self)
         case MergeableTask::TASK_RUNNING:
         	switch ((*self->task)->getRunningState())
         	{
+        	case ModuleTask::applyingParameters:
+        		state = "retrieving and applying parameters";
+        		break;
         	case ModuleTask::retrievingInDataLocks:
         		state = "retrieving input locks";
         		break;
@@ -216,6 +219,11 @@ PyObject* pyTaskState(TaskMembers* self)
         		break;
         	case ModuleTask::processing:
         		state = "processing";
+        		break;
+        	case ModuleTask::NotAvailableRunningState:
+        		state = "not available";
+        		PyErr_WarnEx(PyExc_RuntimeWarning,
+        				"The task state changed during the query", 0);
         		break;
         	default:
             	poco_bugcheck_msg("unknown task running state");

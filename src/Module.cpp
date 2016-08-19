@@ -179,7 +179,8 @@ void Module::run(ModuleTask* pTask)
 
 	try
 	{
-		expireOutData();
+		setRunningState(ModuleTask::applyingParameters);
+		waitParameters();
 
 		setRunningState(ModuleTask::retrievingInDataLocks);
 
@@ -191,7 +192,7 @@ void Module::run(ModuleTask* pTask)
 		// start condition has to be checked before any cancellation test
 		// to allow releaseAllInPorts to be effective
 
-		mergeTasks(portsWithNewData());
+		mergeTasks(inPortCoughts());
 
 		if (cancelling)
 			throw Poco::RuntimeException(name() +
@@ -203,11 +204,13 @@ void Module::run(ModuleTask* pTask)
 	}
 	catch (...)
 	{
+		parametersTreated();
 		releaseAllInPorts();
 		releaseAllOutPorts();
 		throw;
 	}
 
+	parametersTreated();
 	releaseAllInPorts();
 	releaseAllOutPorts();
 }
@@ -392,7 +395,7 @@ void Module::resetWithTargets()
 		poco_bugcheck_msg("Module::reset shall not throw exceptions");
 	}
 
-	// reset the sequence targets
+	// reset the targets (imply sequence targets)
 	resetTargets();
 
 	// clean the task queue
@@ -557,4 +560,24 @@ void Module::mergeTasks(std::set<size_t> inPortIndexes)
 		"remaining tasks: " + Poco::NumberFormatter::format(taskQueue.size()));
 
 	taskMngtMutex.unlock();
+}
+
+Poco::AutoPtr<ModuleTask> Module::runModule()
+{
+    Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(this), true);
+    enqueueTask(taskPtr);
+
+    return taskPtr;
+}
+
+void Module::waitParameters()
+{
+	while (!tryAllParametersSet())
+	{
+		if (yield())
+			throw Poco::RuntimeException(name(),
+					"Apply parameters: Cancelation upon user request");
+	}
+
+	applyParameters();
 }

@@ -92,10 +92,10 @@ void GvExportWorkFlow::exportNodes(std::ostream& out)
                     .getSubsystem<Dispatcher>()
                     .getOutPort(*it);
 
-            if ((*port)->getTargetPorts().size())
+            if ((*port)->getDataTargets().size())
                 outPorts.push_back(port);
 
-            if ((*port)->getSeqTargetPorts().size())
+            if ((*port)->getSeqTargets().size())
                 outSeqPorts.push_back(port);
         }
     }
@@ -112,11 +112,12 @@ void GvExportWorkFlow::exportEdges(std::ostream& out)
     {
         out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
 
-        std::vector<SharedPtr<InPort*> > targets = (**it)->getTargetPorts();
-
-        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
+//	FIXME
+//        std::set<DataTargets*> targets = (**it)->getDataTargets();
+//
+//        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
+//                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
+//            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
 
         out << "};" << std::endl;
     }
@@ -133,12 +134,13 @@ void GvExportWorkFlow::exportSeqEdges(std::ostream& out)
     {
         out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
 
-        std::vector<SharedPtr<InPort*> > targets = (**it)->getSeqTargetPorts();
-
-        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
-
+// FIXME
+//        std::vector<SharedPtr<InPort*> > targets = (**it)->getSeqTargets();
+//
+//        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
+//                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
+//            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
+//
         out << "}[style=dotted];" << std::endl;
     }
 

@@ -31,34 +31,21 @@
 
 TrigPort::TrigPort(Module* parent, std::string name, std::string description,
         size_t index):
-        InPort(parent, name, description, DataItem::typeUndefined, index, true)
+        InPort(parent, name, description, index, true)
 {
 }
 
-TrigPort::TrigPort(OutPort* emptySourcePort):
-                InPort(emptySourcePort,
-                       "emptyTrig", "replace an expired port",
+TrigPort::TrigPort():
+                InPort("emptyTrig", "replace an expired port",
                        true)
 {
 }
 
-bool TrigPort::tryLock()
-{
-    if (!isPlugged())
-        return false;
-
-	newDataLock();
-	bool newData = isNew();
-	newDataUnlock();
-
-	return newData;
-}
-
 bool TrigPort::tryDataAttribute(DataAttributeIn* pAttr)
 {
-	if (tryLock())
+	if (tryCatchSource())
 	{
-		readDataAttribute(pAttr);
+		readInputDataAttribute(pAttr);
 		return true;
 	}
 	else

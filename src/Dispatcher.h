@@ -48,6 +48,7 @@ using Poco::SharedPtr;
 
 class Module;
 class ModuleTask;
+class DataSource;
 
 /**
  * Dispatcher
@@ -134,17 +135,24 @@ public:
       * @note If the target port expired during the binding,
       * no exception is thrown, but the binding is not made.
       */
-     void bind (SharedPtr<OutPort*> source, SharedPtr<InPort*> target);
+     void bind (DataSource* source, DataTarget* target);
 
      /**
-      * Remove a connection between two ports
+      * Remove the incoming connection to the given data target
       *
       * No exception is thrown
       */
-     void unbind(SharedPtr<InPort*> target);
+     void unbind(DataTarget* target);
 
      /**
-      * Create a sequence combination connection between two ports
+      * Remove all outgoing connection from the given data source
+      *
+      * No exception is thrown
+      */
+     void unbind(DataSource* source);
+
+     /**
+      * Create a data sequence connection
       *
       * @throw Poco::Exception that is forwarded
       * from @ref getInPort. It is issued if the port is deleted
@@ -152,33 +160,29 @@ public:
       * @note If the target port expired during the binding,
       * no exception is thrown, but the binding is not made.
       */
-     void seqBind (SharedPtr<OutPort*> source, SharedPtr<InPort*> target);
+     void seqBind (SeqSource* source, SeqTarget* target);
 
      /**
-      * Remove a seq combination connection between two ports
+      * Remove a data seq connection
       *
       * No exception is thrown
       */
-     void seqUnbind(SharedPtr<InPort*> target);
+     void seqUnbind(SeqTarget* target);
 
      /**
-      * Function to be called when new data is ready on an OutPort
+      * Remove a data seq connection
       *
-      *  - Translate the DataAttributeOut attribute into a DataAttribute
-      *  by checking the sequence targets
-      *  - readLock the data for every target InPort
+      * No exception is thrown
+      */
+     void seqUnbind(SeqSource* source);
+
+     /**
+      * Function to be called when new data is ready at a data source
+      *
+      *  - readLock the data for every data target
       *  - notify the Modules corresponding to the target Ports (push)
       */
-     void setOutPortDataReady(OutPort* port);
-
-     /**
-      * Dispatching function for module reset when a task failed.
-      *
-      *  * called by Module::resetWithTargets
-      *  * call Module::resetWithTargets
-      *  * Module::reseting flag avoids the recursions
-      */
-     void dispatchTargetReset(OutPort* port);
+     void setOutputDataReady(DataSource* source);
 
      /**
       * Dispatching function for module cancel when a task is canceled.
@@ -187,48 +191,16 @@ public:
       *  * call Module::cancelWithTargets
       *  * Module::cancelling flag avoids the recursions
       */
-     void dispatchTargetCancel(OutPort* port);
-
-	 /**
-      * Lock the input ports
-      *
-      * to avoid its usage (mainly InPort::tryLock)
-      * during the data update.
-      *
-      *  - To be called by the OutPort when new data is ready on an OutPort
-      *  - the lock is released on new data
-      *
-      * @see OutPort::notifyReady
-      * @see InPort::setNew
-      */
-     void lockInPorts(OutPort* port);
+     void dispatchTargetCancel(DataSource* port);
 
      /**
-      * Launch a module task
+      * Dispatching function for module reset when a task failed.
       *
-      * to be called by the UI or by any mean, but without new
-      * input port data.
-      *
-      * @return The task created for the module to run. The
-      * task can be used to check the state of the execution.
+      *  * called by Module::resetWithTargets via DataSource::ResetTargets
+      *  * call Module::resetWithTargets
+      *  * Module::reseting flag avoids the recursions
       */
-     Poco::AutoPtr<ModuleTask> runModule(SharedPtr<Module*> ppModule);
-
-     /**
-      * Launch a module task
-      *
-      * Direct version: to be called by the module itself.
-      * E.g. following a parameter set
-      */
-     void runModule(Module* pModule);
-
-     /**
-      * Enqueue a new module task
-      *
-      * and launch it if possible.
-      * Register the task in the Module
-      */
-     void enqueueModuleTask(ModuleTask* pTask);
+     void dispatchTargetReset(DataSource* port);
 
 private:
      /**

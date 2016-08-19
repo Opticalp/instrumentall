@@ -29,21 +29,23 @@
 #ifndef SRC_DATAMANAGER_H_
 #define SRC_DATAMANAGER_H_
 
-#include "DataItem.h"
+#include "DataSource.h"
+#include "OutPort.h"
 
 #include "VerboseEntity.h"
 
 #include "Poco/Util/Subsystem.h"
-#include "Poco/SharedPtr.h"
+#include "Poco/AutoPtr.h"
 
 #include "Poco/DynamicFactory.h"
 
 #include <map>
 #include <set>
 
-using Poco::SharedPtr;
+using Poco::AutoPtr;
 
 class DataLogger;
+class DataProxy;
 
 /**
  * DataManager
@@ -91,37 +93,6 @@ public:
 //    void defineOptions(Poco::Util::OptionSet & options);
 
     /**
-     * Add the DataItem of a new output port
-     *
-     * append its DataItem to the dataStore
-     * This function is called by the OutPort constructor
-     */
-    void addOutPort(OutPort* port);
-
-    /**
-     * Remove the DataItem of a deleted output port
-     *
-     * detach the loggers of the data item and
-     * remove its DataItem from the dataStore
-     * This function is called by the OutPort destructor
-     */
-    void removeOutPort(OutPort* port);
-
-    /**
-     * To be called when new data is available
-     *
-     * Launch the log actions
-     *
-     * @param self caller
-     */
-    void newData(DataItem* self);
-
-    /**
-     * Get a shared pointer on a data item
-     */
-    SharedPtr<DataItem*> getDataItem(DataItem* dataItem);
-
-    /**
      * Get the data loggers class names
      *
      * To be used to create new loggers using the factory
@@ -132,53 +103,31 @@ public:
     /**
      * Create a new data logger of the given type
      */
-    SharedPtr<DataLogger*> newDataLogger(std::string className);
+    AutoPtr<DataLogger> newDataLogger(std::string className);
 
     /**
-     * Get all the current data loggers
-     */
-    std::set< SharedPtr<DataLogger*> > dataLoggers();
-
-    /**
-     * Retrieve the shared pointer of a data logger
-     */
-    SharedPtr<DataLogger*> getDataLogger(DataLogger* dataLogger);
-
-    /**
-     * Register a logger to a data item
-     */
-    void registerLogger(SharedPtr<DataItem*> data, SharedPtr<DataLogger*> dataLogger);
-
-    /**
-     * Get the source data of a logger
-     */
-    SharedPtr<DataItem*> getSourceDataItem(SharedPtr<DataLogger*> dataLogger);
-
-    /**
-     * Delete a DataLogger
+     * Get the data proxies class names
      *
-     * Do nothing if the DataLogger is the empty data logger
+     * To be used to create new proxies using the factory
      */
-    void removeDataLogger(SharedPtr<DataLogger*> logger);
+    std::map<std::string, std::string> dataProxyClasses()
+        { return proxyClasses; }
+
+    /**
+     * Create a new data proxy of the given type
+     */
+    AutoPtr<DataProxy> newDataProxy(std::string className);
 
 private:
-    std::vector< SharedPtr<DataItem*> > allData; ///< data corresponding to each OutPort
-    Poco::RWLock allDataLock;
-
     Poco::DynamicFactory<DataLogger> loggerFactory;
     // TODO: use unordered map for c++11-able compilers
     std::map<std::string, std::string> loggerClasses;
-    /// To be used with loggerClasses
+    /// To be used with loggerClasses and proxyClasses
     typedef std::pair<std::string,std::string> classPair;
 
-    // all loggers
-    std::set< SharedPtr<DataLogger*> > loggers;
-    Poco::RWLock loggersLock;
-
-    DataItem emptyDataItem;
-
-    // TODO: any volatile data storage here that is used by the UI
-    // to push data (one shot) into a given InPort
+    Poco::DynamicFactory<DataProxy> proxyFactory;
+    // TODO: use unordered map for c++11-able compilers
+    std::map<std::string, std::string> proxyClasses;
 };
 
 //

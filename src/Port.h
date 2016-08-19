@@ -48,11 +48,16 @@ public:
     Port(Module* parent,
             std::string name,
             std::string description,
-            int dataType,
             size_t index):
                 pParent(parent),
                 mName(name), mDescription(description),
-                mType(dataType), mIndex(index) { }
+                mIndex(index) { }
+
+    /**
+     * Constructor to be used by empty ports
+     */
+    Port(std::string name, std::string description);
+
     /// Destructor
     virtual ~Port() { }
 
@@ -62,18 +67,12 @@ public:
     std::string name() { return mName; }
     /// get port description
     std::string description() { return mDescription; }
-    /// get port data type
-    int dataType() { return mType; }
-    /// get port data type as a character string
-    std::string dataTypeStr() { return DataItem::dataTypeStr(mType); }
-    /// get port indexing at the parent module
     size_t index() { return mIndex; }
 
 private:
     Module* pParent; ///< parent module reference
     std::string mName; ///< port name
     std::string mDescription; ///< port description
-    int mType; ///< port data type
     size_t mIndex; ///< index in the module port list
 };
 

@@ -56,7 +56,7 @@ def myMain():
     print "Querying mod2.outPort(\"" + outPortA.name + "\")... "
     print "got: " + mod2.outPort(outPortA.name).name + ". "
     
-    bind(inPortA, outPortA)
+    bind(outPortA, inPortA)
     unbind(inPortA)
     bind(outPortA, inPortA)
     
@@ -64,13 +64,14 @@ def myMain():
         print ( " - module " + port.parent().name +  
             ", port " + port.name + 
             ": " + port.description )
-        try:
-            source = port.getSourcePort()
+        
+        source = port.getSourcePort()
+        if source is not None:
             print ( "port source: " +
                 source.name + " from module: " +
                 source.parent().name )
-        except ReferenceError:
-            print " This port has no source"
+        else:
+            print "This port has no source or its source is not an output Port"
     
     print "Query mod2 output ports"
     for port in mod2.outPorts():
@@ -89,13 +90,14 @@ def myMain():
         print ( " - module " + port.parent().name +  
             ", port " + port.name + 
             ": " + port.description )
-        try:
-            source = port.getSourcePort()
+
+        source = port.getSourcePort()
+        if source is not None:
             print ( "port source: " +
                 source.name + " from module: " +
                 source.parent().name )
-        except ReferenceError:
-            print " This port has no source"
+        else:
+            print "This port has no source or its source is not an output Port"
     
     print "Query mod2 output ports"
     for port in mod2.outPorts():

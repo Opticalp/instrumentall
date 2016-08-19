@@ -142,9 +142,20 @@ PyObject* pyOutPortParent(OutPortMembers* self)
 
 PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
 {
-    std::vector< Poco::SharedPtr<InPort*> > targets;
+    std::set< Poco::SharedPtr<InPort*> > targetPorts;
 
-    targets = (**self->outPort)->getTargetPorts();
+    std::set<DataTarget*> targets = (**self->outPort)->getDataTargets();
+
+    for (std::set<DataTarget*>::iterator it = targets.begin(),
+    		ite = targets.end(); it != ite; it++)
+    {
+        InPort* tmpPort = dynamic_cast<InPort*>(*it);
+
+        if (tmpPort)
+            targetPorts.insert(Poco::Util::Application::instance()
+				.getSubsystem<Dispatcher>()
+				.getInPort(tmpPort));
+    }
 
     // prepare python list
     PyObject* pyPorts = PyList_New(0);
@@ -158,8 +169,8 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
     }
 
 
-    for ( std::vector< Poco::SharedPtr<InPort*> >::iterator it = targets.begin(),
-            ite = targets.end(); it != ite; it++ )
+    for ( std::set< Poco::SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
     {
         // create the python object
         InPortMembers* pyPort =
@@ -197,9 +208,20 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
 
 PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
 {
-    std::vector< Poco::SharedPtr<InPort*> > targets;
+    std::set< Poco::SharedPtr<InPort*> > targetPorts;
 
-    targets = (**self->outPort)->getSeqTargetPorts();
+    std::set<SeqTarget*> targets = (**self->outPort)->getSeqTargets();
+
+    for (std::set<SeqTarget*>::iterator it = targets.begin(),
+    		ite = targets.end(); it != ite; it++)
+    {
+        InPort* tmpPort = dynamic_cast<InPort*>(*it);
+
+        if (tmpPort)
+            targetPorts.insert(Poco::Util::Application::instance()
+				.getSubsystem<Dispatcher>()
+				.getInPort(tmpPort));
+    }
 
     // prepare python list
     PyObject* pyPorts = PyList_New(0);
@@ -213,8 +235,8 @@ PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
     }
 
 
-    for ( std::vector< Poco::SharedPtr<InPort*> >::iterator it = targets.begin(),
-            ite = targets.end(); it != ite; it++ )
+    for ( std::set< Poco::SharedPtr<InPort*> >::iterator it = targetPorts.begin(),
+            ite = targetPorts.end(); it != ite; it++ )
     {
         // create the python object
         InPortMembers* pyPort =
@@ -254,19 +276,19 @@ PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
 /**
  * Construct a python list from a vector
  */
-PyObject* getVectorValue(SharedPtr<DataItem*> data)
+PyObject* port_getVectorValue(DataSource* data)
 {
     // construct pyList
     PyObject* list = PyList_New(0);
 
-    (*data)->readLock();
+    data->readDataLock();
 
-    switch (DataItem::noContainerDataType((*data)->dataType()))
+    switch (DataItem::noContainerDataType(data->dataType()))
     {
     case DataItem::typeInt32:
     {
         std::vector<Poco::Int32>* pData;
-        pData = (*data)->getDataToRead< std::vector<Poco::Int32> >();
+        pData = data->getData< std::vector<Poco::Int32> >();
 
         for (std::vector<Poco::Int32>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -277,7 +299,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->releaseData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -286,7 +308,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
     case DataItem::typeUInt32:
     {
         std::vector<Poco::UInt32>* pData;
-        pData = (*data)->getDataToRead< std::vector<Poco::UInt32> >();
+        pData = data->getData< std::vector<Poco::UInt32> >();
 
         for (std::vector<Poco::UInt32>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -297,7 +319,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->releaseData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -306,7 +328,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
     case DataItem::typeInt64:
     {
         std::vector<Poco::Int64>* pData;
-        pData = (*data)->getDataToRead< std::vector<Poco::Int64> >();
+        pData = data->getData< std::vector<Poco::Int64> >();
 
         for (std::vector<Poco::Int64>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -317,7 +339,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->releaseData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -326,7 +348,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
     case DataItem::typeUInt64:
     {
         std::vector<Poco::UInt64>* pData;
-        pData = (*data)->getDataToRead< std::vector<Poco::UInt64> >();
+        pData = data->getData< std::vector<Poco::UInt64> >();
 
         for (std::vector<Poco::UInt64>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -337,7 +359,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->releaseData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -346,7 +368,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
     case DataItem::typeFloat:
     {
         std::vector<float>* pData;
-        pData = (*data)->getDataToRead< std::vector<float> >();
+        pData = data->getData< std::vector<float> >();
 
         for (std::vector<float>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -357,7 +379,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->releaseData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -366,7 +388,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
     case DataItem::typeDblFloat:
     {
         std::vector<double>* pData;
-        pData = (*data)->getDataToRead< std::vector<double> >();
+        pData = data->getData< std::vector<double> >();
 
         for (std::vector<double>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -377,7 +399,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->releaseData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -386,7 +408,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
     case DataItem::typeString:
     {
         std::vector<std::string>* pData;
-        pData = (*data)->getDataToRead< std::vector<std::string> >();
+        pData = data->getData< std::vector<std::string> >();
 
         for (std::vector<std::string>::iterator it = pData->begin(),
                 ite = pData->end(); it != ite; it++)
@@ -397,7 +419,7 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
                 // appending the item failed
                 PyErr_SetString(PyExc_RuntimeError,
                         "Not able to build the return list");
-                (*data)->releaseData();
+                data->unlockData();
                 return NULL;
             }
         }
@@ -406,94 +428,90 @@ PyObject* getVectorValue(SharedPtr<DataItem*> data)
     default:
         PyErr_SetString(PyExc_NotImplementedError,
                 "getValue is not implemented for this dataType");
-        (*data)->releaseData();
+        data->unlockData();
         return NULL;
     }
 
-    (*data)->releaseData();
+    data->unlockData();
 
     return list;
 }
 
 PyObject* pyOutPortGetDataValue(OutPortMembers* self)
 {
-	SharedPtr<DataItem*> sharedData = Poco::Util::Application::instance()
-			                          .getSubsystem<DataManager>()
-									  .getDataItem((**self->outPort)->dataItem());
-
-    int dataType = (*sharedData)->dataType();
+    int dataType = (**self->outPort)->dataType();
 
     if (DataItem::isVector(dataType))
-        return getVectorValue(sharedData);
+        return port_getVectorValue(**self->outPort);
 
     // python object to return
     PyObject* pyObj;
 
-    (*sharedData)->readLock();
+    (**self->outPort)->readDataLock();
 
     switch (DataItem::noContainerDataType(dataType))
     {
     case DataItem::typeInt32:
     {
-        long data = *((*sharedData)->getDataToRead<Poco::Int32>());
+        long data = *((**self->outPort)->getData<Poco::Int32>());
         pyObj = PyInt_FromLong(data);
         break;
     }
     case DataItem::typeUInt32:
     {
-        size_t data = *((*sharedData)->getDataToRead<Poco::UInt32>());
+        size_t data = *((**self->outPort)->getData<Poco::UInt32>());
         pyObj = PyInt_FromSize_t(data);
         break;
     }
     case DataItem::typeInt64:
     {
-        long data = static_cast<long>(*((*sharedData)->getDataToRead<Poco::Int64>()));
+        long data = static_cast<long>(*((**self->outPort)->getData<Poco::Int64>()));
         pyObj = PyInt_FromLong(data);
         break;
     }
     case DataItem::typeUInt64:
     {
-        size_t data = *((*sharedData)->getDataToRead<Poco::UInt64>());
+        size_t data = *((**self->outPort)->getData<Poco::UInt64>());
         pyObj = PyInt_FromSize_t(data);
         break;
     }
     case DataItem::typeFloat:
     {
-        double data = *((*sharedData)->getDataToRead<float>());
+        double data = *((**self->outPort)->getData<float>());
         pyObj = PyFloat_FromDouble(data);
         break;
     }
     case DataItem::typeDblFloat:
     {
-        double data = *((*sharedData)->getDataToRead<double>());
+        double data = *((**self->outPort)->getData<double>());
         pyObj = PyFloat_FromDouble(data);
         break;
     }
     case DataItem::typeString:
     {
-        std::string* pData = (*sharedData)->getDataToRead<std::string>();
+        std::string* pData = (**self->outPort)->getData<std::string>();
         pyObj = PyString_FromString(pData->c_str());
         break;
     }
     default:
         PyErr_SetString(PyExc_NotImplementedError,
                 "getValue is not implemented for this dataType");
-        (*sharedData)->releaseData();
+        (**self->outPort)->unlockData();
         return NULL;
     }
 
-    (*sharedData)->releaseData();
+    (**self->outPort)->unlockData();
 
     return pyObj;
 }
 
 PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args)
 {
-	SharedPtr<DataItem*> sharedData = Poco::Util::Application::instance()
-			                          .getSubsystem<DataManager>()
-									  .getDataItem((**self->outPort)->dataItem());
+	SharedPtr<OutPort*> sharedPort =  Poco::Util::Application::instance()
+    								  .getSubsystem<Dispatcher>()
+									  .getOutPort(**self->outPort);
 
-    PyObject *pyObj;
+	PyObject *pyObj;
 
     // arguments parsing
     if (!PyArg_ParseTuple(args, "O:register", &pyObj))
@@ -515,8 +533,8 @@ PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args)
     try
     {
         Poco::Util::Application::instance()
-                                .getSubsystem<DataManager>()
-                                .registerLogger(sharedData, *pyLogger->logger);
+                                .getSubsystem<Dispatcher>()
+                                .bind(*sharedPort, *pyLogger->logger);
     }
     catch (Poco::NotFoundException& e)
     {
@@ -531,26 +549,23 @@ PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args)
         return NULL;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 PyObject* pyOutPortLoggers(OutPortMembers *self)
 {
-    std::set< SharedPtr<DataLogger*> > loggers;
-    try
-    {
-        loggers = (**self->outPort)->dataItem()->loggers();
-    }
-    catch (Poco::NotFoundException& e)
-    {
-        PyErr_SetString( PyExc_RuntimeError,
-                e.displayText().c_str() );
-        return NULL;
-    }
+    std::set< AutoPtr<DataLogger> > loggers;
 
-    if (loggers.size() == 0)
-        return Py_BuildValue("");
+    std::set<DataTarget*> targets = (**self->outPort)->getDataTargets();
+
+    for (std::set<DataTarget*>::iterator it = targets.begin(),
+    		ite = targets.end(); it != ite; it++)
+    {
+        DataLogger* tmpLogger = dynamic_cast<DataLogger*>(*it);
+
+        if (tmpLogger)
+            loggers.insert( AutoPtr<DataLogger>(tmpLogger, true) );
+    }
 
     // construct the list to return
     PyObject* pyLoggers = PyList_New(0);
@@ -569,7 +584,7 @@ PyObject* pyOutPortLoggers(OutPortMembers *self)
                         .getSubsystem<DataManager>()
                         .dataLoggerClasses();
 
-    for (std::set< SharedPtr<DataLogger*> >::iterator it = loggers.begin(),
+    for (std::set< AutoPtr<DataLogger> >::iterator it = loggers.begin(),
             ite = loggers.end(); it != ite; it++ )
     {
         // create the python object
@@ -583,10 +598,11 @@ PyObject* pyOutPortLoggers(OutPortMembers *self)
         // init
         // retrieve name and description
         tmp = pyLogger->name;
-        pyLogger->name = PyString_FromString((**it)->name().c_str());
+        DataLogger* tmpLogger = const_cast<DataLogger*>(it->get());
+        pyLogger->name = PyString_FromString(tmpLogger->name().c_str());
         Py_XDECREF(tmp);
 
-        std::map<std::string, std::string>::iterator loggerClass = classes.find((**it)->name());
+        std::map<std::string, std::string>::iterator loggerClass = classes.find(tmpLogger->name());
         if (loggerClass == classes.end())
         {
             PyErr_SetString(PyExc_RuntimeError, "Logger description not found" );

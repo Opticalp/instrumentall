@@ -35,7 +35,7 @@
 #include <set>
 #include <vector>
 
-class InPort;
+class SeqTarget;
 
 /**
  * DataAttribute
@@ -87,8 +87,8 @@ public:
     }
 
     /// Called by the outPort during notifyReady
-    void appendSeqPortTarget(InPort* port)
-        { seqTargets.insert(port); }
+    void appendSeqTarget(SeqTarget* target)
+        { seqTargets.insert(target); }
 
 protected:
     /**
@@ -103,7 +103,7 @@ protected:
 
     /// Sequences-related members
     ///@{
-    std::set<InPort*> seqTargets;
+    std::set<SeqTarget*> seqTargets;
 
     // using std::vector instead of std::stack
     // to be able to use .swap even not in C++11
