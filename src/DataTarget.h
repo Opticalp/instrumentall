@@ -128,12 +128,38 @@ public:
     virtual void decUser() { --users; }
     virtual size_t userCnt() { return users; }
 
+    /**
+     * Cancel self and dispatch cancellation to the source
+     *
+     * To be called by the implementation in case of cancellation
+     *
+     * targetCancel is not called here
+     */
+    void cancelWithSource();
+
+    /**
+     * Wait for the source to have its cancellation effective
+     */
+    void waitSourceCancelled();
+
+    /**
+     * Reset self and dispatch reset to the source
+     *
+     * To be called after the cancellation having been effective
+     *
+     * targetReset is not called here
+     */
+    void resetWithSource();
+
 protected:
     /**
      * Main logic to launch the target action
      *
      * This method is called synchronously, but it can launch
      * itself a thread.
+     *
+     * Shall not throw exception before the call to
+     * tryCatchSource
      */
     virtual void runTarget() = 0;
 
@@ -177,11 +203,51 @@ protected:
 
     bool isSourcePlugged() { return (dataSource != 0); }
 
+    /**
+     * Implement the cancellation in the concerned entity
+     *
+     * Called by cancelFromSource
+     *
+     * Should cancel the entity and forward the cancellation
+     */
+    virtual void targetCancel() = 0;
+
+    /**
+     * Wait for the entity to be effectively cancelled
+     */
+    virtual void targetWaitCancelled() = 0;
+
+    /**
+     * Implement the reseting in the concerned entity
+     *
+     * Called by resetFromSource
+     *
+     * Should reset the entity and forward the cancellation
+     */
+    virtual void targetReset() = 0;
+
 private:
     DataSource* dataSource;
     Poco::FastMutex sourceLock; ///< lock for the dataSource operations
 
     size_t users;
+
+    /**
+     * Cheap safety
+     *
+     * Lock runTarget during cancellation
+     */
+    bool targetCancelling;
+
+    /**
+     * launch runTarget with DataTarget cancellation verification
+     *
+     * @return false if cancelling
+     */
+    bool tryRunTarget();
+
+    void cancelFromSource(DataSource* source);
+    void resetFromSource(DataSource* source);
 
     friend class Dispatcher;
 };

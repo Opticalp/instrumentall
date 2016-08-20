@@ -138,22 +138,6 @@ void OutPortUser::reserveAllOutPorts()
 	reserveOutPorts(allPorts);
 }
 
-void OutPortUser::cancelTargets()
-{
-    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
-            it!=ite; it++)
-    	(*it)->cancelTargets();
-}
-
-void OutPortUser::resetTargets()
-{
-    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
-            it!=ite; it++)
-        Poco::Util::Application::instance()
-                            .getSubsystem<Dispatcher>()
-                            .dispatchTargetReset(*it);
-}
-
 void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 {
 	if (outputs.empty())
@@ -293,5 +277,19 @@ void OutPortUser::reserveLockOut()
 		if (yield())
 			throw Poco::RuntimeException(name(), "task cancelled upon user request");
 	}
+}
+
+void OutPortUser::cancelTargets()
+{
+    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
+            it!=ite; it++)
+    	(*it)->cancelWithTargets();
+}
+
+void OutPortUser::resetTargets()
+{
+    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
+            it!=ite; it++)
+    	(*it)->resetWithTargets();
 }
 

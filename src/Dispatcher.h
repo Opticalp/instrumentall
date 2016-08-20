@@ -185,22 +185,19 @@ public:
      void setOutputDataReady(DataSource* source);
 
      /**
-      * Dispatching function for module cancel when a task is canceled.
-      *
-      *  * called by Module::cancelWithTargets
-      *  * call Module::cancelWithTargets
-      *  * Module::cancelling flag avoids the recursions
+      * Dispatching function for target cancellation (from the given source)
       */
-     void dispatchTargetCancel(DataSource* port);
+     void dispatchTargetCancel(DataSource* source);
 
      /**
-      * Dispatching function for module reset when a task failed.
-      *
-      *  * called by Module::resetWithTargets via DataSource::ResetTargets
-      *  * call Module::resetWithTargets
-      *  * Module::reseting flag avoids the recursions
+      * Dispatch the target cancellation awaiting
       */
-     void dispatchTargetReset(DataSource* port);
+     void dispatchTargetWaitCancelled(DataSource* source);
+
+     /**
+      * Dispatching function for target reseting (from the given source)
+      */
+     void dispatchTargetReset(DataSource* source);
 
 private:
      /**

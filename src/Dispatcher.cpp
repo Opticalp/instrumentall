@@ -348,14 +348,27 @@ void Dispatcher::setOutputDataReady(DataSource* source)
 {
 //    poco_information(logger(), port->name() + " data ready");
 
-	OutPort* tmpOut = dynamic_cast<OutPort*>(source);
+	OutPort* tmpOut = NULL;
+	if (logger().information())
+		tmpOut = dynamic_cast<OutPort*>(source);
 
 	std::set<DataTarget*> targets = source->getDataTargets();
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     {
         // readlock
-        source->registerPendingTarget(*it);
+    	try
+    	{
+    		source->registerPendingTarget(*it);
+    	}
+    	catch (Poco::InvalidAccessException& exc)
+    	{
+    		poco_error(logger(), (*it)->name()
+    				+ " can not be started: "
+					+ exc.displayText());
+
+    		continue; // could have been a break since the source is involved
+    	}
 
         if (logger().information())
         {
@@ -375,7 +388,10 @@ void Dispatcher::setOutputDataReady(DataSource* source)
 
         try
         {
-        	(*it)->runTarget();
+        	if (!(*it)->tryRunTarget())
+        		poco_warning(logger(), (*it)->name()
+        				+ " is cancelling, can not run it from "
+						+ source->name());
         }
         catch (Poco::Exception& e)
         {
@@ -387,37 +403,26 @@ void Dispatcher::setOutputDataReady(DataSource* source)
     }
 }
 
-void Dispatcher::dispatchTargetReset(DataSource* port)
+void Dispatcher::dispatchTargetCancel(DataSource* source)
 {
-	std::set<DataTarget*> targets = port->getDataTargets();
+	std::set<DataTarget*> targets = source->getDataTargets();
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
-    {
-        InPort* tmpPort = dynamic_cast<InPort*>(*it);
-
-        if (tmpPort == NULL)
-        	continue;
-
-    	poco_information(logger(), "forwarding module reseting to "
-    			+ tmpPort->parent()->name());
-    	tmpPort->parent()->resetWithTargets();
-    }
+    	(*it)->cancelFromSource(source);
 }
 
-void Dispatcher::dispatchTargetCancel(DataSource* port)
+void Dispatcher::dispatchTargetWaitCancelled(DataSource* source)
 {
-	std::set<DataTarget*> targets = port->getDataTargets();
+	std::set<DataTarget*> targets = source->getDataTargets();
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
-    {
-        InPort* tmpPort = dynamic_cast<InPort*>(*it);
-
-        if (tmpPort == NULL)
-        	continue;
-
-    	poco_information(logger(), "forwarding module cancellation to "
-    			+ tmpPort->parent()->name());
-    	tmpPort->parent()->cancelWithTargets();
-    }
+    	(*it)->targetWaitCancelled();
 }
 
+void Dispatcher::dispatchTargetReset(DataSource* source)
+{
+	std::set<DataTarget*> targets = source->getDataTargets();
+    for ( std::set<DataTarget*>::iterator it = targets.begin(),
+            ite = targets.end(); it != ite; it++ )
+    	(*it)->resetFromSource(source);
+}

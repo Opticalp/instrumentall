@@ -232,3 +232,17 @@ void InPortUser::reserveLockIn()
 			throw Poco::RuntimeException(name(), "task cancelled upon user request");
 	}
 }
+
+void InPortUser::cancelSources()
+{
+    for (std::vector<InPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
+            it!=ite; it++)
+    	(*it)->cancelWithSource();
+}
+
+void InPortUser::resetSources()
+{
+    for (std::vector<InPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
+            it!=ite; it++)
+    	(*it)->resetWithSource();
+}

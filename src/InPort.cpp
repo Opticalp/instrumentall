@@ -46,7 +46,7 @@ InPort::InPort(std::string name, std::string description, bool trig):
                 Port(name, description),
                 isTrigFlag(trig)
 {
-	// used = false; // why?
+
 }
 
 void InPort::runTarget()

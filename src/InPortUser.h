@@ -220,6 +220,16 @@ protected:
 	 */
 	void reserveLockIn();
 
+    /**
+     * Dispatch the cancellation to the sources
+     */
+    void cancelSources();
+
+    /**
+     * Dispatch the reseting to the sources
+     */
+    void resetSources();
+
 	virtual bool yield() { Poco::Thread::yield(); return false; }
 
 	/**

@@ -113,3 +113,82 @@ void DataTarget::releaseInputData()
 {
     getDataSource()->targetReleaseRead(this);
 }
+
+void DataTarget::cancelWithSource()
+{
+	if (targetCancelling)
+		return;
+
+	// self
+	targetCancelling = true;
+
+	if (getDataSource())
+		getDataSource()->cancelFromTarget(this);
+}
+
+void DataTarget::waitSourceCancelled()
+{
+	if (!targetCancelling)
+		poco_bugcheck_msg((name() + ": waiting for cancellation, "
+				"although not cancelling").c_str());
+
+	if (getDataSource())
+		getDataSource()->sourceWaitCancelled();
+}
+
+void DataTarget::resetWithSource()
+{
+	if (!targetCancelling)
+		return;
+
+	// self
+	targetCancelling = false;
+
+	if (getDataSource())
+		getDataSource()->resetFromTarget(this);
+}
+
+bool DataTarget::tryRunTarget()
+{
+	if (targetCancelling)
+	{
+		// release source data read lock
+		try
+		{
+			tryCatchSource();
+		}
+		catch (Poco::InvalidAccessException& exc)
+		{
+			// ok, it is normal to get it
+			return false;
+		}
+
+		// the source is not cancelling,
+		// release it anyhow...
+		releaseInputData();
+		return false;
+	}
+
+	runTarget();
+	return true;
+}
+
+void DataTarget::cancelFromSource(DataSource* source)
+{
+	if (targetCancelling)
+		return;
+
+	// self
+	targetCancelling = true;
+	targetCancel();
+}
+
+void DataTarget::resetFromSource(DataSource* source)
+{
+	if (!targetCancelling)
+		return;
+
+	// self
+	targetCancelling = false;
+	targetReset();
+}

@@ -88,6 +88,10 @@ public:
      */
     std::string description() { return Port::description(); }
 
+private:
+	void sourceCancel();
+	void sourceWaitCancelled();
+	void sourceReset();
 };
 
 #endif /* SRC_OUTPORT_H_ */
