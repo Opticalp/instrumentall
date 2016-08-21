@@ -397,7 +397,7 @@ void Dispatcher::setOutputDataReady(DataSource* source)
         {
         	poco_error(logger(), e.displayText()
         			+ ": the target cannot be started");
-        	(*it)->releaseInputData();
+        	(*it)->releaseInputDataOnStartFailure();
         	e.rethrow();
         }
     }
@@ -425,4 +425,24 @@ void Dispatcher::dispatchTargetReset(DataSource* source)
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     	(*it)->resetFromSource(source);
+}
+
+void Dispatcher::cancel(Module* module)
+{
+	if ( (module == NULL)
+	       || (module == Poco::Util::Application::instance()
+							.getSubsystem<ModuleManager>()
+							.getEmptyModule() )  )
+		return;
+
+
+	// TODO
+
+	// lock cancel, reset, run
+
+	// module immediate cancel
+
+	// async: wait cancelled
+
+	// async: reset
 }

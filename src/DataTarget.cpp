@@ -114,6 +114,11 @@ void DataTarget::releaseInputData()
     getDataSource()->targetReleaseRead(this);
 }
 
+void DataTarget::releaseInputDataOnStartFailure()
+{
+    getDataSource()->targetReleaseReadOnStartFailure(this);
+}
+
 void DataTarget::cancelWithSource()
 {
 	if (targetCancelling)
@@ -152,20 +157,7 @@ bool DataTarget::tryRunTarget()
 {
 	if (targetCancelling)
 	{
-		// release source data read lock
-		try
-		{
-			tryCatchSource();
-		}
-		catch (Poco::InvalidAccessException& exc)
-		{
-			// ok, it is normal to get it
-			return false;
-		}
-
-		// the source is not cancelling,
-		// release it anyhow...
-		releaseInputData();
+		releaseInputDataOnStartFailure();
 		return false;
 	}
 

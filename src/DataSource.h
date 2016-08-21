@@ -205,9 +205,16 @@ private:
     /**
      * Release the read lock from the given target
      *
-     * to be called by DataTarget::releaseRead
+     * to be called by DataTarget::releaseInputData
      */
     void targetReleaseRead(DataTarget* target);
+
+    /**
+     * Release the read lock from the given target
+     *
+     * to be called by DataTarget::releaseInputDataOnStartFailure
+     */
+    void targetReleaseReadOnStartFailure(DataTarget* target);
 
     /**
      * Check if the source data is available for the given target

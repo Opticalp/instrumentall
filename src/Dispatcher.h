@@ -199,6 +199,13 @@ public:
       */
      void dispatchTargetReset(DataSource* source);
 
+     /**
+      * Immediate cancel the given module
+      *
+      * Handle the waitCancelled and reseting process
+      */
+     void cancel(Module* module);
+
 private:
      /**
       * Remove a port from the allInPorts list

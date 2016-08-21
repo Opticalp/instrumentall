@@ -80,6 +80,18 @@ void DataSource::targetReleaseRead(DataTarget* target)
 	unlockData();
 }
 
+void DataSource::targetReleaseReadOnStartFailure(DataTarget* target)
+{
+	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(pendingTargetsLock);
+
+	if (pendingDataTargets.erase(target) == 0)
+        poco_bugcheck_msg("call to targetReleaseReadOnStartFailure but "
+                "tryCatchSource was probably previously called");
+
+	lock.unlock();
+	unlockData();
+}
+
 std::set<DataTarget*> DataSource::getDataTargets()
 {
     Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);

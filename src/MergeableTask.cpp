@@ -57,9 +57,10 @@ MergeableTask::~MergeableTask()
 	for (std::set<MergeableTask*>::iterator it = slavedTasks.begin(),
 			ite = slavedTasks.end(); it != ite; it++)
 	{
-		(*it)->setProgress(progress);
-		(*it)->setState(state);
-		(*it)->setMaster(NULL);
+		// set directly progress and state without verifications
+		(*it)->progress = progress;
+		(*it)->state = state;
+		(*it)->setMaster(NULL);// skip verifications
 	}
 }
 
@@ -125,13 +126,13 @@ void MergeableTask::run()
 	tBegin.update();
 	try
 	{
-		state = TASK_RUNNING;
+		setState(TASK_RUNNING);
 		runTask();
 	}
-	catch (Poco::BugcheckException& exc)
-	{
-		throw;
-	}
+//	catch (Poco::BugcheckException& exc)
+//	{
+//		throw;
+//	}
 	catch (Poco::Exception& exc)
 	{
 		if (pTm)

@@ -53,3 +53,18 @@ void InPort::runTarget()
 {
 	parent()->enqueueTask(new ModuleTask(parent(), this));
 }
+
+void InPort::targetCancel()
+{
+	parent()->lazyCancel();
+}
+
+void InPort::targetWaitCancelled()
+{
+	parent()->waitCancelled();
+}
+
+void InPort::targetReset()
+{
+	parent()->moduleReset();
+}

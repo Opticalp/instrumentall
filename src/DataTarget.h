@@ -99,8 +99,21 @@ public:
      * Store that the data has been used and can be released.
      *
      * Release the corresponding lock
+     *
+     * @throw Poco::BugcheckException if no previous call to
+     * tryCatchSource was issued
+     * @see releaseInputDataOnStartFailure
      */
     void releaseInputData();
+
+    /**
+     * Store that the data will not be used and can be released.
+     *
+     * Release the corresponding lock
+     *
+     * No warning is sent if tryCatchSource was not previously called
+     */
+    void releaseInputDataOnStartFailure();
 
     /**
      * Return the data type of the data source

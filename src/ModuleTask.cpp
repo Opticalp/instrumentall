@@ -117,36 +117,15 @@ void ModuleTask::leaveTask()
 
 void ModuleTask::cancel()
 {
-	if (coreModule)
-		coreModule->cancelWithTargets();
-
-	switch (getState())
-	{
-	case TASK_IDLE:
-	case TASK_FALSE_START:
-		{
-			MergeableTask::cancel();
-
-			if (mTriggingPort)
-				mTriggingPort->releaseInputData();
-
-			break;
-		}
-	case TASK_STARTING:
-	case TASK_RUNNING:
-		MergeableTask::cancel();
-		break;
-	case TASK_CANCELLING:
-	case TASK_FINISHED:
-		break;
-	default:
-		poco_bugcheck_msg("unhandeld task state case in module task cancellation");
-	}
+	moduleCancel();
+	MergeableTask::cancel();
 }
 
-void ModuleTask::resetModule()
+#include "Dispatcher.h"
+#include "Poco/Util/Application.h"
+
+void ModuleTask::moduleCancel()
 {
-	if (coreModule)
-		coreModule->resetWithTargets();
+	Poco::Util::Application::instance()
+			.getSubsystem<Dispatcher>().cancel(coreModule);
 }
-

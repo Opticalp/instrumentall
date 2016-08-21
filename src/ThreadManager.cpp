@@ -78,7 +78,13 @@ void ThreadManager::onFailed(TaskFailedNotification* pNf)
     		+ ": " + e.displayText());
 
     ModuleTask* modTask = dynamic_cast<ModuleTask*>(pNf->task());
-    modTask->resetModule();
+    if (modTask)
+    {
+        poco_information(logger(),
+        		modTask->name() + ": module cancellation request");
+
+    	modTask->moduleCancel();
+    }
 
     // TODO:
     // - dispatch to a NotificationQueue
@@ -91,12 +97,8 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
     poco_information(logger(), pNf->task()->name() + " has stopped");
 
     ModuleTask* modTask = dynamic_cast<ModuleTask*>(pNf->task());
-
     if (modTask)
     {
-    	// TODO:
-		// - dispatch to a NotificationQueue
-
     	unregisterModuleTask(modTask);
 
     	taskListLock.readLock();
@@ -116,6 +118,9 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 		poco_information(logger(), "TaskFinishednotification treated. ");
     }
     // else   datalogger task ==> 06.06.16 datalogger does not run in a task any more?
+
+	// TODO:
+	// - dispatch to a NotificationQueue
 
     pNf->release();
 }
@@ -152,7 +157,7 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 	try
 	{
 		if (cancellingAll)
-			throw Poco::RuntimeException("Cancelling, can not start " + taskPtr->name());
+			pTask->cancel();
 
 		taskManager.start(taskPtr);
 	}
@@ -162,11 +167,17 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 
 		poco_error(logger(), pTask->name() + " cannot be started, "
 				+ e.displayText());
+
+		poco_bugcheck_msg("Poco::NoThreadAvailableException treatment not supported");
 	}
 	catch (...)
 	{
 		poco_information(logger(), pTask->name()
 				+ " failed to start");
+
+		if (pTask->triggingPort())
+			pTask->triggingPort()->releaseInputDataOnStartFailure();
+
 		unregisterModuleTask(pTask);
 		throw;
 	}
@@ -181,7 +192,10 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 	try
 	{
 		if (cancellingAll)
+		{
+			pTask->cancel();
 			throw Poco::RuntimeException("Cancelling, can not sync start " + pTask->name());
+		}
 
 		taskManager.startSync(taskPtr);
 	}
@@ -189,9 +203,11 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 	{
 		poco_information(logger(), pTask->name()
 				+ " failed to sync start");
+
+		if (pTask->triggingPort())
+			pTask->triggingPort()->releaseInputDataOnStartFailure();
+
 		unregisterModuleTask(pTask);
-//		poco_information(logger(), pTask->name()
-//				+ " is probably erased");
 		throw;
 	}
 }
@@ -279,7 +295,7 @@ void ThreadManager::cancelAll()
 
 	poco_information(logger(), "All active tasks cancelled. Wait for them to delete. ");
 
-	while (count())
+	while (count() || threadPool.used())
 		Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
 
 	poco_information(logger(), "No more pending task. cancellAll exiting. ");

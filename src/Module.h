@@ -95,7 +95,8 @@ public:
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
-		  cancelling(false), cancelDone(false)
+		  cancelling(false), cancelDone(false),
+		  cancelDoneEvent(false)
 	{
 	}
 
@@ -107,7 +108,8 @@ public:
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
-		  cancelling(false), cancelDone(false)
+		  cancelling(false), cancelDone(false),
+		  cancelDoneEvent(false)
 	{
 	}
 
@@ -254,6 +256,27 @@ public:
 	 */
 	void cancelWithTargets();
 
+	/**
+	 * Force the cancellation
+	 *
+	 * Call Module::cancel
+	 */
+	void immediateCancel();
+
+	/**
+	 * Wait for the end of the current run to dispatch the cancellation.
+	 *
+	 * Should not call Module::cancel, then
+	 */
+	void lazyCancel();
+
+	/**
+	 * Wait for the cancellation to be effective
+	 */
+	void waitCancelled() { cancelDoneEvent.wait(); }
+
+	void moduleReset();
+
 protected:
 	void addInPort(
 			std::string name, std::string description,
@@ -295,20 +318,19 @@ protected:
     ///}
 
     /**
-	 * Canceling method to be called:
-	 *  - from ModuleTask::cancel when a running task
-	 * 	is cancelled
-	 * 	- or from Module::resetWithSeqTargets when reset
-	 * 	is called while a seq is running. Module::seqRunning
-	 * 	should be implemented, then.
+	 * Canceling method to be called to immediate cancel the module
 	 *
-	 * The call is issued via Module::condCancel that checks
-	 * if the module is not already canceling
+	 * Called by immediateCancel issuing either from:
+	 *   * task cancel (direct call or cancelAll call)
+	 *   * any outport sourceCancel
+	 *
+	 * immediateCancel verify first that the module is not already
+	 * canceling.
+	 *
+	 * When the cancellation is effective, Module::cancelled
+	 * should be called
 	 *
 	 * @warning The implementation should not throw exceptions
-	 *
-	 * @see Module::reset
-	 * @see Module::seqRunning
 	 */
 	virtual void cancel() { }
 
@@ -444,6 +466,11 @@ protected:
 
 	Poco::Logger& logger() { return VerboseEntity::logger(); }
 
+	/**
+	 * Notify (self) that the cancellation is effective.
+	 */
+	void cancelled();
+
 private:
     /// enum to be returned by checkName
     enum NameStatus
@@ -494,13 +521,16 @@ private:
 	 */
 	bool taskIsRunning();
 
-	bool cancelling; ///< used by Module::condCancel
-	bool cancelDone; ///< flag set when a cancellation just occured
+	bool immediateCancelling; ///< flag set by immediateCancel and reset by cancelled
+	bool cancelling; ///< flag set by immediateCancel or lazyCancel and reset by cancelled
+	bool cancelDone;
+
+	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
 
 	void waitParameters();
 
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
-	std::set<ModuleTask*> allTasks;
+	std::set<ModuleTask*> allLaunchedTasks;
 	std::list<ModuleTask*> taskQueue;
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked

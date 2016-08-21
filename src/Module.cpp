@@ -194,7 +194,7 @@ void Module::run(ModuleTask* pTask)
 
 		mergeTasks(inPortCoughts());
 
-		if (cancelling)
+		if (isCancelled())
 			throw Poco::RuntimeException(name() +
 					": can not run a new task, "
 					"the module is cancelling");
@@ -224,7 +224,7 @@ bool Module::sleep(long milliseconds)
 	else
 		Poco::Thread::sleep(milliseconds);
 
-	if (cancelling || cancelDone)
+	if (immediateCancelling || cancelDone)
 		return true;
 	else
 		return ret;
@@ -239,7 +239,7 @@ bool Module::yield()
 	else
 		Poco::Thread::yield();
 
-	if (cancelling || cancelDone)
+	if (immediateCancelling || cancelDone)
 		return true;
 	else
 		return ret;
@@ -255,7 +255,7 @@ void Module::setProgress(float progress)
 
 bool Module::isCancelled()
 {
-	if (cancelling || cancelDone)
+	if (immediateCancelling || cancelDone)
 		return true;
 
 	if (*runningTask == NULL)
@@ -295,9 +295,16 @@ void Module::enqueueTask(ModuleTask* task)
 				             .getSubsystem<ThreadManager>()
 				             .registerNewModuleTask(task);
 
+	if (cancelling || isCancelled() || reseting)
+	{
+		if (task->triggingPort())
+			task->triggingPort()->releaseInputData();
+		throw Poco::InvalidAccessException(name(),
+				"enqueue task: module is cancelling");
+	}
+
 	Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
-	allTasks.insert(task);
 	taskQueue.push_back(task);
 
 	if (taskQueue.size()>1)
@@ -339,8 +346,8 @@ void Module::cancelWithTargets()
 	taskMngtMutex.lock();
 	try
 	{
-		for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
-				ite = allTasks.end(); it != ite; it++)
+		for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
+				ite = allLaunchedTasks.end(); it != ite; it++)
 			(*it)->cancel();
 	}
 	catch (...)
@@ -409,8 +416,8 @@ bool Module::taskIsRunning()
 {
 	Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
 
-	for (std::set<ModuleTask*>::iterator it = allTasks.begin(),
-			ite = allTasks.end(); it != ite; it++)
+	for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
+			ite = allLaunchedTasks.end(); it != ite; it++)
 	{
 		switch ((*it)->getState())
 		{
@@ -435,6 +442,8 @@ bool Module::taskIsRunning()
 
 void Module::popTask()
 {
+	// n.b.: the taskMngtMutex is locked during immediateCancel.
+	// when released, the taskQueue is empty.
 	Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
 	if (taskQueue.empty())
@@ -444,13 +453,16 @@ void Module::popTask()
 	poco_information(logger(), "poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
+	allLaunchedTasks.insert(nextTask);
 	Poco::Util::Application::instance()
-						 .getSubsystem<ThreadManager>()
-						 .startModuleTask(nextTask);
+					 .getSubsystem<ThreadManager>()
+					 .startModuleTask(nextTask);
 }
 
 void Module::popTaskSync()
 {
+	// n.b.: the taskMngtMutex is locked during immediateCancel.
+	// when released, the taskQueue is empty.
 	taskMngtMutex.lock();
 
 	if (taskQueue.empty())
@@ -476,9 +488,10 @@ void Module::popTaskSync()
 
 	try
 	{
+		allLaunchedTasks.insert(nextTask);
 		Poco::Util::Application::instance()
-			             .getSubsystem<ThreadManager>()
-			             .startSyncModuleTask(nextTask);
+				 .getSubsystem<ThreadManager>()
+				 .startSyncModuleTask(nextTask);
 
 		// if startSyncModuleTask succeeds, 
 		//       taskMngtMutex.unlock();
@@ -496,7 +509,7 @@ void Module::popTaskSync()
 void Module::unregisterTask(ModuleTask* task)
 {
 	Poco::Mutex::ScopedLock lock(taskMngtMutex);
-	allTasks.erase(task);
+	allLaunchedTasks.erase(task);
 }
 
 void Module::mergeTasks(std::set<size_t> inPortIndexes)
@@ -547,9 +560,9 @@ void Module::mergeTasks(std::set<size_t> inPortIndexes)
 			poco_warning(logger(),
 					"Unable to merge the task for " + trigPort->name()
 					+ ". Retry.");
-//			if (sleep(500))
-			if (yield())
-				throw Poco::RuntimeException(name(), "Cancelation upon user request");
+
+			if (yield() || cancelling)
+				throw Poco::RuntimeException(name(), "Cancellation upon user request");
 			taskMngtMutex.lock();
 		}
 		else
@@ -581,3 +594,166 @@ void Module::waitParameters()
 
 	applyParameters();
 }
+
+void Module::cancelled()
+{
+	Poco::Mutex::ScopedLock lock(taskMngtMutex);
+	if (taskQueue.size())
+		poco_bugcheck_msg(
+				(name() + ": try to set as cancelled "
+ 				 "although tasks remain enqueued").c_str() );
+
+	cancelDoneEvent.set();
+	cancelling = false;
+	immediateCancelling = false;
+}
+
+void Module::immediateCancel()
+{
+	poco_information(logger(), name() + " immediate cancel request");
+
+	if (immediateCancelling)
+	{
+		poco_information(logger(), "already immediate cancelling... return");
+		return;
+	}
+
+	immediateCancelling = true;
+
+	if (cancelDoneEvent.tryWait(0))
+	{
+		poco_information(logger(), "already cancelled... return");
+		immediateCancelling = false;
+		return;
+	}
+
+
+	if (cancelling)
+		poco_information(logger(), "already cancelling... "
+				"Trig immediate cancelling then. ");
+	else
+		cancelling = true;
+
+	cancelSources();
+	cancelTargets();
+
+	taskMngtMutex.lock();
+
+	// delete pending tasks
+	while (taskQueue.size())
+	{
+		InPort* port = taskQueue.front()->mTriggingPort;
+		if (port)
+			port->releaseInputDataOnStartFailure();
+		taskQueue.pop_front();
+	}
+
+	// stop active tasks
+	for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
+			ite = allLaunchedTasks.end(); it != ite; it++)
+	{
+		switch ((*it)->getState())
+		{
+		case MergeableTask::TASK_IDLE:
+		case MergeableTask::TASK_STARTING:
+		case MergeableTask::TASK_RUNNING:
+			(*it)->cancel();
+			break;
+		case MergeableTask::TASK_FALSE_START:
+		case MergeableTask::TASK_FINISHED:
+		case MergeableTask::TASK_CANCELLING:
+		default:
+			break;
+		}
+	}
+
+	taskMngtMutex.unlock();
+
+	try
+	{
+		cancel(); // shall trig Module::cancelled
+	}
+	catch (...)
+	{
+		poco_bugcheck_msg("Module::cancel shall not throw exceptions");
+	}
+
+	poco_information(logger(), "immediateCancel: cancellation request dispatched...");
+}
+
+void Module::lazyCancel()
+{
+	if (immediateCancelling || cancelling)
+	{
+		poco_information(logger(), "lazyCancel: already cancelling... return");
+		return;
+	}
+
+	cancelling = true;
+
+	if (cancelDoneEvent.tryWait(0))
+	{
+		poco_information(logger(), "lazyCancel: already cancelled... return");
+		cancelling = false;
+		return;
+	}
+
+	cancelSources();
+
+	// TODO: async ?
+
+	// TODO
+	// wait for the current run to be terminated (no more tasks?)
+	// care should be taken if input can fail (see startCondition)
+
+	cancelled();
+
+	cancelTargets();
+
+	poco_information(logger(), "lazyCancel: cancellation request dispatched...");
+}
+
+void Module::moduleReset()
+{
+	if (reseting)
+	{
+		poco_information(logger(), "already reseting... return");
+		return;
+	}
+
+	reseting = true;
+
+	if (resetDone)
+	{
+		poco_information(logger(), "already reset... return");
+		reseting = false;
+		return;
+	}
+
+	if (!cancelDoneEvent.tryWait(0))
+		poco_bugcheck_msg( (name() + ".moduleReset: "
+				"cancellation not over... "
+				"Please check that waitCancelled was called first").c_str() );
+
+	if (taskQueue.size())
+		poco_bugcheck_msg(
+				(name() + ": try to reset "
+ 				 "although tasks remain enqueued").c_str() );
+
+	cancelDoneEvent.reset();
+
+	resetTargets();
+	try
+	{
+		reset();
+	}
+	catch (...)
+	{
+		poco_bugcheck_msg("Module::reset shall not throw exceptions");
+	}
+	resetSources();
+
+	resetDone = true;
+	reseting = false;
+}
+
