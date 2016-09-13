@@ -29,7 +29,8 @@
 #include "DataTarget.h"
 
 DataTarget::DataTarget():
-	dataSource(NULL), users(0)
+	dataSource(NULL), users(0),
+	targetCancelling(false)
 {
 
 }

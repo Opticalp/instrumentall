@@ -96,6 +96,7 @@ public:
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
 		  cancelling(false), cancelDone(false),
+		  immediateCancelling(false),
 		  cancelDoneEvent(false)
 	{
 	}
@@ -109,6 +110,7 @@ public:
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
 		  cancelling(false), cancelDone(false),
+          immediateCancelling(false),
 		  cancelDoneEvent(false)
 	{
 	}

@@ -157,7 +157,15 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 	try
 	{
 		if (cancellingAll)
+		{
 			pTask->cancel();
+
+			// directly throw exception, in order to not be relying on
+			// taskMan.start exception throw, based on task.setState while
+			// cancelling the task
+	        throw Poco::RuntimeException("Cancelling all. "
+	                "Can not start " + pTask->name());
+		}
 
 		taskManager.start(taskPtr);
 	}
