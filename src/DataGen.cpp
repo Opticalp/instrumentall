@@ -333,7 +333,7 @@ void DataGen::sendData()
 
 Poco::Int64 DataGen::getIntParameterValue(size_t paramIndex)
 {
-    long ret;
+    Poco::Int64 ret;
 	dataLock.readLock();
 	switch (paramIndex)
 	{
@@ -424,7 +424,7 @@ void DataGen::reset()
 
 	attr = DataAttributeOut();
 
-    std::queue<long> iEmpty;
+    std::queue<Poco::Int64> iEmpty;
     std::swap(iEmpty, iQueue);
     std::queue<double> fEmpty;
     std::swap(fEmpty, fQueue);
