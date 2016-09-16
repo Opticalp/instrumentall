@@ -117,6 +117,17 @@ public:
 	 */
 	void parametersTreated();
 
+protected:
+    /**
+     * Check if the module is cancelling from this port (lazily or immediately)
+     *
+     * To be used in startCondition when checking for input availability
+     *
+     * Implementation, @see Module::isCancelling
+     */
+    virtual bool isCancelling(DataSource* canceller) = 0;
+    virtual bool isCancelling() = 0;
+
 private:
 	ParameterizedEntity* self;
 	std::set< Poco::AutoPtr<ParameterSetter> > setters;

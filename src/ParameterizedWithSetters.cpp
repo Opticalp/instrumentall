@@ -96,7 +96,23 @@ bool ParameterizedWithSetters::trySetParameter(size_t paramIndex)
 bool ParameterizedWithSetters::tryAllParametersSet()
 {
 	if (setters.size())
-		return allSet.tryWait(0);
+	{
+		if (allSet.tryWait(0))
+		    return true;
+		else if (!isCancelling())
+		    return false;
+		else
+		{
+		    for (std::set< Poco::AutoPtr<ParameterSetter> >::iterator it = setters.begin(),
+		            ite = setters.end(); it != ite; it++)
+		    {
+		        if (isCancelling(const_cast<ParameterSetter*>(it->get())->getDataSource()))
+		            throw Poco::RuntimeException("Apply parameters: "
+		                    "Cancellation upon user request (setter)");
+		    }
+		    return false;
+		}
+	}
 	else
 		return true;
 }

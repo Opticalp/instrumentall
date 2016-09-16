@@ -249,7 +249,7 @@ public:
 	 * i.e. if running: let it run, let it send out the newly generated data, then,
 	 * cancel... but avoid the launch of a new run.
 	 */
-	void lazyCancel(InPort* canceller);
+	void lazyCancel(DataSource* canceller);
 
 	/**
 	 * Wait for the cancellation to be effective
@@ -363,6 +363,11 @@ protected:
      * and dequeue it.
      *
      * Do nothing if the queue is empty.
+     *
+     * Require the taskStartingMutex to be available. Lock it.
+     *
+     * If the task start succeeded, taskStartingMutex is locked when the
+     * function returns.
      */
     void popTask();
 
@@ -512,15 +517,23 @@ private:
 	bool cancelling; ///< flag set by immediateCancel or lazyCancel and reset by cancelled
 	bool cancelDone;
 
-    /// Check if the module is cancelling (either immediately or lazily)
-    bool isCancelling(InPort* canceller);
+    /**
+     * Check if the module is cancelling (either immediately or lazily)
+     */
+    bool isCancelling() { return cancelling; }
+
+    /**
+     * Check if the module is cancelling immediately or if the given DataSource
+     * asked for lazy cancellation.
+     */
+    bool isCancelling(DataSource* canceller);
 
     /**
      * Used in lazyCancel to check which port is requesting the cancellation
      *
      * Cleared by Module::cancelled
      */
-    std::set<InPort*> cancellingInPort;
+    std::set<DataSource*> cancellingSource;
 
 	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
 
@@ -536,6 +549,8 @@ private:
 	std::list<ModuleTask*> taskQueue;
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
+
+	Poco::FastMutex taskStartingMutex; ///< lock the launching of a new task as long as another task is already starting.
 
     friend class ModuleTask; // access to setRunningTask, releaseAll
 };

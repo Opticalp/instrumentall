@@ -78,9 +78,6 @@ void ModuleTask::setRunningState(RunningStates state)
 
 void ModuleTask::runTask()
 {
-	if (coreModule == NULL)
-		throw Poco::NullPointerException("no more module bound to " + name());
-
 	try
 	{
 		coreModule->run(this);

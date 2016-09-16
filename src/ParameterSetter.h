@@ -82,9 +82,9 @@ private:
 	void decUser() { release();   }
 	size_t userCnt() { return referenceCount(); }
 
-	void targetCancel() { }
-	void targetWaitCancelled() { }
-	void targetReset() { }
+	void targetCancel();
+	void targetWaitCancelled();
+	void targetReset();
 };
 
 #endif /* SRC_PARAMETERSETTER_H_ */

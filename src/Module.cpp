@@ -177,6 +177,8 @@ void Module::run(ModuleTask* pTask)
 	}
 	taskMngtMutex.unlock();
 
+	int startCond;
+
 	try
 	{
 		setRunningState(ModuleTask::applyingParameters);
@@ -188,13 +190,24 @@ void Module::run(ModuleTask* pTask)
 		resetDone = false;
 		cancelDone = false;
 
-		int startCond = startCondition();
-
-		// start condition has to be checked before any cancellation test
-		// to allow releaseAllInPorts to be effective
+		startCond = startCondition();
 
 		mergeTasks(inPortCoughts());
 
+    }
+    catch (...)
+    {
+        parametersTreated();
+        safeReleaseAllInPorts(triggingPort());
+        taskStartingMutex.unlock();
+        throw;
+    }
+
+    parametersTreated();
+    taskStartingMutex.unlock();
+
+    try
+    {
 		if (isCancelled())
 			throw Poco::RuntimeException(name() +
 					": can not run a new task, "
@@ -206,12 +219,11 @@ void Module::run(ModuleTask* pTask)
 	catch (...)
 	{
 		parametersTreated();
-		safeReleaseAllInPorts(triggingPort());
+		releaseAllInPorts();
 		releaseAllOutPorts();
 		throw;
 	}
 
-	parametersTreated();
 	releaseAllInPorts();
 	releaseAllOutPorts();
 }
@@ -296,7 +308,7 @@ void Module::enqueueTask(ModuleTask* task)
 				             .getSubsystem<ThreadManager>()
 				             .registerNewModuleTask(task);
 
-	if (cancelling || isCancelled() || reseting)
+	if (isCancelled() || reseting)
 	{
 		if (task->triggingPort())
 			task->triggingPort()->releaseInputData();
@@ -304,11 +316,14 @@ void Module::enqueueTask(ModuleTask* task)
 				"enqueue task: module is cancelling");
 	}
 
-	Poco::Mutex::ScopedLock lock(taskMngtMutex);
+	taskMngtMutex.lock();
 
 	taskQueue.push_back(task);
 
-	if (taskQueue.size()>1)
+	bool queueWithManyTasks = (taskQueue.size() > 1);
+    taskMngtMutex.unlock();
+
+	if (queueWithManyTasks)
 	{
 		poco_information(logger(), task->name()
 					+ ": tasks are already enqueued for " + name());
@@ -353,19 +368,54 @@ void Module::popTask()
 {
 	// n.b.: the taskMngtMutex is locked during immediateCancel.
 	// when released, the taskQueue is empty.
-	Poco::Mutex::ScopedLock lock(taskMngtMutex);
+    taskMngtMutex.lock();
 
-	if (taskQueue.empty())
-		return;
+    while (!taskStartingMutex.tryLock())
+	{
+        taskMngtMutex.unlock();
+        yield();
+        taskMngtMutex.lock();
+        if (taskQueue.empty())
+        {
+            poco_information(logger(),
+                (*runningTask)->name() + ": empty task queue, nothing to pop (async)");
+            taskMngtMutex.unlock();
+            return;
+        }
+	}
+
+    // both mutexes are locked here
+
+    if (taskQueue.empty())
+    {
+        poco_information(logger(),
+            (*runningTask)->name() + ": empty task queue, nothing to pop (async.2)");
+        taskStartingMutex.unlock();
+        taskMngtMutex.unlock();
+        return;
+    }
 
 	ModuleTask* nextTask = taskQueue.front();
 	poco_information(logger(), "poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
 	allLaunchedTasks.insert(nextTask);
-	Poco::Util::Application::instance()
+
+	try
+	{
+	    Poco::Util::Application::instance()
 					 .getSubsystem<ThreadManager>()
 					 .startModuleTask(nextTask);
+	}
+	catch (...)
+	{
+        taskMngtMutex.unlock();
+	    taskStartingMutex.unlock();
+	    throw;
+	}
+
+	taskMngtMutex.unlock();
+	// taskStartingMutex stays locked here. will be unlocked by the new thread
 }
 
 void Module::popTaskSync()
@@ -374,10 +424,27 @@ void Module::popTaskSync()
 	// when released, the taskQueue is empty.
 	taskMngtMutex.lock();
 
+    while (!taskStartingMutex.tryLock())
+    {
+        taskMngtMutex.unlock();
+        yield();
+        taskMngtMutex.lock();
+        if (taskQueue.empty())
+        {
+            poco_information(logger(),
+                (*runningTask)->name() + ": empty task queue, nothing to sync pop");
+            taskMngtMutex.unlock();
+            return;
+        }
+    }
+
+    // both mutexes are locked here
+
 	if (taskQueue.empty())
 	{
 		poco_information(logger(), 
-			(*runningTask)->name() + ": empty task queue, nothing to sync pop");
+			(*runningTask)->name() + ": empty task queue, nothing to sync pop (2)");
+        taskStartingMutex.unlock();
 		taskMngtMutex.unlock();
 		return;
 	}
@@ -385,6 +452,7 @@ void Module::popTaskSync()
 	if (taskIsRunning())
 	{
 		poco_information(logger(),"sync pop: a task is already running. ");
+        taskStartingMutex.unlock();
 		taskMngtMutex.unlock();
 		return;
 	}
@@ -411,6 +479,7 @@ void Module::popTaskSync()
 		poco_error(logger(), "can not sync start " + nextTask->name());
 		startSyncPending = false;
 		taskMngtMutex.unlock();
+        taskStartingMutex.unlock();
 		throw;
 	}
 }
@@ -496,7 +565,7 @@ void Module::waitParameters()
 {
 	while (!tryAllParametersSet())
 	{
-		if (yield() || cancelling)
+		if (yield())
 			throw Poco::RuntimeException(name(),
 					"Apply parameters: Cancellation upon user request");
 	}
@@ -513,7 +582,7 @@ void Module::cancelled()
  				 "although tasks remain enqueued").c_str() );
 
 	cancelDoneEvent.set();
-	cancellingInPort.clear();
+	cancellingSource.clear();
 	cancelling = false;
 	immediateCancelling = false;
 }
@@ -591,9 +660,9 @@ void Module::immediateCancel()
 	poco_information(logger(), "immediateCancel: cancellation request dispatched...");
 }
 
-void Module::lazyCancel(InPort* canceller)
+void Module::lazyCancel(DataSource* canceller)
 {
-    cancellingInPort.insert(canceller);
+    cancellingSource.insert(canceller);
 
 	if (immediateCancelling || cancelling)
 	{
@@ -607,8 +676,8 @@ void Module::lazyCancel(InPort* canceller)
 	if (cancelDoneEvent.tryWait(0))
 	{
 		poco_information(logger(), "lazyCancel: already cancelled... return");
-		cancellingInPort.erase(canceller);
-		poco_assert(cancellingInPort.empty());
+		cancellingSource.erase(canceller);
+		poco_assert(cancellingSource.empty());
 		cancelling = false;
 		return;
 	}
@@ -672,10 +741,10 @@ void Module::moduleReset()
 	reseting = false;
 }
 
-bool Module::isCancelling(InPort* canceller)
+bool Module::isCancelling(DataSource* canceller)
 {
     if (immediateCancelling)
         return true;
 
-    return (cancellingInPort.count(canceller) > 0);
+    return (cancellingSource.count(canceller) > 0);
 }

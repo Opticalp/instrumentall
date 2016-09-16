@@ -38,6 +38,7 @@
 
 class Module;
 class InPort;
+class DataSource;
 class DataAttributeIn;
 
 /**
@@ -236,7 +237,7 @@ protected:
      *
      * Implementation, @see Module::isCancelling
      */
-    virtual bool isCancelling(InPort* canceller) = 0;
+    virtual bool isCancelling(DataSource* canceller) = 0;
 
     virtual bool yield() { Poco::Thread::yield(); return false; }
 

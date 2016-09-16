@@ -120,3 +120,21 @@ void ParameterSetter::runTarget()
 
 	releaseInputData();
 }
+
+void ParameterSetter::targetCancel()
+{
+    if (getParent())
+        getParent()->cancel(getDataSource());
+}
+
+void ParameterSetter::targetWaitCancelled()
+{
+    if (getParent())
+        getParent()->waitCancelled();
+}
+
+void ParameterSetter::targetReset()
+{
+    if (getParent())
+        getParent()->reset();
+}
