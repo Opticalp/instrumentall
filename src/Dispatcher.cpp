@@ -436,7 +436,12 @@ void Dispatcher::cancel(Module* module)
 		return;
 
 
+	// Called by ModuleTask::moduleCancel
+	//  * Immediate cancel the given module
+	//  * Handle the waitCancelled and reseting process
+
 	// TODO
+
 
 	// lock cancel, reset, run
 

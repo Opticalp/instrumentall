@@ -123,6 +123,9 @@ protected:
      *
      * To be called by startCondition.
      * The inMutex is managed by the caller.
+     *
+     * @throw Poco::RuntimeException if the input port requested a
+     * lazy cancel of the InPortUser.
      */
     bool tryInPortCatchSource(size_t portIndex);
 
@@ -146,6 +149,13 @@ protected:
      * Release the lock of all the input ports
      */
     void releaseAllInPorts();
+
+    /**
+     * Release the lock of all the input ports with
+     * releaseAllInPorts after having checked if the
+     * trigging port is caught
+     */
+    void safeReleaseAllInPorts(InPort* triggingPort);
 
     /**
      * Check if the given port was caught/locked
@@ -219,7 +229,16 @@ protected:
      */
     void resetSources();
 
-	virtual bool yield() { Poco::Thread::yield(); return false; }
+    /**
+     * Check if the module is cancelling from this port (lazily or immediately)
+     *
+     * To be used in startCondition when checking for input availability
+     *
+     * Implementation, @see Module::isCancelling
+     */
+    virtual bool isCancelling(InPort* canceller) = 0;
+
+    virtual bool yield() { Poco::Thread::yield(); return false; }
 
 	/**
 	 * Used by startCondition to know which port trigged the user execution

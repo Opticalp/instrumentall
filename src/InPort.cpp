@@ -56,7 +56,7 @@ void InPort::runTarget()
 
 void InPort::targetCancel()
 {
-	parent()->lazyCancel();
+	parent()->lazyCancel(this);
 }
 
 void InPort::targetWaitCancelled()

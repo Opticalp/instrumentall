@@ -237,28 +237,6 @@ public:
     ProcessingMode getProcMode() { return procMode; }
 
 	/**
-	 * Reset the module by calling Module::reset(),
-	 * but reset also all the targets.
-	 *
-	 * Called by ModuleTask::resetModule,
-	 * and then by Dispatcher::dispatchTargetReset
-	 */
-	void resetWithTargets();
-
-	/**
-	 * Cancel the module by calling Module::condCancel(),
-	 * but cancel also all the targets.
-	 *
-	 * Called by ModuleTask::resetModule,
-	 * and then by Dispatcher::dispatchTargetCancel
-	 *
-	 * Check if the module is already canceling.
-	 * If not, call Module::cancel and cancel all the module tasks
-	 *
-	 */
-	void cancelWithTargets();
-
-	/**
 	 * Force the cancellation
 	 *
 	 * Call Module::cancel
@@ -268,15 +246,22 @@ public:
 	/**
 	 * Wait for the end of the current run to dispatch the cancellation.
 	 *
-	 * Should not call Module::cancel, then
+	 * i.e. if running: let it run, let it send out the newly generated data, then,
+	 * cancel... but avoid the launch of a new run.
 	 */
-	void lazyCancel();
+	void lazyCancel(InPort* canceller);
 
 	/**
 	 * Wait for the cancellation to be effective
 	 */
 	void waitCancelled() { cancelDoneEvent.wait(); }
 
+	/**
+	 * Reset the targets, then reset itself calling reset(),
+	 * then reset sources.
+	 *
+	 * Check that cancelDoneEvent is set first.
+	 */
 	void moduleReset();
 
 protected:
@@ -347,7 +332,7 @@ protected:
 	 *  - reset running seqIndexes
 	 *  - reset evtl flags, states,...
 	 *
-	 * Called by Module::resetWithSeqTargets
+	 * Called by Module::resetWithTargets
 	 *
 	 * @warning The implementation should not throw exceptions
 	 *
@@ -527,8 +512,23 @@ private:
 	bool cancelling; ///< flag set by immediateCancel or lazyCancel and reset by cancelled
 	bool cancelDone;
 
+    /// Check if the module is cancelling (either immediately or lazily)
+    bool isCancelling(InPort* canceller);
+
+    /**
+     * Used in lazyCancel to check which port is requesting the cancellation
+     *
+     * Cleared by Module::cancelled
+     */
+    std::set<InPort*> cancellingInPort;
+
 	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
 
+	/**
+	 * Wait for all the plugged mandatory parameters to be available.
+	 *
+	 * @throw Poco::RuntimeException on any cancellation (lazy cancel or immediate cancel)
+	 */
 	void waitParameters();
 
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()

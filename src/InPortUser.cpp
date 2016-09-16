@@ -74,6 +74,10 @@ bool InPortUser::tryInPortCatchSource(size_t portIndex)
     if (isInPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
 
+    if (isCancelling(inPorts[portIndex]))
+        throw Poco::RuntimeException("tryInPortCatchSource",
+                "Task cancellation upon user request");
+
     if (inPorts[portIndex]->tryCatchSource())
     {
     	caughts->insert(portIndex);
@@ -115,6 +119,15 @@ void InPortUser::releaseAllInPorts()
     	releaseInPort(*itTmp); // caughts is modified by releaseInPort
 	}
 }
+
+void InPortUser::safeReleaseAllInPorts(InPort* triggingPort)
+{
+    if (triggingPort)
+        caughts->insert(triggingPort->index());
+
+    releaseAllInPorts();
+}
+
 
 int InPortUser::startCondition()
 {

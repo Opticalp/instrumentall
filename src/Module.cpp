@@ -184,6 +184,7 @@ void Module::run(ModuleTask* pTask)
 
 		setRunningState(ModuleTask::retrievingInDataLocks);
 
+		// TODO: remove cancelDone? replaced by the cancelDoneEvent that is reset during Module::moduleReset?
 		resetDone = false;
 		cancelDone = false;
 
@@ -205,7 +206,7 @@ void Module::run(ModuleTask* pTask)
 	catch (...)
 	{
 		parametersTreated();
-		releaseAllInPorts();
+		safeReleaseAllInPorts(triggingPort());
 		releaseAllOutPorts();
 		throw;
 	}
@@ -318,98 +319,6 @@ void Module::enqueueTask(ModuleTask* task)
 		popTask();
 	else
 		poco_information(logger(), name() + ": a task is already running");
-}
-
-void Module::cancelWithTargets()
-{
-	poco_information(logger(), "Entering Module::condCancel()");
-
-//	if (cancelling || cancelDone)
-//		return;
-
-	if (cancelling)
-	{
-		poco_information(logger(), "already cancelling... return");
-		return;
-	}
-
-	if (cancelDone)
-	{
-		poco_information(logger(), "already cancelled... return");
-		return;
-	}
-
-	cancelling = true;
-
-	poco_information(logger(), "cancelling all module tasks");
-	// cancel all module tasks
-	taskMngtMutex.lock();
-	try
-	{
-		for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
-				ite = allLaunchedTasks.end(); it != ite; it++)
-			(*it)->cancel();
-	}
-	catch (...)
-	{
-		taskMngtMutex.unlock();
-		throw;
-	}
-	taskMngtMutex.unlock();
-
-	poco_information(logger(), "cancelling the module itself (specific cancel)");
-
-	try
-	{
-		cancel();
-	}
-	catch (...)
-	{
-		poco_bugcheck_msg("Module::cancel shall not throw exceptions");
-	}
-
-	poco_information(logger(), "cancelling the target modules");
-
-	cancelTargets();
-
-	poco_information(logger(), "cancel done. ");
-
-	cancelDone = true;
-	cancelling = false;
-}
-
-void Module::resetWithTargets()
-{
-	if (reseting || resetDone)
-	{
-		poco_information(logger(), name() + " already reseting");
-		return;
-	}
-
-	reseting = true;
-
-	// if reset comes from a task failure, should cancel first. 
-//	if (seqRunning())
-	cancelWithTargets();
-
-	// reset this module
-	try
-	{
-	  reset();
-	}
-	catch (...)
-	{
-		poco_bugcheck_msg("Module::reset shall not throw exceptions");
-	}
-
-	// reset the targets (imply sequence targets)
-	resetTargets();
-
-	// clean the task queue
-	taskQueue.clear();
-
-	resetDone = true;
-	reseting = false;
 }
 
 bool Module::taskIsRunning()
@@ -587,9 +496,9 @@ void Module::waitParameters()
 {
 	while (!tryAllParametersSet())
 	{
-		if (yield())
+		if (yield() || cancelling)
 			throw Poco::RuntimeException(name(),
-					"Apply parameters: Cancelation upon user request");
+					"Apply parameters: Cancellation upon user request");
 	}
 
 	applyParameters();
@@ -604,6 +513,7 @@ void Module::cancelled()
  				 "although tasks remain enqueued").c_str() );
 
 	cancelDoneEvent.set();
+	cancellingInPort.clear();
 	cancelling = false;
 	immediateCancelling = false;
 }
@@ -681,8 +591,10 @@ void Module::immediateCancel()
 	poco_information(logger(), "immediateCancel: cancellation request dispatched...");
 }
 
-void Module::lazyCancel()
+void Module::lazyCancel(InPort* canceller)
 {
+    cancellingInPort.insert(canceller);
+
 	if (immediateCancelling || cancelling)
 	{
 		poco_information(logger(), "lazyCancel: already cancelling... return");
@@ -691,9 +603,12 @@ void Module::lazyCancel()
 
 	cancelling = true;
 
+	// check if the module was recently cancelled
 	if (cancelDoneEvent.tryWait(0))
 	{
 		poco_information(logger(), "lazyCancel: already cancelled... return");
+		cancellingInPort.erase(canceller);
+		poco_assert(cancellingInPort.empty());
 		cancelling = false;
 		return;
 	}
@@ -757,3 +672,10 @@ void Module::moduleReset()
 	reseting = false;
 }
 
+bool Module::isCancelling(InPort* canceller)
+{
+    if (immediateCancelling)
+        return true;
+
+    return (cancellingInPort.count(canceller) > 0);
+}
