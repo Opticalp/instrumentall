@@ -83,13 +83,15 @@ void MergeableTask::cancel()
 	Poco::AutoPtr<MergeableTask> master(masterTask, true);
 	mergeAccess.unlock();
 
-	if (!master.isNull())
-		master->cancel();
-
-	state = TASK_CANCELLING;
-	cancelEvent.set();
-	if (pOwner)
-		pOwner->taskCancelled(this);
+	if (master.isNull())
+	{
+	    state = TASK_CANCELLING;
+	    cancelEvent.set();
+	    if (pOwner)
+	        pOwner->taskCancelled(this);
+	}
+	else
+	    master->cancel();
 }
 
 bool MergeableTask::isCancelled() const
@@ -99,26 +101,12 @@ bool MergeableTask::isCancelled() const
 
 MergeableTask::TaskState MergeableTask::getState() const
 {
-	mergeAccess.readLock();
-	Poco::AutoPtr<MergeableTask> master(masterTask, true);
-	mergeAccess.unlock();
-
-	if (!master.isNull())
-		return master->getState();
-
 	return state;
 }
 
 void MergeableTask::run()
 {
 	duplicate();
-
-	mergeAccess.readLock();
-	if (masterTask)
-		throw Poco::InvalidAccessException("MergeableTask::run",
-				Poco::format("Task#%?d is a slave from Task#%?d",
-						id(), masterTask->id()));
-	mergeAccess.unlock();
 
 	TaskManager* pTm = getOwner();
 	if (pTm)
@@ -129,10 +117,6 @@ void MergeableTask::run()
 		setState(TASK_RUNNING);
 		runTask();
 	}
-//	catch (Poco::BugcheckException& exc)
-//	{
-//		throw;
-//	}
 	catch (Poco::Exception& exc)
 	{
 		if (pTm)
@@ -171,7 +155,7 @@ void MergeableTask::taskFinishedBroadcast(TaskManager* pTm)
 			ite = slaves.end(); it != ite; it++)
 	{
 		Poco::AutoPtr<MergeableTask> slave(*it, true);
-		slave->state = TASK_FINISHED;
+		slave->setState(TASK_FINISHED);
 		TaskManager* slaveTm = slave->getOwner();
 		if (slaveTm)
 			slaveTm->taskFinished(slave);
@@ -229,9 +213,15 @@ TaskManager* MergeableTask::getOwner() const
 
 void MergeableTask::setState(TaskState taskState)
 {
-	if ((taskState != TASK_FINISHED) && (state == TASK_CANCELLING))
-		throw Poco::RuntimeException("task cancelling. "
+	if (taskState != TASK_FINISHED)
+	{
+	    if (state == TASK_CANCELLING)
+            throw Poco::RuntimeException("task cancelling. "
 				"Can not be changed to another state than \"finished\"");
+        if (state == TASK_MERGED)
+            throw Poco::RuntimeException("slave task. "
+                "Can not be changed to another state than \"finished\"");
+	}
 
 	switch (taskState)
 	{
@@ -254,12 +244,9 @@ void MergeableTask::setMaster(MergeableTask* master)
 {
 	Poco::ScopedWriteRWLock lock(mergeAccess);
 	masterTask = master;
-}
 
-bool MergeableTask::isSlave()
-{
-	Poco::ScopedReadRWLock lock(mergeAccess);
-	return (masterTask != NULL);
+	if (master)
+	    state = TASK_MERGED;
 }
 
 void MergeableTask::eraseSlave(MergeableTask* slave)

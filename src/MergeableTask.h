@@ -67,7 +67,8 @@ public:
 		TASK_STARTING,
 		TASK_RUNNING,
 		TASK_CANCELLING,
-		TASK_FINISHED
+		TASK_FINISHED,
+		TASK_MERGED
 	};
 
 	MergeableTask();
@@ -202,6 +203,7 @@ protected:
 	 *
 	 * Run tests to verify the workflow:
 	 *  - if TASK_CANCELlING, TASK_FINISHED is the only allowed next value
+	 *  - if TASk_MERGED, TASK_FINISHED is the only allowed next value
 	 *  - TASK_STARTING after TASK_IDLE
 	 *  - TASK_RUNNING after TASK_STARTING
 	 */
