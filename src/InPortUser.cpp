@@ -94,31 +94,6 @@ void InPortUser::readInPortDataAttribute(size_t portIndex,
     inPorts[portIndex]->readInputDataAttribute(pAttr);
 }
 
-bool InPortUser::tryInPortDataAttribute(size_t portIndex,
-        DataAttributeIn* pAttr)
-{
-	if (caughts->empty())
-		if (!tryLockIn())
-			return false;
-
-    if (!inPorts.at(portIndex)->isTrig())
-        poco_bugcheck_msg("The port at the given index is a data port");
-
-    TrigPort* trigPort = reinterpret_cast<TrigPort*>(inPorts[portIndex]);
-
-    if (isInPortCaught(portIndex))
-        poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
-
-    bool retValue = trigPort->tryDataAttribute(pAttr);
-
-    if (retValue)
-        caughts->insert(portIndex);
-    else
-    	unlockIn();
-
-    return retValue;
-}
-
 void InPortUser::releaseInPort(size_t portIndex)
 {
     if (isInPortCaught(portIndex))

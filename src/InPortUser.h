@@ -138,17 +138,6 @@ protected:
     void readInPortDataAttribute(size_t portIndex, DataAttributeIn* pAttr);
 
     /**
-     * Forward tryData for the given port
-     */
-    template <typename T>
-    bool tryInPortData(size_t portIndex, T*& pData, DataAttributeIn* pAttr);
-
-    /**
-     * Forward tryDataAttribute to the given port
-     */
-    bool tryInPortDataAttribute(size_t portIndex, DataAttributeIn* pAttr);
-
-    /**
      * Forward release to the given port
      */
     void releaseInPort(size_t portIndex);
@@ -199,10 +188,10 @@ protected:
 	 *  - lock inMutex
 	 *  - check if there is input ports. if not, return.
 	 *  - check if the call is issued from incoming data
-	 *    - if it does, wait for all the data to be available
-	 *    - if it does not, check if the data is held. if not at all,
-	 *    return "no data" and unlock inMutex, if partial, return "unknown",
-	 *    if all, return "all data".
+	 *    and wait for all the data to be available
+	 *
+	 * return "no data" and unlock inMutex,
+	 * if all, return "all data".
 	 *
 	 * A custom implementation should take care of inMutex that has to be
 	 * locked and kept locked if caughts is not empty.
