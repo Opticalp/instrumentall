@@ -532,7 +532,13 @@ private:
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
 
-	Poco::FastMutex taskStartingMutex; ///< lock the launching of a new task as long as another task is already starting.
+	/**
+	 * lock the launching of a new task as long as another task is already starting.
+	 *
+	 * This mutex is locked by popTask or popTaskSync and released when the input ports are released
+	 */
+	Poco::FastMutex taskStartingMutex;
+	void startingUnlock() { taskStartingMutex.unlock(); }
 
     friend class ModuleTask; // access to setRunningTask, releaseAll
 };

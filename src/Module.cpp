@@ -178,6 +178,7 @@ void Module::run(ModuleTask* pTask)
 	taskMngtMutex.unlock();
 
 	int startCond;
+	grabStartingMutex();
 
 	try
 	{
@@ -199,12 +200,10 @@ void Module::run(ModuleTask* pTask)
     {
         parametersTreated();
         safeReleaseAllInPorts(triggingPort());
-        taskStartingMutex.unlock();
         throw;
     }
 
     parametersTreated();
-    taskStartingMutex.unlock();
 
     try
     {

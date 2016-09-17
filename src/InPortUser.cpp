@@ -102,7 +102,7 @@ void InPortUser::releaseInPort(size_t portIndex)
 
 		caughts->erase(portIndex);
 		if (caughts->empty())
-			unlockIn();
+		    releaseStartingMutex();
     }
 }
 
@@ -114,6 +114,8 @@ void InPortUser::releaseAllInPorts()
 		std::set<size_t>::iterator itTmp = it++;
     	releaseInPort(*itTmp); // caughts is modified by releaseInPort
 	}
+
+	releaseStartingMutex();
 }
 
 void InPortUser::safeReleaseAllInPorts(InPort* triggingPort)
@@ -130,19 +132,13 @@ int InPortUser::startCondition()
 	if (inPorts.size() == 0)
 		return noDataStartState;
 
-	bool nakedCall = false;
-
 	if (triggingPort() == NULL)
-		nakedCall = true;
+	    return noDataStartState;
 	else
 		poco_information(logger(), name() + " started by " + triggingPort()->name());
 
-	// we would need a mean to check if held data is available without locking it
-	// ... the inPortsAccess should handle that in fact...
-
 	bool allPresent = false;
 
-	reserveLockIn();
 	while (!allPresent)
 	{
 		allPresent = true;
@@ -164,9 +160,6 @@ int InPortUser::startCondition()
 				//}
 			}
 
-			if (nakedCall)
-				break;
-
 			if (!allPresent)
 			{
 				if (yield())
@@ -176,29 +169,14 @@ int InPortUser::startCondition()
 		}
 		catch (...)
 		{
-			if (inPortCaughtsCount())
-				releaseAllInPorts();
-			else
-				unlockIn();
-
+			releaseAllInPorts();
 			throw;
 		}
 
 //		poco_information(logger(), "Not all inputs caught. Retrying...");
 	}
 
-	if (allPresent)
-		return allDataStartState;
-
-	if (inPortCaughtsCount())
-	{
-		return unknownStartState;
-	}
-	else
-	{
-		unlockIn();
-		return noDataStartState;
-	}
+	return allDataStartState;
 }
 
 InPortUser::~InPortUser()
@@ -206,15 +184,6 @@ InPortUser::~InPortUser()
     for (std::vector<InPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
             it!=ite; it++)
         delete *it;
-}
-
-void InPortUser::reserveLockIn()
-{
-	while (!tryLockIn())
-	{
-		if (yield())
-			throw Poco::RuntimeException(name(), "task cancelled upon user request");
-	}
 }
 
 void InPortUser::cancelSources()
