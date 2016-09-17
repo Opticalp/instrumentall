@@ -164,6 +164,11 @@ public:
      */
     void resetWithSource();
 
+    /**
+     * Check if the present target is cancelling
+     */
+    bool isTargetCancelling() const { return targetCancelling; }
+
 protected:
     /**
      * Main logic to launch the target action

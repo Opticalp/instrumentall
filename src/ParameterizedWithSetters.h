@@ -101,6 +101,7 @@ public:
 	 * Check if the parameter setters have all been called
 	 *
 	 * @return true if all concerned parameters were sets
+	 * @throw Poco::RuntimeException if a parameterSetter is cancelling
 	 */
 	bool tryAllParametersSet();
 
@@ -116,17 +117,6 @@ public:
 	 * @see trySetParameter
 	 */
 	void parametersTreated();
-
-protected:
-    /**
-     * Check if the module is cancelling from this port (lazily or immediately)
-     *
-     * To be used in startCondition when checking for input availability
-     *
-     * Implementation, @see Module::isCancelling
-     */
-    virtual bool isCancelling(DataSource* canceller) = 0;
-    virtual bool isCancelling() = 0;
 
 private:
 	ParameterizedEntity* self;

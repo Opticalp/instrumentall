@@ -230,15 +230,6 @@ protected:
      */
     void resetSources();
 
-    /**
-     * Check if the module is cancelling from this port (lazily or immediately)
-     *
-     * To be used in startCondition when checking for input availability
-     *
-     * Implementation, @see Module::isCancelling
-     */
-    virtual bool isCancelling(DataSource* canceller) = 0;
-
     virtual bool yield() { Poco::Thread::yield(); return false; }
 
 	/**

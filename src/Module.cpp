@@ -582,7 +582,6 @@ void Module::cancelled()
  				 "although tasks remain enqueued").c_str() );
 
 	cancelDoneEvent.set();
-	cancellingSource.clear();
 	cancelling = false;
 	immediateCancelling = false;
 }
@@ -660,10 +659,8 @@ void Module::immediateCancel()
 	poco_information(logger(), "immediateCancel: cancellation request dispatched...");
 }
 
-void Module::lazyCancel(DataSource* canceller)
+void Module::lazyCancel()
 {
-    cancellingSource.insert(canceller);
-
 	if (immediateCancelling || cancelling)
 	{
 		poco_information(logger(), "lazyCancel: already cancelling... return");
@@ -676,8 +673,6 @@ void Module::lazyCancel(DataSource* canceller)
 	if (cancelDoneEvent.tryWait(0))
 	{
 		poco_information(logger(), "lazyCancel: already cancelled... return");
-		cancellingSource.erase(canceller);
-		poco_assert(cancellingSource.empty());
 		cancelling = false;
 		return;
 	}
@@ -739,12 +734,4 @@ void Module::moduleReset()
 
 	resetDone = true;
 	reseting = false;
-}
-
-bool Module::isCancelling(DataSource* canceller)
-{
-    if (immediateCancelling)
-        return true;
-
-    return (cancellingSource.count(canceller) > 0);
 }

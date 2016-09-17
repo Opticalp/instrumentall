@@ -56,7 +56,7 @@ void InPort::runTarget()
 
 void InPort::targetCancel()
 {
-	parent()->lazyCancel(getDataSource());
+	parent()->lazyCancel();
 }
 
 void InPort::targetWaitCancelled()

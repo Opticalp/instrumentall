@@ -249,7 +249,7 @@ public:
 	 * i.e. if running: let it run, let it send out the newly generated data, then,
 	 * cancel... but avoid the launch of a new run.
 	 */
-	void lazyCancel(DataSource* canceller);
+	void lazyCancel();
 
 	/**
 	 * Wait for the cancellation to be effective
@@ -516,24 +516,6 @@ private:
 	bool immediateCancelling; ///< flag set by immediateCancel and reset by cancelled
 	bool cancelling; ///< flag set by immediateCancel or lazyCancel and reset by cancelled
 	bool cancelDone;
-
-    /**
-     * Check if the module is cancelling (either immediately or lazily)
-     */
-    bool isCancelling() { return cancelling; }
-
-    /**
-     * Check if the module is cancelling immediately or if the given DataSource
-     * asked for lazy cancellation.
-     */
-    bool isCancelling(DataSource* canceller);
-
-    /**
-     * Used in lazyCancel to check which port is requesting the cancellation
-     *
-     * Cleared by Module::cancelled
-     */
-    std::set<DataSource*> cancellingSource;
 
 	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
 

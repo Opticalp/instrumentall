@@ -124,7 +124,7 @@ void ParameterSetter::runTarget()
 void ParameterSetter::targetCancel()
 {
     if (getParent())
-        getParent()->cancel(getDataSource());
+        getParent()->cancel();
 }
 
 void ParameterSetter::targetWaitCancelled()

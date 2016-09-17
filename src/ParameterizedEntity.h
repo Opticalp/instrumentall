@@ -147,7 +147,7 @@ public:
     /**
      * To be used by the parameter setters to cancel the corresponding module
      */
-    void cancel(DataSource* canceller) { lazyCancel(canceller); }
+    void cancel() { lazyCancel(); }
 
     virtual void waitCancelled() = 0;
 
@@ -253,7 +253,7 @@ protected:
 
     virtual Poco::Logger& logger() = 0;
 
-    virtual void lazyCancel(DataSource* canceller) = 0;
+    virtual void lazyCancel() = 0;
     virtual void moduleReset() = 0;
 
 private:
