@@ -372,7 +372,7 @@ void Module::popTask()
     while (!taskStartingMutex.tryLock())
 	{
         taskMngtMutex.unlock();
-        yield();
+        Poco::Thread::yield();
         taskMngtMutex.lock();
         if (taskQueue.empty())
         {
@@ -426,7 +426,7 @@ void Module::popTaskSync()
     while (!taskStartingMutex.tryLock())
     {
         taskMngtMutex.unlock();
-        yield();
+        Poco::Thread::yield();
         taskMngtMutex.lock();
         if (taskQueue.empty())
         {
@@ -648,12 +648,18 @@ void Module::immediateCancel()
 
 	try
 	{
+        cancelRequested = true;
 		cancel(); // shall trig Module::cancelled
+        cancelRequested = false;
 	}
 	catch (...)
 	{
+        cancelRequested = false;
 		poco_bugcheck_msg("Module::cancel shall not throw exceptions");
 	}
+
+    if (!cancellationListenerThread.isRunning())
+        cancellationListenerThread.start(cancellationListenerRunnable);
 
 	poco_information(logger(), "immediateCancel: cancellation request dispatched...");
 }
@@ -677,18 +683,52 @@ void Module::lazyCancel()
 	}
 
 	cancelSources();
+    poco_information(logger(), name() + " lazyCancel: "
+            "cancellation request dispatched to the sources");
 
-	// TODO: async ?
-
-	// TODO
-	// wait for the current run to be terminated (no more tasks?)
-	// care should be taken if input can fail (see startCondition)
-
-	cancelled();
-
-	cancelTargets();
+    if (!cancellationListenerThread.isRunning())
+        cancellationListenerThread.start(cancellationListenerRunnable);
 
 	poco_information(logger(), "lazyCancel: cancellation request dispatched...");
+}
+
+void Module::cancellationListen()
+{
+    poco_information(logger(), name() + ": wait for all tasks to terminate");
+
+    int counter = 0;
+    while (taskIsRunning())
+    {
+        Poco::Thread::yield();
+        if (counter++ % 500 == 0)
+            poco_information(logger(), "waiting for " + name() + " tasks to finish");
+    }
+
+    if (!immediateCancelling)
+    {
+        cancelTargets();
+        poco_information(logger(), name() + " lazyCancel: "
+                "cancellation request dispatched to the targets...");
+        cancelled();
+        poco_information(logger(), name() + " lazyCancel: "
+                "cancellation effective.");
+    }
+    else
+    {
+        poco_information(logger(), name() + " immediateCancel: "
+                "tasks stopped.");
+
+        while (cancelRequested)
+        {
+            Poco::Thread::yield();
+            if (counter++ % 500 == 0)
+                poco_information(logger(), "waiting for " + name() + "::cancel to return");
+        }
+
+        cancelled();
+        poco_information(logger(), name() + " immediateCancel: "
+                "cancellation effective.");
+    }
 }
 
 void Module::moduleReset()

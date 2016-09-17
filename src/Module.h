@@ -37,6 +37,8 @@
 #include "OutPortUser.h"
 #include "ModuleTask.h"
 
+#include "Poco/Thread.h"
+#include "Poco/RunnableAdapter.h"
 #include "Poco/ThreadLocal.h"
 #include "Poco/RWLock.h"
 #include "Poco/Mutex.h"
@@ -97,7 +99,9 @@ public:
 		  reseting (false), resetDone(false),
 		  cancelling(false), cancelDone(false),
 		  immediateCancelling(false),
-		  cancelDoneEvent(false)
+		  cancelRequested(false),
+		  cancelDoneEvent(false),
+		  cancellationListenerRunnable(*this, &Module::cancellationListen)
 	{
 	}
 
@@ -111,7 +115,9 @@ public:
 		  reseting (false), resetDone(false),
 		  cancelling(false), cancelDone(false),
           immediateCancelling(false),
-		  cancelDoneEvent(false)
+          cancelRequested(false),
+		  cancelDoneEvent(false),
+		  cancellationListenerRunnable(*this, &Module::cancellationListen)
 	{
 	}
 
@@ -264,6 +270,15 @@ public:
 	 */
 	void moduleReset();
 
+	/**
+	 * Wait that all the threads are terminated for this module
+	 *
+	 * To be called asynchronously by immediateCancel or lazyCancel
+	 *
+	 * Call Module::cancelled when all the tasks have stopped
+	 */
+	void cancellationListen();
+
 protected:
 	void addInPort(
 			std::string name, std::string description,
@@ -305,7 +320,7 @@ protected:
     ///}
 
     /**
-	 * Canceling method to be called to immediate cancel the module
+	 * Canceling method to be called to force cancellation of the module
 	 *
 	 * Called by immediateCancel issuing either from:
 	 *   * task cancel (direct call or cancelAll call)
@@ -314,10 +329,9 @@ protected:
 	 * immediateCancel verify first that the module is not already
 	 * canceling.
 	 *
-	 * When the cancellation is effective, Module::cancelled
-	 * should be called
-	 *
 	 * @warning The implementation should not throw exceptions
+	 *
+	 * @warning This method should not be called directly. Call immediateCancel instead.
 	 */
 	virtual void cancel() { }
 
@@ -515,9 +529,13 @@ private:
 
 	bool immediateCancelling; ///< flag set by immediateCancel and reset by cancelled
 	bool cancelling; ///< flag set by immediateCancel or lazyCancel and reset by cancelled
+	bool cancelRequested; ///< flag set before calling Module::cancel, and reset on return
 	bool cancelDone;
 
 	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
+
+    Poco::RunnableAdapter<Module> cancellationListenerRunnable;
+	Poco::Thread cancellationListenerThread;
 
 	/**
 	 * Wait for all the plugged mandatory parameters to be available.
@@ -535,7 +553,10 @@ private:
 	/**
 	 * lock the launching of a new task as long as another task is already starting.
 	 *
-	 * This mutex is locked by popTask or popTaskSync and released when the input ports are released
+	 * This mutex is locked by popTask or popTaskSync
+	 * and released when the input ports are released
+	 *
+	 * @see InPortUser::starting
 	 */
 	Poco::FastMutex taskStartingMutex;
 	void startingUnlock() { taskStartingMutex.unlock(); }
