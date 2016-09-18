@@ -182,14 +182,17 @@ void Module::run(ModuleTask* pTask)
 
 	try
 	{
-		setRunningState(ModuleTask::applyingParameters);
+        if (isCancelled())
+            throw Poco::RuntimeException(name() +
+                    ": can not run a new task, "
+                    "the module is cancelling");
+
+        resetDone = false;
+
+        setRunningState(ModuleTask::applyingParameters);
 		waitParameters();
 
 		setRunningState(ModuleTask::retrievingInDataLocks);
-
-		// TODO: remove cancelDone? replaced by the cancelDoneEvent that is reset during Module::moduleReset?
-		resetDone = false;
-		cancelDone = false;
 
 		startCond = startCondition();
 
@@ -210,7 +213,7 @@ void Module::run(ModuleTask* pTask)
 		if (isCancelled())
 			throw Poco::RuntimeException(name() +
 					": can not run a new task, "
-					"the module is cancelling");
+					"the module is cancelling (2)");
 
 		setRunningState(ModuleTask::processing);
 		process(startCond);
@@ -236,7 +239,7 @@ bool Module::sleep(long milliseconds)
 	else
 		Poco::Thread::sleep(milliseconds);
 
-	if (immediateCancelling || cancelDone)
+	if (immediateCancelling || cancelDoneEvent.tryWait(0))
 		return true;
 	else
 		return ret;
@@ -251,7 +254,7 @@ bool Module::yield()
 	else
 		Poco::Thread::yield();
 
-	if (immediateCancelling || cancelDone)
+	if (immediateCancelling || cancelDoneEvent.tryWait(0))
 		return true;
 	else
 		return ret;
@@ -267,7 +270,7 @@ void Module::setProgress(float progress)
 
 bool Module::isCancelled()
 {
-	if (immediateCancelling || cancelDone)
+	if (immediateCancelling || cancelDoneEvent.tryWait(0))
 		return true;
 
 	if (*runningTask == NULL)
@@ -307,7 +310,7 @@ void Module::enqueueTask(ModuleTask* task)
 				             .getSubsystem<ThreadManager>()
 				             .registerNewModuleTask(task);
 
-	if (isCancelled() || reseting)
+	if (isCancelled())
 	{
 		if (task->triggingPort())
 			task->triggingPort()->releaseInputData();
@@ -585,6 +588,22 @@ void Module::cancelled()
 	immediateCancelling = false;
 }
 
+void Module::waitCancelled()
+{
+    if (reseting || resetDone)
+    {
+        poco_information(logger(), name() + "::waitCancelled(): a reset just occured. ");
+        return;
+    }
+
+    if (cancelling)
+        cancelDoneEvent.wait();
+    else
+        poco_error(logger(), name() + "::waitCancelled(): "
+                "neither cancelling nor just reset... "
+                "waitCancelled is not relevant here! " );
+}
+
 void Module::immediateCancel()
 {
 	poco_information(logger(), name() + " immediate cancel request");
@@ -595,6 +614,7 @@ void Module::immediateCancel()
 		return;
 	}
 
+    cancelRequested = true; // to be set before immediateCancelling. See cancellationListen
 	immediateCancelling = true;
 
 	if (cancelDoneEvent.tryWait(0))
@@ -603,7 +623,6 @@ void Module::immediateCancel()
 		immediateCancelling = false;
 		return;
 	}
-
 
 	if (cancelling)
 		poco_information(logger(), "already cancelling... "
@@ -646,9 +665,10 @@ void Module::immediateCancel()
 
 	taskMngtMutex.unlock();
 
+	resetDone = false;
+
 	try
 	{
-        cancelRequested = true;
 		cancel(); // shall trig Module::cancelled
         cancelRequested = false;
 	}
@@ -749,16 +769,20 @@ void Module::moduleReset()
 	}
 
 	if (!cancelDoneEvent.tryWait(0))
-		poco_bugcheck_msg( (name() + ".moduleReset: "
+	{
+		poco_warning(logger(), name() + ".moduleReset: "
 				"cancellation not over... "
-				"Please check that waitCancelled was called first").c_str() );
+				"Please check that waitCancelled was called first. "
+				"Or the previous reset is over since a while, and a "
+				"new task overriden it. " );
+		reseting = false;
+		return;
+	}
 
 	if (taskQueue.size())
 		poco_bugcheck_msg(
 				(name() + ": try to reset "
- 				 "although tasks remain enqueued").c_str() );
-
-	cancelDoneEvent.reset();
+ 				 "although tasks are enqueued").c_str() );
 
 	resetTargets();
 	try
@@ -771,6 +795,7 @@ void Module::moduleReset()
 	}
 	resetSources();
 
+    cancelDoneEvent.reset();
 	resetDone = true;
 	reseting = false;
 }

@@ -97,7 +97,7 @@ public:
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
-		  cancelling(false), cancelDone(false),
+		  cancelling(false),
 		  immediateCancelling(false),
 		  cancelRequested(false),
 		  cancelDoneEvent(false),
@@ -113,7 +113,7 @@ public:
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
-		  cancelling(false), cancelDone(false),
+		  cancelling(false),
           immediateCancelling(false),
           cancelRequested(false),
 		  cancelDoneEvent(false),
@@ -260,7 +260,7 @@ public:
 	/**
 	 * Wait for the cancellation to be effective
 	 */
-	void waitCancelled() { cancelDoneEvent.wait(); }
+	void waitCancelled();
 
 	/**
 	 * Reset the targets, then reset itself calling reset(),
@@ -472,11 +472,6 @@ protected:
 
 	Poco::Logger& logger() { return VerboseEntity::logger(); }
 
-	/**
-	 * Notify (self) that the cancellation is effective.
-	 */
-	void cancelled();
-
 private:
     /// enum to be returned by checkName
     enum NameStatus
@@ -527,10 +522,14 @@ private:
 	 */
 	bool taskIsRunning();
 
+    /**
+     * Notify (self) that the cancellation is effective.
+     */
+    void cancelled();
+
 	bool immediateCancelling; ///< flag set by immediateCancel and reset by cancelled
 	bool cancelling; ///< flag set by immediateCancel or lazyCancel and reset by cancelled
 	bool cancelRequested; ///< flag set before calling Module::cancel, and reset on return
-	bool cancelDone;
 
 	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
 
