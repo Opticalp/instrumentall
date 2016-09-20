@@ -305,12 +305,12 @@ ModuleTask::RunningStates Module::getRunningState()
 
 void Module::enqueueTask(ModuleTask* task)
 {
-	if (isCancelled())
+	if (!moduleReady())
 	{
 		if (task->triggingPort())
 			task->triggingPort()->releaseInputData();
 		throw ExecutionAbortedException(name(),
-				"enqueue task " + task->name() + ": module is cancelling");
+				"enqueue task " + task->name() + ": module is cancelling (or reseting)");
 	}
 
     // take ownership of the task.
@@ -611,6 +611,11 @@ void Module::waitCancelled(bool topCall)
     }
     else
         poco_information(logger(), name() + ".waitCancelled skipped");
+}
+
+bool Module::moduleReady()
+{
+    return !(immediateCancelling || cancelling || cancelDoneEvent.tryWait(0) || reseting);
 }
 
 bool Module::immediateCancel()

@@ -297,6 +297,8 @@ void ThreadManager::unregisterModuleTask(ModuleTask* pTask)
 				+ " from the thread manager");
 }
 
+#include "ModuleManager.h"
+
 void ThreadManager::cancelAll()
 {
 	cancellingAll = true;
@@ -320,7 +322,14 @@ void ThreadManager::cancelAll()
 	while (count() || threadPool.used())
 		Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
 
-	poco_information(logger(), "No more pending task. cancellAll exiting. ");
+	poco_information(logger(), "No more pending task. Wait for all modules being ready... ");
+
+	ModuleManager& modMan = Poco::Util::Application::instance().getSubsystem<ModuleManager>();
+
+	while (!modMan.allModuleReady())
+        Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+
+    poco_information(logger(), "All modules ready. CancelAll done. ");
 
 	cancellingAll = false;
 }

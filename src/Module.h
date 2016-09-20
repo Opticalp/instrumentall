@@ -289,6 +289,11 @@ public:
 	 */
 	void cancellationListen();
 
+	/**
+	 * Check if the module cancellation/reset is done.
+	 */
+	bool moduleReady();
+
 protected:
 	void addInPort(
 			std::string name, std::string description,

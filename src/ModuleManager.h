@@ -192,6 +192,11 @@ public:
      */
     std::string exportFacTreeGraphviz();
 
+    /**
+     * Check if all modules are ready (cancellation/reset free)
+     */
+    bool allModuleReady();
+
 private:
     /**
      * Root module factory list
