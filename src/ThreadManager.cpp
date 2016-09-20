@@ -242,6 +242,7 @@ size_t ThreadManager::count()
 }
 
 #define TIME_LAPSE_WAIT_ALL 5
+#include "ModuleManager.h"
 
 void ThreadManager::waitAll()
 {
@@ -269,7 +270,14 @@ void ThreadManager::waitAll()
     }
 
     if (stoppedOnCancel)
+    {
+        ModuleManager& modMan = Poco::Util::Application::instance().getSubsystem<ModuleManager>();
+
+        while (!modMan.allModuleReady())
+            Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+
     	throw Poco::RuntimeException("waitAll","Cancellation upon user request");
+    }
 
     poco_information(logger(), "All threads have stopped. ");
 }
@@ -297,10 +305,11 @@ void ThreadManager::unregisterModuleTask(ModuleTask* pTask)
 				+ " from the thread manager");
 }
 
-#include "ModuleManager.h"
-
 void ThreadManager::cancelAll()
 {
+    if (cancellingAll)
+        return;
+
 	cancellingAll = true;
 
 	taskListLock.readLock();
