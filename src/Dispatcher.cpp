@@ -39,6 +39,8 @@
 #include "OutPort.h"
 #include "DataSource.h"
 
+#include "ModuleCanceller.h"
+
 #include "Poco/NumberFormatter.h"
 
 Dispatcher::Dispatcher():
@@ -440,14 +442,12 @@ void Dispatcher::cancel(Module* module)
 	//  * Immediate cancel the given module
 	//  * Handle the waitCancelled and reseting process
 
-	// TODO
+	module->immediateCancel();
 
+	// async waitCancelled and reset
+	ModuleCanceller* listener = new ModuleCanceller(module);
 
-	// lock cancel, reset, run
-
-	// module immediate cancel
-
-	// async: wait cancelled
-
-	// async: reset
+	Poco::Util::Application::instance()
+            .getSubsystem<ThreadManager>()
+            .startModuleCancellationListener(*listener);
 }

@@ -36,6 +36,7 @@
 #include "TaskNotification.h"
 
 #include "Poco/ThreadPool.h"
+#include "Poco/Runnable.h"
 #include "Poco/TaskNotification.h"
 #include "Poco/Util/Subsystem.h"
 #include "Poco/RWLock.h"
@@ -142,6 +143,11 @@ public:
      * and take ownership of it
      */
     void registerNewModuleTask(ModuleTask* pTask);
+
+    /**
+     * @see Dispatcher::cancel
+     */
+    void startModuleCancellationListener(Poco::Runnable& runnable);
 
 private:
     TaskManager taskManager;
