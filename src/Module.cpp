@@ -305,11 +305,6 @@ ModuleTask::RunningStates Module::getRunningState()
 
 void Module::enqueueTask(ModuleTask* task)
 {
-	// take ownership of the task.
-	Poco::Util::Application::instance()
-				             .getSubsystem<ThreadManager>()
-				             .registerNewModuleTask(task);
-
 	if (isCancelled())
 	{
 		if (task->triggingPort())
@@ -317,6 +312,11 @@ void Module::enqueueTask(ModuleTask* task)
 		throw ExecutionAbortedException(name(),
 				"enqueue task " + task->name() + ": module is cancelling");
 	}
+
+    // take ownership of the task.
+    Poco::Util::Application::instance()
+                             .getSubsystem<ThreadManager>()
+                             .registerNewModuleTask(task);
 
 	taskMngtMutex.lock();
 
@@ -656,6 +656,10 @@ bool Module::immediateCancel()
 		InPort* port = taskQueue.front()->mTriggingPort;
 		if (port)
 			port->releaseInputDataOnStartFailure();
+
+		Poco::Util::Application::instance()
+	                             .getSubsystem<ThreadManager>()
+	                             .unregisterModuleTask(taskQueue.front());
 		taskQueue.pop_front();
 	}
 

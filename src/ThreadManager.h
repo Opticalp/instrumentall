@@ -146,6 +146,11 @@ public:
     void registerNewModuleTask(ModuleTask* pTask);
 
     /**
+     * Unregister a task
+     */
+    void unregisterModuleTask(ModuleTask* pTask);
+
+    /**
      * @see Dispatcher::cancel
      */
     void startModuleCancellationListener(Poco::Runnable& runnable);
@@ -159,11 +164,6 @@ private:
     Poco::RWLock  taskListLock;
 
     bool cancellingAll;
-
-    /**
-     * Unregister a task
-     */
-    void unregisterModuleTask(ModuleTask* pTask);
 };
 
 #endif /* SRC_THREADMANAGER_H_ */
