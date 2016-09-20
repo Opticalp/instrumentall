@@ -114,6 +114,7 @@ void ModuleTask::leaveTask()
 
 void ModuleTask::cancel()
 {
+    coreModule->setRunningTask(this);
 	moduleCancel();
 	MergeableTask::cancel();
 }

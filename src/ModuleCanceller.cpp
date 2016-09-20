@@ -32,7 +32,7 @@
 
 void ModuleCanceller::run()
 {
-    module->waitCancelled();
+    module->waitCancelled(true);
     module->moduleReset();
 
     delete this;

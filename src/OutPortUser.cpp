@@ -286,10 +286,16 @@ void OutPortUser::cancelTargets()
     	(*it)->cancelWithTargets();
 }
 
+void OutPortUser::waitCancelTargets()
+{
+    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
+            it!=ite; it++)
+        (*it)->waitTargetsCancelled();
+}
+
 void OutPortUser::resetTargets()
 {
     for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
             it!=ite; it++)
     	(*it)->resetWithTargets();
 }
-

@@ -588,50 +588,65 @@ void Module::cancelled()
 	immediateCancelling = false;
 }
 
-void Module::waitCancelled()
+void Module::waitCancelled(bool topCall)
 {
     if (reseting || resetDone)
     {
-        poco_information(logger(), name() + "::waitCancelled(): a reset just occured. ");
+        poco_information(logger(), name() + ".waitCancelled: a reset just occured. ");
         return;
     }
 
     if (cancelling)
         cancelDoneEvent.wait();
+
+    if (topCall || (waitingCancelled == 0))
+    {
+        waitingCancelled++;
+        poco_information(logger(), name() + ".waitCancelled: wait for sources... ");
+        waitCancelSources();
+        poco_information(logger(), name() + ".waitCancelled: wait for targets... ");
+        waitCancelTargets();
+        poco_information(logger(), name() + ".waitCancelled: done. ");
+        waitingCancelled--;
+    }
     else
-        poco_error(logger(), name() + "::waitCancelled(): "
-                "neither cancelling nor just reset... "
-                "waitCancelled is not relevant here! " );
+        poco_information(logger(), name() + ".waitCancelled skipped");
 }
 
-void Module::immediateCancel()
+bool Module::immediateCancel()
 {
-	poco_information(logger(), name() + " immediate cancel request");
+	poco_information(logger(), name() + ".immediateCancel request");
 
 	if (immediateCancelling)
 	{
-		poco_information(logger(), "already immediate cancelling... return");
-		return;
+		poco_information(logger(), name() + " already immediate cancelling... return");
+		return false;
 	}
 
+	bool previousCancelReq = cancelRequested;
     cancelRequested = true; // to be set before immediateCancelling. See cancellationListen
 	immediateCancelling = true;
 
 	if (cancelDoneEvent.tryWait(0))
 	{
-		poco_information(logger(), "already cancelled... return");
+		poco_information(logger(), name() + " already cancelled... return");
+		cancelRequested = previousCancelReq;
 		immediateCancelling = false;
-		return;
+		return false;
 	}
 
 	if (cancelling)
-		poco_information(logger(), "already cancelling... "
+		poco_information(logger(), name() + " already cancelling... "
 				"Trig immediate cancelling then. ");
 	else
 		cancelling = true;
 
 	cancelSources();
+    poco_information(logger(), name() + ".immediateCancel: "
+            "cancellation request dispatched to the sources");
 	cancelTargets();
+    poco_information(logger(), name() + ".immediateCancel: "
+            "cancellation request dispatched to the targets");
 
 	taskMngtMutex.lock();
 
@@ -648,6 +663,9 @@ void Module::immediateCancel()
 	for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
 			ite = allLaunchedTasks.end(); it != ite; it++)
 	{
+	    if (*it == runningTask.get())
+	        continue;
+
 		switch ((*it)->getState())
 		{
 		case MergeableTask::TASK_IDLE:
@@ -681,14 +699,15 @@ void Module::immediateCancel()
     if (!cancellationListenerThread.isRunning())
         cancellationListenerThread.start(cancellationListenerRunnable);
 
-	poco_information(logger(), "immediateCancel: cancellation request dispatched...");
+	poco_information(logger(), name() + ".immediateCancel: end of cancellation listener started...");
+	return true;
 }
 
 void Module::lazyCancel()
 {
 	if (immediateCancelling || cancelling)
 	{
-		poco_information(logger(), "lazyCancel: already cancelling... return");
+		poco_information(logger(), name() + ".lazyCancel: already cancelling... return");
 		return;
 	}
 
@@ -697,19 +716,19 @@ void Module::lazyCancel()
 	// check if the module was recently cancelled
 	if (cancelDoneEvent.tryWait(0))
 	{
-		poco_information(logger(), "lazyCancel: already cancelled... return");
+		poco_information(logger(), name() + ".lazyCancel: already cancelled... return");
 		cancelling = false;
 		return;
 	}
 
 	cancelSources();
-    poco_information(logger(), name() + " lazyCancel: "
+    poco_information(logger(), name() + ".lazyCancel: "
             "cancellation request dispatched to the sources");
 
     if (!cancellationListenerThread.isRunning())
         cancellationListenerThread.start(cancellationListenerRunnable);
 
-	poco_information(logger(), "lazyCancel: cancellation request dispatched...");
+	poco_information(logger(), name() + ".lazyCancel: end of cancellation listener started...");
 }
 
 void Module::cancellationListen()
@@ -726,36 +745,40 @@ void Module::cancellationListen()
 
     if (!immediateCancelling)
     {
+        poco_information(logger(), name() + " lazyCancel listener: "
+                "tasks stopped. propagate to targets. ");
         cancelTargets();
-        poco_information(logger(), name() + " lazyCancel: "
-                "cancellation request dispatched to the targets...");
+        poco_information(logger(), name() + " lazyCancel listener: "
+                "cancellation request dispatched to the targets");
         cancelled();
         poco_information(logger(), name() + " lazyCancel: "
                 "cancellation effective.");
     }
     else
     {
-        poco_information(logger(), name() + " immediateCancel: "
+        poco_information(logger(), name() + " immediateCancel listener: "
                 "tasks stopped.");
 
         while (cancelRequested)
         {
             Poco::Thread::yield();
             if (counter++ % 500 == 0)
-                poco_information(logger(), "waiting for " + name() + "::cancel to return");
+                poco_information(logger(), "waiting for " + name() + ".cancel to return");
         }
 
         cancelled();
-        poco_information(logger(), name() + " immediateCancel: "
+        poco_information(logger(), name() + " immediateCancel listener: "
                 "cancellation effective.");
     }
 }
 
 void Module::moduleReset()
 {
+    poco_information(logger(), "entering " + name() + ".moduleReset");
+
 	if (reseting)
 	{
-		poco_information(logger(), "already reseting... return");
+		poco_information(logger(), name() + " already reseting... return");
 		return;
 	}
 
@@ -763,7 +786,7 @@ void Module::moduleReset()
 
 	if (resetDone)
 	{
-		poco_information(logger(), "already reset... return");
+		poco_information(logger(), name() + " already reset... return");
 		reseting = false;
 		return;
 	}

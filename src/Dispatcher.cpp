@@ -442,12 +442,13 @@ void Dispatcher::cancel(Module* module)
 	//  * Immediate cancel the given module
 	//  * Handle the waitCancelled and reseting process
 
-	module->immediateCancel();
+	if (module->immediateCancel())
+	{
+        // async waitCancelled and reset
+        ModuleCanceller* listener = new ModuleCanceller(module);
 
-	// async waitCancelled and reset
-	ModuleCanceller* listener = new ModuleCanceller(module);
-
-	Poco::Util::Application::instance()
-            .getSubsystem<ThreadManager>()
-            .startModuleCancellationListener(*listener);
+        Poco::Util::Application::instance()
+                .getSubsystem<ThreadManager>()
+                .startModuleCancellationListener(*listener);
+	}
 }

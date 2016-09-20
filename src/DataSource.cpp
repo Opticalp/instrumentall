@@ -238,13 +238,13 @@ void DataSource::resetWithTargets()
 	if (!sourceCancelling)
 		return;
 
-	// self
-	sourceCancelling = false;
-
 	// reseting targets
     Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()
                         .dispatchTargetReset(this);
+
+    // self
+    sourceCancelling = false;
 }
 
 void DataSource::cancelFromTarget(DataTarget* target)

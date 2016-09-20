@@ -98,6 +98,7 @@ public:
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
 		  cancelling(false),
+		  waitingCancelled(0),
 		  immediateCancelling(false),
 		  cancelRequested(false),
 		  cancelDoneEvent(false),
@@ -114,6 +115,7 @@ public:
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
 		  cancelling(false),
+          waitingCancelled(0),
           immediateCancelling(false),
           cancelRequested(false),
 		  cancelDoneEvent(false),
@@ -246,8 +248,10 @@ public:
 	 * Force the cancellation
 	 *
 	 * Call Module::cancel
+	 *
+	 * @return true if a cancellation is trigged
 	 */
-	void immediateCancel();
+	bool immediateCancel();
 
 	/**
 	 * Wait for the end of the current run to dispatch the cancellation.
@@ -260,7 +264,13 @@ public:
 	/**
 	 * Wait for the cancellation to be effective
 	 */
-	void waitCancelled();
+	void waitCancelled(bool topCall);
+
+	/**
+	 * Convenience function to facilitate ParameterizedEntity::waitCancelled
+	 * inheritance
+	 */
+	void waitCancelled() { waitCancelled(false); }
 
 	/**
 	 * Reset the targets, then reset itself calling reset(),
@@ -524,6 +534,7 @@ private:
 
 	bool immediateCancelling; ///< flag set by immediateCancel and reset by cancelled
 	bool cancelling; ///< flag set by immediateCancel or lazyCancel and reset by cancelled
+	int waitingCancelled;
 	bool cancelRequested; ///< flag set before calling Module::cancel, and reset on return
 
 	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset

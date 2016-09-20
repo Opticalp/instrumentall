@@ -305,17 +305,17 @@ void ThreadManager::cancelAll()
 	std::set< Poco::AutoPtr<ModuleTask> > tempModTasks = pendingModTasks;
 	taskListLock.unlock();
 
-	poco_notice(logger(), "Dispatching cancel() to all active tasks");
+	poco_notice(logger(), "CancelAll: Dispatching cancel() to all active tasks");
 
 	for (std::set< Poco::AutoPtr<ModuleTask> >::iterator it = tempModTasks.begin(),
 			ite = tempModTasks.end(); it != ite; it++)
 	{
 		Poco::AutoPtr<ModuleTask> tsk = *it;
-		poco_information(logger(), "cancelling " + tsk->name());
+		poco_information(logger(), "CancelAll: cancelling " + tsk->name());
 		tsk->cancel();
 	}
 
-	poco_information(logger(), "All active tasks cancelled. Wait for them to delete. ");
+	poco_information(logger(), "CancelAll: All active tasks cancelled. Wait for them to delete. ");
 
 	while (count() || threadPool.used())
 		Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);

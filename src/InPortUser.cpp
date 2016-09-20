@@ -194,6 +194,13 @@ void InPortUser::cancelSources()
     	(*it)->cancelWithSource();
 }
 
+void InPortUser::waitCancelSources()
+{
+    for (std::vector<InPort*>::iterator it=inPorts.begin(), ite=inPorts.end();
+            it!=ite; it++)
+        (*it)->waitSourceCancelled();
+}
+
 void InPortUser::resetSources()
 {
     for (std::vector<InPort*>::iterator it=inPorts.begin(), ite=inPorts.end();

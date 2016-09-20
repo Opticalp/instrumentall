@@ -221,6 +221,11 @@ protected:
     void cancelSources();
 
     /**
+     * Wait for the sources being effectively cancelled
+     */
+    void waitCancelSources();
+
+    /**
      * Dispatch the reseting to the sources
      */
     void resetSources();

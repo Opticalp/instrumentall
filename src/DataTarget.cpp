@@ -181,7 +181,8 @@ void DataTarget::resetFromSource(DataSource* source)
 	if (!targetCancelling)
 		return;
 
-	// self
-	targetCancelling = false;
+    // self
 	targetReset();
+
+    targetCancelling = false;
 }

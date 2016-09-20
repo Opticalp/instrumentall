@@ -207,6 +207,11 @@ protected:
     void cancelTargets();
 
     /**
+     * Wait for the targets being effectively cancelled
+     */
+    void waitCancelTargets();
+
+    /**
      * Dispatch the reseting to the targets
      */
     void resetTargets();
