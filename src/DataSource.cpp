@@ -138,7 +138,7 @@ void DataSource::detachDataTarget(DataTarget* target)
 bool DataSource::registerPendingTarget(DataTarget* target)
 {
 	if (sourceCancelling)
-		throw Poco::InvalidAccessException(
+		throw ExecutionAbortedException(
 				"DataSource::registerPendingTarget",
 				name() + " cancelling, "
 				"not able to lock the data for the target: "
@@ -190,7 +190,7 @@ bool DataSource::tryCatchRead(DataTarget* target)
 		if (sourceCancelling)
 		{
 			unlockData();
-			throw Poco::InvalidAccessException("DataSource::tryCatchRead",
+			throw ExecutionAbortedException("DataSource::tryCatchRead",
 					name() + " cancelling, can not catch read "
 					+ target->name() + ". Source lock released. ");
 		}
@@ -200,7 +200,7 @@ bool DataSource::tryCatchRead(DataTarget* target)
 	else
 	{
 		if (sourceCancelling)
-			throw Poco::InvalidAccessException("DataSource::tryCatchRead",
+			throw ExecutionAbortedException("DataSource::tryCatchRead",
 					name() + " cancelling, can not catch read "
 					+ target->name()
 					+ ". No source lock to release. ");

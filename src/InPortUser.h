@@ -125,7 +125,7 @@ protected:
      * To be called by startCondition.
      * The inMutex is managed by the caller.
      *
-     * @throw Poco::RuntimeException if the input port requested a
+     * @throw ExecutionAbortedException if the input port requested a
      * lazy cancel of the InPortUser.
      */
     bool tryInPortCatchSource(size_t portIndex);

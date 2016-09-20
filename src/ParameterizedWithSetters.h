@@ -101,7 +101,7 @@ public:
 	 * Check if the parameter setters have all been called
 	 *
 	 * @return true if all concerned parameters were sets
-	 * @throw Poco::RuntimeException if a parameterSetter is cancelling
+	 * @throw ExecutionAbortedException if a parameterSetter is cancelling
 	 */
 	bool tryAllParametersSet();
 

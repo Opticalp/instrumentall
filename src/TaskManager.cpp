@@ -193,6 +193,11 @@ void TaskManager::taskFailed(MergeableTask* pTask, const Poco::Exception& exc)
 	nc.postNotification(new TaskFailedNotification(pTask, exc));
 }
 
+void TaskManager::taskFailedOnCancellation(MergeableTask* pTask, const Poco::Exception& exc)
+{
+    nc.postNotification(new TaskFailedOnCancellationNotification(pTask, exc));
+}
+
 void TaskManager::taskEnslaved(MergeableTask* pTask, MergeableTask* enslaved)
 {
 	enslaved->setOwner(this);

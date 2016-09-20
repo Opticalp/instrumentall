@@ -84,7 +84,7 @@ void OutPortUser::notifyOutPortReady(size_t portIndex,
                 "that was not previously locked? ");
 
     if (isCancelled())
-    	throw Poco::RuntimeException("notify out port ready, "
+    	throw ExecutionAbortedException("notify out port ready, "
     			"although the task is cancelled. abort. ");
 
     outPorts[portIndex]->notifyReady(attribute);
@@ -173,7 +173,7 @@ void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 			}
 
 			if (yield())
-				throw Poco::RuntimeException("reserveOutPorts",
+				throw ExecutionAbortedException("reserveOutPorts",
 						"Task cancellation upon user request");
 
 			poco_information(logger(),"Not all output ports caught. Retrying...");
@@ -224,7 +224,7 @@ size_t OutPortUser::reserveOutPortOneOf(std::set<size_t>& outputs)
 	if (releaseOut)
 		unlockOut();
 
-	throw Poco::RuntimeException("reserveOutPortOneOf",
+	throw ExecutionAbortedException("reserveOutPortOneOf",
 			"Task cancellation upon user request");
 }
 
@@ -245,7 +245,7 @@ void OutPortUser::reserveOutPort(size_t output)
 		while (!tryOutPortLock(output))
 		{
 			if (yield())
-				throw Poco::RuntimeException("reserveOutPort",
+				throw ExecutionAbortedException("reserveOutPort",
 						"Task cancellation upon user request");
 
 	//		poco_information(logger(),"Output port not caught. Retrying...");
@@ -275,7 +275,7 @@ void OutPortUser::reserveLockOut()
 	while (!tryLockOut())
 	{
 		if (yield())
-			throw Poco::RuntimeException(name(), "task cancelled upon user request");
+			throw ExecutionAbortedException(name(), "task cancelled upon user request");
 	}
 }
 

@@ -117,6 +117,11 @@ void MergeableTask::run()
 		setState(TASK_RUNNING);
 		runTask();
 	}
+	catch (ExecutionAbortedException& exc)
+	{
+        if (pTm)
+            pTm->taskFailedOnCancellation(this, exc);
+	}
 	catch (Poco::Exception& exc)
 	{
 		if (pTm)
@@ -216,7 +221,7 @@ void MergeableTask::setState(TaskState taskState)
 	if (taskState != TASK_FINISHED)
 	{
 	    if (state == TASK_CANCELLING)
-            throw Poco::RuntimeException("task cancelling. "
+            throw ExecutionAbortedException("task cancelling. "
 				"Can not be changed to another state than \"finished\"");
         if (state == TASK_MERGED)
             throw Poco::RuntimeException("slave task. "

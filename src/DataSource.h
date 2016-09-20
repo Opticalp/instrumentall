@@ -112,7 +112,7 @@ public:
      * Lock (read) the data
      * and add the target to the pendingDataTargets
      *
-     * @throw Poco::InvalidAccessException in case of
+     * @throw ExecutionAbortedException in case of
      * pending cancellation
      * @return true if the insertion succeeded, false
      * if the target was already inserted
@@ -223,7 +223,7 @@ private:
      * remove the target from the pendingDataTargets if present,
      * and unlock the corresponding data read lock
      *
-     * @throw Poco::InvalidAccessException if the DataSource is
+     * @throw ExecutionAbortedException if the DataSource is
      * cancelling
      */
     bool tryCatchRead(DataTarget* target);

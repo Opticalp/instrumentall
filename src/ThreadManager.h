@@ -93,6 +93,7 @@ public:
     void onStarted(TaskStartedNotification* pNf);
 //    void onProgress(TaskProgressNotification* pNf);
     void onFailed(TaskFailedNotification* pNf);
+    void onFailedOnCancellation(TaskFailedNotification* pNf);
     void onFinished(TaskFinishedNotification* pNf);
     void onEnslaved(TaskEnslavedNotification* pNf);
 

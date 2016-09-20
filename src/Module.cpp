@@ -183,7 +183,7 @@ void Module::run(ModuleTask* pTask)
 	try
 	{
         if (isCancelled())
-            throw Poco::RuntimeException(name() +
+            throw ExecutionAbortedException(name() +
                     ": can not run a new task, "
                     "the module is cancelling");
 
@@ -211,7 +211,7 @@ void Module::run(ModuleTask* pTask)
     try
     {
 		if (isCancelled())
-			throw Poco::RuntimeException(name() +
+			throw ExecutionAbortedException(name() +
 					": can not run a new task, "
 					"the module is cancelling (2)");
 
@@ -284,7 +284,7 @@ InPort* Module::triggingPort()
 	if (*runningTask)
 		return (*runningTask)->triggingPort();
 
-	throw Poco::RuntimeException(name(), "querying trigging port. not in a task");
+	throw Poco::InvalidAccessException(name(), "querying trigging port. not in a task");
 }
 
 void Module::setRunningState(ModuleTask::RunningStates state)
@@ -314,8 +314,8 @@ void Module::enqueueTask(ModuleTask* task)
 	{
 		if (task->triggingPort())
 			task->triggingPort()->releaseInputData();
-		throw Poco::InvalidAccessException(name(),
-				"enqueue task: module is cancelling");
+		throw ExecutionAbortedException(name(),
+				"enqueue task " + task->name() + ": module is cancelling");
 	}
 
 	taskMngtMutex.lock();
@@ -542,7 +542,7 @@ void Module::mergeTasks(std::set<size_t> inPortIndexes)
 					+ ". Retry.");
 
 			if (yield() || cancelling)
-				throw Poco::RuntimeException(name(), "Cancellation upon user request");
+				throw ExecutionAbortedException(name(), "Cancellation upon user request");
 			taskMngtMutex.lock();
 		}
 		else
@@ -568,7 +568,7 @@ void Module::waitParameters()
 	while (!tryAllParametersSet())
 	{
 		if (yield())
-			throw Poco::RuntimeException(name(),
+			throw ExecutionAbortedException(name(),
 					"Apply parameters: Cancellation upon user request");
 	}
 

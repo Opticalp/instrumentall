@@ -38,6 +38,8 @@
 
 class TaskManager;
 
+#include "ExecutionAbortedException.h"
+
 /**
  * MergeableTask
  *

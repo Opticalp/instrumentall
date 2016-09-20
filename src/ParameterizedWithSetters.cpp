@@ -29,6 +29,7 @@
 #include "ParameterizedWithSetters.h"
 
 #include "ParameterizedEntity.h"
+#include "ExecutionAbortedException.h"
 
 using Poco::AutoPtr;
 
@@ -106,7 +107,7 @@ bool ParameterizedWithSetters::tryAllParametersSet()
 		    {
 		        if ( (paramAlreadySet.count(const_cast<ParameterSetter*>(it->get())->getParameterIndex()) == 0)
 		              &&  (it->get())->isTargetCancelling() )
-		            throw Poco::RuntimeException("Apply parameters: "
+		            throw ExecutionAbortedException("Apply parameters: "
 		                    "Cancellation upon user request (setter)");
 		    }
 

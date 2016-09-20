@@ -74,6 +74,7 @@ void ThreadManager::onStarted(TaskStartedNotification* pNf)
 void ThreadManager::onFailed(TaskFailedNotification* pNf)
 {
     Poco::Exception e(pNf->reason());
+
     poco_error(logger(), pNf->task()->name()
     		+ ": " + e.displayText());
 
@@ -81,10 +82,23 @@ void ThreadManager::onFailed(TaskFailedNotification* pNf)
     if (modTask)
     {
         poco_information(logger(),
-        		modTask->name() + ": module cancellation request");
+        		modTask->name() + ": module failed. Cancellation request");
 
     	modTask->moduleCancel();
     }
+
+    // TODO:
+    // - dispatch to a NotificationQueue
+
+    pNf->release();
+}
+
+void ThreadManager::onFailedOnCancellation(TaskFailedNotification* pNf)
+{
+    Poco::Exception e(pNf->reason());
+
+    poco_information(logger(), pNf->task()->name()
+            + ": failed on cancellation request. " + e.displayText());
 
     // TODO:
     // - dispatch to a NotificationQueue

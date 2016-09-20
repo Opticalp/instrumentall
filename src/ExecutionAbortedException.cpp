@@ -1,6 +1,6 @@
 /**
- * @file	src/DataProxy.cpp
- * @date	Jul. 2016
+ * @file	src/ExecutionAbortedException.cpp
+ * @date	Sept. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,10 @@
  THE SOFTWARE.
  */
 
-#include "DataProxy.h"
+
 #include "ExecutionAbortedException.h"
+#include <typeinfo>
 
-void DataProxy::runTarget()
-{
-	if (!tryCatchSource())
-		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
+POCO_IMPLEMENT_EXCEPTION( ExecutionAbortedException, Poco::Exception, "cancellation in progress...")
 
-	DataAttribute attr = getDataAttribute();
 
-	while (!tryWriteDataLock())
-	{
-		if (yield())
-		{
-		    releaseInputData();
-            throw ExecutionAbortedException("DataProxy::runTarget",
-                    "Task cancellation upon user request");
-		}
-	}
-
-	try
-	{
-		convert();
-	}
-	catch (...)
-	{
-		releaseInputData();
-		releaseWriteOnFailure();
-		throw;
-	}
-
-	releaseInputData();
-	notifyReady(attr);
-}

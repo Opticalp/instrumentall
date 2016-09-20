@@ -30,6 +30,7 @@
 
 #include "TrigPort.h"
 #include "InDataPort.h"
+#include "ExecutionAbortedException.h"
 
 #include "Poco/NumberFormatter.h"
 
@@ -163,7 +164,7 @@ int InPortUser::startCondition()
 			if (!allPresent)
 			{
 				if (yield())
-					throw Poco::RuntimeException("startCondition",
+					throw ExecutionAbortedException("startCondition",
 							"Task cancellation upon user request");
 			}
 		}

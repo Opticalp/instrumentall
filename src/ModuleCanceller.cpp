@@ -1,6 +1,6 @@
 /**
- * @file	src/DataProxy.cpp
- * @date	Jul. 2016
+ * @file	src/ModuleCanceller.cpp
+ * @date	Sept. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,14 @@
  THE SOFTWARE.
  */
 
-#include "DataProxy.h"
-#include "ExecutionAbortedException.h"
+#include "ModuleCanceller.h"
 
-void DataProxy::runTarget()
+#include "Module.h"
+
+void ModuleCanceller::run()
 {
-	if (!tryCatchSource())
-		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
+    module->waitCancelled();
+    module->moduleReset();
 
-	DataAttribute attr = getDataAttribute();
-
-	while (!tryWriteDataLock())
-	{
-		if (yield())
-		{
-		    releaseInputData();
-            throw ExecutionAbortedException("DataProxy::runTarget",
-                    "Task cancellation upon user request");
-		}
-	}
-
-	try
-	{
-		convert();
-	}
-	catch (...)
-	{
-		releaseInputData();
-		releaseWriteOnFailure();
-		throw;
-	}
-
-	releaseInputData();
-	notifyReady(attr);
+    delete this;
 }

@@ -338,10 +338,6 @@ protected:
 	/**
 	 * Reset the module to its initial state.
 	 *
-	 * This method is called on error (TaskFailedNotification)
-	 * which can be trigged with an exception throw e.g. on
-	 * user request cancellation.
-	 *
 	 * Should achieve:
 	 *  - reset running seqIndexes
 	 *  - reset evtl flags, states,...
@@ -412,8 +408,7 @@ protected:
 	 *
 	 * In case of cancellation detected via Module::isCancelled or
 	 * Module::yield or Module::sleep,
-	 * an exception should be thrown to trigg the Module::reset
-	 * function.
+	 * a ExecutionAbortedException should be thrown
 	 *
 	 * @param startCond start condition as defined in virtual method
 	 * startCondition. You should consider implementing your own
@@ -539,7 +534,7 @@ private:
 	/**
 	 * Wait for all the plugged mandatory parameters to be available.
 	 *
-	 * @throw Poco::RuntimeException on any cancellation (lazy cancel or immediate cancel)
+	 * @throw ExecutionAbortedException on any cancellation (lazy cancel or immediate cancel)
 	 */
 	void waitParameters();
 

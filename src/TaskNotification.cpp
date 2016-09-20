@@ -86,6 +86,19 @@ TaskFailedNotification::~TaskFailedNotification()
 }
 
 
+TaskFailedOnCancellationNotification::TaskFailedOnCancellationNotification(MergeableTask* pTask, const Poco::Exception& exc):
+    TaskNotification(pTask),
+    _pException(exc.clone())
+{
+}
+
+
+TaskFailedOnCancellationNotification::~TaskFailedOnCancellationNotification()
+{
+    delete _pException;
+}
+
+
 TaskProgressNotification::TaskProgressNotification(MergeableTask* pTask, float taskProgress):
 	TaskNotification(pTask),
 	_progress(taskProgress)

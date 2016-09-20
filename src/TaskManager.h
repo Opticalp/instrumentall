@@ -110,6 +110,7 @@ protected:
 	void taskCancelled(MergeableTask* pTask);
 	void taskFinished(MergeableTask* pTask);
 	void taskFailed(MergeableTask* pTask, const Poco::Exception& exc);
+    void taskFailedOnCancellation(MergeableTask* pTask, const Poco::Exception& exc);
 	void taskEnslaved(MergeableTask* pTask, MergeableTask* enslaved);
 
 private:

@@ -28,6 +28,7 @@
 
 #include "ParameterGetter.h"
 #include "ParameterizedEntity.h"
+#include "ExecutionAbortedException.h"
 
 #include "Poco/NumberFormatter.h"
 
@@ -75,7 +76,7 @@ void ParameterGetter::runTarget()
 	while (!tryWriteDataLock())
 	{
 		if (yield())
-			throw Poco::RuntimeException("ParameterGetter::runTarget",
+			throw ExecutionAbortedException("ParameterGetter::runTarget",
 					"Task cancellation upon user request");
 	}
 

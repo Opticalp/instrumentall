@@ -1,6 +1,6 @@
 /**
- * @file	src/DataProxy.cpp
- * @date	Jul. 2016
+ * @file	src/ExecutionAbortedException.h
+ * @date	Sept. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,11 @@
  THE SOFTWARE.
  */
 
-#include "DataProxy.h"
-#include "ExecutionAbortedException.h"
+#ifndef SRC_EXECUTIONABORTEDEXCEPTION_H_
+#define SRC_EXECUTIONABORTEDEXCEPTION_H_
 
-void DataProxy::runTarget()
-{
-	if (!tryCatchSource())
-		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
+#include "Poco/Exception.h"
 
-	DataAttribute attr = getDataAttribute();
+POCO_DECLARE_EXCEPTION(, ExecutionAbortedException, Poco::Exception)
 
-	while (!tryWriteDataLock())
-	{
-		if (yield())
-		{
-		    releaseInputData();
-            throw ExecutionAbortedException("DataProxy::runTarget",
-                    "Task cancellation upon user request");
-		}
-	}
-
-	try
-	{
-		convert();
-	}
-	catch (...)
-	{
-		releaseInputData();
-		releaseWriteOnFailure();
-		throw;
-	}
-
-	releaseInputData();
-	notifyReady(attr);
-}
+#endif /* SRC_EXECUTIONABORTEDEXCEPTION_H_ */
