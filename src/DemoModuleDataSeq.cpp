@@ -69,7 +69,9 @@ void DemoModuleDataSeq::process(int startCond)
         int *pData;
 
         // lock outPortA
+        poco_information(logger(), name() + ": trying to reserve outPort");
         reserveOutPort(outPortA);
+        poco_information(logger(), name() + ": outPort reserved");
         // retrieve data access
         getDataToWrite(outPortA, pData);
 

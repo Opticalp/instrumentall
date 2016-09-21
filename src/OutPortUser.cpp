@@ -119,7 +119,7 @@ void OutPortUser::releaseAllOutPorts()
 	for (std::set<size_t>::iterator it = caughts->begin(),
 			ite = caughts->end(); it != ite; it++)
 	{
-		poco_warning(logger(), outPorts[*it]->name()
+		poco_warning(logger(), name() + "." + outPorts[*it]->name()
 				+ " was not cleanly released");
         outPorts[*it]->releaseWriteOnFailure();
 	}
@@ -248,7 +248,7 @@ void OutPortUser::reserveOutPort(size_t output)
 				throw ExecutionAbortedException("reserveOutPort",
 						"Task cancellation upon user request");
 
-	//		poco_information(logger(),"Output port not caught. Retrying...");
+//			poco_information(logger(),name() + ": Output port not caught. Retrying...");
 		}
 
 		releaseOut = false;

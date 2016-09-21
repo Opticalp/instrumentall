@@ -317,9 +317,21 @@ void Module::enqueueTask(ModuleTask* task)
 	}
 
     // take ownership of the task.
-    Poco::Util::Application::instance()
+	try
+	{
+	    Poco::Util::Application::instance()
                              .getSubsystem<ThreadManager>()
                              .registerNewModuleTask(task);
+	}
+	catch (Poco::RuntimeException& exc)
+	{
+        if (task->triggingPort())
+            task->triggingPort()->releaseInputData();
+	    poco_error(logger(), name() + ": ThreadManager::registerNewModuleTask failed: "
+	            + exc.displayText());
+        throw ExecutionAbortedException(name(),
+                "enqueue task " + task->name() + ": " + exc.displayText());
+	}
 
 	taskMngtMutex.lock();
 

@@ -363,7 +363,7 @@ void Dispatcher::setOutputDataReady(DataSource* source)
     	{
     		source->registerPendingTarget(*it);
     	}
-    	catch (Poco::InvalidAccessException& exc)
+    	catch (ExecutionAbortedException& exc)
     	{
     		poco_error(logger(), (*it)->name()
     				+ " can not be started: "

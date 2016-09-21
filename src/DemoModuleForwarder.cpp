@@ -97,12 +97,12 @@ void DemoModuleForwarder::process(int startCond)
     if (getProcMode()) // buffered mode
     {
     	*pOutData = tmpData;
-
-    	releaseInPort(inPortA);
     }
     else
     {
     	*pOutData = *pData;
+
+//        releaseInPort(inPortA);
     }
 
     notifyOutPortReady(outPortA, outAttr);
