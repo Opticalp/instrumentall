@@ -216,6 +216,19 @@ protected:
 	virtual void startingUnlock() = 0;
 
     /**
+     * Release Module::taskStartingMutex via startingUnlock
+     * if starting is set.
+     */
+    void releaseStartingMutex()
+    {
+        if (starting)
+        {
+            starting = false;
+            startingUnlock();
+        }
+    }
+
+    /**
      * Dispatch the cancellation to the sources
      */
     void cancelSources();
@@ -246,19 +259,6 @@ private:
 	Poco::ThreadLocal< std::set<size_t> > caughts; ///< store which ports are locked
 
     bool starting; ///< flag set to true is the ports release has to trig startingUnlock
-
-    /**
-     * Release Module::taskStartingMutex via startingUnlock
-     * if starting is set.
-     */
-    void releaseStartingMutex()
-    {
-        if (starting)
-        {
-            starting = false;
-            startingUnlock();
-        }
-    }
 
 };
 

@@ -208,6 +208,9 @@ void Module::run(ModuleTask* pTask)
 
     parametersTreated();
 
+    if (inPortCaughtsCount() == 0)
+        releaseStartingMutex();
+
     try
     {
 		if (isCancelled())
