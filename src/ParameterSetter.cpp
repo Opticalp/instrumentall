@@ -83,6 +83,7 @@ void ParameterSetter::runTarget()
 	{
 		if (yield())
 		{
+		    settersHandler->trigSetParameter(getParameterIndex());
 			releaseInputData();
 			throw ExecutionAbortedException("ParameterSetter::runTarget",
 					"Task cancellation upon user request");
@@ -115,10 +116,12 @@ void ParameterSetter::runTarget()
 	}
 	catch (...)
 	{
+        settersHandler->trigSetParameter(getParameterIndex());
 		releaseInputData();
 		throw;
 	}
 
+    settersHandler->trigSetParameter(getParameterIndex());
 	releaseInputData();
 }
 

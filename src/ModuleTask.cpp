@@ -78,22 +78,14 @@ void ModuleTask::setRunningState(RunningStates state)
 
 void ModuleTask::runTask()
 {
-	try
-	{
-		coreModule->run(this);
-	}
-	catch (...)
-	{
-		doneEvent.set();
-		throw;
-	}
-
-	doneEvent.set();
+	coreModule->run(this);
 }
 
 void ModuleTask::leaveTask()
 {			
-	if (coreModule == NULL)
+    doneEvent.set();
+
+    if (coreModule == NULL)
 		return;
 
 	// enqueue tasks until it works.

@@ -384,6 +384,7 @@ void DataGen::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
 	case paramValue:
 	    iQueue.push(value);
 	    iPar = value;
+	    poco_information(logger(), name() + ": int param set");
 		break;
 	case paramSeqStart:
 		seqStart = value;

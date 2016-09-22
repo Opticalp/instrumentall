@@ -86,16 +86,23 @@ public:
 
 	/**
 	 * Called by a ParameterSetter to notify the ParameterizedEntity
-	 * that a parameter is set
+	 * that a parameter will be set
 	 *
-	 * Insert paramIndex into paramAlreadySet
-	 * If all set, set event, and reset paramAlreadySet,
-	 * evtl apply parameters
+	 * lock alreadySetLock if the parameter setting is possible (return value is true)
 	 *
 	 * @return false if the parameter was already set. The calling function
 	 * should wait until the return value is true, then.
+	 *
+	 * If the return value is true, trigSetParameter has to be called
+	 * to release alreadySetLock
 	 */
 	bool trySetParameter(size_t paramIndex);
+
+	/**
+	 * To be called after trySetParameter if it returned true
+	 * to notify that the setParameterValue function was called.
+	 */
+	void trigSetParameter(size_t paramIndex);
 
 	/**
 	 * Check if the parameter setters have all been called
