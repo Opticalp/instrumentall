@@ -306,7 +306,7 @@ ModuleTask::RunningStates Module::getRunningState()
 	return (*runningTask)->getRunningState();
 }
 
-void Module::enqueueTask(ModuleTask* task)
+void Module::enqueueTask(ModuleTask* task, bool syncAllowed)
 {
 	if (!moduleReady())
 	{
@@ -348,7 +348,12 @@ void Module::enqueueTask(ModuleTask* task)
 	}
 
 	if (!taskIsRunning())
-		popTask();
+	{
+		if (syncAllowed)
+			popTaskSync();
+		else
+			popTask();
+	}
 	else
 		poco_information(logger(), name() + ": a task is already running");
 }
@@ -570,10 +575,10 @@ void Module::mergeTasks(std::set<size_t> inPortIndexes)
 	taskMngtMutex.unlock();
 }
 
-Poco::AutoPtr<ModuleTask> Module::runModule()
+Poco::AutoPtr<ModuleTask> Module::runModule(bool syncAllowed)
 {
     Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(this), true);
-    enqueueTask(taskPtr);
+    enqueueTask(taskPtr, syncAllowed);
 
     return taskPtr;
 }

@@ -178,20 +178,22 @@ public:
      * to be called by the UI or by any mean, but without new
      * input port data.
      *
+	 * @param syncAllowed if true, try to sync start the module first. 
      * @return The task created for the module to run. The
      * task can be used to check the state of the execution.
      */
-	Poco::AutoPtr<ModuleTask> runModule();
+	Poco::AutoPtr<ModuleTask> runModule(bool syncAllowed = false);
 
     /**
      * Enqueue a new task
      *
      * for this module. and pop it, if no task is running for this module.
      * To be called by the disptacher.
+	 * @param syncAllowed if true, try to sync start the module first. 
      * @return true if the module is not running, and thus,
      * the new enqueued task should be started.
      */
-    void enqueueTask(ModuleTask* task);
+    void enqueueTask(ModuleTask* task, bool syncAllowed = false);
 
     /**
      * Unregister a task
