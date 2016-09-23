@@ -248,7 +248,9 @@ void OutPortUser::reserveOutPort(size_t output)
 				throw ExecutionAbortedException("reserveOutPort",
 						"Task cancellation upon user request");
 
-//			poco_information(logger(),name() + ": Output port not caught. Retrying...");
+//			poco_information(logger(),name() + ": Output port "
+//				+ outPorts[output]->name()
+//				+ " not caught. Retrying...");
 		}
 
 		releaseOut = false;

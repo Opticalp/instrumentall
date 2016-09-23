@@ -105,6 +105,9 @@ void InPortUser::releaseInPort(size_t portIndex)
 		if (caughts->empty())
 		    releaseStartingMutex();
     }
+	else
+		poco_warning(logger(), "releaseInPort: "
+			"trying to release a port that is not caught (any more?).");
 }
 
 void InPortUser::releaseAllInPorts()

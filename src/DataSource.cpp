@@ -40,7 +40,7 @@
 
 DataSource::DataSource(int datatype):
 		DataItem(datatype),
-		notifying(0),
+		notifying(false),
 		sourceCancelling(false),
 		users(0)
 {
