@@ -74,11 +74,31 @@ void ThreadManager::onStarted(TaskStartedNotification* pNf)
 void ThreadManager::onFailed(TaskFailedNotification* pNf)
 {
     Poco::Exception e(pNf->reason());
+
     poco_error(logger(), pNf->task()->name()
     		+ ": " + e.displayText());
 
     ModuleTask* modTask = dynamic_cast<ModuleTask*>(pNf->task());
-    modTask->resetModule();
+    if (modTask)
+    {
+        poco_information(logger(),
+        		modTask->name() + ": module failed. Cancellation request");
+
+    	modTask->moduleCancel();
+    }
+
+    // TODO:
+    // - dispatch to a NotificationQueue
+
+    pNf->release();
+}
+
+void ThreadManager::onFailedOnCancellation(TaskFailedNotification* pNf)
+{
+    Poco::Exception e(pNf->reason());
+
+    poco_information(logger(), pNf->task()->name()
+            + ": failed on cancellation request. " + e.displayText());
 
     // TODO:
     // - dispatch to a NotificationQueue
@@ -91,12 +111,8 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
     poco_information(logger(), pNf->task()->name() + " has stopped");
 
     ModuleTask* modTask = dynamic_cast<ModuleTask*>(pNf->task());
-
     if (modTask)
     {
-    	// TODO:
-		// - dispatch to a NotificationQueue
-
     	unregisterModuleTask(modTask);
 
     	taskListLock.readLock();
@@ -116,6 +132,9 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 		poco_information(logger(), "TaskFinishednotification treated. ");
     }
     // else   datalogger task ==> 06.06.16 datalogger does not run in a task any more?
+
+	// TODO:
+	// - dispatch to a NotificationQueue
 
     pNf->release();
 }
@@ -152,7 +171,15 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 	try
 	{
 		if (cancellingAll)
-			throw Poco::RuntimeException("Cancelling, can not start " + taskPtr->name());
+		{
+			pTask->cancel();
+
+			// directly throw exception, in order to not be relying on
+			// taskMan.start exception throw, based on task.setState while
+			// cancelling the task
+	        throw Poco::RuntimeException("Cancelling all. "
+	                "Can not start " + pTask->name());
+		}
 
 		taskManager.start(taskPtr);
 	}
@@ -162,11 +189,17 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 
 		poco_error(logger(), pTask->name() + " cannot be started, "
 				+ e.displayText());
+
+		poco_bugcheck_msg("Poco::NoThreadAvailableException treatment not supported");
 	}
 	catch (...)
 	{
 		poco_information(logger(), pTask->name()
 				+ " failed to start");
+
+		if (pTask->triggingPort())
+			pTask->triggingPort()->releaseInputDataOnStartFailure();
+
 		unregisterModuleTask(pTask);
 		throw;
 	}
@@ -181,7 +214,10 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 	try
 	{
 		if (cancellingAll)
+		{
+			pTask->cancel();
 			throw Poco::RuntimeException("Cancelling, can not sync start " + pTask->name());
+		}
 
 		taskManager.startSync(taskPtr);
 	}
@@ -189,9 +225,11 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 	{
 		poco_information(logger(), pTask->name()
 				+ " failed to sync start");
+
+		if (pTask->triggingPort())
+			pTask->triggingPort()->releaseInputDataOnStartFailure();
+
 		unregisterModuleTask(pTask);
-//		poco_information(logger(), pTask->name()
-//				+ " is probably erased");
 		throw;
 	}
 }
@@ -204,13 +242,16 @@ size_t ThreadManager::count()
 }
 
 #define TIME_LAPSE_WAIT_ALL 5
+#include "ModuleManager.h"
 
 void ThreadManager::waitAll()
 {
+	bool stoppedOnCancel = false;
+
     // joinAll does not work here,
     // since it seems that it locks the recursive creation of new threads...
     // We use an event instead.
-    while (count() || threadPool.used())
+    while (count() || threadPool.used() || cancellingAll)
     {
         //Poco::TaskManager::TaskList list = taskManager.taskList();
         //std::string nameList("\n");
@@ -223,6 +264,19 @@ void ThreadManager::waitAll()
         //poco_information(logger(), "active threads are : " + nameList);
 
         Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+
+        if (cancellingAll)
+        	stoppedOnCancel = true;
+    }
+
+    if (stoppedOnCancel)
+    {
+        ModuleManager& modMan = Poco::Util::Application::instance().getSubsystem<ModuleManager>();
+
+        while (!modMan.allModuleReady())
+            Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+
+    	throw Poco::RuntimeException("waitAll","Cancellation upon user request");
     }
 
     poco_information(logger(), "All threads have stopped. ");
@@ -230,6 +284,11 @@ void ThreadManager::waitAll()
 
 void ThreadManager::registerNewModuleTask(ModuleTask* pTask)
 {
+	if (cancellingAll)
+		throw Poco::RuntimeException("Cancelling, "
+				"can not register the new task: "
+				+ pTask->name());
+
 	Poco::ScopedWriteRWLock lock(taskListLock);
 
 	Poco::AutoPtr<ModuleTask> taskPtr(pTask);
@@ -248,21 +307,43 @@ void ThreadManager::unregisterModuleTask(ModuleTask* pTask)
 
 void ThreadManager::cancelAll()
 {
+    if (cancellingAll)
+        return;
+
+	cancellingAll = true;
+
 	taskListLock.readLock();
 	std::set< Poco::AutoPtr<ModuleTask> > tempModTasks = pendingModTasks;
 	taskListLock.unlock();
 
-	cancellingAll = true; // we wish that it is an atomic operation
-
-	poco_notice(logger(), "Dispatching cancel() to all active tasks");
+	poco_notice(logger(), "CancelAll: Dispatching cancel() to all active tasks");
 
 	for (std::set< Poco::AutoPtr<ModuleTask> >::iterator it = tempModTasks.begin(),
 			ite = tempModTasks.end(); it != ite; it++)
 	{
 		Poco::AutoPtr<ModuleTask> tsk = *it;
-		poco_information(logger(), "cancelling " + tsk->name());
+		poco_information(logger(), "CancelAll: cancelling " + tsk->name());
 		tsk->cancel();
 	}
 
+	poco_information(logger(), "CancelAll: All active tasks cancelled. Wait for them to delete. ");
+
+	while (count() || threadPool.used())
+		Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+
+	poco_information(logger(), "No more pending task. Wait for all modules being ready... ");
+
+	ModuleManager& modMan = Poco::Util::Application::instance().getSubsystem<ModuleManager>();
+
+	while (!modMan.allModuleReady())
+        Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+
+    poco_information(logger(), "All modules ready. CancelAll done. ");
+
 	cancellingAll = false;
+}
+
+void ThreadManager::startModuleCancellationListener(Poco::Runnable& runnable)
+{
+    threadPool.start(runnable);
 }

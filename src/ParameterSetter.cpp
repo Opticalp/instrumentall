@@ -29,6 +29,7 @@
 #include "ParameterSetter.h"
 #include "ParameterizedEntity.h"
 #include "ParameterizedWithSetters.h"
+#include "ExecutionAbortedException.h"
 
 #include "Poco/NumberFormatter.h"
 
@@ -82,8 +83,9 @@ void ParameterSetter::runTarget()
 	{
 		if (yield())
 		{
+		    settersHandler->trigSetParameter(getParameterIndex());
 			releaseInputData();
-			throw Poco::RuntimeException("ParameterSetter::runTarget",
+			throw ExecutionAbortedException("ParameterSetter::runTarget",
 					"Task cancellation upon user request");
 		}
 	}
@@ -114,9 +116,29 @@ void ParameterSetter::runTarget()
 	}
 	catch (...)
 	{
+        settersHandler->trigSetParameter(getParameterIndex());
 		releaseInputData();
 		throw;
 	}
 
+    settersHandler->trigSetParameter(getParameterIndex());
 	releaseInputData();
+}
+
+void ParameterSetter::targetCancel()
+{
+    if (getParent())
+        getParent()->cancel();
+}
+
+void ParameterSetter::targetWaitCancelled()
+{
+    if (getParent())
+        getParent()->waitCancelled();
+}
+
+void ParameterSetter::targetReset()
+{
+    if (getParent())
+        getParent()->reset();
 }

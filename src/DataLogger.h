@@ -91,6 +91,10 @@ private:
 	void decUser() { release();   }
 	size_t userCnt() { return referenceCount(); }
 
+	void targetCancel() { }
+	void targetWaitCancelled() { }
+	void targetReset() { }
+
     Poco::FastMutex mutex; ///< data logger main mutex
 };
 

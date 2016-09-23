@@ -73,35 +73,19 @@ ModuleTask::RunningStates ModuleTask::getRunningState()
 
 void ModuleTask::setRunningState(RunningStates state)
 {
-	if (isCancelled())
-		throw Poco::RuntimeException(name() +
-				": can not change running state, "
-				"the task is cancelling");
-
 	runState = state;
 }
 
 void ModuleTask::runTask()
 {
-	if (coreModule == NULL)
-		throw Poco::NullPointerException("no more module bound to " + name());
-
-	try
-	{
-		coreModule->run(this);
-	}
-	catch (...)
-	{
-		doneEvent.set();
-		throw;
-	}
-
-	doneEvent.set();
+	coreModule->run(this);
 }
 
 void ModuleTask::leaveTask()
 {			
-	if (coreModule == NULL)
+    doneEvent.set();
+
+    if (coreModule == NULL)
 		return;
 
 	// enqueue tasks until it works.
@@ -122,15 +106,16 @@ void ModuleTask::leaveTask()
 
 void ModuleTask::cancel()
 {
-	if ((coreModule == NULL) && (getState() == TASK_RUNNING))
-		coreModule->cancel();
-
+    coreModule->setRunningTask(this);
+	moduleCancel();
 	MergeableTask::cancel();
 }
 
-void ModuleTask::resetModule()
-{
-	if (coreModule)
-		coreModule->resetWithTargets();
-}
+#include "Dispatcher.h"
+#include "Poco/Util/Application.h"
 
+void ModuleTask::moduleCancel()
+{
+	Poco::Util::Application::instance()
+			.getSubsystem<Dispatcher>().cancel(coreModule);
+}

@@ -67,10 +67,15 @@ public:
 	/**
 	 * Task cancel method.
 	 *
-	 *  - call Module::cancel if the task is running
+	 *  - call moduleCancel
 	 *  - call MergeableTask::cancel
 	 */
 	void cancel();
+
+	/**
+	 * Call Module::immediateCancel via the @ref Dispatcher
+	 */
+	void moduleCancel();
 
 	/**
 	 * Retrieve the attached module
@@ -117,13 +122,6 @@ public:
 	 */
 	void waitTaskDone()
 		{ doneEvent.wait(); }
-
-	/**
-	 * Forward to coreModule Module::reset()
-	 *
-	 * If the coreModule is available.
-	 */
-	void resetModule();
 
 protected:
 	/**

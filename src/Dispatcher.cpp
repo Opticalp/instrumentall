@@ -39,6 +39,8 @@
 #include "OutPort.h"
 #include "DataSource.h"
 
+#include "ModuleCanceller.h"
+
 #include "Poco/NumberFormatter.h"
 
 Dispatcher::Dispatcher():
@@ -348,14 +350,27 @@ void Dispatcher::setOutputDataReady(DataSource* source)
 {
 //    poco_information(logger(), port->name() + " data ready");
 
-	OutPort* tmpOut = dynamic_cast<OutPort*>(source);
+	OutPort* tmpOut = NULL;
+	if (logger().information())
+		tmpOut = dynamic_cast<OutPort*>(source);
 
 	std::set<DataTarget*> targets = source->getDataTargets();
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     {
         // readlock
-        source->registerPendingTarget(*it);
+    	try
+    	{
+    		source->registerPendingTarget(*it);
+    	}
+    	catch (ExecutionAbortedException& exc)
+    	{
+    		poco_error(logger(), (*it)->name()
+    				+ " can not be started: "
+					+ exc.displayText());
+
+    		continue; // could have been a break since the source is involved
+    	}
 
         if (logger().information())
         {
@@ -373,23 +388,67 @@ void Dispatcher::setOutputDataReady(DataSource* source)
 			}
         }
 
-        (*it)->runTarget();
+        try
+        {
+        	if (!(*it)->tryRunTarget())
+        		poco_warning(logger(), (*it)->name()
+        				+ " is cancelling, can not run it from "
+						+ source->name());
+        }
+        catch (Poco::Exception& e)
+        {
+        	poco_error(logger(), e.displayText()
+        			+ ": the target cannot be started");
+        	(*it)->releaseInputDataOnStartFailure();
+        	e.rethrow();
+        }
     }
 }
 
-void Dispatcher::dispatchTargetReset(DataSource* port)
+void Dispatcher::dispatchTargetCancel(DataSource* source)
 {
-	std::set<DataTarget*> targets = port->getDataTargets();
+	std::set<DataTarget*> targets = source->getDataTargets();
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
-    {
-        InPort* tmpPort = dynamic_cast<InPort*>(*it);
+    	(*it)->cancelFromSource(source);
+}
 
-        if (tmpPort == NULL)
-        	continue;
+void Dispatcher::dispatchTargetWaitCancelled(DataSource* source)
+{
+	std::set<DataTarget*> targets = source->getDataTargets();
+    for ( std::set<DataTarget*>::iterator it = targets.begin(),
+            ite = targets.end(); it != ite; it++ )
+    	(*it)->targetWaitCancelled();
+}
 
-    	poco_information(logger(), "forwarding module cancellation to "
-    			+ tmpPort->parent()->name());
-    	tmpPort->parent()->resetWithTargets();
-    }
+void Dispatcher::dispatchTargetReset(DataSource* source)
+{
+	std::set<DataTarget*> targets = source->getDataTargets();
+    for ( std::set<DataTarget*>::iterator it = targets.begin(),
+            ite = targets.end(); it != ite; it++ )
+    	(*it)->resetFromSource(source);
+}
+
+void Dispatcher::cancel(Module* module)
+{
+	if ( (module == NULL)
+	       || (module == Poco::Util::Application::instance()
+							.getSubsystem<ModuleManager>()
+							.getEmptyModule() )  )
+		return;
+
+
+	// Called by ModuleTask::moduleCancel
+	//  * Immediate cancel the given module
+	//  * Handle the waitCancelled and reseting process
+
+	if (module->immediateCancel())
+	{
+        // async waitCancelled and reset
+        ModuleCanceller* listener = new ModuleCanceller(module);
+
+        Poco::Util::Application::instance()
+                .getSubsystem<ThreadManager>()
+                .startModuleCancellationListener(*listener);
+	}
 }

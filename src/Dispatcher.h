@@ -185,13 +185,26 @@ public:
      void setOutputDataReady(DataSource* source);
 
      /**
-      * Dispatching function for module reset when a task failed.
-      *
-      *  * called by Module::resetWithTargets via DataSource::ResetTargets
-      *  * call Module::resetWithTargets
-      *  * Module::reseting flag avoids the recursions
+      * Dispatching function for target cancellation (from the given source)
       */
-     void dispatchTargetReset(DataSource* port);
+     void dispatchTargetCancel(DataSource* source);
+
+     /**
+      * Dispatch the target cancellation awaiting
+      */
+     void dispatchTargetWaitCancelled(DataSource* source);
+
+     /**
+      * Dispatching function for target reseting (from the given source)
+      */
+     void dispatchTargetReset(DataSource* source);
+
+     /**
+      * Immediate cancel the given module
+      *
+      * Handle the waitCancelled and reseting process
+      */
+     void cancel(Module* module);
 
 private:
      /**

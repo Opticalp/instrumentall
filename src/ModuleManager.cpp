@@ -293,3 +293,18 @@ std::string ModuleManager::exportFacTreeGraphviz()
     return gvTool.getDotString();
 }
 
+bool ModuleManager::allModuleReady()
+{
+    for (std::vector< SharedPtr<Module*> >::iterator it=allModules.begin(), ite=allModules.end();
+            it!=ite; it++)
+    {
+        if (!(**it)->moduleReady())
+        {
+            poco_information(logger(), "ModMan::allModuleReady: "
+                    + (**it)->name() + " not ready");
+            return false;
+        }
+    }
+
+    return true;
+}

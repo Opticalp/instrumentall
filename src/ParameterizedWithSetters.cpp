@@ -29,6 +29,7 @@
 #include "ParameterizedWithSetters.h"
 
 #include "ParameterizedEntity.h"
+#include "ExecutionAbortedException.h"
 
 using Poco::AutoPtr;
 
@@ -70,33 +71,61 @@ Poco::AutoPtr<ParameterSetter> ParameterizedWithSetters::buildParameterSetter(
 
 bool ParameterizedWithSetters::trySetParameter(size_t paramIndex)
 {
-	Poco::ScopedLock<Poco::FastMutex> lock(alreadySetLock);
+    alreadySetLock.lock();
 
-	if (paramAlreadySet.insert(paramIndex).second)
-	{
-		if (paramAlreadySet.size() == setters.size())
-		{
-			if (preApply)
-				self->applyParameters();
+    if (paramAlreadySet.count(paramIndex) == 0)
+        return true;
+    else
+    {
+        alreadySetLock.unlock();
+        return false;
+    }
+}
 
-			allSet.set();
-			return true;
-		}
-		else
-		{
-			return true;
-		}
-	}
-	else
-	{
-		return false;
-	}
+void ParameterizedWithSetters::trigSetParameter(size_t paramIndex)
+{
+
+    if (paramAlreadySet.insert(paramIndex).second)
+    {
+        if (paramAlreadySet.size() == setters.size())
+        {
+            if (preApply)
+                self->applyParameters();
+
+            allSet.set();
+        }
+
+        alreadySetLock.unlock();
+    }
+    else
+    {
+        poco_bugcheck_msg("trying to trig a parameter that was not previously locked");
+    }
 }
 
 bool ParameterizedWithSetters::tryAllParametersSet()
 {
 	if (setters.size())
-		return allSet.tryWait(0);
+	{
+		if (allSet.tryWait(0))
+		    return true;
+		else
+		{
+		    for (std::set< Poco::AutoPtr<ParameterSetter> >::iterator it = setters.begin(),
+		            ite = setters.end(); it != ite; it++)
+		    {
+		        alreadySetLock.lock();
+		        bool alreadySet = paramAlreadySet.count(const_cast<ParameterSetter*>(it->get())->getParameterIndex()) > 0 ;
+		        alreadySetLock.unlock();
+
+		        if ( !alreadySet &&  (it->get())->isTargetCancelling() )
+		            throw ExecutionAbortedException("Apply parameters: "
+		                    "Cancellation upon user request (setter)");
+		    }
+
+		    return false;
+		}
+	}
 	else
 		return true;
 }

@@ -40,7 +40,9 @@
 
 DataSource::DataSource(int datatype):
 		DataItem(datatype),
-		notifying(0), users(0)
+		notifying(0),
+		sourceCancelling(false),
+		users(0)
 {
 
 }
@@ -75,6 +77,18 @@ void DataSource::targetReleaseRead(DataTarget* target)
 				"previous call to tryCatchSource");
 	lock.unlock();
 
+	unlockData();
+}
+
+void DataSource::targetReleaseReadOnStartFailure(DataTarget* target)
+{
+	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(pendingTargetsLock);
+
+	if (pendingDataTargets.erase(target) == 0)
+        poco_bugcheck_msg("call to targetReleaseReadOnStartFailure but "
+                "tryCatchSource was probably previously called");
+
+	lock.unlock();
 	unlockData();
 }
 
@@ -121,13 +135,31 @@ void DataSource::detachDataTarget(DataTarget* target)
     	decUser();
 }
 
-void DataSource::registerPendingTarget(DataTarget* target)
+bool DataSource::registerPendingTarget(DataTarget* target)
 {
+	if (sourceCancelling)
+		throw ExecutionAbortedException(
+				"DataSource::registerPendingTarget",
+				name() + " cancelling, "
+				"not able to lock the data for the target: "
+				+ target->name());
+
+    bool ret;
     readDataLock();
 
     pendingTargetsLock.lock();
-    pendingDataTargets.insert(target);
+    ret = pendingDataTargets.insert(target).second;
     pendingTargetsLock.unlock();
+
+    if (!ret)
+    {
+    	unlockData();
+    	return false;
+    }
+    else
+    {
+    	return true;
+    }
 }
 
 bool DataSource::tryWriteDataLock()
@@ -153,5 +185,86 @@ bool DataSource::tryWriteDataLock()
 bool DataSource::tryCatchRead(DataTarget* target)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
-	return (pendingDataTargets.erase(target) != 0);
+	if (pendingDataTargets.erase(target))
+	{
+		if (sourceCancelling)
+		{
+			unlockData();
+			throw ExecutionAbortedException("DataSource::tryCatchRead",
+					name() + " cancelling, can not catch read "
+					+ target->name() + ". Source lock released. ");
+		}
+
+		return true;
+	}
+	else
+	{
+		if (sourceCancelling)
+			throw ExecutionAbortedException("DataSource::tryCatchRead",
+					name() + " cancelling, can not catch read "
+					+ target->name()
+					+ ". No source lock to release. ");
+
+		return false;
+	}
+}
+
+void DataSource::cancelWithTargets()
+{
+	if (sourceCancelling)
+		return;
+
+	// self
+	sourceCancelling = true;
+
+	// cancelling targets
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .dispatchTargetCancel(this);
+}
+
+void DataSource::waitTargetsCancelled()
+{
+	if (!sourceCancelling)
+		return;
+
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .dispatchTargetWaitCancelled(this);
+}
+
+void DataSource::resetWithTargets()
+{
+	if (!sourceCancelling)
+		return;
+
+	// reseting targets
+    Poco::Util::Application::instance()
+                        .getSubsystem<Dispatcher>()
+                        .dispatchTargetReset(this);
+
+    // self
+    sourceCancelling = false;
+}
+
+void DataSource::cancelFromTarget(DataTarget* target)
+{
+	if (sourceCancelling)
+		return;
+
+	// dispatch to the other targets (and the calling target... )
+	cancelWithTargets();
+	// self
+	sourceCancel();
+}
+
+void DataSource::resetFromTarget(DataTarget* target)
+{
+	if (!sourceCancelling)
+		return;
+
+	// dispatch to the other targets (and the calling target... )
+	resetWithTargets();
+	// self
+	sourceReset();
 }

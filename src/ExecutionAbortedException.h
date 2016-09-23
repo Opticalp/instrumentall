@@ -1,6 +1,6 @@
 /**
- * @file	src/InPort.cpp
- * @date	Apr. 2016
+ * @file	src/ExecutionAbortedException.h
+ * @date	Sept. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,45 +26,11 @@
  THE SOFTWARE.
  */
 
-#include "InPort.h"
+#ifndef SRC_EXECUTIONABORTEDEXCEPTION_H_
+#define SRC_EXECUTIONABORTEDEXCEPTION_H_
 
-#include "Module.h"
-#include "ModuleTask.h"
-#include "Dispatcher.h"
+#include "Poco/Exception.h"
 
-#include "Poco/Util/Application.h"
+POCO_DECLARE_EXCEPTION(, ExecutionAbortedException, Poco::Exception)
 
-InPort::InPort(Module* parent, std::string name, std::string description,
-        size_t index, bool trig):
-        Port(parent, name, description, index),
-        isTrigFlag(trig)
-{
-
-}
-
-InPort::InPort(std::string name, std::string description, bool trig):
-                Port(name, description),
-                isTrigFlag(trig)
-{
-
-}
-
-void InPort::runTarget()
-{
-	parent()->enqueueTask(new ModuleTask(parent(), this));
-}
-
-void InPort::targetCancel()
-{
-	parent()->lazyCancel();
-}
-
-void InPort::targetWaitCancelled()
-{
-	parent()->waitCancelled();
-}
-
-void InPort::targetReset()
-{
-	parent()->moduleReset();
-}
+#endif /* SRC_EXECUTIONABORTEDEXCEPTION_H_ */

@@ -61,7 +61,9 @@ public:
 	 * Used by DuplicatedSource
 	 */
 	DataSource(DataSource* source):
-		DataItem(*source), notifying(false), users(0)
+		DataItem(*source), notifying(false),
+		sourceCancelling(false),
+		users(0)
 	{
 	}
 
@@ -109,8 +111,13 @@ public:
     /**
      * Lock (read) the data
      * and add the target to the pendingDataTargets
+     *
+     * @throw ExecutionAbortedException in case of
+     * pending cancellation
+     * @return true if the insertion succeeded, false
+     * if the target was already inserted
      */
-    void registerPendingTarget(DataTarget* target);
+    bool registerPendingTarget(DataTarget* target);
 
     /**
      * Increment the user count
@@ -132,6 +139,53 @@ public:
     virtual void decUser() { --users; }
     virtual size_t userCnt() { return users; }
 
+    /**
+     * Cancel self and dispatch cancellation to the targets
+     *
+     * To be called by the implementation in case of cancellation
+     *
+     * sourceCancel is not called here
+     */
+    void cancelWithTargets();
+
+    /**
+     * Wait for the targets to have their cancellation effective
+     */
+    void waitTargetsCancelled();
+
+    /**
+     * Reset self and dispatch reset to the targets
+     *
+     * To be called after the cancellation having been effective
+     *
+     * sourceReset is not called here
+     */
+    void resetWithTargets();
+
+protected:
+    /**
+     * Implement the cancellation in the concerned entity
+     *
+     * Called by cancelFromTarget
+     *
+     * Should cancel the entity and forward the cancellation
+     */
+    virtual void sourceCancel() = 0;
+
+    /**
+     * Wait for the entity to be effectively cancelled
+     */
+    virtual void sourceWaitCancelled() = 0;
+
+    /**
+     * Implement the reseting in the concerned entity
+     *
+     * Called by resetFromTarget
+     *
+     * Should reset the entity and forward the cancellation
+     */
+    virtual void sourceReset() = 0;
+
 private:
     /**
      * Add a data target
@@ -151,12 +205,26 @@ private:
     /**
      * Release the read lock from the given target
      *
-     * to be called by DataTarget::releaseRead
+     * to be called by DataTarget::releaseInputData
      */
     void targetReleaseRead(DataTarget* target);
 
     /**
+     * Release the read lock from the given target
+     *
+     * to be called by DataTarget::releaseInputDataOnStartFailure
+     */
+    void targetReleaseReadOnStartFailure(DataTarget* target);
+
+    /**
      * Check if the source data is available for the given target
+     *
+     * If the DataSource (self) is cancelling,
+     * remove the target from the pendingDataTargets if present,
+     * and unlock the corresponding data read lock
+     *
+     * @throw ExecutionAbortedException if the DataSource is
+     * cancelling
      */
     bool tryCatchRead(DataTarget* target);
 
@@ -175,6 +243,31 @@ private:
      * read lock acquisition
      */
     bool notifying;
+
+    /**
+     * Cheap safety
+     *
+     * Lock the targets registering during cancellation
+     */
+    bool sourceCancelling;
+
+    /**
+     * Cancellation coming from a target
+     *
+     * The cancellation request is dispatched to the other targets too
+     *
+     * call sourceCancel
+     */
+    void cancelFromTarget(DataTarget* target);
+
+    /**
+     * Reseting coming from a target
+     *
+     * The reseting request is dispatched to the other targets too
+     *
+     * call sourceReset
+     */
+    void resetFromTarget(DataTarget* target);
 
     friend class DataTarget;
 };

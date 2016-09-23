@@ -37,6 +37,8 @@
 #include "OutPortUser.h"
 #include "ModuleTask.h"
 
+#include "Poco/Thread.h"
+#include "Poco/RunnableAdapter.h"
 #include "Poco/ThreadLocal.h"
 #include "Poco/RWLock.h"
 #include "Poco/Mutex.h"
@@ -94,7 +96,13 @@ public:
 		  ParameterizedWithSetters(this),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
-		  reseting (false)
+		  reseting (false), resetDone(false),
+		  cancelling(false),
+		  waitingCancelled(0),
+		  immediateCancelling(false),
+		  cancelRequested(false),
+		  cancelDoneEvent(false),
+		  cancellationListenerRunnable(*this, &Module::cancellationListen)
 	{
 	}
 
@@ -105,7 +113,13 @@ public:
 		  ParameterizedWithSetters(this, applyParametersFromSettersWhenAllSet),
 		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
-		  reseting (false)
+		  reseting (false), resetDone(false),
+		  cancelling(false),
+          waitingCancelled(0),
+          immediateCancelling(false),
+          cancelRequested(false),
+		  cancelDoneEvent(false),
+		  cancellationListenerRunnable(*this, &Module::cancellationListen)
 	{
 	}
 
@@ -231,13 +245,54 @@ public:
     ProcessingMode getProcMode() { return procMode; }
 
 	/**
-	 * Reset the module by calling Module::reset(),
-	 * but reset also all the targets.
+	 * Force the cancellation
 	 *
-	 * Called by ModuleTask::resetModule,
-	 * and then by Dispatcher::dispatchTargetReset
+	 * Call Module::cancel
+	 *
+	 * @return true if a cancellation is trigged
 	 */
-	void resetWithTargets();
+	bool immediateCancel();
+
+	/**
+	 * Wait for the end of the current run to dispatch the cancellation.
+	 *
+	 * i.e. if running: let it run, let it send out the newly generated data, then,
+	 * cancel... but avoid the launch of a new run.
+	 */
+	void lazyCancel();
+
+	/**
+	 * Wait for the cancellation to be effective
+	 */
+	void waitCancelled(bool topCall);
+
+	/**
+	 * Convenience function to facilitate ParameterizedEntity::waitCancelled
+	 * inheritance
+	 */
+	void waitCancelled() { waitCancelled(false); }
+
+	/**
+	 * Reset the targets, then reset itself calling reset(),
+	 * then reset sources.
+	 *
+	 * Check that cancelDoneEvent is set first.
+	 */
+	void moduleReset();
+
+	/**
+	 * Wait that all the threads are terminated for this module
+	 *
+	 * To be called asynchronously by immediateCancel or lazyCancel
+	 *
+	 * Call Module::cancelled when all the tasks have stopped
+	 */
+	void cancellationListen();
+
+	/**
+	 * Check if the module cancellation/reset is done.
+	 */
+	bool moduleReady();
 
 protected:
 	void addInPort(
@@ -280,30 +335,31 @@ protected:
     ///}
 
     /**
-	 * Canceling method to be called:
-	 *  - from ModuleTask::cancel when a running task
-	 * 	is cancelled
-	 * 	- or from Module::resetWithSeqTargets when reset
-	 * 	is called while a seq is running. Module::seqRunning
-	 * 	should be implemented, then.
+	 * Canceling method to be called to force cancellation of the module
 	 *
-	 * @see Module::reset
-	 * @see Module::seqRunning
+	 * Called by immediateCancel issuing either from:
+	 *   * task cancel (direct call or cancelAll call)
+	 *   * any outport sourceCancel
+	 *
+	 * immediateCancel verify first that the module is not already
+	 * canceling.
+	 *
+	 * @warning The implementation should not throw exceptions
+	 *
+	 * @warning This method should not be called directly. Call immediateCancel instead.
 	 */
 	virtual void cancel() { }
 
 	/**
 	 * Reset the module to its initial state.
 	 *
-	 * This method is called on error (TaskFailedNotification)
-	 * which can be trigged with an exception throw e.g. on
-	 * user request cancellation.
-	 *
 	 * Should achieve:
 	 *  - reset running seqIndexes
 	 *  - reset evtl flags, states,...
 	 *
-	 * Called by Module::resetWithSeqTargets
+	 * Called by Module::resetWithTargets
+	 *
+	 * @warning The implementation should not throw exceptions
 	 *
 	 * @note Locks or mutexes should not be kept locked in case
 	 * of exceptions, then no unlock should be necessary here
@@ -332,6 +388,11 @@ protected:
      * and dequeue it.
      *
      * Do nothing if the queue is empty.
+     *
+     * Require the taskStartingMutex to be available. Lock it.
+     *
+     * If the task start succeeded, taskStartingMutex is locked when the
+     * function returns.
      */
     void popTask();
 
@@ -362,8 +423,7 @@ protected:
 	 *
 	 * In case of cancellation detected via Module::isCancelled or
 	 * Module::yield or Module::sleep,
-	 * an exception should be thrown to trigg the Module::reset
-	 * function.
+	 * a ExecutionAbortedException should be thrown
 	 *
 	 * @param startCond start condition as defined in virtual method
 	 * startCondition. You should consider implementing your own
@@ -464,22 +524,52 @@ private:
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
 	bool reseting; ///< flag set when the reseting begins
+	bool resetDone; ///< flag set when a reset just occurred
 
 	/**
 	 * Check if a task is already running (or at least started)
 	 * for this module
-	 *
-	 * taskMngtMutex should be locked prior to calling this method
 	 */
 	bool taskIsRunning();
 
+    /**
+     * Notify (self) that the cancellation is effective.
+     */
+    void cancelled();
+
+	bool immediateCancelling; ///< flag set by immediateCancel and reset by cancelled
+	bool cancelling; ///< flag set by immediateCancel or lazyCancel and reset by cancelled
+	int waitingCancelled;
+	bool cancelRequested; ///< flag set before calling Module::cancel, and reset on return
+
+	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
+
+    Poco::RunnableAdapter<Module> cancellationListenerRunnable;
+	Poco::Thread cancellationListenerThread;
+
+	/**
+	 * Wait for all the plugged mandatory parameters to be available.
+	 *
+	 * @throw ExecutionAbortedException on any cancellation (lazy cancel or immediate cancel)
+	 */
 	void waitParameters();
 
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
-	std::set<ModuleTask*> allTasks;
+	std::set<ModuleTask*> allLaunchedTasks;
 	std::list<ModuleTask*> taskQueue;
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
+
+	/**
+	 * lock the launching of a new task as long as another task is already starting.
+	 *
+	 * This mutex is locked by popTask or popTaskSync
+	 * and released when the input ports are released
+	 *
+	 * @see InPortUser::starting
+	 */
+	Poco::FastMutex taskStartingMutex;
+	void startingUnlock() { taskStartingMutex.unlock(); }
 
     friend class ModuleTask; // access to setRunningTask, releaseAll
 };

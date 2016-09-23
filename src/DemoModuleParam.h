@@ -58,7 +58,7 @@ private:
         paramCnt
     };
 
-    long iPar; ///< storage for integer parameter
+    Poco::Int64 iPar; ///< storage for integer parameter
     double fPar; ///< storage for float parameter
     std::string sPar; ///< storage for char string parameter
 

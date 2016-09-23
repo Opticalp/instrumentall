@@ -29,7 +29,8 @@
 #include "DataTarget.h"
 
 DataTarget::DataTarget():
-	dataSource(NULL), users(0)
+	dataSource(NULL), users(0),
+	targetCancelling(false)
 {
 
 }
@@ -112,4 +113,76 @@ void DataTarget::readInputDataAttribute(DataAttribute* pAttr)
 void DataTarget::releaseInputData()
 {
     getDataSource()->targetReleaseRead(this);
+}
+
+void DataTarget::releaseInputDataOnStartFailure()
+{
+    getDataSource()->targetReleaseReadOnStartFailure(this);
+}
+
+void DataTarget::cancelWithSource()
+{
+	if (targetCancelling)
+		return;
+
+	// self
+	targetCancelling = true;
+
+	if (getDataSource())
+		getDataSource()->cancelFromTarget(this);
+}
+
+void DataTarget::waitSourceCancelled()
+{
+	if (!targetCancelling)
+		poco_bugcheck_msg((name() + ": waiting for cancellation, "
+				"although not cancelling").c_str());
+
+	if (getDataSource())
+		getDataSource()->sourceWaitCancelled();
+}
+
+void DataTarget::resetWithSource()
+{
+	if (!targetCancelling)
+		return;
+
+	// self
+	targetCancelling = false;
+
+	if (getDataSource())
+		getDataSource()->resetFromTarget(this);
+}
+
+bool DataTarget::tryRunTarget()
+{
+	if (targetCancelling)
+	{
+		releaseInputDataOnStartFailure();
+		return false;
+	}
+
+	runTarget();
+	return true;
+}
+
+void DataTarget::cancelFromSource(DataSource* source)
+{
+	if (targetCancelling)
+		return;
+
+	// self
+	targetCancelling = true;
+	targetCancel();
+}
+
+void DataTarget::resetFromSource(DataSource* source)
+{
+	if (!targetCancelling)
+		return;
+
+    // self
+	targetReset();
+
+    targetCancelling = false;
 }

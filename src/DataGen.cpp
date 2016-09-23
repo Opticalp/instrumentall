@@ -333,7 +333,7 @@ void DataGen::sendData()
 
 Poco::Int64 DataGen::getIntParameterValue(size_t paramIndex)
 {
-    long ret;
+    Poco::Int64 ret;
 	dataLock.readLock();
 	switch (paramIndex)
 	{
@@ -384,6 +384,7 @@ void DataGen::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
 	case paramValue:
 	    iQueue.push(value);
 	    iPar = value;
+	    poco_information(logger(), name() + ": int param set");
 		break;
 	case paramSeqStart:
 		seqStart = value;
@@ -424,7 +425,7 @@ void DataGen::reset()
 
 	attr = DataAttributeOut();
 
-    std::queue<long> iEmpty;
+    std::queue<Poco::Int64> iEmpty;
     std::swap(iEmpty, iQueue);
     std::queue<double> fEmpty;
     std::swap(fEmpty, fQueue);

@@ -1,6 +1,6 @@
 /**
- * @file	src/InPort.cpp
- * @date	Apr. 2016
+ * @file	src/ExecutionAbortedException.cpp
+ * @date	Sept. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,45 +26,10 @@
  THE SOFTWARE.
  */
 
-#include "InPort.h"
 
-#include "Module.h"
-#include "ModuleTask.h"
-#include "Dispatcher.h"
+#include "ExecutionAbortedException.h"
+#include <typeinfo>
 
-#include "Poco/Util/Application.h"
+POCO_IMPLEMENT_EXCEPTION( ExecutionAbortedException, Poco::Exception, "cancellation in progress...")
 
-InPort::InPort(Module* parent, std::string name, std::string description,
-        size_t index, bool trig):
-        Port(parent, name, description, index),
-        isTrigFlag(trig)
-{
 
-}
-
-InPort::InPort(std::string name, std::string description, bool trig):
-                Port(name, description),
-                isTrigFlag(trig)
-{
-
-}
-
-void InPort::runTarget()
-{
-	parent()->enqueueTask(new ModuleTask(parent(), this));
-}
-
-void InPort::targetCancel()
-{
-	parent()->lazyCancel();
-}
-
-void InPort::targetWaitCancelled()
-{
-	parent()->waitCancelled();
-}
-
-void InPort::targetReset()
-{
-	parent()->moduleReset();
-}

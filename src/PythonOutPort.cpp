@@ -536,16 +536,10 @@ PyObject* pyOutPortRegister(OutPortMembers *self, PyObject* args)
                                 .getSubsystem<Dispatcher>()
                                 .bind(*sharedPort, *pyLogger->logger);
     }
-    catch (Poco::NotFoundException& e)
+    catch (Poco::Exception& e)
     {
         PyErr_SetString(PyExc_RuntimeError,
                 e.displayText().c_str());
-        return NULL;
-    }
-    catch (Poco::InvalidAccessException& e1)
-    {
-        PyErr_SetString(PyExc_RuntimeError,
-                e1.displayText().c_str());
         return NULL;
     }
 

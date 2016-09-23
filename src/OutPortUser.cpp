@@ -84,7 +84,7 @@ void OutPortUser::notifyOutPortReady(size_t portIndex,
                 "that was not previously locked? ");
 
     if (isCancelled())
-    	throw Poco::RuntimeException("notify out port ready, "
+    	throw ExecutionAbortedException("notify out port ready, "
     			"although the task is cancelled. abort. ");
 
     outPorts[portIndex]->notifyReady(attribute);
@@ -119,7 +119,7 @@ void OutPortUser::releaseAllOutPorts()
 	for (std::set<size_t>::iterator it = caughts->begin(),
 			ite = caughts->end(); it != ite; it++)
 	{
-		poco_warning(logger(), outPorts[*it]->name()
+		poco_warning(logger(), name() + "." + outPorts[*it]->name()
 				+ " was not cleanly released");
         outPorts[*it]->releaseWriteOnFailure();
 	}
@@ -138,32 +138,31 @@ void OutPortUser::reserveAllOutPorts()
 	reserveOutPorts(allPorts);
 }
 
-void OutPortUser::resetTargets()
-{
-    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
-            it!=ite; it++)
-        Poco::Util::Application::instance()
-                            .getSubsystem<Dispatcher>()
-                            .dispatchTargetReset(*it);
-}
-
 void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 {
-	if (caughts->empty() && outputs.size())
-		reserveLockOut();
+	if (outputs.empty())
+		return;
 
-	ModuleTask::RunningStates oldState = getRunningState();
-	setRunningState(ModuleTask::retrievingOutDataLocks);
-
-	while (!outputs.empty())
+	bool releaseOut = false; // flag to check if lockOut should be released here in case of error
+	if (caughts->empty())
 	{
-		try
+		reserveLockOut();
+		releaseOut = true;
+	}
+
+	try
+	{
+		ModuleTask::RunningStates oldState = getRunningState();
+		setRunningState(ModuleTask::retrievingOutDataLocks);
+
+		while (!outputs.empty())
 		{
 			for (std::set<size_t>::iterator it = outputs.begin();
 					it != outputs.end(); )
 			{
 				if (tryOutPortLock(*it))
 				{
+					releaseOut = false;
 					std::set<size_t>::iterator itTmp = it++;
 					outputs.erase(itTmp);
 				}
@@ -174,23 +173,20 @@ void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 			}
 
 			if (yield())
-				throw Poco::RuntimeException("reserveOutPorts",
+				throw ExecutionAbortedException("reserveOutPorts",
 						"Task cancellation upon user request");
-		}
-		catch (...)
-		{
-			if (caughts->empty())
-				unlockOut();
-			else
-				releaseAllOutPorts();
 
-			throw;
+			poco_information(logger(),"Not all output ports caught. Retrying...");
 		}
 
-//		poco_information(logger(),"Not all output ports caught. Retrying...");
+		setRunningState(oldState);
 	}
-
-	setRunningState(oldState);
+	catch (...)
+	{
+		if (releaseOut)
+			unlockOut();
+		throw;
+	}
 }
 
 size_t OutPortUser::reserveOutPortOneOf(std::set<size_t>& outputs)
@@ -198,8 +194,12 @@ size_t OutPortUser::reserveOutPortOneOf(std::set<size_t>& outputs)
 	if (outputs.empty())
 		poco_bugcheck_msg("empty output port set to lock");
 
+	bool releaseOut = false; // flag to check if lockOut should be released here in case of error
 	if (caughts->empty())
+	{
 		reserveLockOut();
+		releaseOut = true;
+	}
 
 	ModuleTask::RunningStates oldState = getRunningState();
 	setRunningState(ModuleTask::retrievingOutDataLocks);
@@ -211,6 +211,7 @@ size_t OutPortUser::reserveOutPortOneOf(std::set<size_t>& outputs)
 		{
 			if (tryOutPortLock(*it))
 			{
+				releaseOut = false;
 				size_t retValue = *it;
 				outputs.erase(it);
 				setRunningState(oldState);
@@ -220,36 +221,46 @@ size_t OutPortUser::reserveOutPortOneOf(std::set<size_t>& outputs)
 	}
 	while (!yield());
 
-	throw Poco::RuntimeException("reserveOutPortOneOf",
+	if (releaseOut)
+		unlockOut();
+
+	throw ExecutionAbortedException("reserveOutPortOneOf",
 			"Task cancellation upon user request");
 }
 
 void OutPortUser::reserveOutPort(size_t output)
 {
+	bool releaseOut = false; // flag to check if lockOut should be released here in case of error
 	if (caughts->empty())
+	{
 		reserveLockOut();
-
-	ModuleTask::RunningStates oldState = getRunningState();
-	setRunningState(ModuleTask::retrievingOutDataLocks);
+		releaseOut = true;
+	}
 
 	try
 	{
+		ModuleTask::RunningStates oldState = getRunningState();
+		setRunningState(ModuleTask::retrievingOutDataLocks);
+
 		while (!tryOutPortLock(output))
 		{
 			if (yield())
-				throw Poco::RuntimeException("reserveOutPort",
+				throw ExecutionAbortedException("reserveOutPort",
 						"Task cancellation upon user request");
 
-	//		poco_information(logger(),"Output port not caught. Retrying...");
+//			poco_information(logger(),name() + ": Output port not caught. Retrying...");
 		}
+
+		releaseOut = false;
+
+		setRunningState(oldState);
 	}
 	catch (...)
 	{
-		unlockOut();
+		if (releaseOut)
+			unlockOut();
 		throw;
 	}
-
-	setRunningState(oldState);
 }
 
 OutPortUser::~OutPortUser()
@@ -264,7 +275,27 @@ void OutPortUser::reserveLockOut()
 	while (!tryLockOut())
 	{
 		if (yield())
-			throw Poco::RuntimeException(name(), "task cancelled upon user request");
+			throw ExecutionAbortedException(name(), "task cancelled upon user request");
 	}
 }
 
+void OutPortUser::cancelTargets()
+{
+    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
+            it!=ite; it++)
+    	(*it)->cancelWithTargets();
+}
+
+void OutPortUser::waitCancelTargets()
+{
+    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
+            it!=ite; it++)
+        (*it)->waitTargetsCancelled();
+}
+
+void OutPortUser::resetTargets()
+{
+    for (std::vector<OutPort*>::iterator it=outPorts.begin(), ite=outPorts.end();
+            it!=ite; it++)
+    	(*it)->resetWithTargets();
+}

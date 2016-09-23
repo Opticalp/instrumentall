@@ -28,6 +28,8 @@
 
 #include "OutPort.h"
 
+#include "Module.h"
+
 #include "Dispatcher.h"
 #include "DataManager.h"
 #include "DataLogger.h"
@@ -52,4 +54,19 @@ OutPort::OutPort():
         Port("emptyOut", "replace an expired port")
 {
     // nothing to do
+}
+
+void OutPort::sourceCancel()
+{
+	parent()->immediateCancel();
+}
+
+void OutPort::sourceWaitCancelled()
+{
+	parent()->waitCancelled();
+}
+
+void OutPort::sourceReset()
+{
+	parent()->moduleReset();
 }

@@ -89,14 +89,14 @@ private:
         paramCnt
     };
 
-    long seqStart;
-    long seqEnd;
+    Poco::Int64 seqStart;
+    Poco::Int64 seqEnd;
 
-    long iPar;
+    Poco::Int64 iPar;
     double fPar;
     std::string sPar;
 
-    std::queue<long> iQueue;
+    std::queue<Poco::Int64> iQueue;
     std::queue<double> fQueue;
     std::queue<std::string> sQueue;
     std::queue<DataAttributeOut> attrQueue;

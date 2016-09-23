@@ -36,6 +36,7 @@
 #include "TaskNotification.h"
 
 #include "Poco/ThreadPool.h"
+#include "Poco/Runnable.h"
 #include "Poco/TaskNotification.h"
 #include "Poco/Util/Subsystem.h"
 #include "Poco/RWLock.h"
@@ -92,6 +93,7 @@ public:
     void onStarted(TaskStartedNotification* pNf);
 //    void onProgress(TaskProgressNotification* pNf);
     void onFailed(TaskFailedNotification* pNf);
+    void onFailedOnCancellation(TaskFailedNotification* pNf);
     void onFinished(TaskFinishedNotification* pNf);
     void onEnslaved(TaskEnslavedNotification* pNf);
 
@@ -143,6 +145,16 @@ public:
      */
     void registerNewModuleTask(ModuleTask* pTask);
 
+    /**
+     * Unregister a task
+     */
+    void unregisterModuleTask(ModuleTask* pTask);
+
+    /**
+     * @see Dispatcher::cancel
+     */
+    void startModuleCancellationListener(Poco::Runnable& runnable);
+
 private:
     TaskManager taskManager;
     Poco::ThreadPool threadPool;
@@ -152,11 +164,6 @@ private:
     Poco::RWLock  taskListLock;
 
     bool cancellingAll;
-
-    /**
-     * Unregister a task
-     */
-    void unregisterModuleTask(ModuleTask* pTask);
 };
 
 #endif /* SRC_THREADMANAGER_H_ */

@@ -1,6 +1,6 @@
 /**
- * @file	src/InPort.cpp
- * @date	Apr. 2016
+ * @file	src/ModuleCanceller.h
+ * @date	Sept. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,45 +26,28 @@
  THE SOFTWARE.
  */
 
-#include "InPort.h"
+#ifndef SRC_MODULECANCELLER_H_
+#define SRC_MODULECANCELLER_H_
 
-#include "Module.h"
-#include "ModuleTask.h"
-#include "Dispatcher.h"
+#include "Poco/Runnable.h"
 
-#include "Poco/Util/Application.h"
+class Module;
 
-InPort::InPort(Module* parent, std::string name, std::string description,
-        size_t index, bool trig):
-        Port(parent, name, description, index),
-        isTrigFlag(trig)
+/**
+ * 
+ */
+class ModuleCanceller: public Poco::Runnable
 {
+public:
+    ModuleCanceller(Module* cancelledModule):
+        module(cancelledModule) { }
 
-}
+    virtual ~ModuleCanceller() { }
 
-InPort::InPort(std::string name, std::string description, bool trig):
-                Port(name, description),
-                isTrigFlag(trig)
-{
+    void run();
 
-}
+private:
+    Module* module;
+};
 
-void InPort::runTarget()
-{
-	parent()->enqueueTask(new ModuleTask(parent(), this));
-}
-
-void InPort::targetCancel()
-{
-	parent()->lazyCancel();
-}
-
-void InPort::targetWaitCancelled()
-{
-	parent()->waitCancelled();
-}
-
-void InPort::targetReset()
-{
-	parent()->moduleReset();
-}
+#endif /* SRC_MODULECANCELLER_H_ */

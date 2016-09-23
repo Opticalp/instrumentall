@@ -77,6 +77,14 @@ private:
 	void incUser() { duplicate(); }
 	void decUser() { release();   }
 	size_t userCnt() { return referenceCount(); }
+
+	void targetCancel() { cancelWithTargets(); }
+	void targetWaitCancelled() { waitTargetsCancelled(); }
+	void targetReset() { resetWithTargets(); }
+
+	void sourceCancel() { cancelWithSource(); }
+	void sourceWaitCancelled() { waitSourceCancelled(); }
+	void sourceReset() { resetWithSource(); }
 };
 
 #endif /* SRC_PARAMETERGETTER_H_ */

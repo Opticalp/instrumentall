@@ -37,6 +37,8 @@
 #include "Poco/Mutex.h"
 #include "Poco/Any.h"
 
+class DataSource;
+
 /**
  * ParameterizedEntity
  *
@@ -142,6 +144,18 @@ public:
      */
     virtual void applyParameters();
 
+    /**
+     * To be used by the parameter setters to cancel the corresponding module
+     */
+    void cancel() { lazyCancel(); }
+
+    virtual void waitCancelled() = 0;
+
+    /**
+     * To be used by the parameter setters to reset the corresponding module
+     */
+    void reset() { moduleReset(); }
+
 protected:
     /**
 	 * Change the prefix key
@@ -238,6 +252,9 @@ protected:
         { poco_bugcheck_msg("setStrParameterValue not implemented"); }
 
     virtual Poco::Logger& logger() = 0;
+
+    virtual void lazyCancel() = 0;
+    virtual void moduleReset() = 0;
 
 private:
     ParameterizedEntity();

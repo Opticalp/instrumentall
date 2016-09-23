@@ -86,6 +86,10 @@ public:
 private:
     void runTarget();
 
+	void targetCancel();
+	void targetWaitCancelled();
+	void targetReset();
+
     bool isTrigFlag;
 };
 

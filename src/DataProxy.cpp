@@ -27,6 +27,7 @@
  */
 
 #include "DataProxy.h"
+#include "ExecutionAbortedException.h"
 
 void DataProxy::runTarget()
 {
@@ -38,8 +39,11 @@ void DataProxy::runTarget()
 	while (!tryWriteDataLock())
 	{
 		if (yield())
-			throw Poco::RuntimeException("DataProxy::runTarget",
-					"Task cancellation upon user request");
+		{
+		    releaseInputData();
+            throw ExecutionAbortedException("DataProxy::runTarget",
+                    "Task cancellation upon user request");
+		}
 	}
 
 	try

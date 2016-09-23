@@ -69,7 +69,9 @@ void DemoModuleDataSeq::process(int startCond)
         int *pData;
 
         // lock outPortA
+        poco_information(logger(), name() + ": trying to reserve outPort");
         reserveOutPort(outPortA);
+        poco_information(logger(), name() + ": outPort reserved");
         // retrieve data access
         getDataToWrite(outPortA, pData);
 
@@ -85,7 +87,7 @@ void DemoModuleDataSeq::process(int startCond)
         setProgress(static_cast<float>(index + 1) / static_cast<float>(MAX_INDEX + 1));
 
         if (sleep(WAIT_TIME))
-            throw Poco::RuntimeException(name(), "Cancelled upon user request" );
+            throw ExecutionAbortedException(name(), "Cancelled upon user request" );
     }
 
     poco_information(logger(), "DemoModuleDataSeq::runTask(): all sent. ");

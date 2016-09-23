@@ -38,6 +38,7 @@
 
 class Module;
 class InPort;
+class DataSource;
 class DataAttributeIn;
 
 /**
@@ -123,6 +124,9 @@ protected:
      *
      * To be called by startCondition.
      * The inMutex is managed by the caller.
+     *
+     * @throw ExecutionAbortedException if the input port requested a
+     * lazy cancel of the InPortUser.
      */
     bool tryInPortCatchSource(size_t portIndex);
 
@@ -138,17 +142,6 @@ protected:
     void readInPortDataAttribute(size_t portIndex, DataAttributeIn* pAttr);
 
     /**
-     * Forward tryData for the given port
-     */
-    template <typename T>
-    bool tryInPortData(size_t portIndex, T*& pData, DataAttributeIn* pAttr);
-
-    /**
-     * Forward tryDataAttribute to the given port
-     */
-    bool tryInPortDataAttribute(size_t portIndex, DataAttributeIn* pAttr);
-
-    /**
      * Forward release to the given port
      */
     void releaseInPort(size_t portIndex);
@@ -157,6 +150,13 @@ protected:
      * Release the lock of all the input ports
      */
     void releaseAllInPorts();
+
+    /**
+     * Release the lock of all the input ports with
+     * releaseAllInPorts after having checked if the
+     * trigging port is caught
+     */
+    void safeReleaseAllInPorts(InPort* triggingPort);
 
     /**
      * Check if the given port was caught/locked
@@ -177,7 +177,7 @@ protected:
     enum baseStartStates
 	{
     	noDataStartState,
-		unknownStartState,
+//		unknownStartState,
 		allDataStartState,
 		firstUnusedBaseStartState // to be used to extend the start states with another enum
 	};
@@ -196,31 +196,54 @@ protected:
 	 *     };
 	 *
 	 * Default implementation:
-	 *  - lock inMutex
-	 *  - check if there is input ports. if not, return.
-	 *  - check if the call is issued from incoming data
-	 *    - if it does, wait for all the data to be available
-	 *    - if it does not, check if the data is held. if not at all,
-	 *    return "no data" and unlock inMutex, if partial, return "unknown",
-	 *    if all, return "all data".
+	 *  - check if there is input ports. if not, return noDataStartState.
+	 *  - check if the call is issued from incoming data.
+	 *     - if not, return noDataStartState.
+	 *     - if it does, wait for all the data to be available,
+	 *       and then return allDataStartState
 	 *
-	 * A custom implementation should take care of inMutex that has to be
-	 * locked and kept locked if caughts is not empty.
 	 */
 	virtual int startCondition();
 
-	void unlockIn() { inMutex.unlock(); }
-
 	/**
-	 * Try to lock the inMutex until success or cancellation
-	 *
-	 * Call yield() between 2 tries.
-	 *
-	 * @throws Poco::RuntimeException on cancellation
+	 * Reset the variable: starting,
+	 * in order to handle the responsibility of the
+	 * Module::taskStartingMutex release via startingUnlock
 	 */
-	void reserveLockIn();
+    void grabStartingMutex() { starting = true; }
 
-	virtual bool yield() { Poco::Thread::yield(); return false; }
+    /// @see grabStartingMutex
+	virtual void startingUnlock() = 0;
+
+    /**
+     * Release Module::taskStartingMutex via startingUnlock
+     * if starting is set.
+     */
+    void releaseStartingMutex()
+    {
+        if (starting)
+        {
+            starting = false;
+            startingUnlock();
+        }
+    }
+
+    /**
+     * Dispatch the cancellation to the sources
+     */
+    void cancelSources();
+
+    /**
+     * Wait for the sources being effectively cancelled
+     */
+    void waitCancelSources();
+
+    /**
+     * Dispatch the reseting to the sources
+     */
+    void resetSources();
+
+    virtual bool yield() { Poco::Thread::yield(); return false; }
 
 	/**
 	 * Used by startCondition to know which port trigged the user execution
@@ -232,12 +255,11 @@ protected:
     virtual Poco::Logger& logger() = 0;
 
 private:
-	bool tryLockIn() { return inMutex.tryLock(); }
-
 	std::vector<InPort*> inPorts; ///< list of input ports
 	Poco::ThreadLocal< std::set<size_t> > caughts; ///< store which ports are locked
 
-	Poco::FastMutex inMutex; ///< lock input ports operations
+    bool starting; ///< flag set to true is the ports release has to trig startingUnlock
+
 };
 
 #include "InPortUser.ipp"

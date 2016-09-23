@@ -232,10 +232,30 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
     if (PyRun_String("execfile(__file__)", Py_single_input, py_dict, py_dict)==NULL)
     {
         // check for system exit exception
-        if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_SystemExit))
+        if (PyErr_Occurred())
         {
-            poco_information(logger(),
-                    "Script leaved on a SystemExit exception");
+            if (PyErr_ExceptionMatches(PyExc_SystemExit))
+            {
+                poco_information(logger(),
+                        "Script leaved on a SystemExit exception");
+            }
+            else if (PyErr_ExceptionMatches(PyExc_RuntimeError))
+            {
+                Poco::RuntimeException e("runScript","The script exited on RuntimeError");
+                poco_error(logger(),e.displayText());
+                PyErr_Print();
+                delVar("__file__","__main__");
+                throw  e;
+            }
+            else
+            {
+            	Poco::UnhandledException e("runScript",
+            			"The script exited on unhandled error. ");
+                poco_error(logger(), e.displayText());
+                PyErr_Print();
+                delVar("__file__","__main__");
+                throw  e;
+            }
         }
         else
         {
@@ -243,6 +263,7 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
                 + scriptFile.toString());
             poco_error(logger(),e.displayText());
             PyErr_Print();
+            delVar("__file__","__main__");
             throw e;
         }
     }

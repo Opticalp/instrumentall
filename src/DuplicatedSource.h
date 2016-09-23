@@ -80,6 +80,10 @@ private:
 	Breaker breaker; ///< connection breaker
 
 	std::string mName;
+
+	void sourceCancel() { }
+	void sourceWaitCancelled() { }
+	void sourceReset() { }
 };
 
 #endif /* SRC_DUPLICATEDSOURCE_H_ */
