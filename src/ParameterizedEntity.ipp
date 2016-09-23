@@ -170,9 +170,10 @@ void ParameterizedEntity::setParameterValue<double>(size_t paramIndex, double va
         throw Poco::BugcheckException(); // to avoid compiler warning
     }
 
-    Poco::Mutex::ScopedLock lock(mutex);
+    Poco::ScopedLockWithUnlock<Poco::Mutex> lock(mutex);
     paramValues[paramIndex] = Poco::Any(value);
     needApplication[paramIndex] = true;
+	lock.unlock();
 
     if (immediateApply)
     	applyParameters();
