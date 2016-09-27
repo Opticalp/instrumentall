@@ -81,16 +81,13 @@ public:
     /**
      * Try to lock the data to write
      *
-     * Check the pendingDataTargets, then forward to DataItem::tryWriteDataLock
+     * Check the pendingDataTargets,
+     * then forward to DataItem::tryWriteDataLock
+     *
+     * pendingDataTargets is supposed to have precedence...
+     * Unless two threads try to access the same source together
      */
     bool tryWriteDataLock();
-
-    /**
-     * Release output data
-     *
-     *  - Release the lock
-     */
-    void releaseWrite();
 
     /**
      * Release the output data lock
@@ -203,36 +200,46 @@ private:
     void detachDataTarget(DataTarget* target);
 
     /**
+     * Release output data
+     *
+     *  - Release the lock
+     */
+    void releaseWrite();
+
+    /**
      * Release the read lock from the given target
+     *
+     * and remove the target from the pendingDataTargets
+     * and reservedDataTargets.
      *
      * to be called by DataTarget::releaseInputData
      */
     void targetReleaseRead(DataTarget* target);
 
     /**
-     * Release the read lock from the given target
+     * Check if the given target was notified for available data
      *
-     * to be called by DataTarget::releaseInputDataOnStartFailure
+     * if true,
+     *  - check if it is already reserved. Then return false.
+     *  - if not, reserve (insertion in reservedDataTargets)
+     *    and return true
+     * if no available data (target not in pendingDataTargets),
+     * return false.
      */
-    void targetReleaseReadOnStartFailure(DataTarget* target);
+    bool tryReserveDataForTarget(DataTarget* target);
 
     /**
-     * Check if the source data is available for the given target
-     *
-     * If the DataSource (self) is cancelling,
-     * remove the target from the pendingDataTargets if present,
-     * and unlock the corresponding data read lock
-     *
-     * @throw ExecutionAbortedException if the DataSource is
-     * cancelling
+     * Lock the data for reading
      */
-    bool tryCatchRead(DataTarget* target);
+    void readLockDataForTarget(DataTarget* target);
 
     std::set<DataTarget*> dataTargets;
     Poco::FastMutex targetsLock; ///< non-recursive mutex for data target operations
 
-    std::set<DataTarget*> pendingDataTargets;
-    Poco::FastMutex pendingTargetsLock;
+    std::set<DataTarget*> pendingDataTargets; ///< targets that is not over with using the data
+    std::set<DataTarget*> reservedDataTargets; ///< targets that reserved the use of the data
+    std::set<DataTarget*> lockedDataTargets; ///< targets that read locked the data
+    Poco::FastMutex pendingTargetsLock; ///< lock used for pendingDataTargets and reservedDataTargets
 
     size_t users;
 

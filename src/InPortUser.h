@@ -197,7 +197,7 @@ protected:
 	 *
 	 * Default implementation:
 	 *  - check if there is input ports. if not, return noDataStartState.
-	 *  - check if the call is issued from incoming data.
+	 *  - check if the call is issued from incoming data (check task's triggingPort).
 	 *     - if not, return noDataStartState.
 	 *     - if it does, wait for all the data to be available,
 	 *       and then return allDataStartState

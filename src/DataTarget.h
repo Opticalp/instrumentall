@@ -107,15 +107,6 @@ public:
     void releaseInputData();
 
     /**
-     * Store that the data will not be used and can be released.
-     *
-     * Release the corresponding lock
-     *
-     * No warning is sent if tryCatchSource was not previously called
-     */
-    void releaseInputDataOnStartFailure();
-
-    /**
      * Return the data type of the data source
      * plugged to this target.
      */

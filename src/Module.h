@@ -416,6 +416,12 @@ protected:
 	 * Depending on the processing mode, the data should be buffered or
 	 * not.
 	 *
+	 *
+	 *
+	 * FIXME: the caught input data should be locked before
+	 * being used.
+	 *
+	 *
 	 * Access to input ports data should be done via readInPort and
 	 * readInPortDataAttribute. Call releaseAllInPorts when over.
 	 *

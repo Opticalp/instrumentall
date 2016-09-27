@@ -86,7 +86,7 @@ bool DataTarget::tryCatchSource()
 {
     Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
 	if (dataSource)
-		return dataSource->tryCatchRead(this);
+		return dataSource->tryReserveDataForTarget(this);
 	else
 		return false;
 }
@@ -113,11 +113,6 @@ void DataTarget::readInputDataAttribute(DataAttribute* pAttr)
 void DataTarget::releaseInputData()
 {
     getDataSource()->targetReleaseRead(this);
-}
-
-void DataTarget::releaseInputDataOnStartFailure()
-{
-    getDataSource()->targetReleaseReadOnStartFailure(this);
 }
 
 void DataTarget::cancelWithSource()
@@ -158,11 +153,22 @@ bool DataTarget::tryRunTarget()
 {
 	if (targetCancelling)
 	{
-		releaseInputDataOnStartFailure();
+		// FIXME: releaseInputDataOnStartFailure not needed any more?
+		releaseInputData();
 		return false;
 	}
 
-	runTarget();
+	try
+	{
+		runTarget();
+	}
+	catch (...)
+	{
+		// FIXME: releaseInputDataOnStartFailure not needed any more?
+		releaseInputData();
+		throw;
+	}
+
 	return true;
 }
 

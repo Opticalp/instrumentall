@@ -358,7 +358,7 @@ void Dispatcher::setOutputDataReady(DataSource* source)
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     {
-        // readlock
+    	// append to source -> pendingDataTargets
     	try
     	{
     		source->registerPendingTarget(*it);
@@ -399,7 +399,6 @@ void Dispatcher::setOutputDataReady(DataSource* source)
         {
         	poco_error(logger(), e.displayText()
         			+ ": the target cannot be started");
-        	(*it)->releaseInputDataOnStartFailure();
         	e.rethrow();
         }
     }

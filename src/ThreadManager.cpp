@@ -197,8 +197,9 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 		poco_information(logger(), pTask->name()
 				+ " failed to start");
 
+		// FIXME: releaseInputDataOnStartFailure not needed?
 		if (pTask->triggingPort())
-			pTask->triggingPort()->releaseInputDataOnStartFailure();
+			pTask->triggingPort()->releaseInputData();
 
 		unregisterModuleTask(pTask);
 		throw;
@@ -226,8 +227,9 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 		poco_information(logger(), pTask->name()
 				+ " failed to sync start");
 
+		// FIXME: releaseInputDataOnStartFailure not needed?
 		if (pTask->triggingPort())
-			pTask->triggingPort()->releaseInputDataOnStartFailure();
+			pTask->triggingPort()->releaseInputData();
 
 		unregisterModuleTask(pTask);
 		throw;
