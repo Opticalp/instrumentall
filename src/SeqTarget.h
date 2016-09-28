@@ -57,6 +57,8 @@ public:
      *
      * The port shall have been previously locked using
      * tryLock, with return value == true.
+     *
+     * @see DataTarget::readInputDataAttribute
      */
 	void readInputDataAttribute(DataAttributeIn* pAttr);
 

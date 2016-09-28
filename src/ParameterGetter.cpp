@@ -69,6 +69,7 @@ void ParameterGetter::runTarget()
 				"The parent is no more valid");
 	}
 
+	lockSource();
 	DataAttribute attr;
 	readInputDataAttribute(&attr);
 	releaseInputData();

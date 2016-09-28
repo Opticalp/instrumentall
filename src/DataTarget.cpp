@@ -91,6 +91,12 @@ bool DataTarget::tryCatchSource()
 		return false;
 }
 
+void DataTarget::lockSource()
+{
+    Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
+    dataSource->readLockDataForTarget(this);
+}
+
 int DataTarget::sourceDataType()
 {
 	if (dataSource == NULL)

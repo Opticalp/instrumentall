@@ -64,6 +64,12 @@ public:
 protected:
 	/**
 	 * Convert the input data into the desired data type
+	 *
+	 * The input data is already locked.
+     * The input data is released by the calling function.
+	 *
+	 * The output is already locked.
+	 * The output notification is achieved by the calling function.
 	 */
 	virtual void convert() = 0;
 
@@ -75,7 +81,7 @@ private:
 	/**
 	 * Launch the conversion (sync run)
 	 *
-	 *  - lock the outputs, tryCatch the input
+	 *  - lock the outputs, tryCatch the input, lock the input
 	 *  - launch the conversion
 	 *  - forward the data attributes
 	 *  - release the inputs and notify the outputs

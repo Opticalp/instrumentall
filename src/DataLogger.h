@@ -77,6 +77,7 @@ protected:
      *
      *     T* getDataSource()->getData<T>();
      *
+     * The input data is already locked.
      * The data is released by the calling function.
      */
     virtual void log() = 0;

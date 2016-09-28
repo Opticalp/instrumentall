@@ -75,9 +75,19 @@ public:
      *
      * Signal to the source that the data will be consumed
      *
+     * The input data has to be locked with lockSource
+     * prior to its use
+     *
      * @return true if data available
      */
     bool tryCatchSource();
+
+    /**
+     * Lock data that was previously caught with tryCatchSource
+     *
+     * The lock is released with releaseInputData
+     */
+    void lockSource();
 
     /**
      * Read the data attribute of the incoming data
