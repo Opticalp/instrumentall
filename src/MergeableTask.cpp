@@ -169,9 +169,17 @@ void MergeableTask::taskFinishedBroadcast(TaskManager* pTm)
 
 void MergeableTask::merge(MergeableTask* slave)
 {
-	mergeAccess.writeLock();
-	slavedTasks.insert(slave);
-	slave->setMaster(this);
+    mergeAccess.writeLock();
+    try
+    {
+        slave->setMaster(this);
+        slavedTasks.insert(slave);
+    }
+    catch (...)
+    {
+        mergeAccess.unlock();
+        throw;
+    }
 	mergeAccess.unlock();
 
 	TaskManager* pTm = getOwner();
@@ -218,6 +226,8 @@ TaskManager* MergeableTask::getOwner() const
 
 void MergeableTask::setState(TaskState taskState)
 {
+    Poco::FastMutex::ScopedLock lock(mainMutex);
+
 	if (taskState != TASK_FINISHED)
 	{
 	    if (state == TASK_CANCELLING)
@@ -238,6 +248,11 @@ void MergeableTask::setState(TaskState taskState)
 		if (state != TASK_STARTING)
 			throw Poco::RuntimeException("trying to run a task that is not started");
 		break;
+	case TASK_MERGED:
+	    if (state != TASK_IDLE)
+	        throw Poco::RuntimeException("trying to merge: " +
+	                name() + " that is not idle...");
+	    break;
 	default:
 		break;
 	}
@@ -248,10 +263,11 @@ void MergeableTask::setState(TaskState taskState)
 void MergeableTask::setMaster(MergeableTask* master)
 {
 	Poco::ScopedWriteRWLock lock(mergeAccess);
-	masterTask = master;
 
-	if (master)
-	    state = TASK_MERGED;
+    if (master)
+        setState(TASK_MERGED);
+
+    masterTask = master;
 }
 
 void MergeableTask::eraseSlave(MergeableTask* slave)
