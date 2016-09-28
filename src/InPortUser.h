@@ -131,6 +131,11 @@ protected:
     bool tryInPortCatchSource(size_t portIndex);
 
     /**
+     * @see Module::tryCatchInPortFromQueue
+     */
+    virtual bool tryCatchInPortFromQueue(InPort* triggingPort) = 0;
+
+    /**
      * Forward readData for the given port
      */
     template <typename T>

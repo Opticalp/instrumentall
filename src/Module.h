@@ -368,22 +368,6 @@ protected:
 	 */
 	virtual void reset() { }
 
-	/**
-     * Merge the enqueued tasks of the present Module
-     *
-     * given by their triggering inPort index.
-     *
-     *  - The current task can be listed in this set.
-     *  - a test should be made, so that only the inPorts
-     *  giving new data are listed (they should have been
-     *  trigged simultaneously)
-     *  - but a held port can be sent too. a simple warning
-     *  would be emitted.
-     *
-     * @inPortIndexes indexes of the inPorts which data will be used
-     */
-    void mergeTasks(std::set<size_t> inPortIndexes);
-
     /**
      * Launch the next task of the queue
      *
@@ -489,6 +473,13 @@ protected:
 	void notifyCreation();
 
 	Poco::Logger& logger() { return VerboseEntity::logger(); }
+
+	/**
+	 * Look into the task queue, if a task was trigged by the given InPort.
+	 *
+	 * if true, merge the task.
+	 */
+	bool tryCatchInPortFromQueue(InPort* triggingPort);
 
 private:
     /// enum to be returned by checkName

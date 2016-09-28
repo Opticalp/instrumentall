@@ -195,10 +195,7 @@ void Module::run(ModuleTask* pTask)
 		setRunningState(ModuleTask::retrievingInDataLocks);
 
 		startCond = startCondition();
-
-		mergeTasks(inPortCoughts());
-
-    }
+	}
     catch (...)
     {
         parametersTreated();
@@ -377,6 +374,7 @@ bool Module::taskIsRunning()
 		case MergeableTask::TASK_IDLE: // probably self
 		case MergeableTask::TASK_CANCELLING:
 		case MergeableTask::TASK_FINISHED:
+		case MergeableTask::TASK_MERGED:
 			break;
 		default:
 			poco_bugcheck_msg("unknown task state");
@@ -512,67 +510,45 @@ void Module::unregisterTask(ModuleTask* task)
 	allLaunchedTasks.erase(task);
 }
 
-void Module::mergeTasks(std::set<size_t> inPortIndexes)
+bool Module::tryCatchInPortFromQueue(InPort* trigPort)
 {
-	// Poco::FastMutex::ScopedLock lock(taskMngtMutex);
-	taskMngtMutex.lock();
+    Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
-	for (std::set<size_t>::iterator it = inPortIndexes.begin(),
-			ite = inPortIndexes.end(); it != ite; )
-	{
-		bool found = false;
-		InPort* trigPort;
+    // seek
+    for (std::list<ModuleTask*>::iterator qIt = taskQueue.begin(),
+            qIte = taskQueue.end(); qIt != qIte; qIt++)
+    {
+        poco_information(logger(), name() + "'s taskQueue includes: " + (*qIt)->name());
+        if ((*qIt)->triggingPort() == trigPort)
+        {
+            try
+            {
+                (*runningTask)->merge(*qIt);
+            }
+            catch (Poco::RuntimeException& e)
+            {
+                poco_information(logger(), "potential slave task found: "
+                        + (*qIt)->name() + ", merging with master: "
+                        + (*runningTask)->name() + " failed: "
+                        + e.displayText());
+                return false;
+            }
 
-		try
-		{
-			trigPort = getInPort(*it);
+            poco_information(logger(), "slave task found: "
+                    + (*qIt)->name() + ", merging with master: "
+                    + (*runningTask)->name() + " OK");
 
-			if (triggingPort() == trigPort)
-			{
-				it++;
-				continue; // current task
-			}
+            allLaunchedTasks.insert(*qIt);
+            taskQueue.erase(qIt); // taskMngtMutex is locked. The order (with Task::merge) is not that important.
 
-			// seek
-			for (std::list<ModuleTask*>::iterator qIt = taskQueue.begin(),
-					qIte = taskQueue.end(); qIt != qIte; qIt++)
-			{
-				poco_information(logger(), "taskQueue includes: " + (*qIt)->name());
-				if ((*qIt)->triggingPort() == trigPort)
-				{
-					found = true;
-					(*runningTask)->merge(*qIt);
-					taskQueue.erase(qIt);
-					poco_information(logger(), "slave task found, merging OK");
-					break;
-				}
-			}
-		}
-		catch (...)
-		{
-			taskMngtMutex.unlock();
-			throw;
-		}
+			// FIXME: replace by something contained in the merged task. 
+			trigPort->tryCatchSource();
 
-		if (!found)
-		{
-			taskMngtMutex.unlock();
-			poco_warning(logger(),
-					"Unable to merge the task for " + trigPort->name()
-					+ ". Retry.");
+            return true;
+        }
+    }
 
-			if (yield() || cancelling)
-				throw ExecutionAbortedException(name(), "Cancellation upon user request");
-			taskMngtMutex.lock();
-		}
-		else
-			it++;
-	}
-
-	poco_information(logger(),
-		"remaining tasks: " + Poco::NumberFormatter::format(taskQueue.size()));
-
-	taskMngtMutex.unlock();
+    return false;
 }
 
 Poco::AutoPtr<ModuleTask> Module::runModule(bool syncAllowed)

@@ -75,15 +75,28 @@ bool InPortUser::tryInPortCatchSource(size_t portIndex)
     if (isInPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
 
-    if (inPorts[portIndex]->tryCatchSource())
+    if (inPorts[portIndex] == triggingPort())
     {
-    	caughts->insert(portIndex);
-    	return true;
+        if (!inPorts[portIndex]->tryCatchSource())
+            poco_bugcheck_msg("tryInPortCatchSource: "
+                    "can not catch self trigging input port");
+        caughts->insert(portIndex);
+        return true;
     }
     else
     {
-    	return false;
+        if (tryCatchInPortFromQueue(inPorts[portIndex]))
+        {
+            caughts->insert(portIndex);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
     }
+
 }
 
 void InPortUser::readInPortDataAttribute(size_t portIndex,
