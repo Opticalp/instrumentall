@@ -39,6 +39,9 @@ inline void InPortUser::readInPortData(size_t portIndex, T*& pData)
     InDataPort* inPort = reinterpret_cast<InDataPort*>(inPorts[portIndex]);
 
     if (!isInPortCaught(portIndex))
+    	poco_bugcheck_msg("try to read an input port that was not previously caught");
+
+    if (!isInPortLocked(portIndex))
     	poco_bugcheck_msg("try to read an input port that was not previously locked");
 
     inPort->readData<T>(pData);

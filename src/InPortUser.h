@@ -267,9 +267,16 @@ protected:
 
 private:
 	std::vector<InPort*> inPorts; ///< list of input ports
-	Poco::ThreadLocal< std::set<size_t> > caughts; ///< store which ports are locked
+	Poco::ThreadLocal< std::set<size_t> > caughts; ///< store which ports are caught
+	Poco::ThreadLocal< std::set<size_t> > lockedPorts; ///< store which ports are locked
 
-    bool starting; ///< flag set to true is the ports release has to trig startingUnlock
+    /**
+     * Check if the given port was locked
+     */
+    bool isInPortLocked(size_t index)
+    	{ return (lockedPorts->find(index) != lockedPorts->end()); }
+
+	bool starting; ///< flag set to true is the ports release has to trig startingUnlock
 
 };
 

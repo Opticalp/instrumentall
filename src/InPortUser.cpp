@@ -106,6 +106,7 @@ void InPortUser::readLockInPort(size_t portIndex)
     	poco_bugcheck_msg("try to readLock an input port that was not previously locked");
 
 	inPorts[portIndex]->lockSource();
+	lockedPorts->insert(portIndex);
 }
 
 void InPortUser::readInPortDataAttribute(size_t portIndex,
@@ -113,6 +114,9 @@ void InPortUser::readInPortDataAttribute(size_t portIndex,
 {
     if (!isInPortCaught(portIndex))
     	poco_bugcheck_msg("try to read an input port that was not previously caught");
+
+    if (!isInPortLocked(portIndex))
+    	poco_bugcheck_msg("try to read an input port that was not previously locked");
 
     inPorts[portIndex]->readInputDataAttribute(pAttr);
 }
@@ -124,6 +128,7 @@ void InPortUser::releaseInPort(size_t portIndex)
         inPorts[portIndex]->releaseInputData();
 
 		caughts->erase(portIndex);
+		lockedPorts->erase(portIndex);
 		if (caughts->empty())
 		    releaseStartingMutex();
     }
