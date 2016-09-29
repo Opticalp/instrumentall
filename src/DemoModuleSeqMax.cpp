@@ -73,6 +73,8 @@ void DemoModuleSeqMax::process(int startCond)
 
     DataAttributeIn attr;
     int* pData;
+
+	readLockInPort(inPortA);
     readInPortData<int>(inPortA, pData);
     readInPortDataAttribute(inPortA, &attr);
 

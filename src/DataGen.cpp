@@ -178,6 +178,7 @@ void DataGen::triggedRun()
 
     DataAttributeIn inAttr;
 
+	readLockInPort(trigPort);
     readInPortDataAttribute(trigPort, &inAttr);
     releaseInPort(trigPort);
 
