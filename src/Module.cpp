@@ -451,9 +451,14 @@ void Module::popTaskSync()
         taskMngtMutex.lock();
         if (taskQueue.empty())
         {
-            poco_information(logger(),
-                (*runningTask)->name() + ": empty task queue, nothing to sync pop");
-            taskMngtMutex.unlock();
+			if (*runningTask)
+				poco_information(logger(),
+					(*runningTask)->name() + ": empty task queue, nothing to sync pop");
+			else
+				poco_information(logger(),
+					name() + ": empty task queue, nothing to sync pop");
+
+			taskMngtMutex.unlock();
             return;
         }
     }
@@ -462,8 +467,13 @@ void Module::popTaskSync()
 
 	if (taskQueue.empty())
 	{
-		poco_information(logger(), 
-			(*runningTask)->name() + ": empty task queue, nothing to sync pop (2)");
+		if (*runningTask)
+			poco_information(logger(), 
+				(*runningTask)->name() + ": empty task queue, nothing to sync pop (2)");
+		else
+			poco_information(logger(), 
+				name() + ": empty task queue, nothing to sync pop (2)");
+
         taskStartingMutex.unlock();
 		taskMngtMutex.unlock();
 		return;
