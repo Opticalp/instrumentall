@@ -99,11 +99,20 @@ bool InPortUser::tryInPortCatchSource(size_t portIndex)
 
 }
 
+void InPortUser::readLockInPort(size_t portIndex)
+{
+	// check that the port was caught
+    if (!isInPortCaught(portIndex))
+    	poco_bugcheck_msg("try to readLock an input port that was not previously locked");
+
+	inPorts[portIndex]->lockSource();
+}
+
 void InPortUser::readInPortDataAttribute(size_t portIndex,
 		DataAttributeIn* pAttr)
 {
     if (!isInPortCaught(portIndex))
-    	poco_bugcheck_msg("try to read an input port that was not previously locked");
+    	poco_bugcheck_msg("try to read an input port that was not previously caught");
 
     inPorts[portIndex]->readInputDataAttribute(pAttr);
 }

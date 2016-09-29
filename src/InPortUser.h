@@ -123,7 +123,6 @@ protected:
      * Forward tryLock for the given port
      *
      * To be called by startCondition.
-     * The inMutex is managed by the caller.
      *
      * @throw ExecutionAbortedException if the input port requested a
      * lazy cancel of the InPortUser.
@@ -132,8 +131,15 @@ protected:
 
     /**
      * @see Module::tryCatchInPortFromQueue
+	 *
+	 * to be called by tryInPortCatchSource
      */
     virtual bool tryCatchInPortFromQueue(InPort* triggingPort) = 0;
+
+	/**
+	 * Read lock the source data prior to its use. 
+	 */
+	void readLockInPort(size_t portIndex);
 
     /**
      * Forward readData for the given port
