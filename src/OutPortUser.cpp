@@ -63,7 +63,13 @@ bool OutPortUser::tryOutPortLock(size_t portIndex)
     OutPort* outPort = outPorts.at(portIndex);
 
     if (isOutPortCaught(portIndex))
-        poco_bugcheck_msg("try to re-lock an output port that was already locked? ");
+    {
+        poco_warning(logger(),
+                "Trying to re-lock an output port ("
+                + outPort->name() +
+                ") that was already locked? ");
+        return true;
+    }
 
     if (outPort->tryWriteDataLock())
     {
@@ -176,7 +182,7 @@ void OutPortUser::reserveOutPorts(std::set<size_t> outputs)
 				throw ExecutionAbortedException("reserveOutPorts",
 						"Task cancellation upon user request");
 
-			poco_information(logger(),"Not all output ports caught. Retrying...");
+//			poco_information(logger(),"Not all output ports caught. Retrying...");
 		}
 
 		setRunningState(oldState);
@@ -201,25 +207,34 @@ size_t OutPortUser::reserveOutPortOneOf(std::set<size_t>& outputs)
 		releaseOut = true;
 	}
 
-	ModuleTask::RunningStates oldState = getRunningState();
-	setRunningState(ModuleTask::retrievingOutDataLocks);
-
-	do
+	try
 	{
-		for (std::set<size_t>::iterator it = outputs.begin(),
-				ite = outputs.end(); it != ite; it++)
-		{
-			if (tryOutPortLock(*it))
-			{
-				releaseOut = false;
-				size_t retValue = *it;
-				outputs.erase(it);
-				setRunningState(oldState);
-				return retValue;
-			}
-		}
+        ModuleTask::RunningStates oldState = getRunningState();
+        setRunningState(ModuleTask::retrievingOutDataLocks);
+
+        do
+        {
+            for (std::set<size_t>::iterator it = outputs.begin(),
+                    ite = outputs.end(); it != ite; it++)
+            {
+                if (tryOutPortLock(*it))
+                {
+                    releaseOut = false;
+                    size_t retValue = *it;
+                    outputs.erase(it);
+                    setRunningState(oldState);
+                    return retValue;
+                }
+            }
+        }
+        while (!yield());
 	}
-	while (!yield());
+	catch (...)
+	{
+		if (releaseOut)
+			unlockOut();
+		throw;
+	}
 
 	if (releaseOut)
 		unlockOut();
@@ -233,7 +248,7 @@ void OutPortUser::reserveOutPort(size_t output)
 	bool releaseOut = false; // flag to check if lockOut should be released here in case of error
 	if (caughts->empty())
 	{
-		reserveLockOut();
+		reserveLockOut(); // ok if throws ExecutionAbortedException
 		releaseOut = true;
 	}
 

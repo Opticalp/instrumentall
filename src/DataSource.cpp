@@ -121,7 +121,12 @@ bool DataSource::registerPendingTarget(DataTarget* target)
 
 bool DataSource::tryWriteDataLock()
 {
-	Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
+    if (sourceCancelling)
+        throw ExecutionAbortedException(
+                "DataSource::tryWriteDataLock",
+                name() + " cancelling, not able to lock the data");
+
+    Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
 
 	if (notifying || pendingDataTargets.size())
 		return false;
