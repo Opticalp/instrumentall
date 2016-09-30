@@ -85,15 +85,26 @@ bool OutPortUser::tryOutPortLock(size_t portIndex)
 void OutPortUser::notifyOutPortReady(size_t portIndex,
 		DataAttributeOut attribute)
 {
-    if (!isOutPortCaught(portIndex))
-        poco_bugcheck_msg("try to unlock an output port "
-                "that was not previously locked? ");
-
     if (isCancelled())
     	throw ExecutionAbortedException("notify out port ready, "
     			"although the task is cancelled. abort. ");
 
-    outPorts[portIndex]->notifyReady(attribute);
+    if (!isOutPortCaught(portIndex))
+        poco_bugcheck_msg("try to notify an output port "
+                "that was not previously locked");
+
+	try 
+	{
+		outPorts[portIndex]->notifyReady(attribute);
+	}
+	catch (ExecutionAbortedException&)
+	{
+		caughts->erase(portIndex); // lock released by DataSource::notifyReady in case of cancellation
+
+		if (caughts->empty())
+			unlockOut();
+		throw;
+	}
 
     caughts->erase(portIndex);
 
@@ -112,9 +123,6 @@ void OutPortUser::notifyAllOutPortReady(DataAttributeOut attribute)
 		size_t port = *it++;
 		notifyOutPortReady(port, attribute);
 	}
-
-	poco_assert(caughts->empty());
-	unlockOut();
 }
 
 void OutPortUser::releaseAllOutPorts()

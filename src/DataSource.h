@@ -103,7 +103,7 @@ public:
      * With the given attributes,
      * and release the lock acquired with tryWriteDataLock
      *
-     * @throw ExecutionAbortedException in case of source
+     * @throw ExecutionAbortedException in case of source (self)
      * cancellation
      */
     void notifyReady(DataAttribute attribute);

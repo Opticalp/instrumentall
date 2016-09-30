@@ -91,12 +91,6 @@ protected:
     template<typename T>
     void getDataToWrite(size_t portIndex, T*& pData);
 
-//    /**
-//     * Forward tryData for the given port
-//     */
-//    template <typename T>
-//    bool tryOutPortData(size_t portIndex, T*& pData);
-
     /**
      * Forward releaseData to the given port
      */
