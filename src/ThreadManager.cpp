@@ -172,7 +172,8 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 	{
 		if (cancellingAll)
 		{
-			pTask->cancel();
+		    // FIXME: cancel or not?
+//			pTask->cancel();
 
 			// directly throw exception, in order to not be relying on
 			// taskMan.start exception throw, based on task.setState while
@@ -197,11 +198,10 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 		poco_information(logger(), pTask->name()
 				+ " failed to start");
 
-		// FIXME: releaseInputDataOnStartFailure not needed?
-		if (pTask->triggingPort())
-			pTask->triggingPort()->releaseInputData();
+        if (pTask->triggingPort())
+           pTask->triggingPort()->releaseInputDataOnFailure();
 
-		unregisterModuleTask(pTask);
+        unregisterModuleTask(pTask);
 		throw;
 	}
 }
@@ -216,8 +216,10 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 	{
 		if (cancellingAll)
 		{
-			pTask->cancel();
-			throw Poco::RuntimeException("Cancelling, can not sync start " + pTask->name());
+            // FIXME: cancel or not?
+//          pTask->cancel();
+
+		    throw Poco::RuntimeException("Cancelling, can not sync start " + pTask->name());
 		}
 
 		taskManager.startSync(taskPtr);
@@ -227,9 +229,8 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 		poco_information(logger(), pTask->name()
 				+ " failed to sync start");
 
-		// FIXME: releaseInputDataOnStartFailure not needed?
 		if (pTask->triggingPort())
-			pTask->triggingPort()->releaseInputData();
+			pTask->triggingPort()->releaseInputDataOnFailure();
 
 		unregisterModuleTask(pTask);
 		throw;

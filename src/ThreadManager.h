@@ -122,6 +122,8 @@ public:
      *
      * Start a ModuleTask.
      * Do not take ownership of the task.
+     *
+     * Called by Module::popTask
      */
     void startModuleTask(ModuleTask* task);
 
@@ -130,6 +132,8 @@ public:
      *
      * ModuleTask specific.
      * Do not take ownership of the task.
+     *
+     * Called by Module::popTaskSync
      */
     void startSyncModuleTask(ModuleTask* task);
 

@@ -306,12 +306,11 @@ ModuleTask::RunningStates Module::getRunningState()
 void Module::enqueueTask(ModuleTask* task, bool syncAllowed)
 {
 	if (!moduleReady())
-	{
-		if (task->triggingPort())
-			task->triggingPort()->releaseInputData();
 		throw ExecutionAbortedException(name(),
 				"enqueue task " + task->name() + ": module is cancelling (or reseting)");
-	}
+
+	Poco::ScopedLockWithUnlock<Poco::Mutex> lock(taskMngtMutex);
+    // thread safety: no deadlock risk with ThreadManager::registerNewModuleTask
 
     // take ownership of the task.
 	try
@@ -322,20 +321,16 @@ void Module::enqueueTask(ModuleTask* task, bool syncAllowed)
 	}
 	catch (Poco::RuntimeException& exc)
 	{
-        if (task->triggingPort())
-            task->triggingPort()->releaseInputData();
-	    poco_error(logger(), name() + ": ThreadManager::registerNewModuleTask failed: "
+	    poco_error(logger(), name() + "::enqueueTask: "
+	            "ThreadManager::registerNewModuleTask failed: "
 	            + exc.displayText());
-        throw ExecutionAbortedException(name(),
-                "enqueue task " + task->name() + ": " + exc.displayText());
+        throw;
 	}
-
-	taskMngtMutex.lock();
 
 	taskQueue.push_back(task);
 
 	bool queueWithManyTasks = (taskQueue.size() > 1);
-    taskMngtMutex.unlock();
+    lock.unlock();
 
 	if (queueWithManyTasks)
 	{
@@ -390,10 +385,11 @@ void Module::popTask()
 	// when released, the taskQueue is empty.
     taskMngtMutex.lock();
 
+    // FIXME: popTask is waiting for a lock to release?!
     while (!taskStartingMutex.tryLock())
 	{
         taskMngtMutex.unlock();
-        Poco::Thread::yield();
+        Poco::Thread::yield(); // FIXME: which yield?
         taskMngtMutex.lock();
         if (taskQueue.empty())
         {

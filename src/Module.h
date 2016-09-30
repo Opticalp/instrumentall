@@ -188,10 +188,18 @@ public:
      * Enqueue a new task
      *
      * for this module. and pop it, if no task is running for this module.
-     * To be called by the disptacher.
-	 * @param syncAllowed if true, try to sync start the module first. 
+     *
+     * To be called
+     *  - either by runModule if no trigging input port is involved.
+     *  - or by a InPort::runTarget.
+     *
+	 * @param syncAllowed if true, try to sync start the module first.
+	 *
      * @return true if the module is not running, and thus,
      * the new enqueued task should be started.
+     *
+     * @throw ExecutionAbortedException in case of cancellation.
+     * The calling trigging port is not released.
      */
     void enqueueTask(ModuleTask* task, bool syncAllowed = false);
 
