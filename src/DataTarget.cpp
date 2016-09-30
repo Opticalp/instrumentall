@@ -121,6 +121,11 @@ void DataTarget::releaseInputData()
     getDataSource()->targetReleaseRead(this);
 }
 
+void DataTarget::releaseInputDataOnFailure()
+{
+    getDataSource()->targetReleaseReadOnFailure(this);
+}
+
 void DataTarget::cancelWithSource()
 {
 	if (targetCancelling)
@@ -159,7 +164,6 @@ bool DataTarget::tryRunTarget()
 {
 	if (targetCancelling)
 	{
-		// FIXME: releaseInputDataOnStartFailure not needed any more?
 		releaseInputData();
 		return false;
 	}
@@ -170,9 +174,8 @@ bool DataTarget::tryRunTarget()
 	}
 	catch (...)
 	{
-		// FIXME: releaseInputDataOnStartFailure not needed any more?
-		releaseInputData();
-		throw;
+		releaseInputDataOnFailure();
+		return false;
 	}
 
 	return true;

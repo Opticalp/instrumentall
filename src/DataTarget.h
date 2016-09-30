@@ -112,9 +112,18 @@ public:
      *
      * @throw Poco::BugcheckException if no previous call to
      * tryCatchSource was issued
-     * @see releaseInputDataOnStartFailure
+     * @see releaseInputDataOnFailure
      */
     void releaseInputData();
+
+    /**
+     * Store that the input data has to be released.
+     *
+     * Release the corresponding lock
+     *
+     * @see releaseInputData
+     */
+    void releaseInputDataOnFailure();
 
     /**
      * Return the data type of the data source
@@ -261,7 +270,10 @@ private:
     /**
      * launch runTarget with DataTarget cancellation verification
      *
-     * @return false if cancelling
+     * @return false if cancelling or exception caught.
+     * Then release the input.
+     *
+     * Do not throw exception
      */
     bool tryRunTarget();
 

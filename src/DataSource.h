@@ -101,7 +101,10 @@ public:
      * Notify the dispatcher that the new data is ready
      *
      * With the given attributes,
-     * and release the lock acquired with tryData
+     * and release the lock acquired with tryWriteDataLock
+     *
+     * @throw ExecutionAbortedException in case of source
+     * cancellation
      */
     void notifyReady(DataAttribute attribute);
 
@@ -215,6 +218,16 @@ private:
      * to be called by DataTarget::releaseInputData
      */
     void targetReleaseRead(DataTarget* target);
+
+    /**
+     * Release the read lock from the given target
+     *
+     * and remove the target from the pendingDataTargets
+     * and reservedDataTargets.
+     *
+     * to be called by DataTarget::releaseInputDataOnFailure
+     */
+    void targetReleaseReadOnFailure(DataTarget* target);
 
     /**
      * Check if the given target was notified for available data

@@ -70,6 +70,15 @@ void DataSource::notifyReady(DataAttribute attribute)
 {
     setDataAttribute(attribute);
 
+    if (sourceCancelling)
+    {
+        releaseWriteOnFailure();
+        throw ExecutionAbortedException(
+                "DataSource::notifyReady",
+                name() + " cancelling, "
+                "not able to dispatch the data to the targets");
+    }
+
     notifying = true;
     try
     {
@@ -78,11 +87,12 @@ void DataSource::notifyReady(DataAttribute attribute)
 							.getSubsystem<Dispatcher>()
 							.setOutputDataReady(this);
     }
-    catch (...)
+    catch (ExecutionAbortedException&)
     {
         notifying = false;
         throw;
     }
+
     notifying = false;
 }
 
@@ -105,8 +115,6 @@ bool DataSource::registerPendingTarget(DataTarget* target)
 				"not able to lock the data for the target: "
 				+ target->name());
 
-    // FIXME: readlock removed
-
     Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
     return pendingDataTargets.insert(target).second;
 }
@@ -125,14 +133,14 @@ void DataSource::releaseWrite()
 {
 	// TODO
 	// setDataOk();
-    unlockData();
+    DataItem::unlockData();
 }
 
 void DataSource::releaseWriteOnFailure()
 {
 	// TODO
 	// setDataOk(false);  // DataItem::setDataOk
-	unlockData();
+    DataItem::unlockData();
 }
 
 
@@ -181,6 +189,17 @@ void DataSource::targetReleaseRead(DataTarget* target)
 
 	if (lockedDataTargets.erase(target))
 		unlockData();
+}
+
+void DataSource::targetReleaseReadOnFailure(DataTarget* target)
+{
+    Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
+
+    pendingDataTargets.erase(target);
+    reservedDataTargets.erase(target);
+
+    if (lockedDataTargets.erase(target))
+        unlockData();
 }
 
 void DataSource::cancelWithTargets()
