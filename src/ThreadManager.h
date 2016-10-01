@@ -123,7 +123,8 @@ public:
      * Start a ModuleTask.
      * Do not take ownership of the task.
      *
-     * Called by Module::popTask
+     * Called by Module::popTask, the Module::taskMngtMutex is locked
+     * during the call.
      */
     void startModuleTask(ModuleTask* task);
 

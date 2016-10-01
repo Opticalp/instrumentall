@@ -32,6 +32,8 @@
 #include "Poco/Format.h"
 #include "Poco/Thread.h"
 
+POCO_IMPLEMENT_EXCEPTION( TaskMergedException, Poco::Exception, "The task was merged into a master")
+
 size_t MergeableTask::nextAvailableIndex = 0;
 
 MergeableTask::MergeableTask():
@@ -114,8 +116,13 @@ void MergeableTask::run()
 	tBegin.update();
 	try
 	{
-		setState(TASK_RUNNING);
+	    prepareTask();
 		runTask();
+	}
+	catch (TaskMergedException&) // task merged, probably during prepareTask
+	{
+	    release();
+	    return;
 	}
 	catch (ExecutionAbortedException& exc)
 	{
@@ -234,7 +241,7 @@ void MergeableTask::setState(TaskState taskState)
             throw ExecutionAbortedException("task cancelling. "
 				"Can not be changed to another state than \"finished\"");
         if (state == TASK_MERGED)
-            throw Poco::RuntimeException("slave task. "
+            throw TaskMergedException("slave task. "
                 "Can not be changed to another state than \"finished\"");
 	}
 
@@ -249,9 +256,9 @@ void MergeableTask::setState(TaskState taskState)
 			throw Poco::RuntimeException("trying to run a task that is not started");
 		break;
 	case TASK_MERGED:
-	    if (state != TASK_IDLE)
+	    if (state != TASK_IDLE && state != TASK_STARTING)
 	        throw Poco::RuntimeException("trying to merge: " +
-	                name() + " that is not idle...");
+	                name() + " that is not idle nor starting...");
 	    break;
 	default:
 		break;

@@ -76,6 +76,21 @@ void ModuleTask::setRunningState(RunningStates state)
 	runState = state;
 }
 
+void ModuleTask::prepareTask()
+{
+    coreModule->prepareTaskStart(this);
+
+    try
+    {
+        MergeableTask::prepareTask();
+    }
+    catch (...)
+    {
+        coreModule->taskStartFailure();
+        throw;
+    }
+}
+
 void ModuleTask::runTask()
 {
 	coreModule->run(this);

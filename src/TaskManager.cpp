@@ -63,8 +63,8 @@ void TaskManager::start(TaskPtr pAutoTask)
 		// Make sure that we don't act like we own the task since
 		// we never started it.  If we leave the task on our task
 		// list, the size of the list is incorrect.
+        pAutoTask->setState(MergeableTask::TASK_FALSE_START);
 		mTaskList.pop_back();
-		pAutoTask->setState(MergeableTask::TASK_FALSE_START);
 		throw;
 	}
 }
@@ -72,21 +72,12 @@ void TaskManager::start(TaskPtr pAutoTask)
 
 void TaskManager::startSync(TaskPtr pAutoTask)
 {
-	mutex.lock();
+	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(mutex);
 
-	try
-	{
-		pAutoTask->setOwner(this);
-		pAutoTask->setState(MergeableTask::TASK_STARTING);
-	}
-	catch (...)
-	{
-		mutex.unlock();
-		throw;
-	}
-
+    pAutoTask->setOwner(this);
+    pAutoTask->setState(MergeableTask::TASK_STARTING);
 	mTaskList.push_back(pAutoTask);
-	mutex.unlock();
+	lock.unlock();
 
 	try
 	{

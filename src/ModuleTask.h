@@ -51,6 +51,12 @@ public:
 	std::string name() { return mName; }
 
 	/**
+	 * Lock the taskStartingMutex before the task is in
+	 * TASK_RUNNING state
+	 */
+	void prepareTask();
+
+	/**
 	 * Execute the attached module.
 	 *
 	 * To be called by the module itself.

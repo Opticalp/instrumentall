@@ -533,6 +533,12 @@ private:
 	bool reseting; ///< flag set when the reseting begins
 	bool resetDone; ///< flag set when a reset just occurred
 
+    /**
+     * Check if a task is already starting
+     * for this module
+     */
+    bool taskIsStarting();
+
 	/**
 	 * Check if a task is already running (or at least started)
 	 * for this module
@@ -563,7 +569,8 @@ private:
 
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
 	std::set<ModuleTask*> allLaunchedTasks;
-	std::list<ModuleTask*> taskQueue;
+	std::list<ModuleTask*> taskQueue; ///< enqueued tasks, waiting to be started. The order counts.
+	std::set<ModuleTask*> startingTasks; ///< tasks that are just started. no more in taskQueue, already in allLaunchedTasks.
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
 
@@ -577,6 +584,14 @@ private:
 	 */
 	Poco::FastMutex taskStartingMutex;
 	void startingUnlock() { taskStartingMutex.unlock(); }
+
+	/**
+	 * Lock the taskStartingMutex
+	 *
+	 * called by ModuleTask::prepareTask
+	 */
+	void prepareTaskStart(ModuleTask* task);
+	void taskStartFailure() { releaseStartingMutex(); }
 
     friend class ModuleTask; // access to setRunningTask, releaseAll
 };

@@ -219,7 +219,8 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
             // FIXME: cancel or not?
 //          pTask->cancel();
 
-		    throw Poco::RuntimeException("Cancelling, can not sync start " + pTask->name());
+		    throw Poco::RuntimeException("Cancelling all. "
+		            "Can not sync start " + pTask->name());
 		}
 
 		taskManager.startSync(taskPtr);
