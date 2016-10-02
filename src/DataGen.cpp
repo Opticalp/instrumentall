@@ -142,7 +142,7 @@ void DataGen::process(int startCond)
     dataLock.unlock();
 
     // launch next task if requested.
-    popTask();
+    processingTerminated();
 
     reserveOutPort(outPortData);
 

@@ -129,8 +129,6 @@ void InPortUser::releaseInPort(size_t portIndex)
 
 		caughts->erase(portIndex);
 		lockedPorts->erase(portIndex);
-		if (caughts->empty())
-		    releaseStartingMutex();
     }
 	else
 		poco_warning(logger(), "releaseInPort: "
@@ -145,8 +143,6 @@ void InPortUser::releaseAllInPorts()
 		std::set<size_t>::iterator itTmp = it++;
     	releaseInPort(*itTmp); // caughts is modified by releaseInPort
 	}
-
-	releaseStartingMutex();
 }
 
 void InPortUser::safeReleaseAllInPorts(InPort* triggingPort)

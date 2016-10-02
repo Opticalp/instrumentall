@@ -216,29 +216,6 @@ protected:
 	 */
 	virtual int startCondition();
 
-	/**
-	 * Reset the variable: starting,
-	 * in order to handle the responsibility of the
-	 * Module::taskStartingMutex release via startingUnlock
-	 */
-    void grabStartingMutex() { starting = true; }
-
-    /// @see grabStartingMutex
-	virtual void startingUnlock() = 0;
-
-    /**
-     * Release Module::taskStartingMutex via startingUnlock
-     * if starting is set.
-     */
-    void releaseStartingMutex()
-    {
-        if (starting)
-        {
-            starting = false;
-            startingUnlock();
-        }
-    }
-
     /**
      * Dispatch the cancellation to the sources
      */
@@ -275,9 +252,6 @@ private:
      */
     bool isInPortLocked(size_t index)
     	{ return (lockedPorts->find(index) != lockedPorts->end()); }
-
-	bool starting; ///< flag set to true is the ports release has to trig startingUnlock
-
 };
 
 #include "InPortUser.ipp"

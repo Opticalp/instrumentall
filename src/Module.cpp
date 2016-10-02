@@ -165,9 +165,18 @@ void Module::freeInternalName()
     }
 }
 
+void Module::releaseProcessingMutex()
+{
+    if (processing)
+    {
+        processing = false;
+        processingUnlock();
+    }
+}
+
 void Module::prepareTaskStart(ModuleTask* task)
 {
-    while (!taskStartingMutex.tryLock())
+    while (!taskProcessingMutex.tryLock())
     {
         if (yield())
             throw ExecutionAbortedException(task->name() + "::prepareTask",
@@ -175,10 +184,9 @@ void Module::prepareTaskStart(ModuleTask* task)
     }
 
     taskMngtMutex.lock();
-    startingTasks.erase(task);
+    startingTask = NULL;
+    processing = true;
     taskMngtMutex.unlock();
-
-    grabStartingMutex();
 }
 
 void Module::run(ModuleTask* pTask)
@@ -215,13 +223,12 @@ void Module::run(ModuleTask* pTask)
     {
         parametersTreated();
         safeReleaseAllInPorts(triggingPort());
+        releaseProcessingMutex();
         throw;
     }
 
     parametersTreated();
 
-    if (inPortCaughtsCount() == 0)
-        releaseStartingMutex();
 
     try
     {
@@ -238,11 +245,13 @@ void Module::run(ModuleTask* pTask)
 		parametersTreated();
 		releaseAllInPorts();
 		releaseAllOutPorts();
+        releaseProcessingMutex();
 		throw;
 	}
 
 	releaseAllInPorts();
 	releaseAllOutPorts();
+    releaseProcessingMutex();
 }
 
 bool Module::sleep(long milliseconds)
@@ -364,6 +373,9 @@ bool Module::taskIsStarting()
 {
     Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
 
+    if (startingTask != NULL)
+        return true;
+
     for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
             ite = allLaunchedTasks.end(); it != ite; it++)
     {
@@ -443,7 +455,7 @@ void Module::popTask()
 	poco_information(logger(), "poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
-	startingTasks.insert(nextTask);
+	startingTask = nextTask;
 	allLaunchedTasks.insert(nextTask);
 
 	try
@@ -486,7 +498,7 @@ void Module::popTaskSync()
 
 	if (taskIsRunning()) // taskMngtMutex is recursive. this call is ok.
 	{
-		poco_information(logger(),"sync pop: a task is already running. ");
+		poco_information(logger(),"sync pop: a task is already running (or starting). ");
 		taskMngtMutex.unlock();
 		return;
 	}
@@ -495,7 +507,7 @@ void Module::popTaskSync()
 	poco_information(logger(), "SYNC poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
-    startingTasks.insert(nextTask);
+    startingTask = nextTask;
     allLaunchedTasks.insert(nextTask);
 
 	startSyncPending = true;
@@ -529,28 +541,29 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
 {
     Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
-    // seek among starting tasks first
-    for (std::set<ModuleTask*>::iterator qIt = startingTasks.begin(),
-            qIte = startingTasks.end(); qIt != qIte; qIt++)
+    // check the starting task first
+    if (startingTask != NULL)
     {
-        poco_information(logger(), name() + "'s startingTasks includes: " + (*qIt)->name());
-        if ((*qIt)->triggingPort() == trigPort)
+        poco_information(logger(), startingTask->name()
+                + " is starting for " + name() );
+
+        if (startingTask->triggingPort() == trigPort)
         {
             try
             {
-                (*runningTask)->merge(*qIt);
+                (*runningTask)->merge(startingTask);
             }
             catch (Poco::RuntimeException& e)
             {
                 poco_information(logger(), "potential slave task found: "
-                        + (*qIt)->name() + ", merging with master: "
+                        + startingTask->name() + ", merging with master: "
                         + (*runningTask)->name() + " failed: "
                         + e.displayText());
                 return false;
             }
 
             poco_information(logger(), "slave task found: "
-                    + (*qIt)->name() + ", merging with master: "
+                    + startingTask->name() + ", merging with master: "
                     + (*runningTask)->name() + " OK");
 
             // FIXME: replace by something contained in the merged task.
@@ -863,6 +876,8 @@ void Module::moduleReset()
 	resetTargets();
 	try
 	{
+	    startingTask = NULL;
+	    processing = false;
 		reset();
 	}
 	catch (...)

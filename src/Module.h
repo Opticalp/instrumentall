@@ -102,7 +102,8 @@ public:
 		  immediateCancelling(false),
 		  cancelRequested(false),
 		  cancelDoneEvent(false),
-		  cancellationListenerRunnable(*this, &Module::cancellationListen)
+		  cancellationListenerRunnable(*this, &Module::cancellationListen),
+		  startingTask(NULL), processing(false)
 	{
 	}
 
@@ -119,7 +120,8 @@ public:
           immediateCancelling(false),
           cancelRequested(false),
 		  cancelDoneEvent(false),
-		  cancellationListenerRunnable(*this, &Module::cancellationListen)
+		  cancellationListenerRunnable(*this, &Module::cancellationListen),
+		  startingTask(NULL), processing(false)
 	{
 	}
 
@@ -209,13 +211,6 @@ public:
      * called by the task destructor
      */
     void unregisterTask(ModuleTask* task);
-
-    /**
-     * Launch the next task of the queue in the current thread
-     *
-     * and dequeue it.
-     */
-    void popTaskSync();
 
     /**
      * Processing modes:
@@ -376,20 +371,6 @@ protected:
 	 */
 	virtual void reset() { }
 
-    /**
-     * Launch the next task of the queue
-     *
-     * and dequeue it.
-     *
-     * Do nothing if the queue is empty.
-     *
-     * Require the taskStartingMutex to be available. Lock it.
-     *
-     * If the task start succeeded, taskStartingMutex is locked when the
-     * function returns.
-     */
-    void popTask();
-
 	/**
 	 * Method called by the task that identifies itself with pTask.
 	 *
@@ -489,6 +470,14 @@ protected:
 	 */
 	bool tryCatchInPortFromQueue(InPort* triggingPort);
 
+	/**
+	 * To be called by Module::process implementation
+	 * when the processing is terminated
+	 *
+	 * to allow the next task to be ran.
+	 */
+    void processingTerminated() { popTask(); releaseProcessingMutex(); }
+
 private:
     /// enum to be returned by checkName
     enum NameStatus
@@ -530,6 +519,27 @@ private:
 	static std::vector<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
+    /**
+     * Launch the next task of the queue in the current thread
+     *
+     * and dequeue it.
+     */
+    void popTaskSync();
+
+    /**
+     * Launch the next task of the queue
+     *
+     * and dequeue it.
+     *
+     * Do nothing if the queue is empty.
+     *
+     * Require the taskStartingMutex to be available. Lock it.
+     *
+     * If the task start succeeded, taskStartingMutex is locked when the
+     * function returns.
+     */
+    void popTask();
+
 	bool reseting; ///< flag set when the reseting begins
 	bool resetDone; ///< flag set when a reset just occurred
 
@@ -570,20 +580,27 @@ private:
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
 	std::set<ModuleTask*> allLaunchedTasks;
 	std::list<ModuleTask*> taskQueue; ///< enqueued tasks, waiting to be started. The order counts.
-	std::set<ModuleTask*> startingTasks; ///< tasks that are just started. no more in taskQueue, already in allLaunchedTasks.
+	ModuleTask* startingTask; ///< task that is just started. no more in taskQueue, already in allLaunchedTasks.
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
 
 	/**
-	 * lock the launching of a new task as long as another task is already starting.
+	 * lock the launching of a new task as long as another task is already processing.
 	 *
 	 * This mutex is locked by popTask or popTaskSync
-	 * and released when the input ports are released
+	 * and released by releaseProcessingMutex
 	 *
-	 * @see InPortUser::starting
+	 * @see processing
 	 */
-	Poco::FastMutex taskStartingMutex;
-	void startingUnlock() { taskStartingMutex.unlock(); }
+	Poco::FastMutex taskProcessingMutex;
+    bool processing;
+	void processingUnlock() { taskProcessingMutex.unlock(); }
+
+	/**
+     * Release Module::taskProcessingMutex via startingUnlock
+     * if starting is set.
+     */
+    void releaseProcessingMutex();
 
 	/**
 	 * Lock the taskStartingMutex
@@ -591,7 +608,7 @@ private:
 	 * called by ModuleTask::prepareTask
 	 */
 	void prepareTaskStart(ModuleTask* task);
-	void taskStartFailure() { releaseStartingMutex(); }
+	void taskStartFailure() { releaseProcessingMutex(); }
 
     friend class ModuleTask; // access to setRunningTask, releaseAll
 };
