@@ -246,12 +246,14 @@ void Module::run(ModuleTask* pTask)
 		releaseAllInPorts();
 		releaseAllOutPorts();
         releaseProcessingMutex();
+        releaseOutputMutex();
 		throw;
 	}
 
 	releaseAllInPorts();
 	releaseAllOutPorts();
     releaseProcessingMutex();
+    releaseOutputMutex();
 }
 
 bool Module::sleep(long milliseconds)
@@ -893,4 +895,21 @@ void Module::moduleReset()
     cancelDoneEvent.reset();
 	resetDone = true;
 	reseting = false;
+}
+
+void Module::processingTerminated()
+{
+    outputMutex.lock();
+    outputLocked = true;
+    popTask();
+    releaseProcessingMutex();
+}
+
+void Module::releaseOutputMutex()
+{
+    if (outputLocked)
+    {
+        outputLocked = false;
+        outputMutex.unlock();
+    }
 }

@@ -103,7 +103,8 @@ public:
 		  cancelRequested(false),
 		  cancelDoneEvent(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
-		  startingTask(NULL), processing(false)
+		  startingTask(NULL), processing(false),
+		  outputLocked(false)
 	{
 	}
 
@@ -121,7 +122,8 @@ public:
           cancelRequested(false),
 		  cancelDoneEvent(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
-		  startingTask(NULL), processing(false)
+		  startingTask(NULL), processing(false),
+		  outputLocked(false)
 	{
 	}
 
@@ -475,8 +477,11 @@ protected:
 	 * when the processing is terminated
 	 *
 	 * to allow the next task to be ran.
+	 *
+	 * Shall be called only once in Module::process due
+	 * to the outputMutex management
 	 */
-    void processingTerminated() { popTask(); releaseProcessingMutex(); }
+    void processingTerminated();
 
 private:
     /// enum to be returned by checkName
@@ -609,6 +614,10 @@ private:
 	 */
 	void prepareTaskStart(ModuleTask* task);
 	void taskStartFailure() { releaseProcessingMutex(); }
+
+	Poco::FastMutex outputMutex; ///< used to keep the queue order to the access to the outputs
+	bool outputLocked;
+	void releaseOutputMutex();
 
     friend class ModuleTask; // access to setRunningTask, releaseAll
 };
