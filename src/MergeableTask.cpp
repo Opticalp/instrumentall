@@ -41,7 +41,7 @@ MergeableTask::MergeableTask():
 		progress(0.0),
 		state(TASK_IDLE),
 		cancelEvent(false), // manual reset
-		masterTask(NULL)
+		masterTask(NULL), slave(false)
 {
 	// creation time is set with the present time,
 	// as it is for beginning of run time and end of run time.
@@ -275,6 +275,7 @@ void MergeableTask::setMaster(MergeableTask* master)
         setState(TASK_MERGED);
 
     masterTask = master;
+    slave = true;
 }
 
 void MergeableTask::eraseSlave(MergeableTask* slave)

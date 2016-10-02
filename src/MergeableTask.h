@@ -167,7 +167,7 @@ public:
 	/**
 	 * Check if this task is a slave task.
 	 */
-	bool isSlave();
+	bool isSlave() { return slave; }
 
 protected:
 	/**
@@ -247,6 +247,8 @@ private:
 
 	std::set<MergeableTask*> slavedTasks;
 	MergeableTask* masterTask;
+
+	bool slave;
 
 	void taskFinishedBroadcast(TaskManager* pTm);
 

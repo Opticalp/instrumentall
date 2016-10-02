@@ -374,7 +374,11 @@ bool Module::taskIsStarting()
     Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
 
     if (startingTask != NULL)
+    {
+        poco_information(logger(), name() + ": a task is already starting ("
+                + startingTask->name() + ")");
         return true;
+    }
 
     for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
             ite = allLaunchedTasks.end(); it != ite; it++)

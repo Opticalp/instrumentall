@@ -86,7 +86,16 @@ void ModuleTask::prepareTask()
     }
     catch (...)
     {
+        poco_warning(coreModule->logger(), name() + " starting failed (prepareTask)");
         coreModule->taskStartFailure();
+
+        if ((getState() == TASK_FINISHED) && isSlave())
+        {
+            poco_warning(coreModule->logger(), name() + " was merged and is finished");
+            throw TaskMergedException("Finished slave task. "
+                    "Can not run");
+        }
+
         throw;
     }
 }
