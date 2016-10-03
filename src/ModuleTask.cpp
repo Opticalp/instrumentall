@@ -130,8 +130,10 @@ void ModuleTask::leaveTask()
 
 void ModuleTask::cancel()
 {
+    ModuleTask* pTask = coreModule->getRunningTask();
     coreModule->setRunningTask(this);
 	moduleCancel();
+	coreModule->setRunningTask(pTask);
 	MergeableTask::cancel();
 }
 
