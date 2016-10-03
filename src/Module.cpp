@@ -174,12 +174,14 @@ void Module::releaseProcessingMutex()
     }
 }
 
-void Module::prepareTaskStart(ModuleTask* task)
+void Module::prepareTaskStart(ModuleTask* pTask)
 {
+    setRunningTask(pTask);
+
     while (!taskProcessingMutex.tryLock())
     {
         if (yield())
-            throw ExecutionAbortedException(task->name() + "::prepareTask",
+            throw ExecutionAbortedException(pTask->name() + "::prepareTask",
                     "task cancellation during taskStartingMutex lock wait");
     }
 
@@ -191,8 +193,6 @@ void Module::prepareTaskStart(ModuleTask* task)
 
 void Module::run(ModuleTask* pTask)
 {
-	setRunningTask(pTask);
-
 	taskMngtMutex.lock();
 	if (startSyncPending)
 	{
@@ -260,7 +260,7 @@ bool Module::sleep(long milliseconds)
 {
 	bool ret = false;
 
-	if (*runningTask)
+	if ((*runningTask) != NULL)
 		ret = (*runningTask)->sleep(milliseconds);
 	else
 		Poco::Thread::sleep(milliseconds);
@@ -275,7 +275,7 @@ bool Module::yield()
 {
 	bool ret = false;
 
-	if (*runningTask)
+    if ((*runningTask) != NULL)
 		ret = (*runningTask)->yield();
 	else
 		Poco::Thread::yield();
@@ -288,7 +288,7 @@ bool Module::yield()
 
 void Module::setProgress(float progress)
 {
-	if (*runningTask == NULL)
+    if ((*runningTask) == NULL)
 		return;
 
 	(*runningTask)->setProgress(progress);
@@ -299,7 +299,7 @@ bool Module::isCancelled()
 	if (immediateCancelling || cancelDoneEvent.tryWait(0))
 		return true;
 
-	if (*runningTask == NULL)
+    if ((*runningTask) == NULL)
 		return false;
 
 	return (*runningTask)->isCancelled();
@@ -307,7 +307,7 @@ bool Module::isCancelled()
 
 InPort* Module::triggingPort()
 {
-	if (*runningTask)
+    if ((*runningTask) != NULL)
 		return (*runningTask)->triggingPort();
 
 	throw Poco::InvalidAccessException(name(), "querying trigging port. not in a task");
@@ -315,7 +315,7 @@ InPort* Module::triggingPort()
 
 void Module::setRunningState(ModuleTask::RunningStates state)
 {
-	if (*runningTask == NULL)
+    if ((*runningTask) == NULL)
 		return;
 
 	(*runningTask)->setRunningState(state);
@@ -323,17 +323,17 @@ void Module::setRunningState(ModuleTask::RunningStates state)
 
 ModuleTask::RunningStates Module::getRunningState()
 {
-	if (*runningTask == NULL)
+    if ((*runningTask) == NULL)
 		return ModuleTask::processing;
 
 	return (*runningTask)->getRunningState();
 }
 
-void Module::enqueueTask(ModuleTask* task, bool syncAllowed)
+void Module::enqueueTask(ModuleTaskPtr& pTask, bool syncAllowed)
 {
 	if (!moduleReady())
 		throw ExecutionAbortedException(name(),
-				"enqueue task " + task->name() + ": module is cancelling (or reseting)");
+				"enqueue task " + pTask->name() + ": module is cancelling (or reseting)");
 
 	Poco::ScopedLockWithUnlock<Poco::Mutex> lock(taskMngtMutex);
     // thread safety: no deadlock risk with ThreadManager::registerNewModuleTask
@@ -343,7 +343,7 @@ void Module::enqueueTask(ModuleTask* task, bool syncAllowed)
 	{
 	    Poco::Util::Application::instance()
                              .getSubsystem<ThreadManager>()
-                             .registerNewModuleTask(task);
+                             .registerNewModuleTask(pTask);
 	}
 	catch (Poco::RuntimeException& exc)
 	{
@@ -353,14 +353,14 @@ void Module::enqueueTask(ModuleTask* task, bool syncAllowed)
         throw;
 	}
 
-	taskQueue.push_back(task);
+	taskQueue.push_back(pTask);
 
 	bool queueWithManyTasks = (taskQueue.size() > 1);
     lock.unlock();
 
 	if (queueWithManyTasks)
 	{
-		poco_information(logger(), task->name()
+		poco_information(logger(), pTask->name()
 					+ ": tasks are already enqueued for " + name());
 		return;
 	}
@@ -375,14 +375,14 @@ bool Module::taskIsStarting()
 {
     Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
 
-    if (startingTask != NULL)
+    if (!startingTask.isNull())
     {
         poco_information(logger(), name() + ": a task is already starting ("
                 + startingTask->name() + ")");
         return true;
     }
 
-    for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
+    for (std::set<ModuleTaskPtr>::iterator it = allLaunchedTasks.begin(),
             ite = allLaunchedTasks.end(); it != ite; it++)
     {
         switch ((*it)->getState())
@@ -411,7 +411,7 @@ bool Module::taskIsRunning()
 {
 	Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
 
-	for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
+	for (std::set<ModuleTaskPtr>::iterator it = allLaunchedTasks.begin(),
 			ite = allLaunchedTasks.end(); it != ite; it++)
 	{
 		switch ((*it)->getState())
@@ -444,8 +444,15 @@ void Module::popTask()
 
     if (taskQueue.empty())
     {
-        poco_information(logger(),
-            (*runningTask)->name() + ": empty task queue, nothing to pop (async)");
+        if (logger().information())
+        {
+            if ((*runningTask) == NULL)
+                poco_information(logger(),
+                        name() + ": empty task queue, nothing to pop (async)");
+            else
+                poco_information(logger(),
+                        (*runningTask)->name() + ": empty task queue, nothing to pop (async)");
+        }
         taskMngtMutex.unlock();
         return;
     }
@@ -457,7 +464,7 @@ void Module::popTask()
         return;
     }
 
-	ModuleTask* nextTask = taskQueue.front();
+	ModuleTaskPtr nextTask = taskQueue.front();
 	poco_information(logger(), "poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
@@ -490,12 +497,12 @@ void Module::popTaskSync()
     {
         if (logger().information())
         {
-            if (*runningTask)
+            if ((*runningTask) == NULL)
                 logger().information(
-                    (*runningTask)->name() + ": empty task queue, nothing to sync pop");
+                        name() + ": empty task queue, nothing to sync pop");
             else
                 logger().information(
-                    name() + ": empty task queue, nothing to sync pop");
+                        (*runningTask)->name() + ": empty task queue, nothing to sync pop");
         }
 
         taskMngtMutex.unlock();
@@ -509,7 +516,7 @@ void Module::popTaskSync()
 		return;
 	}
 
-	Poco::AutoPtr<ModuleTask> nextTask(taskQueue.front(), true);
+	ModuleTaskPtr nextTask = taskQueue.front();
 	poco_information(logger(), "SYNC poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
@@ -537,10 +544,10 @@ void Module::popTaskSync()
 	}
 }
 
-void Module::unregisterTask(ModuleTask* task)
+void Module::unregisterTask(ModuleTask* pTask)
 {
 	Poco::Mutex::ScopedLock lock(taskMngtMutex);
-	allLaunchedTasks.erase(task);
+	allLaunchedTasks.erase(pTask);
 }
 
 bool Module::tryCatchInPortFromQueue(InPort* trigPort)
@@ -548,7 +555,7 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
     Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
     // check the starting task first
-    if (startingTask != NULL)
+    if (!startingTask.isNull())
     {
         poco_information(logger(), startingTask->name()
                 + " is starting for " + name() );
@@ -557,7 +564,8 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
         {
             try
             {
-                (*runningTask)->merge(startingTask);
+                Poco::AutoPtr<MergeableTask> slave(startingTask);
+                (*runningTask)->merge(slave);
             }
             catch (Poco::RuntimeException& e)
             {
@@ -568,7 +576,7 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
                 return false;
             }
 
-            poco_information(logger(), "slave task found: "
+            poco_information(logger(), "slave task found (starting): "
                     + startingTask->name() + ", merging with master: "
                     + (*runningTask)->name() + " OK");
 
@@ -580,7 +588,7 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
     }
 
     // seek in the pending tasks queue
-    for (std::list<ModuleTask*>::iterator qIt = taskQueue.begin(),
+    for (std::list<ModuleTaskPtr>::iterator qIt = taskQueue.begin(),
             qIte = taskQueue.end(); qIt != qIte; qIt++)
     {
         poco_information(logger(), name() + "'s taskQueue includes: " + (*qIt)->name());
@@ -588,18 +596,19 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
         {
             try
             {
-                (*runningTask)->merge(*qIt);
+                Poco::AutoPtr<MergeableTask> slave(*qIt);
+                (*runningTask)->merge(slave);
             }
             catch (Poco::RuntimeException& e)
             {
-                poco_information(logger(), "potential slave task found: "
+                poco_information(logger(), "potential slave task found in queue: "
                         + (*qIt)->name() + ", merging with master: "
                         + (*runningTask)->name() + " failed: "
                         + e.displayText());
                 return false;
             }
 
-            poco_information(logger(), "slave task found: "
+            poco_information(logger(), "slave task found (in queue): "
                     + (*qIt)->name() + ", merging with master: "
                     + (*runningTask)->name() + " OK");
 
@@ -618,7 +627,7 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
 
 Poco::AutoPtr<ModuleTask> Module::runModule(bool syncAllowed)
 {
-    Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(this), true);
+    ModuleTaskPtr taskPtr(new ModuleTask(this));
     enqueueTask(taskPtr, syncAllowed);
 
     return taskPtr;
@@ -732,7 +741,7 @@ bool Module::immediateCancel()
 	}
 
 	// stop active tasks
-	for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
+	for (std::set<ModuleTaskPtr>::iterator it = allLaunchedTasks.begin(),
 			ite = allLaunchedTasks.end(); it != ite; it++)
 	{
 	    if (*it == runningTask.get())
@@ -743,7 +752,7 @@ bool Module::immediateCancel()
 		case MergeableTask::TASK_IDLE:
 		case MergeableTask::TASK_STARTING:
 		case MergeableTask::TASK_RUNNING:
-			(*it)->cancel();
+		    ModuleTaskPtr(*it)->cancel();
 			break;
 		case MergeableTask::TASK_FALSE_START:
 		case MergeableTask::TASK_FINISHED:

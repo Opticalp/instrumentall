@@ -130,6 +130,14 @@ public:
 	void waitTaskDone()
 		{ doneEvent.wait(); }
 
+	/**
+	 * To be called when the task is finished.
+	 *
+	 * called by the thread manager when the task finishes, via
+     * ThreadManager::unregisterModuleTask
+	 */
+	void taskFinished();
+
 protected:
 	/**
 	 * To be called by Module::run and Module::process

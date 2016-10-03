@@ -163,7 +163,7 @@ public:
 	 *
 	 * and call the slave setMaster()
 	 */
-	void merge(MergeableTask* slave);
+	void merge(Poco::AutoPtr<MergeableTask>& slave);
 
 	/**
 	 * Check if this task is a slave task.
@@ -243,13 +243,9 @@ private:
 
 	/// to be called by the master task
 	void setMaster(MergeableTask* master);
-	/// to be called by the slave task upon deletion
-	void eraseSlave(MergeableTask* slave);
 
-	std::set<MergeableTask*> slavedTasks;
+	std::set< Poco::AutoPtr<MergeableTask> > slavedTasks;
 	Poco::AutoPtr<MergeableTask> masterTask;
-
-	bool slave;
 
 	void taskFinishedBroadcast(TaskManager* pTm);
 

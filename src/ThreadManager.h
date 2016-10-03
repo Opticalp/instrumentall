@@ -126,7 +126,7 @@ public:
      * Called by Module::popTask, the Module::taskMngtMutex is locked
      * during the call.
      */
-    void startModuleTask(ModuleTask* task);
+    void startModuleTask(ModuleTaskPtr& task);
 
     /**
      * Start a task in the current thread
@@ -136,7 +136,7 @@ public:
      *
      * Called by Module::popTaskSync
      */
-    void startSyncModuleTask(ModuleTask* task);
+    void startSyncModuleTask(ModuleTaskPtr& task);
 
     /**
      * Wait for all tasks to be terminated
@@ -148,12 +148,12 @@ public:
      *
      * and take ownership of it
      */
-    void registerNewModuleTask(ModuleTask* pTask);
+    void registerNewModuleTask(ModuleTaskPtr& pTask);
 
     /**
      * Unregister a task
      */
-    void unregisterModuleTask(ModuleTask* pTask);
+    void unregisterModuleTask(ModuleTaskPtr& pTask);
 
     /**
      * @see Dispatcher::cancel

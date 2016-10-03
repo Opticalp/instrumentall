@@ -205,14 +205,15 @@ public:
      * @throw ExecutionAbortedException in case of cancellation.
      * The calling trigging port is not released.
      */
-    void enqueueTask(ModuleTask* task, bool syncAllowed = false);
+    void enqueueTask(ModuleTaskPtr& task, bool syncAllowed = false);
 
     /**
      * Unregister a task
      *
-     * called by the task destructor
+     * called by the thread manager when the task finishes, via
+     * ThreadManager::unregisterModuleTask and via
      */
-    void unregisterTask(ModuleTask* task);
+    void unregisterTask(ModuleTask* pTask);
 
     /**
      * Processing modes:
@@ -586,9 +587,9 @@ private:
 
     Poco::ThreadLocal<ModuleTask*> runningTask; ///< task that executes this module
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
-	std::set<ModuleTask*> allLaunchedTasks;
-	std::list<ModuleTask*> taskQueue; ///< enqueued tasks, waiting to be started. The order counts.
-	ModuleTask* startingTask; ///< task that is just started. no more in taskQueue, already in allLaunchedTasks.
+	std::set<ModuleTaskPtr> allLaunchedTasks;
+	std::list<ModuleTaskPtr> taskQueue; ///< enqueued tasks, waiting to be started. The order counts.
+	ModuleTaskPtr startingTask; ///< task that is just started. no more in taskQueue, already in allLaunchedTasks.
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
 
@@ -615,8 +616,8 @@ private:
 	 *
 	 * called by ModuleTask::prepareTask
 	 */
-	void prepareTaskStart(ModuleTask* task);
-	void taskStartFailure() { releaseProcessingMutex(); }
+	void prepareTaskStart(ModuleTask* pTask);
+	void taskStartFailure() { startingTask = NULL; releaseProcessingMutex(); }
 
 	Poco::FastMutex outputMutex; ///< used to keep the queue order to the access to the outputs
 	bool outputLocked;
