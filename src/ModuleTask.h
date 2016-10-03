@@ -32,6 +32,7 @@
 #include "MergeableTask.h"
 
 #include "Poco/Event.h"
+#include "Poco/AutoPtr.h"
 
 class Module;
 class InPort;
@@ -151,5 +152,7 @@ private:
 
 	friend class Module; // access to sleep, setProgress, ...
 };
+
+typedef Poco::AutoPtr<ModuleTask>  ModuleTaskPtr;
 
 #endif /* SRC_MODULETASK_H_ */

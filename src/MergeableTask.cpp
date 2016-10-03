@@ -41,7 +41,7 @@ MergeableTask::MergeableTask():
 		progress(0.0),
 		state(TASK_IDLE),
 		cancelEvent(false), // manual reset
-		masterTask(NULL), slave(false)
+		masterTask(NULL)
 {
 	// creation time is set with the present time,
 	// as it is for beginning of run time and end of run time.
@@ -51,29 +51,18 @@ MergeableTask::MergeableTask():
 
 MergeableTask::~MergeableTask()
 {
-	Poco::ScopedReadRWLock lock(mergeAccess);
-
-	if (masterTask)
+	if (!masterTask.isNull())
 		masterTask->eraseSlave(this);
-
-	for (std::set<MergeableTask*>::iterator it = slavedTasks.begin(),
-			ite = slavedTasks.end(); it != ite; it++)
-	{
-		// set directly progress and state without verifications
-		(*it)->progress = progress;
-		(*it)->state = state;
-		(*it)->setMaster(NULL);// skip verifications
-	}
 }
 
 float MergeableTask::getProgress() const
 {
 	mergeAccess.readLock();
-	Poco::AutoPtr<MergeableTask> master(masterTask, true);
+	bool hasMaster = !masterTask.isNull();
 	mergeAccess.unlock();
 
-	if (!master.isNull())
-		return master->getProgress();
+	if (hasMaster)
+		return masterTask->getProgress();
 
 	Poco::FastMutex::ScopedLock lock(mainMutex);
 	return progress;
@@ -82,18 +71,20 @@ float MergeableTask::getProgress() const
 void MergeableTask::cancel()
 {
 	mergeAccess.readLock();
-	Poco::AutoPtr<MergeableTask> master(masterTask, true);
+    bool hasMaster = !masterTask.isNull();
 	mergeAccess.unlock();
 
-	if (master.isNull())
+	if (hasMaster)
+	{
+	    masterTask->cancel();
+	}
+	else
 	{
 	    state = TASK_CANCELLING;
 	    cancelEvent.set();
 	    if (pOwner)
 	        pOwner->taskCancelled(this);
 	}
-	else
-	    master->cancel();
 }
 
 bool MergeableTask::isCancelled() const
@@ -271,11 +262,9 @@ void MergeableTask::setMaster(MergeableTask* master)
 {
 	Poco::ScopedWriteRWLock lock(mergeAccess);
 
-    if (master)
-        setState(TASK_MERGED);
+    setState(TASK_MERGED);
 
-    masterTask = master;
-    slave = true;
+    masterTask = Poco::AutoPtr<MergeableTask>(master, true); // increment ref count
 }
 
 void MergeableTask::eraseSlave(MergeableTask* slave)

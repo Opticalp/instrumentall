@@ -29,6 +29,7 @@
 
 #include "Poco/Runnable.h"
 #include "Poco/RefCountedObject.h"
+#include "Poco/AutoPtr.h"
 #include "Poco/Mutex.h"
 #include "Poco/RWLock.h"
 #include "Poco/Event.h"
@@ -167,7 +168,7 @@ public:
 	/**
 	 * Check if this task is a slave task.
 	 */
-	bool isSlave() { return slave; }
+	bool isSlave() { return !masterTask.isNull(); }
 
 protected:
 	/**
@@ -246,7 +247,7 @@ private:
 	void eraseSlave(MergeableTask* slave);
 
 	std::set<MergeableTask*> slavedTasks;
-	MergeableTask* masterTask;
+	Poco::AutoPtr<MergeableTask> masterTask;
 
 	bool slave;
 

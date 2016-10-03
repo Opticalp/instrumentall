@@ -164,9 +164,13 @@ private:
     TaskManager taskManager;
     Poco::ThreadPool threadPool;
 
-    /// Store all non-terminated tasks: idle, or active.
-    std::set< Poco::AutoPtr<ModuleTask> > pendingModTasks;
-    Poco::RWLock  taskListLock;
+    /**
+     * Store all non-terminated tasks: idle, or active.
+     *
+     * Own the tasks, first.
+     */
+    std::set<ModuleTaskPtr> pendingModTasks;
+    Poco::RWLock  taskListLock; ///< restrict access to pendingModTasks
 
     bool cancellingAll;
 };
