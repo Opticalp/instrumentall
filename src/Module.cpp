@@ -547,7 +547,7 @@ void Module::popTaskSync()
 void Module::unregisterTask(ModuleTask* pTask)
 {
 	Poco::Mutex::ScopedLock lock(taskMngtMutex);
-	allLaunchedTasks.erase(pTask);
+	allLaunchedTasks.erase(ModuleTaskPtr(pTask, true));
 }
 
 bool Module::tryCatchInPortFromQueue(InPort* trigPort)
