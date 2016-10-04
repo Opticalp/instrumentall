@@ -68,7 +68,7 @@ void ThreadManager::onStarted(TaskStartedNotification* pNf)
     // TODO:
     // - dispatch to a NotificationQueue
 
-    pNf->release();
+//    pNf->release();
 }
 
 void ThreadManager::onFailed(TaskFailedNotification* pNf)
@@ -90,7 +90,7 @@ void ThreadManager::onFailed(TaskFailedNotification* pNf)
     // TODO:
     // - dispatch to a NotificationQueue
 
-    pNf->release();
+//    pNf->release();
 }
 
 void ThreadManager::onFailedOnCancellation(TaskFailedNotification* pNf)
@@ -103,7 +103,7 @@ void ThreadManager::onFailedOnCancellation(TaskFailedNotification* pNf)
     // TODO:
     // - dispatch to a NotificationQueue
 
-    pNf->release();
+//    pNf->release();
 }
 
 void ThreadManager::onFinished(TaskFinishedNotification* pNf)
@@ -141,7 +141,7 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 	// TODO:
 	// - dispatch to a NotificationQueue
 
-    pNf->release();
+//    pNf->release();
 }
 
 void ThreadManager::onEnslaved(TaskEnslavedNotification* pNf)
@@ -149,7 +149,7 @@ void ThreadManager::onEnslaved(TaskEnslavedNotification* pNf)
     poco_information(logger(), pNf->task()->name()
     		+ " enslaved " + pNf->slave()->name() );
 
-    pNf->release();
+//    pNf->release();
 }
 
 void ThreadManager::startDataLogger(DataLogger* dataLogger)
