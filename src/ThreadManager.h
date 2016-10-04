@@ -46,6 +46,8 @@
 
 class DataLogger;
 
+using Poco::AutoPtr;
+
 /**
  * ThreadManager
  *
@@ -90,12 +92,12 @@ public:
          { poco_information(logger(), "ThreadManager::uninitialize()"); }
      ///@}
 
-    void onStarted(TaskStartedNotification* pNf);
-//    void onProgress(TaskProgressNotification* pNf);
-    void onFailed(TaskFailedNotification* pNf);
-    void onFailedOnCancellation(TaskFailedNotification* pNf);
-    void onFinished(TaskFinishedNotification* pNf);
-    void onEnslaved(TaskEnslavedNotification* pNf);
+    void onStarted(const AutoPtr<TaskStartedNotification>& pNf);
+//    void onProgress(const AutoPtr<TaskProgressNotification> pNf);
+    void onFailed(const AutoPtr<TaskFailedNotification>& pNf);
+    void onFailedOnCancellation(const AutoPtr<TaskFailedNotification>& pNf);
+    void onFinished(const AutoPtr<TaskFinishedNotification>& pNf);
+    void onEnslaved(const AutoPtr<TaskEnslavedNotification>& pNf);
 
     /**
      * Count the active tasks

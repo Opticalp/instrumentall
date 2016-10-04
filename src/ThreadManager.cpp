@@ -33,11 +33,12 @@
 #include "Module.h"
 
 #include "Poco/Observer.h"
+#include "Poco/NObserver.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/ThreadPool.h"
 #include "Poco/AutoPtr.h"
 
-using Poco::Observer;
+using Poco::NObserver;
 
 ThreadManager::ThreadManager():
         VerboseEntity(name()),
@@ -46,32 +47,30 @@ ThreadManager::ThreadManager():
 		cancellingAll(false)
 {
     taskManager.addObserver(
-            Observer<ThreadManager, TaskStartedNotification>(
+            NObserver<ThreadManager, TaskStartedNotification>(
                     *this, &ThreadManager::onStarted ) );
     taskManager.addObserver(
-            Observer<ThreadManager, TaskFailedNotification>(
+            NObserver<ThreadManager, TaskFailedNotification>(
                     *this, &ThreadManager::onFailed ) );
     taskManager.addObserver(
-                Observer<ThreadManager, TaskFinishedNotification>(
+                NObserver<ThreadManager, TaskFinishedNotification>(
                         *this, &ThreadManager::onFinished ) );
     taskManager.addObserver(
-                Observer<ThreadManager, TaskEnslavedNotification>(
+                NObserver<ThreadManager, TaskEnslavedNotification>(
                         *this, &ThreadManager::onEnslaved ) );
 
     threadPool.addCapacity(32);
 }
 
-void ThreadManager::onStarted(TaskStartedNotification* pNf)
+void ThreadManager::onStarted(const AutoPtr<TaskStartedNotification>& pNf)
 {
     poco_information(logger(), pNf->task()->name() + " was started");
 
     // TODO:
     // - dispatch to a NotificationQueue
-
-//    pNf->release();
 }
 
-void ThreadManager::onFailed(TaskFailedNotification* pNf)
+void ThreadManager::onFailed(const AutoPtr<TaskFailedNotification>& pNf)
 {
     Poco::Exception e(pNf->reason());
 
@@ -89,11 +88,9 @@ void ThreadManager::onFailed(TaskFailedNotification* pNf)
 
     // TODO:
     // - dispatch to a NotificationQueue
-
-//    pNf->release();
 }
 
-void ThreadManager::onFailedOnCancellation(TaskFailedNotification* pNf)
+void ThreadManager::onFailedOnCancellation(const AutoPtr<TaskFailedNotification>& pNf)
 {
     Poco::Exception e(pNf->reason());
 
@@ -102,11 +99,9 @@ void ThreadManager::onFailedOnCancellation(TaskFailedNotification* pNf)
 
     // TODO:
     // - dispatch to a NotificationQueue
-
-//    pNf->release();
 }
 
-void ThreadManager::onFinished(TaskFinishedNotification* pNf)
+void ThreadManager::onFinished(const AutoPtr<TaskFinishedNotification>& pNf)
 {
     poco_information(logger(), pNf->task()->name() + " has stopped");
 
@@ -140,16 +135,12 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 
 	// TODO:
 	// - dispatch to a NotificationQueue
-
-//    pNf->release();
 }
 
-void ThreadManager::onEnslaved(TaskEnslavedNotification* pNf)
+void ThreadManager::onEnslaved(const AutoPtr<TaskEnslavedNotification>& pNf)
 {
     poco_information(logger(), pNf->task()->name()
     		+ " enslaved " + pNf->slave()->name() );
-
-//    pNf->release();
 }
 
 void ThreadManager::startDataLogger(DataLogger* dataLogger)
