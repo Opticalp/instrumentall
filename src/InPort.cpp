@@ -51,7 +51,8 @@ InPort::InPort(std::string name, std::string description, bool trig):
 
 void InPort::runTarget()
 {
-	parent()->enqueueTask(new ModuleTask(parent(), this));
+    ModuleTaskPtr pTask(new ModuleTask(parent(), this));
+	parent()->enqueueTask(pTask);
 }
 
 void InPort::targetCancel()

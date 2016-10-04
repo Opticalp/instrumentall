@@ -32,6 +32,7 @@
 #include "MergeableTask.h"
 
 #include "Poco/Event.h"
+#include "Poco/AutoPtr.h"
 
 class Module;
 class InPort;
@@ -129,6 +130,14 @@ public:
 	void waitTaskDone()
 		{ doneEvent.wait(); }
 
+	/**
+	 * To be called when the task is finished.
+	 *
+	 * called by the thread manager when the task finishes, via
+     * ThreadManager::unregisterModuleTask
+	 */
+	void taskFinished();
+
 protected:
 	/**
 	 * To be called by Module::run and Module::process
@@ -151,5 +160,7 @@ private:
 
 	friend class Module; // access to sleep, setProgress, ...
 };
+
+typedef Poco::AutoPtr<ModuleTask>  ModuleTaskPtr;
 
 #endif /* SRC_MODULETASK_H_ */

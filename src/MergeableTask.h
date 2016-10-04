@@ -29,6 +29,7 @@
 
 #include "Poco/Runnable.h"
 #include "Poco/RefCountedObject.h"
+#include "Poco/AutoPtr.h"
 #include "Poco/Mutex.h"
 #include "Poco/RWLock.h"
 #include "Poco/Event.h"
@@ -162,12 +163,12 @@ public:
 	 *
 	 * and call the slave setMaster()
 	 */
-	void merge(MergeableTask* slave);
+	void merge(Poco::AutoPtr<MergeableTask>& slave);
 
 	/**
 	 * Check if this task is a slave task.
 	 */
-	bool isSlave() { return slave; }
+	bool isSlave() { return !masterTask.isNull(); }
 
 protected:
 	/**
@@ -242,13 +243,9 @@ private:
 
 	/// to be called by the master task
 	void setMaster(MergeableTask* master);
-	/// to be called by the slave task upon deletion
-	void eraseSlave(MergeableTask* slave);
 
-	std::set<MergeableTask*> slavedTasks;
-	MergeableTask* masterTask;
-
-	bool slave;
+	std::set< Poco::AutoPtr<MergeableTask> > slavedTasks;
+	Poco::AutoPtr<MergeableTask> masterTask;
 
 	void taskFinishedBroadcast(TaskManager* pTm);
 

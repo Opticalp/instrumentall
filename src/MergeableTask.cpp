@@ -40,8 +40,7 @@ MergeableTask::MergeableTask():
 		pOwner(NULL),
 		progress(0.0),
 		state(TASK_IDLE),
-		cancelEvent(false), // manual reset
-		masterTask(NULL), slave(false)
+		cancelEvent(false) // manual reset
 {
 	// creation time is set with the present time,
 	// as it is for beginning of run time and end of run time.
@@ -51,29 +50,16 @@ MergeableTask::MergeableTask():
 
 MergeableTask::~MergeableTask()
 {
-	Poco::ScopedReadRWLock lock(mergeAccess);
-
-	if (masterTask)
-		masterTask->eraseSlave(this);
-
-	for (std::set<MergeableTask*>::iterator it = slavedTasks.begin(),
-			ite = slavedTasks.end(); it != ite; it++)
-	{
-		// set directly progress and state without verifications
-		(*it)->progress = progress;
-		(*it)->state = state;
-		(*it)->setMaster(NULL);// skip verifications
-	}
 }
 
 float MergeableTask::getProgress() const
 {
 	mergeAccess.readLock();
-	Poco::AutoPtr<MergeableTask> master(masterTask, true);
+	bool hasMaster = !masterTask.isNull();
 	mergeAccess.unlock();
 
-	if (!master.isNull())
-		return master->getProgress();
+	if (hasMaster)
+		return masterTask->getProgress();
 
 	Poco::FastMutex::ScopedLock lock(mainMutex);
 	return progress;
@@ -82,18 +68,20 @@ float MergeableTask::getProgress() const
 void MergeableTask::cancel()
 {
 	mergeAccess.readLock();
-	Poco::AutoPtr<MergeableTask> master(masterTask, true);
+    bool hasMaster = !masterTask.isNull();
 	mergeAccess.unlock();
 
-	if (master.isNull())
+	if (hasMaster)
+	{
+	    masterTask->cancel();
+	}
+	else
 	{
 	    state = TASK_CANCELLING;
 	    cancelEvent.set();
 	    if (pOwner)
 	        pOwner->taskCancelled(this);
 	}
-	else
-	    master->cancel();
 }
 
 bool MergeableTask::isCancelled() const
@@ -108,7 +96,7 @@ MergeableTask::TaskState MergeableTask::getState() const
 
 void MergeableTask::run()
 {
-	duplicate();
+	duplicate(); // to keep the task alive, even after the finishedNotification, to execute leaveTask
 
 	TaskManager* pTm = getOwner();
 	if (pTm)
@@ -159,22 +147,23 @@ void MergeableTask::taskFinishedBroadcast(TaskManager* pTm)
 	if (pTm)
 		pTm->taskFinished(this);
 
-	mergeAccess.readLock();
-	std::set<MergeableTask*> slaves = slavedTasks;
-	mergeAccess.unlock();
-
-	for  (std::set<MergeableTask*>::iterator it = slaves.begin(),
-			ite = slaves.end(); it != ite; it++)
 	{
-		Poco::AutoPtr<MergeableTask> slave(*it, true);
-		slave->setState(TASK_FINISHED);
-		TaskManager* slaveTm = slave->getOwner();
-		if (slaveTm)
-			slaveTm->taskFinished(slave);
+	    Poco::ScopedWriteRWLock lock(mergeAccess);
+
+        Poco::AutoPtr<MergeableTask> currentSlave;
+        for  (std::set< Poco::AutoPtr<MergeableTask> >::iterator it = slavedTasks.begin(),
+                ite = slavedTasks.end(); it != ite; it++)
+        {
+            currentSlave = *it;
+            currentSlave->setState(TASK_FINISHED);
+            TaskManager* slaveTm = currentSlave->getOwner();
+            if (slaveTm)
+                slaveTm->taskFinished(currentSlave);
+        }
 	}
 }
 
-void MergeableTask::merge(MergeableTask* slave)
+void MergeableTask::merge(Poco::AutoPtr<MergeableTask>& slave)
 {
     mergeAccess.writeLock();
     try
@@ -271,15 +260,8 @@ void MergeableTask::setMaster(MergeableTask* master)
 {
 	Poco::ScopedWriteRWLock lock(mergeAccess);
 
-    if (master)
-        setState(TASK_MERGED);
+    setState(TASK_MERGED);
 
-    masterTask = master;
-    slave = true;
+    masterTask = Poco::AutoPtr<MergeableTask>(master, true); // increment ref count
 }
 
-void MergeableTask::eraseSlave(MergeableTask* slave)
-{
-	Poco::ScopedWriteRWLock lock(mergeAccess);
-	slavedTasks.erase(slave);
-}

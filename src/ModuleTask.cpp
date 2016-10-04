@@ -56,11 +56,20 @@ ModuleTask::ModuleTask():
 ModuleTask::~ModuleTask()
 {
 	poco_information(coreModule->logger(), "erasing task: " + name());
-	coreModule->unregisterTask(this);
 
 	// there should be nothing to do in the managers since AutoPtr should be used
 	// - in the thread manager
 	// - in the task manager
+}
+
+
+void ModuleTask::taskFinished()
+{
+    poco_information(coreModule->logger(), name() + " ref cnt is: "
+            + Poco::NumberFormatter::format(referenceCount()));
+    poco_information(coreModule->logger(), name() + " finished, "
+            "removing it from Module::allLaunchedTasks");
+    coreModule->unregisterTask(this);
 }
 
 ModuleTask::RunningStates ModuleTask::getRunningState()
@@ -102,7 +111,13 @@ void ModuleTask::prepareTask()
 
 void ModuleTask::runTask()
 {
+    poco_information(coreModule->logger(), name() + " ref cnt "
+            "at runTask (1): "
+            + Poco::NumberFormatter::format(referenceCount()));
 	coreModule->run(this);
+    poco_information(coreModule->logger(), name() + " ref cnt "
+            "at runTask (2): "
+            + Poco::NumberFormatter::format(referenceCount()));
 }
 
 void ModuleTask::leaveTask()
@@ -111,6 +126,9 @@ void ModuleTask::leaveTask()
 
     if (coreModule == NULL)
 		return;
+
+    poco_information(coreModule->logger(), name() + " leaving task. "
+            "Ref Cnt is " + Poco::NumberFormatter::format(referenceCount()));
 
 	// enqueue tasks until it works.
 	while (true)
@@ -130,8 +148,10 @@ void ModuleTask::leaveTask()
 
 void ModuleTask::cancel()
 {
+    ModuleTask* pTask = coreModule->getRunningTask();
     coreModule->setRunningTask(this);
 	moduleCancel();
+	coreModule->setRunningTask(pTask);
 	MergeableTask::cancel();
 }
 
