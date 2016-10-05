@@ -176,6 +176,14 @@ void Module::releaseProcessingMutex()
 
 void Module::prepareTaskStart(ModuleTask* pTask)
 {
+    taskMngtMutex.lock();
+    if (startSyncPending)
+    {
+        startSyncPending = false;
+        taskMngtMutex.unlock();
+    }
+    taskMngtMutex.unlock();
+
     setRunningTask(pTask);
 
     while (!taskProcessingMutex.tryLock())
@@ -202,14 +210,6 @@ void Module::prepareTaskStart(ModuleTask* pTask)
 
 void Module::run(ModuleTask* pTask)
 {
-	taskMngtMutex.lock();
-	if (startSyncPending)
-	{
-		startSyncPending = false;
-		taskMngtMutex.unlock();
-	}
-	taskMngtMutex.unlock();
-
 	int startCond;
 
 	try

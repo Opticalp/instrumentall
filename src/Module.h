@@ -343,7 +343,11 @@ protected:
 	 * Expire the output data, check the start condition,
 	 * and call process().
 	 *
-	 * There is no mutex locked here. Concurrence running should be OK.
+	 * prepareTaskStart was previously called by MergeableTask::run
+	 * to lock taskProcessingMutex and set Module::processing to true
+	 *
+	 * taskProcessingMutex is released in this function by a call to
+	 * releaseProcessingMutex
 	 *
 	 * Manage ports release.
 	 */
@@ -352,14 +356,8 @@ protected:
 	/**
 	 * Main logic called by run
 	 *
-	 * Depending on the processing mode, the data should be buffered or
-	 * not.
-	 *
-	 *
-	 *
-	 * FIXME: the caught input data should be locked before
+	 * The caught input data should be locked before
 	 * being used.
-	 *
 	 *
 	 * Access to input ports data should be done via readInPort and
 	 * readInPortDataAttribute. Call releaseAllInPorts when over.
@@ -376,13 +374,13 @@ protected:
 	 * startCondition. You should consider implementing your own
 	 * startCondition method for non-standard cases.
 	 *
-	 * It could be wised to use a lock in this method if there is a
-	 * chance (popTask()?) that it is called twice at the same time.
-	 * No thread-safety is given by the caller.
+	 * When the processing is done, processingTerminated should be
+	 * called to allow the next tasks to be launched (taskProcessingMutex
+	 * is released). It can gain some time if there is many output ports
+	 * to reserve and if the result of the processing is buffered.
 	 *
 	 * @see startCondition
 	 * @see setRunningState
-	 * @see getProcMode
 	 */
 	virtual void process(int startCond)
 		{ poco_warning(logger(), name() + ": nothing to be done"); }
@@ -574,6 +572,8 @@ private:
 	 * Lock the taskStartingMutex
 	 *
 	 * called by ModuleTask::prepareTask
+	 *
+	 * Release the taskMngtMutex in case of sync start
 	 *
 	 * @throw ExecutionAbortedException
 	 * @throw TaskMergedException if the starting task is merged while trying to
