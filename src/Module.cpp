@@ -242,7 +242,6 @@ void Module::run(ModuleTask* pTask)
 	}
 	catch (...)
 	{
-		parametersTreated();
 		releaseAllInPorts();
 		releaseAllOutPorts();
         releaseProcessingMutex();
