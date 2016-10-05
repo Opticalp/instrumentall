@@ -82,10 +82,10 @@ void DemoModuleForwarder::process(int startCond)
 
     DataAttributeOut outAttr = attr;
 
-    int tmpData;
+    int tmpData; // for verbosity purpose
 
 //    // buffered mode
-//    tmpData = *pData;
+    tmpData = *pData;
 //    releaseInPort(inPortA);
 
     reserveOutPort(outPortA);
