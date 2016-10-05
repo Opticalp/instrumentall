@@ -94,7 +94,6 @@ public:
 		  ParameterizedEntity("module." + name),
 		  ParameterizedWithGetters(this),
 		  ParameterizedWithSetters(this),
-		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
 		  cancelling(false),
@@ -113,7 +112,6 @@ public:
 		  ParameterizedEntity("module." + name),
 		  ParameterizedWithGetters(this),
 		  ParameterizedWithSetters(this, applyParametersFromSettersWhenAllSet),
-		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
 		  cancelling(false),
@@ -214,43 +212,6 @@ public:
      * ThreadManager::unregisterModuleTask and via
      */
     void unregisterTask(ModuleTask* pTask);
-
-    /**
-     * Processing modes:
-     *
-     * - direct: the input ports are locked, the output ports are locked,
-     * and the processing occurs directly from the input data into the output
-     * data
-     * - buffered in: the input data is duplicated, the input port is released,
-     * and then the processing occurs.
-     * - buffered out: the processing occurs into a buffer. Then the output
-     * port is locked and the data is copied into the outport.
-     * - full buffered: combination of buffered in and buffered out
-     * - other: any other processing way.
-     *
-     * Not all the processing modes are relevant... Mainly depending on the presence
-     * of input/output ports and of course depending on the processing itself.
-     *
-     * The main difference between those modes is not really the memory footprint
-     * (it can be, in some cases), but the time during which the ports are locked.
-     */
-    enum ProcessingMode
-	{
-    	directProcessing,
-		bufferedInProcessing = 1,
-		bufferedOutProcessing = 1 << 1,
-		fullBufferedProcessing = bufferedInProcessing | bufferedOutProcessing,
-		otherProcessing
-	};
-
-    /**
-     * Set the processing mode
-     *
-     * can be overloaded to execute some checks or restrictions.
-     * The parent method should be called, though.
-     */
-    virtual void setProcMode(ProcessingMode mode) { procMode = mode; }
-    ProcessingMode getProcMode() { return procMode; }
 
 	/**
 	 * Force the cancellation
@@ -521,8 +482,6 @@ private:
 
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
-
-	ProcessingMode procMode;
 
 	static std::vector<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names

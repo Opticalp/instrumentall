@@ -84,28 +84,23 @@ void DemoModuleForwarder::process(int startCond)
 
     int tmpData;
 
-    if (getProcMode()) // buffered mode
-    {
-    	tmpData = *pData;
-
-    	releaseInPort(inPortA);
-    }
+//    // buffered mode
+//    tmpData = *pData;
+//    releaseInPort(inPortA);
 
     reserveOutPort(outPortA);
 
     int* pOutData;
     getDataToWrite<int>(outPortA, pOutData);
 
-    if (getProcMode()) // buffered mode
-    {
-    	*pOutData = tmpData;
-    }
-    else
-    {
-    	*pOutData = *pData;
+//    // buffered mode
+//  	*pOutData = tmpData;
+//    else
 
-//        releaseInPort(inPortA);
-    }
+    *pOutData = *pData;
+
+    // not mandatory
+    releaseInPort(inPortA);
 
     notifyOutPortReady(outPortA, outAttr);
 
