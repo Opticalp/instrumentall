@@ -180,9 +180,18 @@ void Module::prepareTaskStart(ModuleTask* pTask)
 
     while (!taskProcessingMutex.tryLock())
     {
-        if (yield())
+        if (yield()) // startingTask reset by moduleReset
             throw ExecutionAbortedException(pTask->name() + "::prepareTask",
                     "task cancellation during taskStartingMutex lock wait");
+
+        if (pTask->isSlave())
+        {
+            Poco::Mutex::ScopedLock lock(taskMngtMutex);
+            startingTask = NULL;
+
+            throw TaskMergedException("Task merged. "
+                    "Start skipped. ");
+        }
     }
 
     taskMngtMutex.lock();

@@ -574,6 +574,10 @@ private:
 	 * Lock the taskStartingMutex
 	 *
 	 * called by ModuleTask::prepareTask
+	 *
+	 * @throw ExecutionAbortedException
+	 * @throw TaskMergedException if the starting task is merged while trying to
+	 * lock taskStartingMutex
 	 */
 	void prepareTaskStart(ModuleTask* pTask);
 	void taskStartFailure() { startingTask = NULL; releaseProcessingMutex(); }
