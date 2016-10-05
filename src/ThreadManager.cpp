@@ -111,10 +111,6 @@ void ThreadManager::onFinished(const AutoPtr<TaskFinishedNotification>& pNf)
         ModuleTaskPtr pTask(modTask,true);
     	unregisterModuleTask(pTask);
 
-    	poco_information(logger(),
-    	        pTask->name() + " unregistered... ref count is "
-    	        + Poco::NumberFormatter::format(pTask->referenceCount()));
-
     	taskListLock.readLock();
 
 		poco_information(logger(), "pending module tasks list size is: "
@@ -131,7 +127,6 @@ void ThreadManager::onFinished(const AutoPtr<TaskFinishedNotification>& pNf)
 
 		poco_information(logger(), "TaskFinishednotification treated. ");
     }
-    // else   datalogger task ==> 06.06.16 datalogger does not run in a task any more?
 
 	// TODO:
 	// - dispatch to a NotificationQueue
@@ -151,7 +146,7 @@ void ThreadManager::startDataLogger(DataLogger* dataLogger)
 	}
 	catch (Poco::NoThreadAvailableException& e)
 	{
-		// FIXME
+		// FIXME: threadPool.start > NoThreadAvailableException
 
 		poco_error(logger(), dataLogger->name() + " cannot be started, "
 				+ e.displayText());
@@ -180,7 +175,7 @@ void ThreadManager::startModuleTask(ModuleTaskPtr& pTask)
 	}
 	catch (Poco::NoThreadAvailableException& e)
 	{
-		// FIXME
+        // FIXME: taskManager.start > NoThreadAvailableException
 
 		poco_error(logger(), pTask->name() + " cannot be started, "
 				+ e.displayText());
@@ -300,9 +295,7 @@ void ThreadManager::unregisterModuleTask(ModuleTaskPtr& pTask)
 		poco_warning(logger(), "Failed to erase the task " + pTask->name()
 				+ " from the thread manager");
 
-	poco_information(logger(), pTask->name() + " erased from the thread manager. "
-	        "ref cnt is now: "
-	        + Poco::NumberFormatter::format(pTask->referenceCount()));
+	poco_information(logger(), pTask->name() + " erased from ThreadManager::pendingModTasks. ");
 }
 
 void ThreadManager::cancelAll()
