@@ -706,6 +706,12 @@ bool Module::immediateCancel()
 		return false;
 	}
 
+    if (reseting)
+    {
+        poco_information(logger(), name() + " already reseting... return");
+        return false;
+    }
+
 	bool previousCancelReq = cancelRequested;
     cancelRequested = true; // to be set before immediateCancelling. See cancellationListen
 	immediateCancelling = true;
@@ -722,7 +728,10 @@ bool Module::immediateCancel()
 		poco_information(logger(), name() + " already cancelling... "
 				"Trig immediate cancelling then. ");
 	else
-		cancelling = true;
+	{
+	    resetDone = false;
+        cancelling = true;
+	}
 
 	cancelSources();
     poco_information(logger(), name() + ".immediateCancel: "
@@ -788,7 +797,7 @@ bool Module::immediateCancel()
     if (!cancellationListenerThread.isRunning())
         cancellationListenerThread.start(cancellationListenerRunnable);
 
-	poco_information(logger(), name() + ".immediateCancel: end of cancellation listener started...");
+	poco_information(logger(), name() + ".immediateCancel: listener started for end-of-cancellation...");
 	return true;
 }
 
@@ -800,6 +809,13 @@ void Module::lazyCancel()
 		return;
 	}
 
+    if (reseting)
+    {
+        poco_information(logger(), name() + " already reseting... return");
+        return;
+    }
+
+    resetDone = false;
 	cancelling = true;
 
 	// check if the module was recently cancelled
@@ -817,7 +833,7 @@ void Module::lazyCancel()
     if (!cancellationListenerThread.isRunning())
         cancellationListenerThread.start(cancellationListenerRunnable);
 
-	poco_information(logger(), name() + ".lazyCancel: end of cancellation listener started...");
+	poco_information(logger(), name() + ".lazyCancel: listener started for end-of-cancellation...");
 }
 
 void Module::cancellationListen()
