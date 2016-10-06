@@ -150,14 +150,19 @@ void ModuleTask::moduleCancel()
 			.getSubsystem<Dispatcher>().cancel(coreModule);
 }
 
+#include "ThreadManager.h"
+
 void ModuleTask::taskFinished()
 {
     poco_information(coreModule->logger(), name() + " finished, "
             "removing it (async) from Module::allLaunchedTasks");
 
-	if (unregisterThread.isRunning())
-		return;
-
-	unregisterThread.start(unregisterRunner);
+	if (!coreModule->tryUnregisterTask(this))
+	{
+		// try once, then, do it the async way
+		Poco::Util::Application::instance()
+				.getSubsystem<ThreadManager>()
+				.startRunnable(unregisterRunner);
+	}
 }
 

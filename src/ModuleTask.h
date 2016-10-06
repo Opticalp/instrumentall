@@ -160,8 +160,7 @@ private:
 
 	Poco::Event doneEvent; ///< event signaled when the task is finished.
 
-	Poco::Thread unregisterThread; ///< used to run the task unregistering (at the coreModule) in an async way
-	TaskUnregisterer unregisterRunner; ///< runnable to be used by unregisterThread
+	TaskUnregisterer unregisterRunner; ///< used to run the task unregistering (at the coreModule) in an async way
 
 	friend class Module; ///< access to sleep, setProgress, ...
 };
