@@ -46,6 +46,8 @@
 
 class DataLogger;
 
+using Poco::AutoPtr;
+
 /**
  * ThreadManager
  *
@@ -90,12 +92,12 @@ public:
          { poco_information(logger(), "ThreadManager::uninitialize()"); }
      ///@}
 
-    void onStarted(TaskStartedNotification* pNf);
-//    void onProgress(TaskProgressNotification* pNf);
-    void onFailed(TaskFailedNotification* pNf);
-    void onFailedOnCancellation(TaskFailedNotification* pNf);
-    void onFinished(TaskFinishedNotification* pNf);
-    void onEnslaved(TaskEnslavedNotification* pNf);
+    void onStarted(const AutoPtr<TaskStartedNotification>& pNf);
+//    void onProgress(const AutoPtr<TaskProgressNotification> pNf);
+    void onFailed(const AutoPtr<TaskFailedNotification>& pNf);
+    void onFailedOnCancellation(const AutoPtr<TaskFailedNotification>& pNf);
+    void onFinished(const AutoPtr<TaskFinishedNotification>& pNf);
+    void onEnslaved(const AutoPtr<TaskEnslavedNotification>& pNf);
 
     /**
      * Count the active tasks
@@ -122,16 +124,21 @@ public:
      *
      * Start a ModuleTask.
      * Do not take ownership of the task.
+     *
+     * Called by Module::popTask, the Module::taskMngtMutex is locked
+     * during the call.
      */
-    void startModuleTask(ModuleTask* task);
+    void startModuleTask(ModuleTaskPtr& task);
 
     /**
      * Start a task in the current thread
      *
      * ModuleTask specific.
      * Do not take ownership of the task.
+     *
+     * Called by Module::popTaskSync
      */
-    void startSyncModuleTask(ModuleTask* task);
+    void startSyncModuleTask(ModuleTaskPtr& task);
 
     /**
      * Wait for all tasks to be terminated
@@ -143,12 +150,12 @@ public:
      *
      * and take ownership of it
      */
-    void registerNewModuleTask(ModuleTask* pTask);
+    void registerNewModuleTask(ModuleTaskPtr& pTask);
 
     /**
      * Unregister a task
      */
-    void unregisterModuleTask(ModuleTask* pTask);
+    void unregisterModuleTask(ModuleTaskPtr& pTask);
 
     /**
      * @see Dispatcher::cancel
@@ -159,9 +166,13 @@ private:
     TaskManager taskManager;
     Poco::ThreadPool threadPool;
 
-    /// Store all non-terminated tasks: idle, or active.
-    std::set< Poco::AutoPtr<ModuleTask> > pendingModTasks;
-    Poco::RWLock  taskListLock;
+    /**
+     * Store all non-terminated tasks: idle, or active.
+     *
+     * Own the tasks, first.
+     */
+    std::set<ModuleTaskPtr> pendingModTasks;
+    Poco::RWLock  taskListLock; ///< restrict access to pendingModTasks
 
     bool cancellingAll;
 };

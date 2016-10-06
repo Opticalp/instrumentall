@@ -56,11 +56,18 @@ ModuleTask::ModuleTask():
 ModuleTask::~ModuleTask()
 {
 	poco_information(coreModule->logger(), "erasing task: " + name());
-	coreModule->unregisterTask(this);
 
 	// there should be nothing to do in the managers since AutoPtr should be used
 	// - in the thread manager
 	// - in the task manager
+}
+
+
+void ModuleTask::taskFinished()
+{
+    poco_information(coreModule->logger(), name() + " finished, "
+            "removing it from Module::allLaunchedTasks");
+    coreModule->unregisterTask(this);
 }
 
 ModuleTask::RunningStates ModuleTask::getRunningState()
@@ -76,6 +83,30 @@ void ModuleTask::setRunningState(RunningStates state)
 	runState = state;
 }
 
+void ModuleTask::prepareTask()
+{
+    coreModule->prepareTaskStart(this);
+
+    try
+    {
+        MergeableTask::prepareTask();
+    }
+    catch (...)
+    {
+        poco_warning(coreModule->logger(), name() + " starting failed (prepareTask)");
+        coreModule->taskStartFailure();
+
+        if ((getState() == TASK_FINISHED) && isSlave())
+        {
+            poco_warning(coreModule->logger(), name() + " was merged and is finished");
+            throw TaskMergedException("Finished slave task. "
+                    "Can not run");
+        }
+
+        throw;
+    }
+}
+
 void ModuleTask::runTask()
 {
 	coreModule->run(this);
@@ -87,6 +118,9 @@ void ModuleTask::leaveTask()
 
     if (coreModule == NULL)
 		return;
+
+    poco_information(coreModule->logger(), name() + " leaving task. "
+            "Check the queue. ");
 
 	// enqueue tasks until it works.
 	while (true)
@@ -106,8 +140,10 @@ void ModuleTask::leaveTask()
 
 void ModuleTask::cancel()
 {
+    ModuleTask* pTask = coreModule->getRunningTask();
     coreModule->setRunningTask(this);
 	moduleCancel();
+	coreModule->setRunningTask(pTask);
 	MergeableTask::cancel();
 }
 

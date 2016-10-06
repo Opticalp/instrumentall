@@ -142,7 +142,7 @@ void DataGen::process(int startCond)
     dataLock.unlock();
 
     // launch next task if requested.
-    popTask();
+    processingTerminated();
 
     reserveOutPort(outPortData);
 
@@ -178,6 +178,7 @@ void DataGen::triggedRun()
 
     DataAttributeIn inAttr;
 
+	readLockInPort(trigPort);
     readInPortDataAttribute(trigPort, &inAttr);
     releaseInPort(trigPort);
 

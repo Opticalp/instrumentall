@@ -75,35 +75,32 @@ void DemoModuleForwarder::process(int startCond)
 
     DataAttributeIn attr;
     int* pData;
+
+	readLockInPort(inPortA);
     readInPortData<int>(inPortA, pData);
     readInPortDataAttribute(inPortA, &attr);
 
     DataAttributeOut outAttr = attr;
 
-    int tmpData;
+    int tmpData; // for verbosity purpose
 
-    if (getProcMode()) // buffered mode
-    {
-    	tmpData = *pData;
-
-    	releaseInPort(inPortA);
-    }
+//    // buffered mode
+    tmpData = *pData;
+//    releaseInPort(inPortA);
 
     reserveOutPort(outPortA);
 
     int* pOutData;
     getDataToWrite<int>(outPortA, pOutData);
 
-    if (getProcMode()) // buffered mode
-    {
-    	*pOutData = tmpData;
-    }
-    else
-    {
-    	*pOutData = *pData;
+//    // buffered mode
+//  	*pOutData = tmpData;
+//    else
 
-//        releaseInPort(inPortA);
-    }
+    *pOutData = *pData;
+
+    // not mandatory
+    releaseInPort(inPortA);
 
     notifyOutPortReady(outPortA, outAttr);
 

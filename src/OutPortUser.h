@@ -91,12 +91,6 @@ protected:
     template<typename T>
     void getDataToWrite(size_t portIndex, T*& pData);
 
-//    /**
-//     * Forward tryData for the given port
-//     */
-//    template <typename T>
-//    bool tryOutPortData(size_t portIndex, T*& pData);
-
     /**
      * Forward releaseData to the given port
      */
@@ -122,11 +116,15 @@ protected:
 
 	/**
 	 * Lock all output ports prior to their use.
+	 *
+	 * @throw ExecutionAbortedException
 	 */
 	void reserveAllOutPorts();
 
 	/**
 	 * Specify a set of output ports to lock prior to their use.
+	 *
+	 * @throw ExecutionAbortedException
 	 */
 	void reserveOutPorts(std::set<size_t> outputs);
 
@@ -175,11 +173,14 @@ protected:
 	 * @param outputs set of ports among which one will be locked.
 	 * The set is then updated
 	 * @return locked output port
+	 * @throw ExecutionAbortedException
 	 */
 	size_t reserveOutPortOneOf(std::set<size_t>& outputs);
 
 	/**
 	 * Specify an output port to lock prior to its use.
+	 *
+	 * @throw ExecutionAbortedException
 	 */
 	void reserveOutPort(size_t output);
 
@@ -197,7 +198,7 @@ protected:
 	 * as many times as reserveLockOut() in order to release the mutex.
 	 *
 	 * @see outMutex
-	 * @throws Poco::RuntimeException on cancellation
+	 * @throw ExecutionAbortedException
 	 */
 	void reserveLockOut();
 
@@ -235,6 +236,9 @@ private:
      *
      * This method is private,
      * for a direct call (e.g. from a Module), use reserveOutPort
+     *
+     * @throw ExecutionAbortedException in case of output port
+     * cancellation, forwarded from DataSource::tryWriteDataLock
      */
     bool tryOutPortLock(size_t portIndex);
 

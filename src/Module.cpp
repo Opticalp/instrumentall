@@ -165,20 +165,52 @@ void Module::freeInternalName()
     }
 }
 
+void Module::releaseProcessingMutex()
+{
+    if (processing)
+    {
+        processing = false;
+        processingUnlock();
+    }
+}
+
+void Module::prepareTaskStart(ModuleTask* pTask)
+{
+    taskMngtMutex.lock();
+    if (startSyncPending)
+    {
+        startSyncPending = false;
+        taskMngtMutex.unlock();
+    }
+    taskMngtMutex.unlock();
+
+    setRunningTask(pTask);
+
+    while (!taskProcessingMutex.tryLock())
+    {
+        if (yield()) // startingTask reset by moduleReset
+            throw ExecutionAbortedException(pTask->name() + "::prepareTask",
+                    "task cancellation during taskStartingMutex lock wait");
+
+        if (pTask->isSlave())
+        {
+            Poco::Mutex::ScopedLock lock(taskMngtMutex);
+            startingTask = NULL;
+
+            throw TaskMergedException("Task merged. "
+                    "Start skipped. ");
+        }
+    }
+
+    taskMngtMutex.lock();
+    startingTask = NULL;
+    processing = true;
+    taskMngtMutex.unlock();
+}
+
 void Module::run(ModuleTask* pTask)
 {
-	setRunningTask(pTask);
-
-	taskMngtMutex.lock();
-	if (startSyncPending)
-	{
-		startSyncPending = false;
-		taskMngtMutex.unlock();
-	}
-	taskMngtMutex.unlock();
-
 	int startCond;
-	grabStartingMutex();
 
 	try
 	{
@@ -195,21 +227,17 @@ void Module::run(ModuleTask* pTask)
 		setRunningState(ModuleTask::retrievingInDataLocks);
 
 		startCond = startCondition();
-
-		mergeTasks(inPortCoughts());
-
-    }
+	}
     catch (...)
     {
         parametersTreated();
         safeReleaseAllInPorts(triggingPort());
+        releaseProcessingMutex();
         throw;
     }
 
     parametersTreated();
 
-    if (inPortCaughtsCount() == 0)
-        releaseStartingMutex();
 
     try
     {
@@ -223,21 +251,24 @@ void Module::run(ModuleTask* pTask)
 	}
 	catch (...)
 	{
-		parametersTreated();
 		releaseAllInPorts();
 		releaseAllOutPorts();
+        releaseProcessingMutex();
+        releaseOutputMutex();
 		throw;
 	}
 
 	releaseAllInPorts();
 	releaseAllOutPorts();
+    releaseProcessingMutex();
+    releaseOutputMutex();
 }
 
 bool Module::sleep(long milliseconds)
 {
 	bool ret = false;
 
-	if (*runningTask)
+	if ((*runningTask) != NULL)
 		ret = (*runningTask)->sleep(milliseconds);
 	else
 		Poco::Thread::sleep(milliseconds);
@@ -252,7 +283,7 @@ bool Module::yield()
 {
 	bool ret = false;
 
-	if (*runningTask)
+    if ((*runningTask) != NULL)
 		ret = (*runningTask)->yield();
 	else
 		Poco::Thread::yield();
@@ -265,7 +296,7 @@ bool Module::yield()
 
 void Module::setProgress(float progress)
 {
-	if (*runningTask == NULL)
+    if ((*runningTask) == NULL)
 		return;
 
 	(*runningTask)->setProgress(progress);
@@ -276,7 +307,7 @@ bool Module::isCancelled()
 	if (immediateCancelling || cancelDoneEvent.tryWait(0))
 		return true;
 
-	if (*runningTask == NULL)
+    if ((*runningTask) == NULL)
 		return false;
 
 	return (*runningTask)->isCancelled();
@@ -284,7 +315,7 @@ bool Module::isCancelled()
 
 InPort* Module::triggingPort()
 {
-	if (*runningTask)
+    if ((*runningTask) != NULL)
 		return (*runningTask)->triggingPort();
 
 	throw Poco::InvalidAccessException(name(), "querying trigging port. not in a task");
@@ -292,7 +323,7 @@ InPort* Module::triggingPort()
 
 void Module::setRunningState(ModuleTask::RunningStates state)
 {
-	if (*runningTask == NULL)
+    if ((*runningTask) == NULL)
 		return;
 
 	(*runningTask)->setRunningState(state);
@@ -300,64 +331,95 @@ void Module::setRunningState(ModuleTask::RunningStates state)
 
 ModuleTask::RunningStates Module::getRunningState()
 {
-	if (*runningTask == NULL)
+    if ((*runningTask) == NULL)
 		return ModuleTask::processing;
 
 	return (*runningTask)->getRunningState();
 }
 
-void Module::enqueueTask(ModuleTask* task)
+void Module::enqueueTask(ModuleTaskPtr& pTask, bool syncAllowed)
 {
 	if (!moduleReady())
-	{
-		if (task->triggingPort())
-			task->triggingPort()->releaseInputData();
 		throw ExecutionAbortedException(name(),
-				"enqueue task " + task->name() + ": module is cancelling (or reseting)");
-	}
+				"enqueue task " + pTask->name() + ": module is cancelling (or reseting)");
+
+	Poco::ScopedLockWithUnlock<Poco::Mutex> lock(taskMngtMutex);
+    // thread safety: no deadlock risk with ThreadManager::registerNewModuleTask
 
     // take ownership of the task.
 	try
 	{
 	    Poco::Util::Application::instance()
                              .getSubsystem<ThreadManager>()
-                             .registerNewModuleTask(task);
+                             .registerNewModuleTask(pTask);
 	}
 	catch (Poco::RuntimeException& exc)
 	{
-        if (task->triggingPort())
-            task->triggingPort()->releaseInputData();
-	    poco_error(logger(), name() + ": ThreadManager::registerNewModuleTask failed: "
+	    poco_error(logger(), name() + "::enqueueTask: "
+	            "ThreadManager::registerNewModuleTask failed: "
 	            + exc.displayText());
-        throw ExecutionAbortedException(name(),
-                "enqueue task " + task->name() + ": " + exc.displayText());
+        throw;
 	}
 
-	taskMngtMutex.lock();
-
-	taskQueue.push_back(task);
+	taskQueue.push_back(pTask);
 
 	bool queueWithManyTasks = (taskQueue.size() > 1);
-    taskMngtMutex.unlock();
+    lock.unlock();
 
 	if (queueWithManyTasks)
 	{
-		poco_information(logger(), task->name()
+		poco_information(logger(), pTask->name()
 					+ ": tasks are already enqueued for " + name());
 		return;
 	}
 
-	if (!taskIsRunning())
-		popTask();
-	else
-		poco_information(logger(), name() + ": a task is already running");
+    if (syncAllowed)
+        popTaskSync();
+    else
+        popTask();
+}
+
+bool Module::taskIsStarting()
+{
+    Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
+
+    if (!startingTask.isNull())
+    {
+        poco_information(logger(), name() + ": a task is already starting ("
+                + startingTask->name() + ")");
+        return true;
+    }
+
+    for (std::set<ModuleTaskPtr>::iterator it = allLaunchedTasks.begin(),
+            ite = allLaunchedTasks.end(); it != ite; it++)
+    {
+        switch ((*it)->getState())
+        {
+        case MergeableTask::TASK_STARTING:
+            //poco_information(logger(), task->name()
+            //      + ": " + (*it)->name()
+            //      + " is already starting for " + name());
+            return true;
+        case MergeableTask::TASK_RUNNING:
+        case MergeableTask::TASK_FALSE_START:
+        case MergeableTask::TASK_IDLE: // probably self
+        case MergeableTask::TASK_CANCELLING:
+        case MergeableTask::TASK_FINISHED:
+        case MergeableTask::TASK_MERGED:
+            break;
+        default:
+            poco_bugcheck_msg("unknown task state");
+        }
+    }
+
+    return false;
 }
 
 bool Module::taskIsRunning()
 {
 	Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
 
-	for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
+	for (std::set<ModuleTaskPtr>::iterator it = allLaunchedTasks.begin(),
 			ite = allLaunchedTasks.end(); it != ite; it++)
 	{
 		switch ((*it)->getState())
@@ -372,6 +434,7 @@ bool Module::taskIsRunning()
 		case MergeableTask::TASK_IDLE: // probably self
 		case MergeableTask::TASK_CANCELLING:
 		case MergeableTask::TASK_FINISHED:
+		case MergeableTask::TASK_MERGED:
 			break;
 		default:
 			poco_bugcheck_msg("unknown task state");
@@ -387,35 +450,33 @@ void Module::popTask()
 	// when released, the taskQueue is empty.
     taskMngtMutex.lock();
 
-    while (!taskStartingMutex.tryLock())
-	{
-        taskMngtMutex.unlock();
-        Poco::Thread::yield();
-        taskMngtMutex.lock();
-        if (taskQueue.empty())
-        {
-            poco_information(logger(),
-                (*runningTask)->name() + ": empty task queue, nothing to pop (async)");
-            taskMngtMutex.unlock();
-            return;
-        }
-	}
-
-    // both mutexes are locked here
-
     if (taskQueue.empty())
     {
-        poco_information(logger(),
-            (*runningTask)->name() + ": empty task queue, nothing to pop (async.2)");
-        taskStartingMutex.unlock();
+        if (logger().information())
+        {
+            if ((*runningTask) == NULL)
+                poco_information(logger(),
+                        name() + ": empty task queue, nothing to pop (async)");
+            else
+                poco_information(logger(),
+                        (*runningTask)->name() + ": empty task queue, nothing to pop (async)");
+        }
         taskMngtMutex.unlock();
         return;
     }
 
-	ModuleTask* nextTask = taskQueue.front();
+    if (taskIsStarting()) // taskMngtMutex is recursive. this call is ok.
+    {
+        poco_information(logger(),"pop (async): a task is already starting. ");
+        taskMngtMutex.unlock();
+        return;
+    }
+
+	ModuleTaskPtr nextTask = taskQueue.front();
 	poco_information(logger(), "poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
 
+	startingTask = nextTask;
 	allLaunchedTasks.insert(nextTask);
 
 	try
@@ -426,13 +487,12 @@ void Module::popTask()
 	}
 	catch (...)
 	{
+        poco_error(logger(), "can not start (async) " + nextTask->name());
         taskMngtMutex.unlock();
-	    taskStartingMutex.unlock();
 	    throw;
 	}
 
 	taskMngtMutex.unlock();
-	// taskStartingMutex stays locked here. will be unlocked by the new thread
 }
 
 void Module::popTaskSync()
@@ -441,48 +501,40 @@ void Module::popTaskSync()
 	// when released, the taskQueue is empty.
 	taskMngtMutex.lock();
 
-    while (!taskStartingMutex.tryLock())
+    if (taskQueue.empty())
     {
-        taskMngtMutex.unlock();
-        Poco::Thread::yield();
-        taskMngtMutex.lock();
-        if (taskQueue.empty())
+        if (logger().information())
         {
-            poco_information(logger(),
-                (*runningTask)->name() + ": empty task queue, nothing to sync pop");
-            taskMngtMutex.unlock();
-            return;
+            if ((*runningTask) == NULL)
+                logger().information(
+                        name() + ": empty task queue, nothing to sync pop");
+            else
+                logger().information(
+                        (*runningTask)->name() + ": empty task queue, nothing to sync pop");
         }
+
+        taskMngtMutex.unlock();
+        return;
     }
 
-    // both mutexes are locked here
-
-	if (taskQueue.empty())
+	if (taskIsRunning()) // taskMngtMutex is recursive. this call is ok.
 	{
-		poco_information(logger(), 
-			(*runningTask)->name() + ": empty task queue, nothing to sync pop (2)");
-        taskStartingMutex.unlock();
+		poco_information(logger(),"sync pop: a task is already running (or starting). ");
 		taskMngtMutex.unlock();
 		return;
 	}
 
-	if (taskIsRunning())
-	{
-		poco_information(logger(),"sync pop: a task is already running. ");
-        taskStartingMutex.unlock();
-		taskMngtMutex.unlock();
-		return;
-	}
-
-	Poco::AutoPtr<ModuleTask> nextTask(taskQueue.front(), true);
+	ModuleTaskPtr nextTask = taskQueue.front();
 	poco_information(logger(), "SYNC poping out the next task: " + nextTask->name());
 	taskQueue.pop_front();
+
+    startingTask = nextTask;
+    allLaunchedTasks.insert(nextTask);
 
 	startSyncPending = true;
 
 	try
 	{
-		allLaunchedTasks.insert(nextTask);
 		Poco::Util::Application::instance()
 				 .getSubsystem<ThreadManager>()
 				 .startSyncModuleTask(nextTask);
@@ -496,84 +548,95 @@ void Module::popTaskSync()
 		poco_error(logger(), "can not sync start " + nextTask->name());
 		startSyncPending = false;
 		taskMngtMutex.unlock();
-        taskStartingMutex.unlock();
 		throw;
 	}
 }
 
-void Module::unregisterTask(ModuleTask* task)
+void Module::unregisterTask(ModuleTask* pTask)
 {
 	Poco::Mutex::ScopedLock lock(taskMngtMutex);
-	allLaunchedTasks.erase(task);
+	allLaunchedTasks.erase(ModuleTaskPtr(pTask, true));
 }
 
-void Module::mergeTasks(std::set<size_t> inPortIndexes)
+bool Module::tryCatchInPortFromQueue(InPort* trigPort)
 {
-	// Poco::FastMutex::ScopedLock lock(taskMngtMutex);
-	taskMngtMutex.lock();
+    Poco::Mutex::ScopedLock lock(taskMngtMutex);
 
-	for (std::set<size_t>::iterator it = inPortIndexes.begin(),
-			ite = inPortIndexes.end(); it != ite; )
-	{
-		bool found = false;
-		InPort* trigPort;
+    // check the starting task first
+    if (!startingTask.isNull())
+    {
+        poco_information(logger(), startingTask->name()
+                + " is starting for " + name() );
 
-		try
-		{
-			trigPort = getInPort(*it);
+        if (startingTask->triggingPort() == trigPort)
+        {
+            try
+            {
+                Poco::AutoPtr<MergeableTask> slave(startingTask);
+                (*runningTask)->merge(slave);
+            }
+            catch (Poco::RuntimeException& e)
+            {
+                poco_information(logger(), "potential slave task found: "
+                        + startingTask->name() + ", merging with master: "
+                        + (*runningTask)->name() + " failed: "
+                        + e.displayText());
+                return false;
+            }
 
-			if (triggingPort() == trigPort)
-			{
-				it++;
-				continue; // current task
-			}
+            poco_information(logger(), "slave task found (starting): "
+                    + startingTask->name() + ", merging with master: "
+                    + (*runningTask)->name() + " OK");
 
-			// seek
-			for (std::list<ModuleTask*>::iterator qIt = taskQueue.begin(),
-					qIte = taskQueue.end(); qIt != qIte; qIt++)
-			{
-				poco_information(logger(), "taskQueue includes: " + (*qIt)->name());
-				if ((*qIt)->triggingPort() == trigPort)
-				{
-					found = true;
-					(*runningTask)->merge(*qIt);
-					taskQueue.erase(qIt);
-					poco_information(logger(), "slave task found, merging OK");
-					break;
-				}
-			}
-		}
-		catch (...)
-		{
-			taskMngtMutex.unlock();
-			throw;
-		}
+            // FIXME: replace by something contained in the merged task.
+            trigPort->tryCatchSource();
 
-		if (!found)
-		{
-			taskMngtMutex.unlock();
-			poco_warning(logger(),
-					"Unable to merge the task for " + trigPort->name()
-					+ ". Retry.");
+            return true;
+        }
+    }
 
-			if (yield() || cancelling)
-				throw ExecutionAbortedException(name(), "Cancellation upon user request");
-			taskMngtMutex.lock();
-		}
-		else
-			it++;
-	}
+    // seek in the pending tasks queue
+    for (std::list<ModuleTaskPtr>::iterator qIt = taskQueue.begin(),
+            qIte = taskQueue.end(); qIt != qIte; qIt++)
+    {
+        poco_information(logger(), name() + "'s taskQueue includes: " + (*qIt)->name());
+        if ((*qIt)->triggingPort() == trigPort)
+        {
+            try
+            {
+                Poco::AutoPtr<MergeableTask> slave(*qIt);
+                (*runningTask)->merge(slave);
+            }
+            catch (Poco::RuntimeException& e)
+            {
+                poco_information(logger(), "potential slave task found in queue: "
+                        + (*qIt)->name() + ", merging with master: "
+                        + (*runningTask)->name() + " failed: "
+                        + e.displayText());
+                return false;
+            }
 
-	poco_information(logger(),
-		"remaining tasks: " + Poco::NumberFormatter::format(taskQueue.size()));
+            poco_information(logger(), "slave task found (in queue): "
+                    + (*qIt)->name() + ", merging with master: "
+                    + (*runningTask)->name() + " OK");
 
-	taskMngtMutex.unlock();
+            allLaunchedTasks.insert(*qIt);
+            taskQueue.erase(qIt); // taskMngtMutex is locked. The order (with Task::merge) is not that important.
+
+			// FIXME: replace by something contained in the merged task. 
+			trigPort->tryCatchSource();
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
-Poco::AutoPtr<ModuleTask> Module::runModule()
+Poco::AutoPtr<ModuleTask> Module::runModule(bool syncAllowed)
 {
-    Poco::AutoPtr<ModuleTask> taskPtr(new ModuleTask(this), true);
-    enqueueTask(taskPtr);
+    ModuleTaskPtr taskPtr(new ModuleTask(this));
+    enqueueTask(taskPtr, syncAllowed);
 
     return taskPtr;
 }
@@ -643,6 +706,12 @@ bool Module::immediateCancel()
 		return false;
 	}
 
+    if (reseting)
+    {
+        poco_information(logger(), name() + " already reseting... return");
+        return false;
+    }
+
 	bool previousCancelReq = cancelRequested;
     cancelRequested = true; // to be set before immediateCancelling. See cancellationListen
 	immediateCancelling = true;
@@ -659,7 +728,10 @@ bool Module::immediateCancel()
 		poco_information(logger(), name() + " already cancelling... "
 				"Trig immediate cancelling then. ");
 	else
-		cancelling = true;
+	{
+	    resetDone = false;
+        cancelling = true;
+	}
 
 	cancelSources();
     poco_information(logger(), name() + ".immediateCancel: "
@@ -674,8 +746,10 @@ bool Module::immediateCancel()
 	while (taskQueue.size())
 	{
 		InPort* port = taskQueue.front()->mTriggingPort;
+
+		// FIXME: no need to releaseInputDataOnStartFailure?
 		if (port)
-			port->releaseInputDataOnStartFailure();
+			port->releaseInputData();
 
 		Poco::Util::Application::instance()
 	                             .getSubsystem<ThreadManager>()
@@ -684,7 +758,7 @@ bool Module::immediateCancel()
 	}
 
 	// stop active tasks
-	for (std::set<ModuleTask*>::iterator it = allLaunchedTasks.begin(),
+	for (std::set<ModuleTaskPtr>::iterator it = allLaunchedTasks.begin(),
 			ite = allLaunchedTasks.end(); it != ite; it++)
 	{
 	    if (*it == runningTask.get())
@@ -695,7 +769,7 @@ bool Module::immediateCancel()
 		case MergeableTask::TASK_IDLE:
 		case MergeableTask::TASK_STARTING:
 		case MergeableTask::TASK_RUNNING:
-			(*it)->cancel();
+		    ModuleTaskPtr(*it)->cancel();
 			break;
 		case MergeableTask::TASK_FALSE_START:
 		case MergeableTask::TASK_FINISHED:
@@ -723,7 +797,7 @@ bool Module::immediateCancel()
     if (!cancellationListenerThread.isRunning())
         cancellationListenerThread.start(cancellationListenerRunnable);
 
-	poco_information(logger(), name() + ".immediateCancel: end of cancellation listener started...");
+	poco_information(logger(), name() + ".immediateCancel: listener started for end-of-cancellation...");
 	return true;
 }
 
@@ -735,6 +809,13 @@ void Module::lazyCancel()
 		return;
 	}
 
+    if (reseting)
+    {
+        poco_information(logger(), name() + " already reseting... return");
+        return;
+    }
+
+    resetDone = false;
 	cancelling = true;
 
 	// check if the module was recently cancelled
@@ -752,7 +833,7 @@ void Module::lazyCancel()
     if (!cancellationListenerThread.isRunning())
         cancellationListenerThread.start(cancellationListenerRunnable);
 
-	poco_information(logger(), name() + ".lazyCancel: end of cancellation listener started...");
+	poco_information(logger(), name() + ".lazyCancel: listener started for end-of-cancellation...");
 }
 
 void Module::cancellationListen()
@@ -834,6 +915,8 @@ void Module::moduleReset()
 	resetTargets();
 	try
 	{
+	    startingTask = NULL;
+	    processing = false;
 		reset();
 	}
 	catch (...)
@@ -845,4 +928,21 @@ void Module::moduleReset()
     cancelDoneEvent.reset();
 	resetDone = true;
 	reseting = false;
+}
+
+void Module::processingTerminated()
+{
+    outputMutex.lock();
+    outputLocked = true;
+    popTask();
+    releaseProcessingMutex();
+}
+
+void Module::releaseOutputMutex()
+{
+    if (outputLocked)
+    {
+        outputLocked = false;
+        outputMutex.unlock();
+    }
 }

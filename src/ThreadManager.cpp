@@ -33,11 +33,12 @@
 #include "Module.h"
 
 #include "Poco/Observer.h"
+#include "Poco/NObserver.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/ThreadPool.h"
 #include "Poco/AutoPtr.h"
 
-using Poco::Observer;
+using Poco::NObserver;
 
 ThreadManager::ThreadManager():
         VerboseEntity(name()),
@@ -46,32 +47,30 @@ ThreadManager::ThreadManager():
 		cancellingAll(false)
 {
     taskManager.addObserver(
-            Observer<ThreadManager, TaskStartedNotification>(
+            NObserver<ThreadManager, TaskStartedNotification>(
                     *this, &ThreadManager::onStarted ) );
     taskManager.addObserver(
-            Observer<ThreadManager, TaskFailedNotification>(
+            NObserver<ThreadManager, TaskFailedNotification>(
                     *this, &ThreadManager::onFailed ) );
     taskManager.addObserver(
-                Observer<ThreadManager, TaskFinishedNotification>(
+                NObserver<ThreadManager, TaskFinishedNotification>(
                         *this, &ThreadManager::onFinished ) );
     taskManager.addObserver(
-                Observer<ThreadManager, TaskEnslavedNotification>(
+                NObserver<ThreadManager, TaskEnslavedNotification>(
                         *this, &ThreadManager::onEnslaved ) );
 
     threadPool.addCapacity(32);
 }
 
-void ThreadManager::onStarted(TaskStartedNotification* pNf)
+void ThreadManager::onStarted(const AutoPtr<TaskStartedNotification>& pNf)
 {
     poco_information(logger(), pNf->task()->name() + " was started");
 
     // TODO:
     // - dispatch to a NotificationQueue
-
-    pNf->release();
 }
 
-void ThreadManager::onFailed(TaskFailedNotification* pNf)
+void ThreadManager::onFailed(const AutoPtr<TaskFailedNotification>& pNf)
 {
     Poco::Exception e(pNf->reason());
 
@@ -89,11 +88,9 @@ void ThreadManager::onFailed(TaskFailedNotification* pNf)
 
     // TODO:
     // - dispatch to a NotificationQueue
-
-    pNf->release();
 }
 
-void ThreadManager::onFailedOnCancellation(TaskFailedNotification* pNf)
+void ThreadManager::onFailedOnCancellation(const AutoPtr<TaskFailedNotification>& pNf)
 {
     Poco::Exception e(pNf->reason());
 
@@ -102,18 +99,17 @@ void ThreadManager::onFailedOnCancellation(TaskFailedNotification* pNf)
 
     // TODO:
     // - dispatch to a NotificationQueue
-
-    pNf->release();
 }
 
-void ThreadManager::onFinished(TaskFinishedNotification* pNf)
+void ThreadManager::onFinished(const AutoPtr<TaskFinishedNotification>& pNf)
 {
     poco_information(logger(), pNf->task()->name() + " has stopped");
 
     ModuleTask* modTask = dynamic_cast<ModuleTask*>(pNf->task());
     if (modTask)
     {
-    	unregisterModuleTask(modTask);
+        ModuleTaskPtr pTask(modTask,true);
+    	unregisterModuleTask(pTask);
 
     	taskListLock.readLock();
 
@@ -131,20 +127,15 @@ void ThreadManager::onFinished(TaskFinishedNotification* pNf)
 
 		poco_information(logger(), "TaskFinishednotification treated. ");
     }
-    // else   datalogger task ==> 06.06.16 datalogger does not run in a task any more?
 
 	// TODO:
 	// - dispatch to a NotificationQueue
-
-    pNf->release();
 }
 
-void ThreadManager::onEnslaved(TaskEnslavedNotification* pNf)
+void ThreadManager::onEnslaved(const AutoPtr<TaskEnslavedNotification>& pNf)
 {
     poco_information(logger(), pNf->task()->name()
     		+ " enslaved " + pNf->slave()->name() );
-
-    pNf->release();
 }
 
 void ThreadManager::startDataLogger(DataLogger* dataLogger)
@@ -155,24 +146,23 @@ void ThreadManager::startDataLogger(DataLogger* dataLogger)
 	}
 	catch (Poco::NoThreadAvailableException& e)
 	{
-		// FIXME
+		// FIXME: threadPool.start > NoThreadAvailableException
 
 		poco_error(logger(), dataLogger->name() + " cannot be started, "
 				+ e.displayText());
 	}
 }
 
-void ThreadManager::startModuleTask(ModuleTask* pTask)
+void ThreadManager::startModuleTask(ModuleTaskPtr& pTask)
 {
-	Poco::AutoPtr<ModuleTask> taskPtr(pTask, true); // do not take ownership!
-
-	poco_information(logger(), "starting " + taskPtr->name());
+	poco_information(logger(), "starting " + pTask->name());
 
 	try
 	{
 		if (cancellingAll)
 		{
-			pTask->cancel();
+		    // FIXME: cancel or not?
+//			pTask->cancel();
 
 			// directly throw exception, in order to not be relying on
 			// taskMan.start exception throw, based on task.setState while
@@ -181,11 +171,11 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 	                "Can not start " + pTask->name());
 		}
 
-		taskManager.start(taskPtr);
+		taskManager.start(pTask);
 	}
 	catch (Poco::NoThreadAvailableException& e)
 	{
-		// FIXME
+        // FIXME: taskManager.start > NoThreadAvailableException
 
 		poco_error(logger(), pTask->name() + " cannot be started, "
 				+ e.displayText());
@@ -197,29 +187,30 @@ void ThreadManager::startModuleTask(ModuleTask* pTask)
 		poco_information(logger(), pTask->name()
 				+ " failed to start");
 
-		if (pTask->triggingPort())
-			pTask->triggingPort()->releaseInputDataOnStartFailure();
+        if (pTask->triggingPort())
+           pTask->triggingPort()->releaseInputDataOnFailure();
 
-		unregisterModuleTask(pTask);
+        unregisterModuleTask(pTask);
 		throw;
 	}
 }
 
-void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
+void ThreadManager::startSyncModuleTask(ModuleTaskPtr& pTask)
 {
-	Poco::AutoPtr<MergeableTask> taskPtr(pTask, true); // do not take ownership!
-
-	poco_information(logger(), "SYNC starting " + taskPtr->name());
+	poco_information(logger(), "SYNC starting " + pTask->name());
 
 	try
 	{
 		if (cancellingAll)
 		{
-			pTask->cancel();
-			throw Poco::RuntimeException("Cancelling, can not sync start " + pTask->name());
+            // FIXME: cancel or not?
+//          pTask->cancel();
+
+		    throw Poco::RuntimeException("Cancelling all. "
+		            "Can not sync start " + pTask->name());
 		}
 
-		taskManager.startSync(taskPtr);
+		taskManager.startSync(pTask);
 	}
 	catch (...)
 	{
@@ -227,7 +218,7 @@ void ThreadManager::startSyncModuleTask(ModuleTask* pTask)
 				+ " failed to sync start");
 
 		if (pTask->triggingPort())
-			pTask->triggingPort()->releaseInputDataOnStartFailure();
+			pTask->triggingPort()->releaseInputDataOnFailure();
 
 		unregisterModuleTask(pTask);
 		throw;
@@ -282,7 +273,7 @@ void ThreadManager::waitAll()
     poco_information(logger(), "All threads have stopped. ");
 }
 
-void ThreadManager::registerNewModuleTask(ModuleTask* pTask)
+void ThreadManager::registerNewModuleTask(ModuleTaskPtr& pTask)
 {
 	if (cancellingAll)
 		throw Poco::RuntimeException("Cancelling, "
@@ -291,18 +282,20 @@ void ThreadManager::registerNewModuleTask(ModuleTask* pTask)
 
 	Poco::ScopedWriteRWLock lock(taskListLock);
 
-	Poco::AutoPtr<ModuleTask> taskPtr(pTask);
-	pendingModTasks.insert(taskPtr);
+	pendingModTasks.insert(pTask);
 }
 
-void ThreadManager::unregisterModuleTask(ModuleTask* pTask)
+void ThreadManager::unregisterModuleTask(ModuleTaskPtr& pTask)
 {
+    pTask->taskFinished();
+
 	Poco::ScopedWriteRWLock lock(taskListLock);
 
-	Poco::AutoPtr<ModuleTask> taskPtr(pTask, true); // do not take ownership!
-	if (pendingModTasks.erase(taskPtr) < 1)
+	if (pendingModTasks.erase(pTask) < 1)
 		poco_warning(logger(), "Failed to erase the task " + pTask->name()
 				+ " from the thread manager");
+
+	poco_information(logger(), pTask->name() + " erased from ThreadManager::pendingModTasks. ");
 }
 
 void ThreadManager::cancelAll()
@@ -313,15 +306,15 @@ void ThreadManager::cancelAll()
 	cancellingAll = true;
 
 	taskListLock.readLock();
-	std::set< Poco::AutoPtr<ModuleTask> > tempModTasks = pendingModTasks;
+	std::set<ModuleTaskPtr> tempModTasks = pendingModTasks;
 	taskListLock.unlock();
 
 	poco_notice(logger(), "CancelAll: Dispatching cancel() to all active tasks");
 
-	for (std::set< Poco::AutoPtr<ModuleTask> >::iterator it = tempModTasks.begin(),
+	for (std::set<ModuleTaskPtr>::iterator it = tempModTasks.begin(),
 			ite = tempModTasks.end(); it != ite; it++)
 	{
-		Poco::AutoPtr<ModuleTask> tsk = *it;
+		ModuleTaskPtr tsk(*it);
 		poco_information(logger(), "CancelAll: cancelling " + tsk->name());
 		tsk->cancel();
 	}

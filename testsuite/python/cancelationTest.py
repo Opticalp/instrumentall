@@ -66,6 +66,7 @@ def myMain():
     print "wait 0.5 sec and cancel all. "
     time.sleep(0.5)
     cancelAll()
+    
     waitAll()
     
     print "Run 3 times to check the sync of the threads and the cleaning after cancelation"

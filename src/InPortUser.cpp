@@ -75,21 +75,47 @@ bool InPortUser::tryInPortCatchSource(size_t portIndex)
     if (isInPortCaught(portIndex))
         poco_bugcheck_msg("try to re-lock an input port that was already locked? ");
 
-    if (inPorts[portIndex]->tryCatchSource())
+    if (inPorts[portIndex] == triggingPort())
     {
-    	caughts->insert(portIndex);
-    	return true;
+        if (!inPorts[portIndex]->tryCatchSource())
+            poco_bugcheck_msg("tryInPortCatchSource: "
+                    "can not catch self trigging input port");
+        caughts->insert(portIndex);
+        return true;
     }
     else
     {
-    	return false;
+        if (tryCatchInPortFromQueue(inPorts[portIndex]))
+        {
+            caughts->insert(portIndex);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
     }
+
+}
+
+void InPortUser::readLockInPort(size_t portIndex)
+{
+	// check that the port was caught
+    if (!isInPortCaught(portIndex))
+    	poco_bugcheck_msg("try to readLock an input port that was not previously locked");
+
+	inPorts[portIndex]->lockSource();
+	lockedPorts->insert(portIndex);
 }
 
 void InPortUser::readInPortDataAttribute(size_t portIndex,
 		DataAttributeIn* pAttr)
 {
     if (!isInPortCaught(portIndex))
+    	poco_bugcheck_msg("try to read an input port that was not previously caught");
+
+    if (!isInPortLocked(portIndex))
     	poco_bugcheck_msg("try to read an input port that was not previously locked");
 
     inPorts[portIndex]->readInputDataAttribute(pAttr);
@@ -102,9 +128,11 @@ void InPortUser::releaseInPort(size_t portIndex)
         inPorts[portIndex]->releaseInputData();
 
 		caughts->erase(portIndex);
-		if (caughts->empty())
-		    releaseStartingMutex();
+		lockedPorts->erase(portIndex);
     }
+	else
+		poco_warning(logger(), "releaseInPort: "
+			"trying to release a port that is not caught (any more?).");
 }
 
 void InPortUser::releaseAllInPorts()
@@ -115,8 +143,6 @@ void InPortUser::releaseAllInPorts()
 		std::set<size_t>::iterator itTmp = it++;
     	releaseInPort(*itTmp); // caughts is modified by releaseInPort
 	}
-
-	releaseStartingMutex();
 }
 
 void InPortUser::safeReleaseAllInPorts(InPort* triggingPort)

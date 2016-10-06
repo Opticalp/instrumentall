@@ -34,7 +34,10 @@ void DataProxy::runTarget()
 	if (!tryCatchSource())
 		poco_bugcheck_msg((name() + ": not able to catch the source").c_str());
 
-	DataAttribute attr = getDataAttribute();
+	lockSource();
+
+	DataAttribute attr;
+	readInputDataAttribute(&attr);
 
 	while (!tryWriteDataLock())
 	{

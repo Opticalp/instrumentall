@@ -45,6 +45,7 @@ bool TrigPort::tryDataAttribute(DataAttributeIn* pAttr)
 {
 	if (tryCatchSource())
 	{
+	    lockSource();
 		readInputDataAttribute(pAttr);
 		return true;
 	}

@@ -75,9 +75,19 @@ public:
      *
      * Signal to the source that the data will be consumed
      *
+     * The input data has to be locked with lockSource
+     * prior to its use
+     *
      * @return true if data available
      */
     bool tryCatchSource();
+
+    /**
+     * Lock data that was previously caught with tryCatchSource
+     *
+     * The lock is released with releaseInputData
+     */
+    void lockSource();
 
     /**
      * Read the data attribute of the incoming data
@@ -102,18 +112,18 @@ public:
      *
      * @throw Poco::BugcheckException if no previous call to
      * tryCatchSource was issued
-     * @see releaseInputDataOnStartFailure
+     * @see releaseInputDataOnFailure
      */
     void releaseInputData();
 
     /**
-     * Store that the data will not be used and can be released.
+     * Store that the input data has to be released.
      *
      * Release the corresponding lock
      *
-     * No warning is sent if tryCatchSource was not previously called
+     * @see releaseInputData
      */
-    void releaseInputDataOnStartFailure();
+    void releaseInputDataOnFailure();
 
     /**
      * Return the data type of the data source
@@ -260,7 +270,10 @@ private:
     /**
      * launch runTarget with DataTarget cancellation verification
      *
-     * @return false if cancelling
+     * @return false if cancelling or exception caught.
+     * Then release the input.
+     *
+     * Do not throw exception
      */
     bool tryRunTarget();
 

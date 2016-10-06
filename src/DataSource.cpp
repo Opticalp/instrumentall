@@ -40,7 +40,7 @@
 
 DataSource::DataSource(int datatype):
 		DataItem(datatype),
-		notifying(0),
+		notifying(false),
 		sourceCancelling(false),
 		users(0)
 {
@@ -51,45 +51,6 @@ DataSource::~DataSource()
 {
 	if (dataTargets.size())
 		poco_bugcheck_msg("DataSource destruction: dataTargets is not empty");
-}
-
-void DataSource::releaseWrite()
-{
-	// TODO
-	// setDataOk();
-    unlockData();
-}
-
-void DataSource::releaseWriteOnFailure()
-{
-	// TODO
-	// setDataOk(false);  // DataItem::setDataOk
-	unlockData();
-}
-
-
-void DataSource::targetReleaseRead(DataTarget* target)
-{
-	// check that the target is not in the pending targets anymore
-	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(pendingTargetsLock);
-	if (pendingDataTargets.erase(target))
-		poco_bugcheck_msg("call to targetReleaseRead without "
-				"previous call to tryCatchSource");
-	lock.unlock();
-
-	unlockData();
-}
-
-void DataSource::targetReleaseReadOnStartFailure(DataTarget* target)
-{
-	Poco::ScopedLockWithUnlock<Poco::FastMutex> lock(pendingTargetsLock);
-
-	if (pendingDataTargets.erase(target) == 0)
-        poco_bugcheck_msg("call to targetReleaseReadOnStartFailure but "
-                "tryCatchSource was probably previously called");
-
-	lock.unlock();
-	unlockData();
 }
 
 std::set<DataTarget*> DataSource::getDataTargets()
@@ -109,6 +70,15 @@ void DataSource::notifyReady(DataAttribute attribute)
 {
     setDataAttribute(attribute);
 
+    if (sourceCancelling)
+    {
+        releaseWriteOnFailure();
+        throw ExecutionAbortedException(
+                "DataSource::notifyReady",
+                name() + " cancelling, "
+                "not able to dispatch the data to the targets");
+    }
+
     notifying = true;
     try
     {
@@ -117,11 +87,12 @@ void DataSource::notifyReady(DataAttribute attribute)
 							.getSubsystem<Dispatcher>()
 							.setOutputDataReady(this);
     }
-    catch (...)
+    catch (ExecutionAbortedException&)
     {
         notifying = false;
         throw;
     }
+
     notifying = false;
 }
 
@@ -144,69 +115,96 @@ bool DataSource::registerPendingTarget(DataTarget* target)
 				"not able to lock the data for the target: "
 				+ target->name());
 
-    bool ret;
-    readDataLock();
-
-    pendingTargetsLock.lock();
-    ret = pendingDataTargets.insert(target).second;
-    pendingTargetsLock.unlock();
-
-    if (!ret)
-    {
-    	unlockData();
-    	return false;
-    }
-    else
-    {
-    	return true;
-    }
+    Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
+    return pendingDataTargets.insert(target).second;
 }
 
 bool DataSource::tryWriteDataLock()
 {
-	if (notifying)
+    if (sourceCancelling)
+        throw ExecutionAbortedException(
+                "DataSource::tryWriteDataLock",
+                name() + " cancelling, not able to lock the data");
+
+    Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
+
+	if (notifying || pendingDataTargets.size())
 		return false;
 
-	bool ret = DataItem::tryWriteDataLock();
+	return DataItem::tryWriteDataLock();
+}
 
-	if (ret)
-	{
-		Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
-		if (pendingDataTargets.size())
-			poco_bugcheck_msg((name() + " pending targets is not empty, "
-					"write lock should not have been possible").c_str());
+void DataSource::releaseWrite()
+{
+	// TODO
+	// setDataOk();
+    DataItem::unlockData();
+}
 
-		return true;
-	}
+void DataSource::releaseWriteOnFailure()
+{
+	// TODO
+	// setDataOk(false);  // DataItem::setDataOk
+    DataItem::unlockData();
+}
+
+
+bool DataSource::tryReserveDataForTarget(DataTarget* target)
+{
+	Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
+
+	if (sourceCancelling)
+		throw ExecutionAbortedException("DataSource::tryReserveDataForTarget",
+				name() + " cancelling, can not reserve "
+				+ target->name() + " for reading.");
+
+	if (pendingDataTargets.count(target))
+		return reservedDataTargets.insert(target).second;
 	else
 		return false;
 }
 
-bool DataSource::tryCatchRead(DataTarget* target)
+void DataSource::readLockDataForTarget(DataTarget* target)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
-	if (pendingDataTargets.erase(target))
-	{
-		if (sourceCancelling)
-		{
-			unlockData();
-			throw ExecutionAbortedException("DataSource::tryCatchRead",
-					name() + " cancelling, can not catch read "
-					+ target->name() + ". Source lock released. ");
-		}
 
-		return true;
-	}
-	else
-	{
-		if (sourceCancelling)
-			throw ExecutionAbortedException("DataSource::tryCatchRead",
-					name() + " cancelling, can not catch read "
-					+ target->name()
-					+ ". No source lock to release. ");
+	if (sourceCancelling)
+		throw ExecutionAbortedException("DataSource::tryReserveDataForTarget",
+				name() + " cancelling, can not reserve "
+				+ target->name() + " for reading.");
 
-		return false;
-	}
+	if (reservedDataTargets.count(target) == 0)
+		poco_bugcheck_msg("DataSource::readLockDataForTarget: "
+				"trying to lock data that was not reserved");
+
+	if (lockedDataTargets.insert(target).second)
+		readDataLock();
+}
+
+void DataSource::targetReleaseRead(DataTarget* target)
+{
+	Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
+	if (!pendingDataTargets.erase(target))
+		poco_bugcheck_msg("call to targetReleaseRead without "
+				"previous data reservation");
+
+	reservedDataTargets.erase(target);
+	// normal behavior: the target is erased.
+	// abnormal behavior (e.g. abortion): the target was not reserved
+
+	if (lockedDataTargets.erase(target))
+		unlockData();
+}
+
+void DataSource::targetReleaseReadOnFailure(DataTarget* target)
+{
+    Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
+
+    pendingDataTargets.erase(target);
+    reservedDataTargets.erase(target);
+
+    if (lockedDataTargets.erase(target))
+        unlockData();
 }
 
 void DataSource::cancelWithTargets()

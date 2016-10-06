@@ -358,7 +358,7 @@ void Dispatcher::setOutputDataReady(DataSource* source)
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
     {
-        // readlock
+    	// append to source -> pendingDataTargets
     	try
     	{
     		source->registerPendingTarget(*it);
@@ -368,8 +368,7 @@ void Dispatcher::setOutputDataReady(DataSource* source)
     		poco_error(logger(), (*it)->name()
     				+ " can not be started: "
 					+ exc.displayText());
-
-    		continue; // could have been a break since the source is involved
+    		throw;
     	}
 
         if (logger().information())
@@ -388,20 +387,12 @@ void Dispatcher::setOutputDataReady(DataSource* source)
 			}
         }
 
-        try
-        {
-        	if (!(*it)->tryRunTarget())
-        		poco_warning(logger(), (*it)->name()
-        				+ " is cancelling, can not run it from "
-						+ source->name());
-        }
-        catch (Poco::Exception& e)
-        {
-        	poco_error(logger(), e.displayText()
-        			+ ": the target cannot be started");
-        	(*it)->releaseInputDataOnStartFailure();
-        	e.rethrow();
-        }
+        // nb: tryRunTarget handles the source release in case of
+        // false return
+        if (!(*it)->tryRunTarget())
+            poco_warning(logger(), (*it)->name()
+                    + " can not be started by "
+                    + source->name());
     }
 }
 

@@ -81,14 +81,18 @@ void ParameterSetter::runTarget()
 
 	while (!settersHandler->trySetParameter(getParameterIndex()))
 	{
+	    // FIXME: yield will not return true!!
 		if (yield())
 		{
+		    // NOTICE: call to trigSetParameter to release alreadySetLock?
 		    settersHandler->trigSetParameter(getParameterIndex());
 			releaseInputData();
 			throw ExecutionAbortedException("ParameterSetter::runTarget",
 					"Task cancellation upon user request");
 		}
 	}
+
+	lockSource();
 
 	try
 	{

@@ -29,6 +29,7 @@
 
 #include "Poco/Runnable.h"
 #include "Poco/RefCountedObject.h"
+#include "Poco/AutoPtr.h"
 #include "Poco/Mutex.h"
 #include "Poco/RWLock.h"
 #include "Poco/Event.h"
@@ -39,6 +40,8 @@
 class TaskManager;
 
 #include "ExecutionAbortedException.h"
+
+POCO_DECLARE_EXCEPTION(, TaskMergedException, Poco::Exception)
 
 /**
  * MergeableTask
@@ -111,8 +114,26 @@ public:
 	TaskState getState() const;
 
 	/**
+	 * Method called before runTask:
+	 *
+	 *  - the task state is TASK_STARTING
+	 *  - this method change the state to TASK_RUNNING
+	 *
+	 * can be used to wait for an event, lock/unlock mutexes, ...
+	 *
+	 * Default implementation: just change the state to TASK_RUNNING.
+	 *
+	 * Exception throwing is safe.
+	 */
+	virtual void prepareTask() { setState(TASK_RUNNING); }
+
+	/**
 	 * Do whatever the task needs to do. Must
 	 * be overridden by subclasses.
+	 *
+	 * Exception throwing is safe.
+	 *
+	 * @throw ExecutionAbortedException on task cancellation detection
 	 */
 	virtual void runTask() = 0;
 
@@ -142,12 +163,12 @@ public:
 	 *
 	 * and call the slave setMaster()
 	 */
-	void merge(MergeableTask* slave);
+	void merge(Poco::AutoPtr<MergeableTask>& slave);
 
 	/**
 	 * Check if this task is a slave task.
 	 */
-	bool isSlave();
+	bool isSlave() { return !masterTask.isNull(); }
 
 protected:
 	/**
@@ -222,11 +243,9 @@ private:
 
 	/// to be called by the master task
 	void setMaster(MergeableTask* master);
-	/// to be called by the slave task upon deletion
-	void eraseSlave(MergeableTask* slave);
 
-	std::set<MergeableTask*> slavedTasks;
-	MergeableTask* masterTask;
+	std::set< Poco::AutoPtr<MergeableTask> > slavedTasks;
+	Poco::AutoPtr<MergeableTask> masterTask;
 
 	void taskFinishedBroadcast(TaskManager* pTm);
 

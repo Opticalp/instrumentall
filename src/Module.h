@@ -94,7 +94,6 @@ public:
 		  ParameterizedEntity("module." + name),
 		  ParameterizedWithGetters(this),
 		  ParameterizedWithSetters(this),
-		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
 		  cancelling(false),
@@ -102,7 +101,9 @@ public:
 		  immediateCancelling(false),
 		  cancelRequested(false),
 		  cancelDoneEvent(false),
-		  cancellationListenerRunnable(*this, &Module::cancellationListen)
+		  cancellationListenerRunnable(*this, &Module::cancellationListen),
+		  startingTask(NULL), processing(false),
+		  outputLocked(false)
 	{
 	}
 
@@ -111,7 +112,6 @@ public:
 		  ParameterizedEntity("module." + name),
 		  ParameterizedWithGetters(this),
 		  ParameterizedWithSetters(this, applyParametersFromSettersWhenAllSet),
-		  procMode(fullBufferedProcessing),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
 		  cancelling(false),
@@ -119,7 +119,9 @@ public:
           immediateCancelling(false),
           cancelRequested(false),
 		  cancelDoneEvent(false),
-		  cancellationListenerRunnable(*this, &Module::cancellationListen)
+		  cancellationListenerRunnable(*this, &Module::cancellationListen),
+		  startingTask(NULL), processing(false),
+		  outputLocked(false)
 	{
 	}
 
@@ -178,71 +180,38 @@ public:
      * to be called by the UI or by any mean, but without new
      * input port data.
      *
+	 * @param syncAllowed if true, try to sync start the module first. 
      * @return The task created for the module to run. The
      * task can be used to check the state of the execution.
      */
-	Poco::AutoPtr<ModuleTask> runModule();
+	Poco::AutoPtr<ModuleTask> runModule(bool syncAllowed = false);
 
     /**
      * Enqueue a new task
      *
      * for this module. and pop it, if no task is running for this module.
-     * To be called by the disptacher.
+     *
+     * To be called
+     *  - either by runModule if no trigging input port is involved.
+     *  - or by a InPort::runTarget.
+     *
+	 * @param syncAllowed if true, try to sync start the module first.
+	 *
      * @return true if the module is not running, and thus,
      * the new enqueued task should be started.
+     *
+     * @throw ExecutionAbortedException in case of cancellation.
+     * The calling trigging port is not released.
      */
-    void enqueueTask(ModuleTask* task);
+    void enqueueTask(ModuleTaskPtr& task, bool syncAllowed = false);
 
     /**
      * Unregister a task
      *
-     * called by the task destructor
+     * called by the thread manager when the task finishes, via
+     * ThreadManager::unregisterModuleTask and via
      */
-    void unregisterTask(ModuleTask* task);
-
-    /**
-     * Launch the next task of the queue in the current thread
-     *
-     * and dequeue it.
-     */
-    void popTaskSync();
-
-    /**
-     * Processing modes:
-     *
-     * - direct: the input ports are locked, the output ports are locked,
-     * and the processing occurs directly from the input data into the output
-     * data
-     * - buffered in: the input data is duplicated, the input port is released,
-     * and then the processing occurs.
-     * - buffered out: the processing occurs into a buffer. Then the output
-     * port is locked and the data is copied into the outport.
-     * - full buffered: combination of buffered in and buffered out
-     * - other: any other processing way.
-     *
-     * Not all the processing modes are relevant... Mainly depending on the presence
-     * of input/output ports and of course depending on the processing itself.
-     *
-     * The main difference between those modes is not really the memory footprint
-     * (it can be, in some cases), but the time during which the ports are locked.
-     */
-    enum ProcessingMode
-	{
-    	directProcessing,
-		bufferedInProcessing = 1,
-		bufferedOutProcessing = 1 << 1,
-		fullBufferedProcessing = bufferedInProcessing | bufferedOutProcessing,
-		otherProcessing
-	};
-
-    /**
-     * Set the processing mode
-     *
-     * can be overloaded to execute some checks or restrictions.
-     * The parent method should be called, though.
-     */
-    virtual void setProcMode(ProcessingMode mode) { procMode = mode; }
-    ProcessingMode getProcMode() { return procMode; }
+    void unregisterTask(ModuleTask* pTask);
 
 	/**
 	 * Force the cancellation
@@ -312,8 +281,6 @@ protected:
             size_t index )
 	{ OutPortUser::addOutPort(this, name, description, dataType, index); }
 
-    Poco::ThreadLocal<ModuleTask*> runningTask;
-
 	/**
 	 * Set the running task thread local pointer. 
 	 *
@@ -322,6 +289,10 @@ protected:
 	 * e.g. when calling reserveOutPorts() from setParameter
 	 */
     void setRunningTask(ModuleTask* pTask) { *runningTask = pTask; }
+    /**
+     * Get the running task thread local pointer.
+     */
+    ModuleTask* getRunningTask() { return *runningTask; }
 
     /// @name forwarding methods to thread local: runningTask
     ///@{
@@ -367,42 +338,16 @@ protected:
 	virtual void reset() { }
 
 	/**
-     * Merge the enqueued tasks of the present Module
-     *
-     * given by their triggering inPort index.
-     *
-     *  - The current task can be listed in this set.
-     *  - a test should be made, so that only the inPorts
-     *  giving new data are listed (they should have been
-     *  trigged simultaneously)
-     *  - but a held port can be sent too. a simple warning
-     *  would be emitted.
-     *
-     * @inPortIndexes indexes of the inPorts which data will be used
-     */
-    void mergeTasks(std::set<size_t> inPortIndexes);
-
-    /**
-     * Launch the next task of the queue
-     *
-     * and dequeue it.
-     *
-     * Do nothing if the queue is empty.
-     *
-     * Require the taskStartingMutex to be available. Lock it.
-     *
-     * If the task start succeeded, taskStartingMutex is locked when the
-     * function returns.
-     */
-    void popTask();
-
-	/**
 	 * Method called by the task that identifies itself with pTask.
 	 *
 	 * Expire the output data, check the start condition,
 	 * and call process().
 	 *
-	 * There is no mutex locked here. Concurrence running should be OK.
+	 * prepareTaskStart was previously called by MergeableTask::run
+	 * to lock taskProcessingMutex and set Module::processing to true
+	 *
+	 * taskProcessingMutex is released in this function by a call to
+	 * releaseProcessingMutex
 	 *
 	 * Manage ports release.
 	 */
@@ -411,8 +356,8 @@ protected:
 	/**
 	 * Main logic called by run
 	 *
-	 * Depending on the processing mode, the data should be buffered or
-	 * not.
+	 * The caught input data should be locked before
+	 * being used.
 	 *
 	 * Access to input ports data should be done via readInPort and
 	 * readInPortDataAttribute. Call releaseAllInPorts when over.
@@ -429,13 +374,13 @@ protected:
 	 * startCondition. You should consider implementing your own
 	 * startCondition method for non-standard cases.
 	 *
-	 * It could be wised to use a lock in this method if there is a
-	 * chance (popTask()?) that it is called twice at the same time.
-	 * No thread-safety is given by the caller.
+	 * When the processing is done, processingTerminated should be
+	 * called to allow the next tasks to be launched (taskProcessingMutex
+	 * is released). It can gain some time if there is many output ports
+	 * to reserve and if the result of the processing is buffered.
 	 *
 	 * @see startCondition
 	 * @see setRunningState
-	 * @see getProcMode
 	 */
 	virtual void process(int startCond)
 		{ poco_warning(logger(), name() + ": nothing to be done"); }
@@ -482,6 +427,24 @@ protected:
 
 	Poco::Logger& logger() { return VerboseEntity::logger(); }
 
+	/**
+	 * Look into the task queue, if a task was trigged by the given InPort.
+	 *
+	 * if true, merge the task.
+	 */
+	bool tryCatchInPortFromQueue(InPort* triggingPort);
+
+	/**
+	 * To be called by Module::process implementation
+	 * when the processing is terminated
+	 *
+	 * to allow the next task to be ran.
+	 *
+	 * Shall be called only once in Module::process due
+	 * to the outputMutex management
+	 */
+    void processingTerminated();
+
 private:
     /// enum to be returned by checkName
     enum NameStatus
@@ -518,13 +481,38 @@ private:
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
 
-	ProcessingMode procMode;
-
 	static std::vector<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
+    /**
+     * Launch the next task of the queue in the current thread
+     *
+     * and dequeue it.
+     */
+    void popTaskSync();
+
+    /**
+     * Launch the next task of the queue
+     *
+     * and dequeue it.
+     *
+     * Do nothing if the queue is empty.
+     *
+     * Require the taskStartingMutex to be available. Lock it.
+     *
+     * If the task start succeeded, taskStartingMutex is locked when the
+     * function returns.
+     */
+    void popTask();
+
 	bool reseting; ///< flag set when the reseting begins
 	bool resetDone; ///< flag set when a reset just occurred
+
+    /**
+     * Check if a task is already starting
+     * for this module
+     */
+    bool taskIsStarting();
 
 	/**
 	 * Check if a task is already running (or at least started)
@@ -554,22 +542,49 @@ private:
 	 */
 	void waitParameters();
 
+    Poco::ThreadLocal<ModuleTask*> runningTask; ///< task that executes this module
 	/// Store the tasks assigned to this module. See registerTask(), unregisterTask()
-	std::set<ModuleTask*> allLaunchedTasks;
-	std::list<ModuleTask*> taskQueue;
+	std::set<ModuleTaskPtr> allLaunchedTasks;
+	std::list<ModuleTaskPtr> taskQueue; ///< enqueued tasks, waiting to be started. The order counts.
+	ModuleTaskPtr startingTask; ///< task that is just started. no more in taskQueue, already in allLaunchedTasks.
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
 
 	/**
-	 * lock the launching of a new task as long as another task is already starting.
+	 * lock the launching of a new task as long as another task is already processing.
 	 *
 	 * This mutex is locked by popTask or popTaskSync
-	 * and released when the input ports are released
+	 * and released by releaseProcessingMutex
 	 *
-	 * @see InPortUser::starting
+	 * @see processing
 	 */
-	Poco::FastMutex taskStartingMutex;
-	void startingUnlock() { taskStartingMutex.unlock(); }
+	Poco::FastMutex taskProcessingMutex;
+    bool processing;
+	void processingUnlock() { taskProcessingMutex.unlock(); }
+
+	/**
+     * Release Module::taskProcessingMutex via startingUnlock
+     * if starting is set.
+     */
+    void releaseProcessingMutex();
+
+	/**
+	 * Lock the taskStartingMutex
+	 *
+	 * called by ModuleTask::prepareTask
+	 *
+	 * Release the taskMngtMutex in case of sync start
+	 *
+	 * @throw ExecutionAbortedException
+	 * @throw TaskMergedException if the starting task is merged while trying to
+	 * lock taskStartingMutex
+	 */
+	void prepareTaskStart(ModuleTask* pTask);
+	void taskStartFailure() { startingTask = NULL; releaseProcessingMutex(); }
+
+	Poco::FastMutex outputMutex; ///< used to keep the queue order to the access to the outputs
+	bool outputLocked;
+	void releaseOutputMutex();
 
     friend class ModuleTask; // access to setRunningTask, releaseAll
 };

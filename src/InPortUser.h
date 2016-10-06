@@ -123,12 +123,23 @@ protected:
      * Forward tryLock for the given port
      *
      * To be called by startCondition.
-     * The inMutex is managed by the caller.
      *
      * @throw ExecutionAbortedException if the input port requested a
      * lazy cancel of the InPortUser.
      */
     bool tryInPortCatchSource(size_t portIndex);
+
+    /**
+     * @see Module::tryCatchInPortFromQueue
+	 *
+	 * to be called by tryInPortCatchSource
+     */
+    virtual bool tryCatchInPortFromQueue(InPort* triggingPort) = 0;
+
+	/**
+	 * Read lock the source data prior to its use. 
+	 */
+	void readLockInPort(size_t portIndex);
 
     /**
      * Forward readData for the given port
@@ -197,36 +208,13 @@ protected:
 	 *
 	 * Default implementation:
 	 *  - check if there is input ports. if not, return noDataStartState.
-	 *  - check if the call is issued from incoming data.
+	 *  - check if the call is issued from incoming data (check task's triggingPort).
 	 *     - if not, return noDataStartState.
 	 *     - if it does, wait for all the data to be available,
 	 *       and then return allDataStartState
 	 *
 	 */
 	virtual int startCondition();
-
-	/**
-	 * Reset the variable: starting,
-	 * in order to handle the responsibility of the
-	 * Module::taskStartingMutex release via startingUnlock
-	 */
-    void grabStartingMutex() { starting = true; }
-
-    /// @see grabStartingMutex
-	virtual void startingUnlock() = 0;
-
-    /**
-     * Release Module::taskStartingMutex via startingUnlock
-     * if starting is set.
-     */
-    void releaseStartingMutex()
-    {
-        if (starting)
-        {
-            starting = false;
-            startingUnlock();
-        }
-    }
 
     /**
      * Dispatch the cancellation to the sources
@@ -256,10 +244,14 @@ protected:
 
 private:
 	std::vector<InPort*> inPorts; ///< list of input ports
-	Poco::ThreadLocal< std::set<size_t> > caughts; ///< store which ports are locked
+	Poco::ThreadLocal< std::set<size_t> > caughts; ///< store which ports are caught
+	Poco::ThreadLocal< std::set<size_t> > lockedPorts; ///< store which ports are locked
 
-    bool starting; ///< flag set to true is the ports release has to trig startingUnlock
-
+    /**
+     * Check if the given port was locked
+     */
+    bool isInPortLocked(size_t index)
+    	{ return (lockedPorts->find(index) != lockedPorts->end()); }
 };
 
 #include "InPortUser.ipp"

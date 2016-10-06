@@ -65,7 +65,9 @@ void DemoModuleTwoInputs::process(int startCond)
     switch (startCond)
     {
     case allDataStartState:
+		readLockInPort(inPortA);
     	readInPortDataAttribute(inPortA, attrs + inPortA);
+		readLockInPort(inPortB);
     	readInPortDataAttribute(inPortB, attrs + inPortB);
     	Poco::Thread::sleep(1000); // simulate a job (ms)
     	releaseAllInPorts(); // release when the job is done

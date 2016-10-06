@@ -74,6 +74,8 @@ void DemoModuleSeqAccu::process(int startCond)
 
 	DataAttributeIn attr;
     Poco::Int32* pData;
+
+	readLockInPort(inPortA);
     readInPortData<Poco::Int32>(inPortA, pData);
     readInPortDataAttribute(inPortA, &attr);
 

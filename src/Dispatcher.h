@@ -179,8 +179,12 @@ public:
      /**
       * Function to be called when new data is ready at a data source
       *
-      *  - readLock the data for every data target
+      *  - register every data target at the source
       *  - notify the Modules corresponding to the target Ports (push)
+      *
+      * @throw ExecutionAbortedException in case of source cancellation
+      *
+      * No other exception should be thrown.
       */
      void setOutputDataReady(DataSource* source);
 

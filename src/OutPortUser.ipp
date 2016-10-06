@@ -30,27 +30,6 @@
 
 #include "OutPort.h"
 
-//template<typename T>
-//inline bool OutPortUser::tryOutPortData(size_t portIndex, T*& pData)
-//{
-//    OutPort* outPort = outPorts.at(portIndex);
-//
-//	if (caughts->empty())
-//		outMutex.lock();
-//
-//	if (isOutPortCaught(portIndex))
-//        poco_bugcheck_msg("try to re-lock an output port that was already locked? ");
-//
-//    bool retValue = outPort->tryData<T>(pData);
-//
-//    if (retValue)
-//    	caughts->insert(portIndex);
-//    else
-//    	outMutex.unlock();
-//
-//    return retValue;
-//}
-
 template<typename T>
 inline void OutPortUser::getDataToWrite(size_t portIndex, T*& pData)
 {
