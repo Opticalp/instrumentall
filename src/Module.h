@@ -206,12 +206,12 @@ public:
     void enqueueTask(ModuleTaskPtr& task, bool syncAllowed = false);
 
     /**
-     * Unregister a task
+     * Try to unregister a task
      *
-     * called by the thread manager when the task finishes, via
-     * ThreadManager::unregisterModuleTask and via
+     * Async called by the thread manager when the task finishes, 
+	 * via a TaskUnregisterer, via the taskFinishedNotification
      */
-    void unregisterTask(ModuleTask* pTask);
+	bool tryUnregisterTask(ModuleTask* pTask);
 
 	/**
 	 * Force the cancellation
@@ -549,6 +549,14 @@ private:
 	ModuleTaskPtr startingTask; ///< task that is just started. no more in taskQueue, already in allLaunchedTasks.
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
 	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
+
+    ///**
+    // * Unregister a task
+    // *
+    // * called by the thread manager when the task finishes, via
+    // * ThreadManager::unregisterModuleTask and via
+    // */
+    //void unregisterTask(ModuleTask* pTask);
 
 	/**
 	 * lock the launching of a new task as long as another task is already processing.

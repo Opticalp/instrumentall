@@ -552,10 +552,22 @@ void Module::popTaskSync()
 	}
 }
 
-void Module::unregisterTask(ModuleTask* pTask)
+//void Module::unregisterTask(ModuleTask* pTask)
+//{
+//	Poco::Mutex::ScopedLock lock(taskMngtMutex);
+//	allLaunchedTasks.erase(ModuleTaskPtr(pTask, true));
+//}
+
+bool Module::tryUnregisterTask(ModuleTask* pTask)
 {
-	Poco::Mutex::ScopedLock lock(taskMngtMutex);
-	allLaunchedTasks.erase(ModuleTaskPtr(pTask, true));
+	if (taskMngtMutex.tryLock())
+	{
+		allLaunchedTasks.erase(ModuleTaskPtr(pTask, true));
+		taskMngtMutex.unlock();
+		return true;
+	}
+	else 
+		return false;
 }
 
 bool Module::tryCatchInPortFromQueue(InPort* trigPort)

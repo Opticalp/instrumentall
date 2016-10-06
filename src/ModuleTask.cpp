@@ -37,7 +37,8 @@ ModuleTask::ModuleTask(Module* module, InPort* inPort):
 	coreModule(module),
 	runState(NotAvailableRunningState),
 	mTriggingPort(inPort),
-	doneEvent(false) // manual reset
+	doneEvent(false), // manual reset
+	unregisterRunner(this)
 {
 	// commented: registered when queued by the dispatcher
 	// coreModule->registerTask(this);
@@ -49,7 +50,8 @@ ModuleTask::ModuleTask():
 	coreModule(NULL),
 	runState(NotAvailableRunningState),
 	mTriggingPort(NULL),
-	doneEvent(false) // manual reset
+	doneEvent(false), // manual reset
+	unregisterRunner(this)
 {
 }
 
@@ -60,14 +62,6 @@ ModuleTask::~ModuleTask()
 	// there should be nothing to do in the managers since AutoPtr should be used
 	// - in the thread manager
 	// - in the task manager
-}
-
-
-void ModuleTask::taskFinished()
-{
-    poco_information(coreModule->logger(), name() + " finished, "
-            "removing it from Module::allLaunchedTasks");
-    coreModule->unregisterTask(this);
 }
 
 ModuleTask::RunningStates ModuleTask::getRunningState()
@@ -155,3 +149,15 @@ void ModuleTask::moduleCancel()
 	Poco::Util::Application::instance()
 			.getSubsystem<Dispatcher>().cancel(coreModule);
 }
+
+void ModuleTask::taskFinished()
+{
+    poco_information(coreModule->logger(), name() + " finished, "
+            "removing it (async) from Module::allLaunchedTasks");
+
+	if (unregisterThread.isRunning())
+		return;
+
+	unregisterThread.start(unregisterRunner);
+}
+
