@@ -201,10 +201,10 @@ void Module::prepareTaskStart(ModuleTask* pTask)
                     "Start skipped. ");
         }
     }
+    processing = true;
 
     taskMngtMutex.lock();
     startingTask = NULL;
-    processing = true;
     taskMngtMutex.unlock();
 }
 
@@ -488,8 +488,13 @@ void Module::popTask()
 	catch (...)
 	{
         poco_error(logger(), "can not start (async) " + nextTask->name());
+        allLaunchedTasks.erase(nextTask);
+        startingTask = NULL;
         taskMngtMutex.unlock();
-	    throw;
+
+        // * do not re-throw. popTask is not due to launch a task.
+        // * but try to launch the next task in queue, if any:
+        popTask();
 	}
 
 	taskMngtMutex.unlock();
@@ -547,16 +552,15 @@ void Module::popTaskSync()
 	{
 		poco_error(logger(), "can not sync start " + nextTask->name());
 		startSyncPending = false;
-		taskMngtMutex.unlock();
-		throw;
+        allLaunchedTasks.erase(nextTask);
+        startingTask = NULL;
+        taskMngtMutex.unlock();
+
+        // * do not re-throw. popTaskSync is not due to launch a task.
+        // * but try to launch the next task in queue, if any:
+        popTaskSync();
 	}
 }
-
-//void Module::unregisterTask(ModuleTask* pTask)
-//{
-//	Poco::Mutex::ScopedLock lock(taskMngtMutex);
-//	allLaunchedTasks.erase(ModuleTaskPtr(pTask, true));
-//}
 
 bool Module::tryUnregisterTask(ModuleTask* pTask)
 {
@@ -946,7 +950,17 @@ void Module::processingTerminated()
 {
     outputMutex.lock();
     outputLocked = true;
-    popTask();
+
+    try
+    {
+        popTask();
+    }
+    catch (...) // cancelled, merged...
+    {
+        releaseProcessingMutex();
+        throw;
+    }
+
     releaseProcessingMutex();
 }
 
