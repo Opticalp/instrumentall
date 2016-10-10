@@ -440,6 +440,6 @@ void Dispatcher::cancel(Module* module)
 
         Poco::Util::Application::instance()
                 .getSubsystem<ThreadManager>()
-                .startModuleCancellationListener(*listener);
+                .startRunnable(*listener);
 	}
 }

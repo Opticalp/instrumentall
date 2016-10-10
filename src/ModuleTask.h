@@ -30,9 +30,11 @@
 #define SRC_MODULETASK_H_
 
 #include "MergeableTask.h"
+#include "TaskUnregisterer.h"
 
 #include "Poco/Event.h"
 #include "Poco/AutoPtr.h"
+#include "Poco/Thread.h"
 
 class Module;
 class InPort;
@@ -156,9 +158,11 @@ private:
 
 	RunningStates runState;
 
-	Poco::Event doneEvent; /// event signaled when the task is finished.
+	Poco::Event doneEvent; ///< event signaled when the task is finished.
 
-	friend class Module; // access to sleep, setProgress, ...
+	TaskUnregisterer unregisterRunner; ///< used to run the task unregistering (at the coreModule) in an async way
+
+	friend class Module; ///< access to sleep, setProgress, ...
 };
 
 typedef Poco::AutoPtr<ModuleTask>  ModuleTaskPtr;

@@ -336,7 +336,7 @@ void ThreadManager::cancelAll()
 	cancellingAll = false;
 }
 
-void ThreadManager::startModuleCancellationListener(Poco::Runnable& runnable)
+void ThreadManager::startRunnable(Poco::Runnable& runnable)
 {
     threadPool.start(runnable);
 }

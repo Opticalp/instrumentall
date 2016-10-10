@@ -158,9 +158,11 @@ public:
     void unregisterModuleTask(ModuleTaskPtr& pTask);
 
     /**
-     * @see Dispatcher::cancel
+	 * Launch a thread for an async task not depending on a specific module
+	 *
+	 * Used by Dispatcher::cancel and by ModuleTask::taskFinished
      */
-    void startModuleCancellationListener(Poco::Runnable& runnable);
+    void startRunnable(Poco::Runnable& runnable);
 
 private:
     TaskManager taskManager;

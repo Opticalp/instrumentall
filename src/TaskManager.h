@@ -71,10 +71,20 @@ public:
 
 	~TaskManager();
 
-	/// Start the given task in a thread obtained from the thread pool
+	/**
+	 * Start the given task in a thread obtained from the thread pool
+	 *
+	 * @throw ExecutionAbortedException on task cancellation
+	 * @throw TaskMergedException if the task was enslaved
+	 */
 	void start(TaskPtr pAutoTask);
 
-	/// Start the given task in the current thread.
+	/**
+	 * Start the given task in the current thread.
+	 *
+     * @throw ExecutionAbortedException on task cancellation
+     * @throw TaskMergedException if the task was enslaved
+	 */
 	void startSync(TaskPtr pAutoTask);
 
 	/// Request cancellation of all tasks.

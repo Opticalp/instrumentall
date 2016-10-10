@@ -206,12 +206,12 @@ public:
     void enqueueTask(ModuleTaskPtr& task, bool syncAllowed = false);
 
     /**
-     * Unregister a task
+     * Try to unregister a task
      *
-     * called by the thread manager when the task finishes, via
-     * ThreadManager::unregisterModuleTask and via
+     * Async called by the thread manager when the task finishes, 
+	 * via a TaskUnregisterer, via the taskFinishedNotification
      */
-    void unregisterTask(ModuleTask* pTask);
+	bool tryUnregisterTask(ModuleTask* pTask);
 
 	/**
 	 * Force the cancellation
