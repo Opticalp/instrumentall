@@ -932,7 +932,11 @@ void Module::moduleReset()
 	try
 	{
 	    startingTask = NULL;
-	    processing = false;
+//	    processing = false;
+		if (processing)
+			poco_bugcheck_msg((name() 
+			+ ": a task is processing... "
+			"It should not happen since cancel is done. ").c_str());
 		reset();
 	}
 	catch (...)
