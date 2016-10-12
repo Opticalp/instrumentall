@@ -289,7 +289,15 @@ private:
     bool tryRunTarget();
 
     void cancelFromSource(DataSource* source);
-//    void waitCancelledFromSource(DataSource* source);
+
+    /**
+     * Forward waitCancelled if not already waiting (in the
+     * current thread)
+     *
+     * Call targetWaitCancelled implementation
+     */
+    void waitCancelledFromSource(DataSource* source);
+
     void resetFromSource(DataSource* source);
 
     friend class Dispatcher;

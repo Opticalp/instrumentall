@@ -291,7 +291,13 @@ private:
      */
     void cancelFromTarget(DataTarget* target);
 
-//    void waitCancelledFromTarget(DataTarget* target);
+    /**
+     * Forward the waitCancelled if not already waiting (in the
+     * current thread)
+     *
+     * Call sourceWaitCancelled implementation
+     */
+    void waitCancelledFromTarget(DataTarget* target);
 
     /**
      * Reseting coming from a target

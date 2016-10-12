@@ -141,11 +141,11 @@ void DataTarget::cancelWithSource()
 void DataTarget::waitSourceCancelled()
 {
 	if (!targetCancelling)
-		poco_bugcheck_msg((name() + ": waiting for cancellation, "
+		poco_bugcheck_msg((name() + ": waiting for source cancellation, "
 				"although not cancelling").c_str());
 
 	if (getDataSource())
-		getDataSource()->sourceWaitCancelled();
+		getDataSource()->waitCancelledFromTarget(this);
 }
 
 void DataTarget::resetWithSource()
@@ -189,6 +189,15 @@ void DataTarget::cancelFromSource(DataSource* source)
 	// self
 	targetCancelling = true;
 	targetCancel();
+}
+
+void DataTarget::waitCancelledFromSource(DataSource* source)
+{
+    if (waiting->trySet())
+    {
+        targetWaitCancelled();
+        waiting->reset();
+    }
 }
 
 void DataTarget::resetFromSource(DataSource* source)
