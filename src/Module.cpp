@@ -682,7 +682,7 @@ void Module::cancelled()
 	immediateCancelling = false;
 }
 
-void Module::waitCancelled(bool topCall)
+void Module::waitCancelled()
 {
     if (reseting || resetDone)
     {
@@ -690,21 +690,24 @@ void Module::waitCancelled(bool topCall)
         return;
     }
 
-    if (cancelling)
-        cancelDoneEvent.wait();
-
-    if (topCall || (waitingCancelled == 0))
+    if (waiting->trySet())
     {
-        waitingCancelled++;
         poco_information(logger(), name() + ".waitCancelled: wait for sources... ");
         waitCancelSources();
+
+        poco_information(logger(), name() + ".waitCancelled: wait for self... ");
+        if (cancelling)
+            cancelDoneEvent.wait();
+
         poco_information(logger(), name() + ".waitCancelled: wait for targets... ");
         waitCancelTargets();
         poco_information(logger(), name() + ".waitCancelled: done. ");
-        waitingCancelled--;
+
+        waiting->reset();
     }
     else
         poco_information(logger(), name() + ".waitCancelled skipped");
+
 }
 
 bool Module::moduleReady()

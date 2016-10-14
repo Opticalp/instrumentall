@@ -36,6 +36,7 @@
 #include "InPortUser.h"
 #include "OutPortUser.h"
 #include "ModuleTask.h"
+#include "InitializedFlag.h"
 
 #include "Poco/Thread.h"
 #include "Poco/RunnableAdapter.h"
@@ -233,13 +234,7 @@ public:
 	/**
 	 * Wait for the cancellation to be effective
 	 */
-	void waitCancelled(bool topCall);
-
-	/**
-	 * Convenience function to facilitate ParameterizedEntity::waitCancelled
-	 * inheritance
-	 */
-	void waitCancelled() { waitCancelled(false); }
+	void waitCancelled();
 
 	/**
 	 * Reset the targets, then reset itself calling reset(),
@@ -531,6 +526,14 @@ private:
 	bool cancelRequested; ///< flag set before calling Module::cancel, and reset on return
 
 	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
+
+    /**
+     * flag used to know is the thread is already waiting for the end
+     * of the cancellation
+     *
+     * @see waitCancelled
+     */
+    Poco::ThreadLocal<InitializedFlag> waiting;
 
     Poco::RunnableAdapter<Module> cancellationListenerRunnable;
 	Poco::Thread cancellationListenerThread;
