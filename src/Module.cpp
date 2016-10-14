@@ -219,6 +219,7 @@ void Module::run(ModuleTask* pTask)
                     ": can not run a new task, "
                     "the module is cancelling");
 
+		cancelEffective = false;
         resetDone = false;
 
         setRunningState(ModuleTask::applyingParameters);
@@ -690,9 +691,9 @@ void Module::waitCancelled()
         return;
     }
 
-    if (waiting->trySet())
+    if (!cancelEffective && waiting->trySet())
     {
-        poco_information(logger(), name() + ".waitCancelled: wait for sources... ");
+		poco_information(logger(), Poco::Thread::current()->getName() + "#" + name() + ".waitCancelled: wait for sources... ");
         waitCancelSources();
 
         poco_information(logger(), name() + ".waitCancelled: wait for self... ");
@@ -703,6 +704,7 @@ void Module::waitCancelled()
         waitCancelTargets();
         poco_information(logger(), name() + ".waitCancelled: done. ");
 
+		cancelEffective = true;
         waiting->reset();
     }
     else
@@ -735,7 +737,7 @@ bool Module::immediateCancel()
     cancelRequested = true; // to be set before immediateCancelling. See cancellationListen
 	immediateCancelling = true;
 
-	if (cancelDoneEvent.tryWait(0))
+	if (cancelEffective)
 	{
 		poco_information(logger(), name() + " already cancelled... return");
 		cancelRequested = previousCancelReq;
@@ -748,6 +750,7 @@ bool Module::immediateCancel()
 				"Trig immediate cancelling then. ");
 	else
 	{
+		cancelEffective = false;
 	    resetDone = false;
         cancelling = true;
 	}
@@ -800,6 +803,7 @@ bool Module::immediateCancel()
 
 	taskMngtMutex.unlock();
 
+	cancelEffective = false;
 	resetDone = false;
 
 	try
@@ -838,12 +842,14 @@ void Module::lazyCancel()
 	cancelling = true;
 
 	// check if the module was recently cancelled
-	if (cancelDoneEvent.tryWait(0))
+	if (cancelEffective) 
 	{
 		poco_information(logger(), name() + ".lazyCancel: already cancelled... return");
 		cancelling = false;
 		return;
 	}
+
+	cancelEffective = false;
 
 	cancelSources();
     poco_information(logger(), name() + ".lazyCancel: "
@@ -915,7 +921,7 @@ void Module::moduleReset()
 		return;
 	}
 
-	if (!cancelDoneEvent.tryWait(0))
+	if (!cancelEffective)
 	{
 		poco_warning(logger(), name() + ".moduleReset: "
 				"cancellation not over... "
@@ -925,6 +931,8 @@ void Module::moduleReset()
 		reseting = false;
 		return;
 	}
+
+	cancelEffective = false;
 
 	if (taskQueue.size())
 		poco_bugcheck_msg(

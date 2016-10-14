@@ -102,6 +102,7 @@ public:
 		  immediateCancelling(false),
 		  cancelRequested(false),
 		  cancelDoneEvent(false),
+		  cancelEffective(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
 		  startingTask(NULL), processing(false),
 		  outputLocked(false)
@@ -120,6 +121,7 @@ public:
           immediateCancelling(false),
           cancelRequested(false),
 		  cancelDoneEvent(false),
+		  cancelEffective(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
 		  startingTask(NULL), processing(false),
 		  outputLocked(false)
@@ -526,6 +528,14 @@ private:
 	bool cancelRequested; ///< flag set before calling Module::cancel, and reset on return
 
 	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
+
+	/**
+	 * set if just cancelled and neighbours are cancelled to. 
+	 *
+	 * Used by waitCancelled
+	 * Reset by resetModule and runModule
+	 */
+	bool cancelEffective; 
 
     /**
      * flag used to know is the thread is already waiting for the end
