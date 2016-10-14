@@ -60,7 +60,7 @@ public:
     virtual ~DataLogger() { }
 
     /**
-     * Lock the main mutex and launch log()
+     * Lock the input and launch log()
      *
      * This method release the data after the logging.
      */
