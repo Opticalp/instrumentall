@@ -107,3 +107,15 @@ void ParameterGetter::runTarget()
 
 	notifyReady(attr);
 }
+
+void ParameterGetter::targetWaitCancelled()
+{
+    getParent()->waitCancelled();
+    waitTargetsCancelled();
+}
+
+void ParameterGetter::sourceWaitCancelled()
+{
+    waitSourceCancelled();
+    getParent()->waitCancelled();
+}
