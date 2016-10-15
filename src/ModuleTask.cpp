@@ -134,6 +134,27 @@ void ModuleTask::leaveTask()
 
 void ModuleTask::cancel()
 {
+    switch(getState())
+    {
+    case TASK_IDLE:
+    case TASK_STARTING:
+    case TASK_RUNNING:
+    case TASK_MERGED:
+        break;
+    case TASK_FALSE_START:
+    case TASK_CANCELLING:
+    case TASK_FINISHED:
+        poco_warning(coreModule->logger(), name()
+                + " cancel not relevant: "
+                "task state is either FALSE_START, or CANCELLING, or FINISHED. ");
+        return;
+    default:
+        poco_error(coreModule->logger(), name()
+                + " cancel not possible. "
+                "Task state is unknown. ");
+        return;
+    }
+
     ModuleTask* pTask = coreModule->getRunningTask();
     coreModule->setRunningTask(this);
 	moduleCancel();

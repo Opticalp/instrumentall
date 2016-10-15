@@ -786,19 +786,7 @@ bool Module::immediateCancel()
 	    if (*it == runningTask.get())
 	        continue;
 
-		switch ((*it)->getState())
-		{
-		case MergeableTask::TASK_IDLE:
-		case MergeableTask::TASK_STARTING:
-		case MergeableTask::TASK_RUNNING:
-		    ModuleTaskPtr(*it)->cancel();
-			break;
-		case MergeableTask::TASK_FALSE_START:
-		case MergeableTask::TASK_FINISHED:
-		case MergeableTask::TASK_CANCELLING:
-		default:
-			break;
-		}
+        ModuleTaskPtr(*it)->cancel();
 	}
 
 	taskMngtMutex.unlock();
