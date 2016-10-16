@@ -147,10 +147,9 @@ PyObject* pyDataLoggerSource(DataLoggerMembers* self)
                 e.displayText().c_str());
         return NULL;
     }
-
-    if (tmpPort == NULL)
+    catch (Poco::NullPointerException& )
     {
-    	Py_RETURN_NONE;
+        Py_RETURN_NONE;
     }
 
     Poco::SharedPtr<OutPort*> sharedPort = Poco::Util::Application::instance()

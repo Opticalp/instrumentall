@@ -147,9 +147,9 @@ PyObject* pyDataTargetGetDataSource(DataTargetMembers* self)
     {
     	tmpSource = self->target->getDataSource();
     }
-    catch (Poco::NullPointerException&)
+    catch (Poco::NullPointerException& )
     {
-    	tmpPort = NULL;
+        Py_RETURN_NONE;
     }
 
 	tmpPort = dynamic_cast<OutPort*>(tmpSource);

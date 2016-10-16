@@ -134,8 +134,14 @@ void DataTarget::cancelWithSource()
 	// self
 	targetCancelling = true;
 
-	if (getDataSource())
-		getDataSource()->cancelFromTarget(this);
+	try
+	{
+	    getDataSource()->cancelFromTarget(this);
+	}
+	catch (Poco::NullPointerException&)
+	{
+	    return;
+	}
 }
 
 void DataTarget::waitSourceCancelled()
@@ -144,8 +150,14 @@ void DataTarget::waitSourceCancelled()
 		poco_bugcheck_msg((name() + ": waiting for source cancellation, "
 				"although not cancelling").c_str());
 
-	if (getDataSource())
-		getDataSource()->waitCancelledFromTarget(this);
+    try
+    {
+        getDataSource()->waitCancelledFromTarget(this);
+    }
+    catch (Poco::NullPointerException&)
+    {
+        return;
+    }
 }
 
 void DataTarget::resetWithSource()
@@ -156,8 +168,14 @@ void DataTarget::resetWithSource()
 	// self
 	targetCancelling = false;
 
-	if (getDataSource())
+	try
+	{
 		getDataSource()->resetFromTarget(this);
+    }
+    catch (Poco::NullPointerException&)
+    {
+        return;
+    }
 }
 
 bool DataTarget::tryRunTarget()
