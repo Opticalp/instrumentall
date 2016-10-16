@@ -101,7 +101,7 @@ public:
 		  waitingCancelled(0),
 		  immediateCancelling(false),
 		  cancelRequested(false),
-		  cancelDoneEvent(false),
+		  cancelDone(false),
 		  cancelEffective(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
 		  startingTask(NULL), processing(false),
@@ -120,7 +120,7 @@ public:
           waitingCancelled(0),
           immediateCancelling(false),
           cancelRequested(false),
-		  cancelDoneEvent(false),
+		  cancelDone(false),
 		  cancelEffective(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
 		  startingTask(NULL), processing(false),
@@ -540,8 +540,7 @@ private:
 	bool lazyCancelling; ///< flag set by lazyCancel and reset by cancelled
 	int waitingCancelled;
 	bool cancelRequested; ///< flag set before calling Module::cancel, and reset on return
-
-	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
+	bool cancelDone; ///< set when a cancellation just occurred via cancelled. Reset in moduleReset
 
 	/**
 	 * set if just cancelled and neighbours are cancelled to. 

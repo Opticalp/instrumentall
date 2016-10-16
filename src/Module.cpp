@@ -274,7 +274,7 @@ bool Module::sleep(long milliseconds)
 	else
 		Poco::Thread::sleep(milliseconds);
 
-	if (immediateCancelling || cancelDoneEvent.tryWait(0))
+	if (immediateCancelling || cancelDone)
 		return true;
 	else
 		return ret;
@@ -289,7 +289,7 @@ bool Module::yield()
 	else
 		Poco::Thread::yield();
 
-	if (immediateCancelling || cancelDoneEvent.tryWait(0))
+	if (immediateCancelling || cancelDone)
 		return true;
 	else
 		return ret;
@@ -305,7 +305,7 @@ void Module::setProgress(float progress)
 
 bool Module::isCancelled()
 {
-	if (immediateCancelling || cancelDoneEvent.tryWait(0))
+	if (immediateCancelling || cancelDone)
 		return true;
 
     if ((*runningTask) == NULL)
@@ -672,7 +672,7 @@ void Module::waitParameters()
 
 bool Module::moduleReady()
 {
-    return !(immediateCancelling || lazyCancelling || cancelDoneEvent.tryWait(0) || reseting);
+    return !(immediateCancelling || lazyCancelling || cancelDone || reseting);
 }
 
 void Module::lazyCancel()
@@ -701,7 +701,7 @@ void Module::lazyCancel()
 
     lazyCancelling = true;
 
-    if (cancelDoneEvent.tryWait(0))
+    if (cancelDone)
     {
         poco_information(logger(), name() + " already cancelled (self)... return");
         lazyCancelling = false;
@@ -720,7 +720,8 @@ void Module::lazyCancel()
     cancelEffective = false;
     resetDone = false;
 
-	cancelSources();
+    cancelSources();
+
     poco_information(logger(), name() + ".lazyCancel: "
             "cancellation request dispatched to the sources");
 
@@ -769,7 +770,7 @@ bool Module::immediateCancel()
     immediateCancelling = true;
     cancelRequested = true;
 
-    if (cancelDoneEvent.tryWait(0))
+    if (cancelDone)
     {
         poco_information(logger(), name() + " already cancelled (self)... return");
         immediateCancelling = false;
@@ -919,7 +920,7 @@ void Module::cancelled()
                  "although tasks remain enqueued").c_str() );
 
     cancelMutex.lock();
-    cancelDoneEvent.set();
+    cancelDone = true;
     lazyCancelling = false;
     immediateCancelling = false;
     cancelMutex.unlock();
@@ -939,8 +940,15 @@ void Module::waitCancelled()
         waitCancelSources();
 
         poco_information(logger(), name() + ".waitCancelled: wait for self... ");
-        if (lazyCancelling || immediateCancelling)
-            cancelDoneEvent.wait();
+
+        cancelMutex.lock();
+        while (lazyCancelling || immediateCancelling)
+        {
+            cancelMutex.unlock();
+            Poco::Thread::yield();
+            cancelMutex.lock();
+        }
+        cancelMutex.unlock();
 
         poco_information(logger(), name() + ".waitCancelled: wait for targets... ");
         waitCancelTargets();
@@ -965,6 +973,7 @@ void Module::moduleReset()
 	}
 
 	reseting = true;
+    cancelDone = false;
 
 	if (resetDone)
 	{
@@ -1008,7 +1017,6 @@ void Module::moduleReset()
 	}
 	resetSources();
 
-    cancelDoneEvent.reset();
 	resetDone = true;
 	reseting = false;
 }
