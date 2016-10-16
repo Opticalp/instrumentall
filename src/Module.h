@@ -97,7 +97,7 @@ public:
 		  ParameterizedWithSetters(this),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
-		  cancelling(false),
+		  lazyCancelling(false),
 		  waitingCancelled(0),
 		  immediateCancelling(false),
 		  cancelRequested(false),
@@ -116,7 +116,7 @@ public:
 		  ParameterizedWithSetters(this, applyParametersFromSettersWhenAllSet),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
-		  cancelling(false),
+		  lazyCancelling(false),
           waitingCancelled(0),
           immediateCancelling(false),
           cancelRequested(false),
@@ -219,9 +219,15 @@ public:
 	/**
 	 * Force the cancellation
 	 *
-	 * Call Module::cancel
+	 *  - Cancel sources,
+	 *  - cancel targets,
+	 *  - purge the task queue,
+	 *  - request the active tasks to stop
+	 *  - call Module::cancel
+	 *  - launch a listener to wait for the cancellation to be effective (on self)
 	 *
-	 * @return true if a cancellation is trigged
+	 * @return true if a cancellation is trigged.
+	 * false if a cancellation process is already occuring.
 	 */
 	bool immediateCancel();
 
@@ -230,6 +236,8 @@ public:
 	 *
 	 * i.e. if running: let it run, let it send out the newly generated data, then,
 	 * cancel... but avoid the launch of a new run.
+	 *
+	 * @warning Module::cancel is not called here
 	 */
 	void lazyCancel();
 
@@ -522,8 +530,14 @@ private:
      */
     void cancelled();
 
+    /**
+     * Mutex used to lock immediateCancel, lazyCancel and cancelled
+     *
+     * to avoid async modification of immediateCancelling and cancelling.
+     */
+    Poco::Mutex cancelMutex;
 	bool immediateCancelling; ///< flag set by immediateCancel and reset by cancelled
-	bool cancelling; ///< flag set by immediateCancel or lazyCancel and reset by cancelled
+	bool lazyCancelling; ///< flag set by lazyCancel and reset by cancelled
 	int waitingCancelled;
 	bool cancelRequested; ///< flag set before calling Module::cancel, and reset on return
 
