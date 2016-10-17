@@ -192,6 +192,15 @@ void Module::prepareTaskStart(ModuleTask* pTask)
             throw ExecutionAbortedException(pTask->name() + "::prepareTask",
                     "task cancellation during taskStartingMutex lock wait");
 
+        if (startingTask != pTask)
+        {
+        	poco_fatal(logger(), pTask->name() + " <<<  << < <<  < << < < < << < < <<< < < < < < < < <  < < < < < < < <  <<< < < < < <  <<");
+        	if (!startingTask.isNull())
+        	    poco_fatal(logger(),startingTask->name() + " names me");
+        	Poco::Thread::sleep(1000);
+        }
+
+
         if (pTask->isSlave())
         {
             Poco::Mutex::ScopedLock lock(taskMngtMutex);
@@ -232,7 +241,18 @@ void Module::run(ModuleTask* pTask)
     catch (...)
     {
         parametersTreated();
-        safeReleaseAllInPorts(triggingPort());
+        try
+        {
+        	safeReleaseAllInPorts(triggingPort());
+        }
+        catch (Poco::Exception& e)
+        {
+        	poco_fatal(logger(),name()
+        			+ ".run: safeReleaseAllInPorts: "
+					+ e.displayText()
+					+ " === = ==  = = = =  == = = == === = = = ===");
+        	throw;
+        }
         releaseProcessingMutex();
         throw;
     }
@@ -252,10 +272,20 @@ void Module::run(ModuleTask* pTask)
 	}
 	catch (...)
 	{
-		releaseAllInPorts();
-		releaseAllOutPorts();
-        releaseProcessingMutex();
-        releaseOutputMutex();
+		try
+		{
+			releaseAllInPorts();
+			releaseAllOutPorts();
+			releaseProcessingMutex();
+			releaseOutputMutex();
+		}
+		catch (std::exception& e)
+		{
+			poco_fatal(logger(), name()
+				+ ".run error: " + std::string(e.what())
+				+ " == = = = = =  = = = = == ==  = = = = == =  == = =");
+			throw;
+		}
 		throw;
 	}
 
@@ -1003,13 +1033,24 @@ void Module::moduleReset()
 	resetTargets();
 	try
 	{
-	    startingTask = NULL;
+//		startingTask = NULL;
+	    if (startingTask)
+	    {
+		    poco_error(logger(), name()
+            + ": a task is starting... "
+            "It should not happen since cancel is done. "
+			"== = = == = == == = == = = = = == == = = = == = ");
+			poco_bugcheck_msg((name()
+			+ ": a task is starting... "
+			"It should not happen since cancel is done. ").c_str());
+	    }
 //	    processing = false;
 		if (processing)
 		{
 		    poco_error(logger(), name()
             + ": a task is processing... "
-            "It should not happen since cancel is done. ");
+            "It should not happen since cancel is done. "
+			"== = = == = == == = == = = = = == == = = = == = ");
 			poco_bugcheck_msg((name() 
 			+ ": a task is processing... "
 			"It should not happen since cancel is done. ").c_str());
