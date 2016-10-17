@@ -1006,9 +1006,14 @@ void Module::moduleReset()
 	    startingTask = NULL;
 //	    processing = false;
 		if (processing)
+		{
+		    poco_error(logger(), name()
+            + ": a task is processing... "
+            "It should not happen since cancel is done. ");
 			poco_bugcheck_msg((name() 
 			+ ": a task is processing... "
 			"It should not happen since cancel is done. ").c_str());
+		}
 		reset();
 	}
 	catch (...)
