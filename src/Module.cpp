@@ -209,7 +209,8 @@ void Module::prepareTaskStart(ModuleTask* pTask)
         if (pTask->isSlave())
         {
             Poco::Mutex::ScopedLock lock(taskMngtMutex);
-            startingTask = NULL;
+            if (startingTask == pTask) // see call to taskIsRunning in popTaskSync. can have take precedence.
+                startingTask = NULL;
 
             throw TaskMergedException("Task merged. "
                     "Start skipped. ");
