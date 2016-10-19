@@ -526,6 +526,12 @@ private:
 	bool taskIsRunning();
 
     /**
+     * Check if a task is already running or just pending
+     * for this module
+     */
+    bool taskIsPending();
+
+    /**
      * Notify (self) that the cancellation is effective.
      */
     void cancelled();

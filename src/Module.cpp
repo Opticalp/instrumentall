@@ -480,6 +480,38 @@ bool Module::taskIsRunning()
 	return false;
 }
 
+bool Module::taskIsPending()
+{
+    Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
+
+    if (taskQueue.size())
+        return true;
+
+    for (std::set<ModuleTaskPtr>::iterator it = allLaunchedTasks.begin(),
+            ite = allLaunchedTasks.end(); it != ite; it++)
+    {
+        switch ((*it)->getState())
+        {
+        case MergeableTask::TASK_STARTING:
+        case MergeableTask::TASK_RUNNING:
+            //poco_information(logger(), task->name()
+            //      + ": " + (*it)->name()
+            //      + " is already running for " + name());
+            return true;
+        case MergeableTask::TASK_FALSE_START:
+        case MergeableTask::TASK_IDLE: // probably self
+        case MergeableTask::TASK_CANCELLING:
+        case MergeableTask::TASK_FINISHED:
+        case MergeableTask::TASK_MERGED:
+            break;
+        default:
+            poco_bugcheck_msg("unknown task state");
+        }
+    }
+
+    return false;
+}
+
 void Module::popTask()
 {
 	// n.b.: the taskMngtMutex is locked during immediateCancel.
@@ -913,7 +945,7 @@ void Module::cancellationListen()
             "wait for all tasks to terminate");
 
     int counter = 0;
-    while (taskIsRunning())
+    while (taskIsPending())
     {
         Poco::Thread::yield();
         if (counter++ % 50 == 0)
@@ -1042,7 +1074,7 @@ void Module::moduleReset()
 	    if (startingTask)
 	    {
 		    poco_error(logger(), name()
-            + ": a task is starting... "
+            + ": a task (" + startingTask->name() + ") is starting... "
             "It should not happen since cancel is done. "
 			"== = = == = == == = == = = = = == == = = = == = ");
 			poco_bugcheck_msg((name()
