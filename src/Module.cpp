@@ -189,8 +189,13 @@ void Module::prepareTaskStart(ModuleTask* pTask)
     while (!taskProcessingMutex.tryLock())
     {
         if (yield()) // startingTask reset by moduleReset
+        {
+            Poco::Mutex::ScopedLock lock(taskMngtMutex);
+            startingTask = NULL;
+
             throw ExecutionAbortedException(pTask->name() + "::prepareTask",
                     "task cancellation during taskStartingMutex lock wait");
+        }
 
         if (startingTask != pTask)
         {
