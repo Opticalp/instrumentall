@@ -95,7 +95,7 @@ public:
     void onStarted(const AutoPtr<TaskStartedNotification>& pNf);
 //    void onProgress(const AutoPtr<TaskProgressNotification> pNf);
     void onFailed(const AutoPtr<TaskFailedNotification>& pNf);
-    void onFailedOnCancellation(const AutoPtr<TaskFailedNotification>& pNf);
+    void onFailedOnCancellation(const AutoPtr<TaskFailedOnCancellationNotification>& pNf);
     void onFinished(const AutoPtr<TaskFinishedNotification>& pNf);
     void onEnslaved(const AutoPtr<TaskEnslavedNotification>& pNf);
 
