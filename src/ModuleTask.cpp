@@ -108,8 +108,6 @@ void ModuleTask::runTask()
 
 void ModuleTask::leaveTask()
 {			
-    doneEvent.set();
-
     if (coreModule == NULL)
 		return;
 
@@ -142,11 +140,19 @@ void ModuleTask::cancel()
     case TASK_MERGED:
         break;
     case TASK_FALSE_START:
+        poco_warning(coreModule->logger(), name()
+                + " cancel not relevant: "
+                "task state is FALSE_START. ");
+        return;
     case TASK_CANCELLING:
+        poco_warning(coreModule->logger(), name()
+                + " cancel not relevant: "
+                "task state is CANCELLING. ");
+        return;
     case TASK_FINISHED:
         poco_warning(coreModule->logger(), name()
                 + " cancel not relevant: "
-                "task state is either FALSE_START, or CANCELLING, or FINISHED. ");
+                "task state is FINISHED. ");
         return;
     default:
         poco_error(coreModule->logger(), name()
@@ -175,6 +181,8 @@ void ModuleTask::moduleCancel()
 
 void ModuleTask::taskFinished()
 {
+    doneEvent.set();
+
     poco_information(coreModule->logger(), name() + " finished, "
             "removing it (async) from Module::allLaunchedTasks");
 
