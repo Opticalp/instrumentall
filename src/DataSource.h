@@ -31,8 +31,11 @@
 
 #include "DataItem.h"
 
+#include "InitializedFlag.h"
+
 #include "Poco/Mutex.h"
 #include "Poco/SharedPtr.h"
+#include "Poco/ThreadLocal.h"
 
 #include <set>
 
@@ -272,6 +275,14 @@ private:
     bool sourceCancelling;
 
     /**
+     * flag used to know is the thread is already waiting for the end
+     * of the cancellation
+     *
+     * @see waitCancelledFromTarget
+     */
+    Poco::ThreadLocal<InitializedFlag> waiting;
+
+    /**
      * Cancellation coming from a target
      *
      * The cancellation request is dispatched to the other targets too
@@ -279,6 +290,14 @@ private:
      * call sourceCancel
      */
     void cancelFromTarget(DataTarget* target);
+
+    /**
+     * Forward the waitCancelled if not already waiting (in the
+     * current thread)
+     *
+     * Call sourceWaitCancelled implementation
+     */
+    void waitCancelledFromTarget(DataTarget* target);
 
     /**
      * Reseting coming from a target

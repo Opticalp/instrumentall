@@ -126,7 +126,7 @@ private:
 
 class TaskFailedOnCancellationNotification: public TaskNotification
     /// This notification is posted by the TaskManager for
-    /// every task that has failed with an exception.
+    /// every task that has failed after a cancellation.
 {
 public:
     TaskFailedOnCancellationNotification(MergeableTask* pTask, const Poco::Exception& exc);
@@ -198,6 +198,11 @@ inline MergeableTask* TaskNotification::task() const
 inline const Poco::Exception& TaskFailedNotification::reason() const
 {
 	return *_pException;
+}
+
+inline const Poco::Exception& TaskFailedOnCancellationNotification::reason() const
+{
+    return *_pException;
 }
 
 

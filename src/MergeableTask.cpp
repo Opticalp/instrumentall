@@ -109,6 +109,7 @@ void MergeableTask::run()
 	}
 	catch (TaskMergedException&) // task merged, probably during prepareTask
 	{
+	    leaveTask();
 	    release();
 	    return;
 	}
@@ -137,7 +138,6 @@ void MergeableTask::run()
 	taskFinishedBroadcast(pTm);
 
 	leaveTask();
-
 	release();
 }
 

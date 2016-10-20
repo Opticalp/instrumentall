@@ -61,10 +61,16 @@ void Breaker::breakAllTargetsFromSource(DataSource* source)
 
 void Breaker::breakSourceToTarget(DataTarget* target)
 {
-	DataSource* source = target->getDataSource();
+	DataSource* source;
 
-	if (source == NULL)
-		return;
+	try
+	{
+	    source = target->getDataSource();
+	}
+	catch (Poco::NullPointerException& )
+	{
+	    return;
+	}
 
 	target->incUser();
 	source->incUser();

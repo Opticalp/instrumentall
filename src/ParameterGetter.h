@@ -79,11 +79,11 @@ private:
 	size_t userCnt() { return referenceCount(); }
 
 	void targetCancel() { cancelWithTargets(); }
-	void targetWaitCancelled() { waitTargetsCancelled(); }
+	void targetWaitCancelled();
 	void targetReset() { resetWithTargets(); }
 
 	void sourceCancel() { cancelWithSource(); }
-	void sourceWaitCancelled() { waitSourceCancelled(); }
+	void sourceWaitCancelled();
 	void sourceReset() { resetWithSource(); }
 };
 

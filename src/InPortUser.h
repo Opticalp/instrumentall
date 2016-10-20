@@ -158,6 +158,12 @@ protected:
     void releaseInPort(size_t portIndex);
 
     /**
+     * Forward release to the given port,
+     * even if the port was not caught
+     */
+    void safeReleaseInPort(size_t portIndex);
+
+    /**
      * Release the lock of all the input ports
      */
     void releaseAllInPorts();

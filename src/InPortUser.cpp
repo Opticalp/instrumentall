@@ -135,20 +135,24 @@ void InPortUser::releaseInPort(size_t portIndex)
 			"trying to release a port that is not caught (any more?).");
 }
 
+void InPortUser::safeReleaseInPort(size_t portIndex)
+{
+	inPorts[portIndex]->releaseInputDataOnFailure();
+
+	caughts->erase(portIndex);
+	lockedPorts->erase(portIndex);
+}
+
 void InPortUser::releaseAllInPorts()
 {
-	for (std::set<size_t>::iterator it = caughts->begin(),
-			ite = caughts->end(); it != ite; )
-	{
-		std::set<size_t>::iterator itTmp = it++;
-    	releaseInPort(*itTmp); // caughts is modified by releaseInPort
-	}
+	while (caughts->size())
+		releaseInPort(*(caughts->begin()));
 }
 
 void InPortUser::safeReleaseAllInPorts(InPort* triggingPort)
 {
     if (triggingPort)
-        caughts->insert(triggingPort->index());
+        safeReleaseInPort(triggingPort->index());
 
     releaseAllInPorts();
 }

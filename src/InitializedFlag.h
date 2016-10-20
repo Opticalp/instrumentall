@@ -1,6 +1,6 @@
 /**
- * @file	src/ModuleCanceller.cpp
- * @date	Sept. 2016
+ * @file	src/InitializedFlag.h
+ * @date	Oct. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,14 +26,34 @@
  THE SOFTWARE.
  */
 
-#include "ModuleCanceller.h"
+#ifndef SRC_INITIALIZEDFLAG_H_
+#define SRC_INITIALIZEDFLAG_H_
 
-#include "Module.h"
-
-void ModuleCanceller::run()
+/**
+ * Boolean class that has a default false value at initialization to be
+ * used as Poco::ThreadLocal with its default constructor
+ */
+class InitializedFlag
 {
-    module->waitCancelled();
-    module->moduleReset();
+public:
+    InitializedFlag(): flag(false) { }
+    virtual ~InitializedFlag() { }
 
-    delete this;
-}
+    /**
+     * Set the flag if not already set
+     *
+     * @return false if already set
+     */
+    bool trySet();
+
+    bool isSet() { return flag; }
+    void reset() { flag = false; }
+    void set()   { flag = true; }
+
+    InitializedFlag& operator =(bool value);
+
+private:
+    bool flag;
+};
+
+#endif /* SRC_INITIALIZEDFLAG_H_ */

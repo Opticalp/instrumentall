@@ -99,12 +99,12 @@ void TaskManager::startSync(TaskPtr pAutoTask)
 
 void TaskManager::cancelAll()
 {
-	Poco::FastMutex::ScopedLock lock(mutex);
+    // Duplicate the task list. Allow not to keep `mutex` locked
+    // during the tasks cancellation
+	TaskList tasks = taskList();
 
-	for (TaskList::iterator it = mTaskList.begin(); it != mTaskList.end(); ++it)
-	{
+	for (TaskList::iterator it = tasks.begin(); it != tasks.end(); ++it)
 		(*it)->cancel();
-	}
 }
 
 

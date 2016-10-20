@@ -31,7 +31,10 @@
 
 #include "DataSource.h"
 
+#include "InitializedFlag.h"
+
 #include "Poco/Mutex.h"
+#include "Poco/ThreadLocal.h"
 
 #include <set>
 
@@ -268,6 +271,14 @@ private:
     bool targetCancelling;
 
     /**
+     * flag used to know is the thread is already waiting for the end
+     * of the cancellation
+     *
+     * @see waitCancelledFromSource
+     */
+    Poco::ThreadLocal<InitializedFlag> waiting;
+
+    /**
      * launch runTarget with DataTarget cancellation verification
      *
      * @return false if cancelling or exception caught.
@@ -278,6 +289,15 @@ private:
     bool tryRunTarget();
 
     void cancelFromSource(DataSource* source);
+
+    /**
+     * Forward waitCancelled if not already waiting (in the
+     * current thread)
+     *
+     * Call targetWaitCancelled implementation
+     */
+    void waitCancelledFromSource(DataSource* source);
+
     void resetFromSource(DataSource* source);
 
     friend class Dispatcher;

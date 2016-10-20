@@ -224,7 +224,9 @@ void DataSource::cancelWithTargets()
 void DataSource::waitTargetsCancelled()
 {
 	if (!sourceCancelling)
-		return;
+        poco_bugcheck_msg((name() + ": waiting for targets cancellation, "
+                "although not cancelling").c_str());
+
 
     Poco::Util::Application::instance()
                         .getSubsystem<Dispatcher>()
@@ -254,6 +256,18 @@ void DataSource::cancelFromTarget(DataTarget* target)
 	cancelWithTargets();
 	// self
 	sourceCancel();
+}
+
+void DataSource::waitCancelledFromTarget(DataTarget* target)
+{
+    if (waiting->trySet())
+    {
+        // wait for the other targets (and the calling target...)
+        waitTargetsCancelled();
+        //self
+        sourceWaitCancelled();
+        waiting->reset();
+    }
 }
 
 void DataSource::resetFromTarget(DataTarget* target)

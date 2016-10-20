@@ -36,6 +36,7 @@
 #include "InPortUser.h"
 #include "OutPortUser.h"
 #include "ModuleTask.h"
+#include "InitializedFlag.h"
 
 #include "Poco/Thread.h"
 #include "Poco/RunnableAdapter.h"
@@ -96,11 +97,12 @@ public:
 		  ParameterizedWithSetters(this),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
-		  cancelling(false),
+		  lazyCancelling(false),
 		  waitingCancelled(0),
 		  immediateCancelling(false),
 		  cancelRequested(false),
-		  cancelDoneEvent(false),
+		  cancelDone(false),
+		  cancelEffective(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
 		  startingTask(NULL), processing(false),
 		  outputLocked(false)
@@ -114,11 +116,12 @@ public:
 		  ParameterizedWithSetters(this, applyParametersFromSettersWhenAllSet),
 		  startSyncPending(false),
 		  reseting (false), resetDone(false),
-		  cancelling(false),
+		  lazyCancelling(false),
           waitingCancelled(0),
           immediateCancelling(false),
           cancelRequested(false),
-		  cancelDoneEvent(false),
+		  cancelDone(false),
+		  cancelEffective(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
 		  startingTask(NULL), processing(false),
 		  outputLocked(false)
@@ -216,9 +219,15 @@ public:
 	/**
 	 * Force the cancellation
 	 *
-	 * Call Module::cancel
+	 *  - Cancel sources,
+	 *  - cancel targets,
+	 *  - purge the task queue,
+	 *  - request the active tasks to stop
+	 *  - call Module::cancel
+	 *  - launch a listener to wait for the cancellation to be effective (on self)
 	 *
-	 * @return true if a cancellation is trigged
+	 * @return true if a cancellation is trigged.
+	 * false if a cancellation process is already occuring.
 	 */
 	bool immediateCancel();
 
@@ -227,19 +236,15 @@ public:
 	 *
 	 * i.e. if running: let it run, let it send out the newly generated data, then,
 	 * cancel... but avoid the launch of a new run.
+	 *
+	 * @warning Module::cancel is not called here
 	 */
 	void lazyCancel();
 
 	/**
 	 * Wait for the cancellation to be effective
 	 */
-	void waitCancelled(bool topCall);
-
-	/**
-	 * Convenience function to facilitate ParameterizedEntity::waitCancelled
-	 * inheritance
-	 */
-	void waitCancelled() { waitCancelled(false); }
+	void waitCancelled();
 
 	/**
 	 * Reset the targets, then reset itself calling reset(),
@@ -521,16 +526,43 @@ private:
 	bool taskIsRunning();
 
     /**
+     * Check if a task is already running or just pending
+     * for this module
+     */
+    bool taskIsPending();
+
+    /**
      * Notify (self) that the cancellation is effective.
      */
     void cancelled();
 
+    /**
+     * Mutex used to lock immediateCancel, lazyCancel and cancelled
+     *
+     * to avoid async modification of immediateCancelling and cancelling.
+     */
+    Poco::Mutex cancelMutex;
 	bool immediateCancelling; ///< flag set by immediateCancel and reset by cancelled
-	bool cancelling; ///< flag set by immediateCancel or lazyCancel and reset by cancelled
+	bool lazyCancelling; ///< flag set by lazyCancel and reset by cancelled
 	int waitingCancelled;
 	bool cancelRequested; ///< flag set before calling Module::cancel, and reset on return
+	bool cancelDone; ///< set when a cancellation just occurred via cancelled. Reset in moduleReset
 
-	Poco::Event cancelDoneEvent; ///< event set when a cancellation just occurred via cancelled. Reset in moduleReset
+	/**
+	 * set if just cancelled and neighbours are cancelled to. 
+	 *
+	 * Used by waitCancelled
+	 * Reset by resetModule and runModule
+	 */
+	bool cancelEffective; 
+
+    /**
+     * flag used to know is the thread is already waiting for the end
+     * of the cancellation
+     *
+     * @see waitCancelled
+     */
+    Poco::ThreadLocal<InitializedFlag> waiting;
 
     Poco::RunnableAdapter<Module> cancellationListenerRunnable;
 	Poco::Thread cancellationListenerThread;

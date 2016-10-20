@@ -53,6 +53,9 @@ ThreadManager::ThreadManager():
             NObserver<ThreadManager, TaskFailedNotification>(
                     *this, &ThreadManager::onFailed ) );
     taskManager.addObserver(
+            NObserver<ThreadManager, TaskFailedOnCancellationNotification>(
+                    *this, &ThreadManager::onFailedOnCancellation ) );
+    taskManager.addObserver(
                 NObserver<ThreadManager, TaskFinishedNotification>(
                         *this, &ThreadManager::onFinished ) );
     taskManager.addObserver(
@@ -90,7 +93,7 @@ void ThreadManager::onFailed(const AutoPtr<TaskFailedNotification>& pNf)
     // - dispatch to a NotificationQueue
 }
 
-void ThreadManager::onFailedOnCancellation(const AutoPtr<TaskFailedNotification>& pNf)
+void ThreadManager::onFailedOnCancellation(const AutoPtr<TaskFailedOnCancellationNotification>& pNf)
 {
     Poco::Exception e(pNf->reason());
 

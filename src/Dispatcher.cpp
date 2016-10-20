@@ -409,7 +409,7 @@ void Dispatcher::dispatchTargetWaitCancelled(DataSource* source)
 	std::set<DataTarget*> targets = source->getDataTargets();
     for ( std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++ )
-    	(*it)->targetWaitCancelled();
+    	(*it)->waitCancelledFromSource(source);
 }
 
 void Dispatcher::dispatchTargetReset(DataSource* source)

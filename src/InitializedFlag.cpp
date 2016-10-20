@@ -1,6 +1,6 @@
 /**
- * @file	src/ModuleCanceller.cpp
- * @date	Sept. 2016
+ * @file	src/InitializedFlag.cpp
+ * @date	Oct. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,14 +26,19 @@
  THE SOFTWARE.
  */
 
-#include "ModuleCanceller.h"
+#include "InitializedFlag.h"
 
-#include "Module.h"
-
-void ModuleCanceller::run()
+bool InitializedFlag::trySet()
 {
-    module->waitCancelled();
-    module->moduleReset();
+    if (isSet())
+        return false;
 
-    delete this;
+    set();
+    return true;
+}
+
+InitializedFlag& InitializedFlag::operator =(bool value)
+{
+    flag = value;
+    return *this;
 }
