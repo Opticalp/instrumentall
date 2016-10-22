@@ -176,13 +176,11 @@ void Module::releaseProcessingMutex()
 
 void Module::prepareTaskStart(ModuleTask* pTask)
 {
-    taskMngtMutex.lock();
-    if (startSyncPending)
+    if (startSyncPending->isSet())
     {
-        startSyncPending = false;
+        startSyncPending->reset();
         taskMngtMutex.unlock();
     }
-    taskMngtMutex.unlock();
 
     setRunningTask(pTask);
 
@@ -597,7 +595,7 @@ void Module::popTaskSync()
     startingTask = nextTask;
     allLaunchedTasks.insert(nextTask);
 
-	startSyncPending = true;
+	startSyncPending->set();
 
 	try
 	{
@@ -612,7 +610,7 @@ void Module::popTaskSync()
 	catch (...)
 	{
 		poco_error(logger(), "can not sync start " + nextTask->name());
-		startSyncPending = false;
+		startSyncPending->reset();
         allLaunchedTasks.erase(nextTask);
         startingTask = NULL;
         taskMngtMutex.unlock();
