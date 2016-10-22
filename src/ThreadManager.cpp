@@ -185,10 +185,28 @@ void ThreadManager::startModuleTask(ModuleTaskPtr& pTask)
 
 		poco_bugcheck_msg("Poco::NoThreadAvailableException treatment not supported");
 	}
-	catch (...)
+	catch (ExecutionAbortedException&)
 	{
 		poco_information(logger(), pTask->name()
-				+ " failed to start");
+				+ " failed to start: cancelled before starting");
+
+		if (pTask->triggingPort())
+           pTask->triggingPort()->releaseInputDataOnFailure();
+
+        unregisterModuleTask(pTask);
+
+        throw;
+	}
+	catch (TaskMergedException&)
+	{
+		poco_information(logger(), pTask->name()
+				+ " failed to start: merged before starting");
+		throw;
+	}
+	catch (...)
+	{
+		poco_error(logger(), pTask->name()
+				+ " failed to start on unknown exception");
 
         if (pTask->triggingPort())
            pTask->triggingPort()->releaseInputDataOnFailure();
