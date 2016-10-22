@@ -872,9 +872,8 @@ bool Module::immediateCancel()
     {
         InPort* port = taskQueue.front()->mTriggingPort;
 
-        // FIXME: no need to releaseInputDataOnStartFailure?
         if (port)
-            port->releaseInputData();
+            port->releaseInputDataOnFailure();
 
         Poco::Util::Application::instance()
                                  .getSubsystem<ThreadManager>()
