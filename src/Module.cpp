@@ -188,7 +188,7 @@ void Module::prepareTaskStart(ModuleTask* pTask)
 
     while (!taskProcessingMutex.tryLock())
     {
-        if (yield()) // startingTask reset by moduleReset
+        if (yield())
         {
             Poco::Mutex::ScopedLock lock(taskMngtMutex);
             startingTask = NULL;
@@ -196,15 +196,6 @@ void Module::prepareTaskStart(ModuleTask* pTask)
             throw ExecutionAbortedException(pTask->name() + "::prepareTask",
                     "task cancellation during taskStartingMutex lock wait");
         }
-
-        if (startingTask != pTask)
-        {
-        	poco_fatal(logger(), pTask->name() + " <<<  << < <<  < << < < < << < < <<< < < < < < < < <  < < < < < < < <  <<< < < < < <  <<");
-        	if (!startingTask.isNull())
-        	    poco_fatal(logger(),startingTask->name() + " names me");
-        	Poco::Thread::sleep(1000);
-        }
-
 
         if (pTask->isSlave())
         {
@@ -634,6 +625,8 @@ bool Module::tryUnregisterTask(ModuleTask* pTask)
 {
 	if (taskMngtMutex.tryLock())
 	{
+		poco_information(logger(), "erasing " + pTask->name()
+				+ " from allLaunchedTasks");
 		allLaunchedTasks.erase(ModuleTaskPtr(pTask, true));
 		taskMngtMutex.unlock();
 		return true;

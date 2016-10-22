@@ -184,11 +184,13 @@ void ModuleTask::taskFinished()
     doneEvent.set();
 
     poco_information(coreModule->logger(), name() + " finished, "
-            "removing it (async) from Module::allLaunchedTasks");
+            "trying to remove it from Module::allLaunchedTasks");
 
 	if (!coreModule->tryUnregisterTask(this))
 	{
 		// try once, then, do it the async way
+        poco_information(coreModule->logger(), name() + ": "
+                "removing it (async) from Module::allLaunchedTasks");
 		Poco::Util::Application::instance()
 				.getSubsystem<ThreadManager>()
 				.startRunnable(unregisterRunner);

@@ -438,6 +438,7 @@ void Dispatcher::cancel(Module* module)
         // async waitCancelled and reset
         ModuleCanceller* listener = new ModuleCanceller(module);
 
+        poco_information(logger(), module->name() + " async wait cancelled");
         Poco::Util::Application::instance()
                 .getSubsystem<ThreadManager>()
                 .startRunnable(*listener);
