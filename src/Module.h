@@ -514,14 +514,18 @@ private:
     /**
      * Check if a task is already starting
      * for this module
+     *
+     * or just running
+     *
+     * @param orRunning if true, check also if a task is running
      */
-    bool taskIsStarting();
+    bool taskIsStarting(bool orRunning = false);
 
 	/**
 	 * Check if a task is already running (or at least started)
 	 * for this module
 	 */
-	bool taskIsRunning();
+	bool taskIsRunning() { return taskIsStarting(true); }
 
     /**
      * Check if a task is already running or just pending
