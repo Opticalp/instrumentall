@@ -668,13 +668,21 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
                 Poco::AutoPtr<MergeableTask> slave(startingTask);
                 (*runningTask)->merge(slave);
             }
-            catch (Poco::RuntimeException& e)
+            catch (Poco::Exception& e)
             {
                 poco_information(logger(), "potential slave task found: "
                         + startingTask->name() + ", merging with master: "
                         + (*runningTask)->name() + " failed: "
                         + e.displayText());
-                return false;
+
+            	safeReleaseInPort(trigPort->index());
+
+                poco_warning(logger(), (*runningTask)->name()
+                		+ ": slave candidate probably cancelled. "
+                				"Cancelling self. ");
+                (*runningTask)->cancel();
+                throw ExecutionAbortedException("slave candidate: "
+                		+ e.displayText());
             }
 
             poco_information(logger(), "slave task found (starting): "
@@ -682,7 +690,20 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
                     + (*runningTask)->name() + " OK");
 
             // FIXME: replace by something contained in the merged task.
-            trigPort->tryCatchSource();
+            try
+            {
+            	trigPort->tryCatchSource();
+            }
+            catch (ExecutionAbortedException& e)
+            {
+            	poco_warning(logger(), (*runningTask)->name()
+            			+ " merging " + startingTask->name()
+						+ " => can not catch the source ("
+						+ e.displayText() + ")");
+            	safeReleaseInPort(trigPort->index());
+
+            	e.rethrow();
+            }
 
             return true;
         }
@@ -700,13 +721,19 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
                 Poco::AutoPtr<MergeableTask> slave(*qIt);
                 (*runningTask)->merge(slave);
             }
-            catch (Poco::RuntimeException& e)
+            catch (Poco::Exception& e)
             {
                 poco_information(logger(), "potential slave task found in queue: "
                         + (*qIt)->name() + ", merging with master: "
                         + (*runningTask)->name() + " failed: "
                         + e.displayText());
-                return false;
+
+                poco_warning(logger(), (*runningTask)->name()
+                		+ ": slave candidate in queue, probably cancelled. "
+                				"Cancelling self. ");
+                (*runningTask)->cancel();
+                throw ExecutionAbortedException("slave candidate: "
+                		+ e.displayText());
             }
 
             poco_information(logger(), "slave task found (in queue): "
@@ -717,7 +744,20 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
             taskQueue.erase(qIt); // taskMngtMutex is locked. The order (with Task::merge) is not that important.
 
 			// FIXME: replace by something contained in the merged task. 
-			trigPort->tryCatchSource();
+            try
+            {
+            	trigPort->tryCatchSource();
+            }
+            catch (ExecutionAbortedException& e)
+            {
+            	poco_warning(logger(), (*runningTask)->name()
+            			+ " merging " + (*qIt)->name()
+						+ " => can not catch the source ("
+						+ e.displayText() + ")");
+            	safeReleaseInPort(trigPort->index());
+
+            	e.rethrow();
+            }
 
             return true;
         }
