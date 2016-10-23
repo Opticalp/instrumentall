@@ -621,7 +621,6 @@ private:
 	 * lock taskStartingMutex
 	 */
 	void prepareTaskStart(ModuleTask* pTask);
-	void taskStartFailure() { startingTask = NULL; releaseProcessingMutex(); }
 
 	Poco::FastMutex outputMutex; ///< used to keep the queue order to the access to the outputs
 	bool outputLocked;

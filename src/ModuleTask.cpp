@@ -88,7 +88,7 @@ void ModuleTask::prepareTask()
     catch (...)
     {
         poco_warning(coreModule->logger(), name() + " starting failed (prepareTask)");
-        coreModule->taskStartFailure();
+        coreModule->releaseProcessingMutex();
 
         if ((getState() == TASK_FINISHED) && isSlave())
         {
