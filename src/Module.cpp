@@ -481,7 +481,6 @@ void Module::popTask()
 	// n.b.: the taskMngtMutex is locked during immediateCancel.
 	// when released, the taskQueue is empty.
 	Poco::ScopedLockWithUnlock<Poco::Mutex> lock(taskMngtMutex);
-//    taskMngtMutex.lock();
 
     if (taskQueue.empty())
     {
@@ -494,14 +493,12 @@ void Module::popTask()
                 poco_information(logger(),
                         (*runningTask)->name() + ": empty task queue, nothing to pop (async)");
         }
-//        taskMngtMutex.unlock();
         return;
     }
 
     if (taskIsStarting()) // taskMngtMutex is recursive. this call is ok.
     {
         poco_information(logger(),"pop (async): a task is already starting. ");
-//        taskMngtMutex.unlock();
         return;
     }
 
@@ -523,15 +520,12 @@ void Module::popTask()
         poco_error(logger(), "can not start (async) " + nextTask->name());
         allLaunchedTasks.erase(nextTask);
         startingTask = NULL;
-//      taskMngtMutex.unlock();
         lock.unlock();
 
         // * do not re-throw. popTask is not due to launch a task.
         // * but try to launch the next task in queue, if any:
         popTask();
 	}
-
-//	taskMngtMutex.unlock();
 }
 
 void Module::popTaskSync()
