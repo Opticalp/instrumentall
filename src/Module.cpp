@@ -188,6 +188,10 @@ void Module::prepareTaskStart(ModuleTask* pTask)
     {
         if (yield())
         {
+            // release trigging port
+            if (pTask->triggingPort())
+            	safeReleaseInPort(pTask->triggingPort()->index());
+
             Poco::Mutex::ScopedLock lock(taskMngtMutex);
             startingTask = NULL;
 
@@ -209,6 +213,49 @@ void Module::prepareTaskStart(ModuleTask* pTask)
     taskMngtMutex.lock();
     startingTask = NULL;
     taskMngtMutex.unlock();
+
+    try
+    {
+        pTask->parentPrepareTask();
+    }
+    catch (ExecutionAbortedException&)
+    {
+        poco_warning(logger(), pTask->name() + " starting failed (prepareTask)"
+        		" on user cancellation request");
+        // release trigging port
+        if (pTask->triggingPort())
+        	safeReleaseInPort(pTask->triggingPort()->index());
+
+        releaseProcessingMutex();
+        throw;
+    }
+	catch (TaskMergedException&)
+	{
+        poco_warning(logger(), pTask->name() + " starting failed (prepareTask)"
+        		" on task merged");
+        releaseProcessingMutex();
+        throw;
+	}
+	catch (...)
+	{
+        releaseProcessingMutex();
+
+        if ((pTask->getState() == MergeableTask::TASK_FINISHED) && pTask->isSlave())
+        {
+            poco_information(logger(), pTask->name()
+            		+ " starting failed (prepareTask):"
+            		" was merged and is finished");
+            throw TaskMergedException("Finished slave task. "
+                    "Can not run");
+        }
+        else
+        {
+        	poco_error(logger(), pTask->name()
+            		+ " starting failed (prepareTask) on unknown error...");
+        }
+
+        throw;
+    }
 }
 
 void Module::run(ModuleTask* pTask)

@@ -80,25 +80,6 @@ void ModuleTask::setRunningState(RunningStates state)
 void ModuleTask::prepareTask()
 {
     coreModule->prepareTaskStart(this);
-
-    try
-    {
-        MergeableTask::prepareTask();
-    }
-    catch (...)
-    {
-        poco_warning(coreModule->logger(), name() + " starting failed (prepareTask)");
-        coreModule->releaseProcessingMutex();
-
-        if ((getState() == TASK_FINISHED) && isSlave())
-        {
-            poco_warning(coreModule->logger(), name() + " was merged and is finished");
-            throw TaskMergedException("Finished slave task. "
-                    "Can not run");
-        }
-
-        throw;
-    }
 }
 
 void ModuleTask::runTask()
