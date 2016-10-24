@@ -160,6 +160,9 @@ void MergeableTask::taskFinishedBroadcast(TaskManager* pTm)
             if (slaveTm)
                 slaveTm->taskFinished(currentSlave);
         }
+
+        // allow the slaves to delete themselves if their are not use anywhere else
+        slavedTasks.clear();
 	}
 }
 

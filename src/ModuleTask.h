@@ -54,26 +54,6 @@ public:
 	std::string name() { return mName; }
 
 	/**
-	 * Lock the taskStartingMutex before the task is in
-	 * TASK_RUNNING state
-	 */
-	void prepareTask();
-
-	/**
-	 * Execute the attached module.
-	 *
-	 * To be called by the module itself.
-	 * @see Module::popTask
-	 * @see Module::popTaskSync
-	 */
-	void runTask();
-
-	/**
-	 * Sync-launch the next task of the module queue
-	 */
-	void leaveTask();
-
-	/**
 	 * Task cancel method.
 	 *
 	 *  - call moduleCancel
@@ -148,6 +128,32 @@ protected:
 	 * check if the task is cancelling before changing the state
 	 */
 	void setRunningState(RunningStates state);
+
+	/**
+	 * Call Module::prepareTaskStart
+	 *
+	 * to lock the taskStartingMutex before the task is in
+	 * TASK_RUNNING state.
+	 *
+	 * parentPrepareTask will be called from there.
+	 */
+	void prepareTask();
+
+	void parentPrepareTask() { MergeableTask::prepareTask(); }
+
+	/**
+	 * Execute the attached module.
+	 *
+	 * To be called by the module itself.
+	 * @see Module::popTask
+	 * @see Module::popTaskSync
+	 */
+	void runTask();
+
+	/**
+	 * Sync-launch the next task of the module queue
+	 */
+	void leaveTask();
 
 private:
 	ModuleTask();

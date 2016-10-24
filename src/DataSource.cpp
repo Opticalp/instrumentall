@@ -153,13 +153,12 @@ bool DataSource::tryReserveDataForTarget(DataTarget* target)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(pendingTargetsLock);
 
-	if (sourceCancelling)
+	if (pendingDataTargets.count(target))
+		return reservedDataTargets.insert(target).second;
+	else if (sourceCancelling)
 		throw ExecutionAbortedException("DataSource::tryReserveDataForTarget",
 				name() + " cancelling, can not reserve "
 				+ target->name() + " for reading.");
-
-	if (pendingDataTargets.count(target))
-		return reservedDataTargets.insert(target).second;
 	else
 		return false;
 }
@@ -277,6 +276,17 @@ void DataSource::resetFromTarget(DataTarget* target)
 
 	// dispatch to the other targets (and the calling target... )
 	resetWithTargets();
+
+	// check that the locks are released >>> should --never-- be needed!
+	pendingTargetsLock.lock();
+	std::set<DataTarget*> targetsToRelease = pendingDataTargets;
+	targetsToRelease.insert(reservedDataTargets.begin(), reservedDataTargets.end());
+	pendingTargetsLock.unlock();
+
+	for (std::set<DataTarget*>::iterator it = targetsToRelease.begin(),
+			ite = targetsToRelease.end(); it != ite; it++)
+		targetReleaseReadOnFailure(*it);
+
 	// self
 	sourceReset();
 }

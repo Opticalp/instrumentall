@@ -95,7 +95,6 @@ public:
 		  ParameterizedEntity("module." + name),
 		  ParameterizedWithGetters(this),
 		  ParameterizedWithSetters(this),
-		  startSyncPending(false),
 		  reseting (false), resetDone(false),
 		  lazyCancelling(false),
 		  waitingCancelled(0),
@@ -114,7 +113,6 @@ public:
 		  ParameterizedEntity("module." + name),
 		  ParameterizedWithGetters(this),
 		  ParameterizedWithSetters(this, applyParametersFromSettersWhenAllSet),
-		  startSyncPending(false),
 		  reseting (false), resetDone(false),
 		  lazyCancelling(false),
           waitingCancelled(0),
@@ -516,14 +514,18 @@ private:
     /**
      * Check if a task is already starting
      * for this module
+     *
+     * or just running
+     *
+     * @param orRunning if true, check also if a task is running
      */
-    bool taskIsStarting();
+    bool taskIsStarting(bool orRunning = false);
 
 	/**
 	 * Check if a task is already running (or at least started)
 	 * for this module
 	 */
-	bool taskIsRunning();
+	bool taskIsRunning() { return taskIsStarting(true); }
 
     /**
      * Check if a task is already running or just pending
@@ -557,7 +559,7 @@ private:
 	bool cancelEffective; 
 
     /**
-     * flag used to know is the thread is already waiting for the end
+     * flag used to know if the thread is already waiting for the end
      * of the cancellation
      *
      * @see waitCancelled
@@ -580,7 +582,14 @@ private:
 	std::list<ModuleTaskPtr> taskQueue; ///< enqueued tasks, waiting to be started. The order counts.
 	ModuleTaskPtr startingTask; ///< task that is just started. no more in taskQueue, already in allLaunchedTasks.
 	Poco::Mutex taskMngtMutex; ///< recursive mutex. lock the task management. Recursive because of its use in Module::enqueueTask
-	bool startSyncPending; ///< flag used by start sync to know that the tasMngLock is kept locked
+
+	/**
+     * flag used to know if the module execution occured following
+     * a sync start
+     *
+     * @see popTaskSync
+     */
+    Poco::ThreadLocal<InitializedFlag> startSyncPending;
 
 	/**
 	 * lock the launching of a new task as long as another task is already processing.
@@ -612,7 +621,6 @@ private:
 	 * lock taskStartingMutex
 	 */
 	void prepareTaskStart(ModuleTask* pTask);
-	void taskStartFailure() { startingTask = NULL; releaseProcessingMutex(); }
 
 	Poco::FastMutex outputMutex; ///< used to keep the queue order to the access to the outputs
 	bool outputLocked;

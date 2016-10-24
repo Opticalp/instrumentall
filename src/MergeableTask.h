@@ -114,30 +114,6 @@ public:
 	TaskState getState() const;
 
 	/**
-	 * Method called before runTask:
-	 *
-	 *  - the task state is TASK_STARTING
-	 *  - this method change the state to TASK_RUNNING
-	 *
-	 * can be used to wait for an event, lock/unlock mutexes, ...
-	 *
-	 * Default implementation: just change the state to TASK_RUNNING.
-	 *
-	 * Exception throwing is safe.
-	 */
-	virtual void prepareTask() { setState(TASK_RUNNING); }
-
-	/**
-	 * Do whatever the task needs to do. Must
-	 * be overridden by subclasses.
-	 *
-	 * Exception throwing is safe.
-	 *
-	 * @throw ExecutionAbortedException on task cancellation detection
-	 */
-	virtual void runTask() = 0;
-
-	/**
 	 * Method called after the finishedNotification is dispatched. 
 	 *
 	 * Could be used to run some cleaning, etc
@@ -231,6 +207,30 @@ protected:
 	 *  - TASK_RUNNING after TASK_STARTING
 	 */
 	void setState(TaskState state);
+
+	/**
+	 * Method called before runTask:
+	 *
+	 *  - the task state is TASK_STARTING
+	 *  - this method change the state to TASK_RUNNING
+	 *
+	 * can be used to wait for an event, lock/unlock mutexes, ...
+	 *
+	 * Default implementation: just change the state to TASK_RUNNING.
+	 *
+	 * Exception throwing is safe.
+	 */
+	virtual void prepareTask() { setState(TASK_RUNNING); }
+
+	/**
+	 * Do whatever the task needs to do. Must
+	 * be overridden by subclasses.
+	 *
+	 * Exception throwing is safe.
+	 *
+	 * @throw ExecutionAbortedException on task cancellation detection
+	 */
+	virtual void runTask() = 0;
 
 	virtual ~MergeableTask();
 

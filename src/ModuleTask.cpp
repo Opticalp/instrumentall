@@ -80,25 +80,6 @@ void ModuleTask::setRunningState(RunningStates state)
 void ModuleTask::prepareTask()
 {
     coreModule->prepareTaskStart(this);
-
-    try
-    {
-        MergeableTask::prepareTask();
-    }
-    catch (...)
-    {
-        poco_warning(coreModule->logger(), name() + " starting failed (prepareTask)");
-        coreModule->taskStartFailure();
-
-        if ((getState() == TASK_FINISHED) && isSlave())
-        {
-            poco_warning(coreModule->logger(), name() + " was merged and is finished");
-            throw TaskMergedException("Finished slave task. "
-                    "Can not run");
-        }
-
-        throw;
-    }
 }
 
 void ModuleTask::runTask()
@@ -184,11 +165,13 @@ void ModuleTask::taskFinished()
     doneEvent.set();
 
     poco_information(coreModule->logger(), name() + " finished, "
-            "removing it (async) from Module::allLaunchedTasks");
+            "trying to remove it from Module::allLaunchedTasks");
 
 	if (!coreModule->tryUnregisterTask(this))
 	{
 		// try once, then, do it the async way
+        poco_information(coreModule->logger(), name() + ": "
+                "removing it (async) from Module::allLaunchedTasks");
 		Poco::Util::Application::instance()
 				.getSubsystem<ThreadManager>()
 				.startRunnable(unregisterRunner);
