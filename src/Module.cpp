@@ -917,33 +917,39 @@ bool Module::immediateCancel()
                 "cancellation request dispatched to the sources");
     }
 
-    taskMngtMutex.lock();
-
-    // delete pending tasks
-    while (taskQueue.size())
+    // section working with the taskQueue and the allLaunchedTasks
+    try
     {
-        InPort* port = taskQueue.front()->mTriggingPort;
+    	Poco::Mutex::ScopedLock tskLock(taskMngtMutex);
 
-        if (port)
-            port->releaseInputDataOnFailure();
+    	// delete pending tasks
+		while (taskQueue.size())
+		{
+			InPort* port = taskQueue.front()->mTriggingPort;
 
-        Poco::Util::Application::instance()
-                                 .getSubsystem<ThreadManager>()
-                                 .unregisterModuleTask(taskQueue.front());
-        taskQueue.pop_front();
+			if (port)
+				port->releaseInputDataOnFailure();
+
+			Poco::Util::Application::instance()
+									 .getSubsystem<ThreadManager>()
+									 .unregisterModuleTask(taskQueue.front());
+			taskQueue.pop_front();
+		}
+
+		// stop active tasks
+		for (std::set<ModuleTaskPtr>::iterator it = allLaunchedTasks.begin(),
+				ite = allLaunchedTasks.end(); it != ite; it++)
+		{
+			if (*it == runningTask.get())
+				continue;
+
+			ModuleTaskPtr(*it)->cancel();
+		}
     }
-
-    // stop active tasks
-    for (std::set<ModuleTaskPtr>::iterator it = allLaunchedTasks.begin(),
-            ite = allLaunchedTasks.end(); it != ite; it++)
+    catch (...)
     {
-        if (*it == runningTask.get())
-            continue;
-
-        ModuleTaskPtr(*it)->cancel();
+    	poco_bugcheck_msg("exception throw not authorized here...");
     }
-
-    taskMngtMutex.unlock();
 
     cancelTargets();
     poco_information(logger(), name() + ".immediateCancel: "
