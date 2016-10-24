@@ -689,7 +689,6 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
                     + startingTask->name() + ", merging with master: "
                     + (*runningTask)->name() + " OK");
 
-            // FIXME: replace by something contained in the merged task.
             try
             {
             	trigPort->tryCatchSource();
@@ -743,7 +742,6 @@ bool Module::tryCatchInPortFromQueue(InPort* trigPort)
             allLaunchedTasks.insert(*qIt);
             taskQueue.erase(qIt); // taskMngtMutex is locked. The order (with Task::merge) is not that important.
 
-			// FIXME: replace by something contained in the merged task. 
             try
             {
             	trigPort->tryCatchSource();
