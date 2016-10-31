@@ -25,7 +25,7 @@ set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/bin" 
 ## configure executable 
 
 set ( MAIN_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src )
-# include_directories ( ${MAIN_SOURCE_DIR} )
+include_directories ( ${MAIN_SOURCE_DIR} )
 
 # list of source files
 file (
