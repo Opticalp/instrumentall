@@ -43,12 +43,11 @@ public:
         ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
     virtual ~DaqDeviceFactory() { }
 
-    std::string name() { return "DemoBranchFactory"; }
+    std::string name() { return "DaqDeviceFactory"; }
     std::string description()
     {
-        return "Example code for a branch module factory. "
-                "Please use selectValueList() to check "
-                "the authorized selectors. ";
+        return "Factory to create DAQ modules that interface"
+                " DAQ boards. ";
     }
 
     std::string selectDescription()

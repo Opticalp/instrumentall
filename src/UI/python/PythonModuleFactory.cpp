@@ -230,6 +230,23 @@ PyObject* pyModFactCountRemain(ModFactMembers* self)
     return PyInt_FromSize_t(cnt);
 }
 
+PyObject* pyModFactIsLeaf(ModFactMembers* self)
+{
+    try
+    {
+        if ((**self->moduleFactory)->isLeaf())
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+}
+
 PyObject* pyModFactCreate(ModFactMembers* self, PyObject *args)
 {
     char empty[] = "";

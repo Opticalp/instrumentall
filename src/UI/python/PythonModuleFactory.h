@@ -131,6 +131,17 @@ static PyMethodDef pyMethodModFactCountRemain =
     "Count how many times create() can be called. "
 };
 
+/// ModuleFactory::isLeaf python wrapper
+extern "C" PyObject* pyModFactIsLeaf(ModFactMembers *self);
+
+static PyMethodDef pyMethodModFactIsLeaf =
+{
+    "isLeaf",
+    (PyCFunction)pyModFactIsLeaf,
+    METH_NOARGS,
+    "Check if the current factory is a leaf factory. "
+};
+
 /// ModuleFactory::create python wrapper
 extern "C" PyObject* pyModFactCreate(ModFactMembers *self, PyObject *args);
 
@@ -186,6 +197,7 @@ static PyMethodDef pyModFactMethods[] = {
         pyMethodModFactSelectValueList,
 
         pyMethodModFactCountRemain,
+        pyMethodModFactIsLeaf,
         pyMethodModFactCreate,
         pyMethodModFactGetChildModules,
 
