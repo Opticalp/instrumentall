@@ -1,6 +1,6 @@
 /**
- * @file	src/DeviceFactory.cpp
- * @date	Mar 2016
+ * @file	src/CameraFactory.cpp
+ * @date	apr. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,21 @@
  THE SOFTWARE.
  */
 
-#include "DeviceFactory.h"
-
-#include "DaqDeviceFactory.h"
 #include "CameraFactory.h"
 
-std::vector<std::string> DeviceFactory::selectValueList()
+std::vector<std::string> CameraFactory::selectValueList()
 {
     std::vector<std::string> list;
-    list.push_back("DAQ");
-    list.push_back("camera");
-    // list.push_back("motionStage");
+
+//    list.push_back("uEye");
+
     return list;
 }
 
-ModuleFactoryBranch* DeviceFactory::newChildFactory(std::string selector)
+ModuleFactoryBranch* CameraFactory::newChildFactory(std::string selector)
 {
-	if (selector.compare("DAQ") == 0)
-	{
-		return new DaqDeviceFactory(this, selector);
-	}
-	else if (selector.compare("camera") == 0)
-	{
-		return new CameraFactory(this, selector);
-	}
-//	else if (selector.compare("motionStage") == 0)
-//	{
-//		return new MotionStageFactory(this, selector);
-//	}
-	else
-	{
-		poco_bugcheck_msg("Create: unknown selector");
-		throw Poco::BugcheckException();
-	}
+//    if (selector.compare("Mojo") == 0)
+//        return new MojoCameraFactory(this, selector);
+//    else
+        return NULL;
 }

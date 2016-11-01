@@ -1,6 +1,6 @@
 /**
- * @file	src/DeviceFactory.cpp
- * @date	Mar 2016
+ * @file	src/CameraFactory.h
+ * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,37 +26,34 @@
  THE SOFTWARE.
  */
 
-#include "DeviceFactory.h"
+#ifndef SRC_CAMERAFACTORY_H_
+#define SRC_CAMERAFACTORY_H_
 
-#include "DaqDeviceFactory.h"
-#include "CameraFactory.h"
+#include "core/ModuleFactoryBranch.h"
 
-std::vector<std::string> DeviceFactory::selectValueList()
+/**
+ * CameraFactory
+ *
+ * Module factory for the camera devices
+ */
+class CameraFactory: public ModuleFactoryBranch
 {
-    std::vector<std::string> list;
-    list.push_back("DAQ");
-    list.push_back("camera");
-    // list.push_back("motionStage");
-    return list;
-}
+public:
+    CameraFactory(ModuleFactory* parent, std::string selector):
+        ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
+    virtual ~CameraFactory() { }
 
-ModuleFactoryBranch* DeviceFactory::newChildFactory(std::string selector)
-{
-	if (selector.compare("DAQ") == 0)
-	{
-		return new DaqDeviceFactory(this, selector);
-	}
-	else if (selector.compare("camera") == 0)
-	{
-		return new CameraFactory(this, selector);
-	}
-//	else if (selector.compare("motionStage") == 0)
-//	{
-//		return new MotionStageFactory(this, selector);
-//	}
-	else
-	{
-		poco_bugcheck_msg("Create: unknown selector");
-		throw Poco::BugcheckException();
-	}
-}
+    std::string name() { return "CameraFactory"; }
+    std::string description()
+        { return "Factory to create modules that interface cameras"; }
+
+    std::string selectDescription()
+        { return "Select the camera type"; }
+
+    std::vector<std::string> selectValueList();
+
+private:
+    ModuleFactoryBranch* newChildFactory(std::string selector);
+};
+
+#endif /* SRC_CAMERAFACTORY_H_ */
