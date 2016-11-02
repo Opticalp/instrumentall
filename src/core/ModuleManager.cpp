@@ -34,6 +34,7 @@
 #include "modules/signalProc/SignalProcFactory.h"
 #include "modules/imageProc/ImageProcFactory.h"
 #include "modules/devices/DeviceFactory.h"
+#include "modules/fieldBus/FieldBusFactory.h"
 
 ModuleManager::ModuleManager():
 	VerboseEntity(name())
@@ -45,6 +46,7 @@ ModuleManager::ModuleManager():
     addFactory(new SignalProcFactory);
     addFactory(new ImageProcFactory);
     addFactory(new DeviceFactory);
+    addFactory(new FieldBusFactory);
 }
 
 ModuleManager::~ModuleManager()

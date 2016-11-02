@@ -1,6 +1,6 @@
 /**
- * @file	src/DaqDeviceFactory.h
- * @date	Mar 2016
+ * @file	src/CameraFactory.h
+ * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,35 +26,29 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DAQDEVICEFACTORY_H_
-#define SRC_DAQDEVICEFACTORY_H_
+#ifndef SRC_CAMERAFACTORY_H_
+#define SRC_CAMERAFACTORY_H_
 
 #include "core/ModuleFactoryBranch.h"
 
 /**
- * DaqDeviceFactory
+ * CameraFactory
  *
- * branch factory that selects any DAQ module factory
+ * Module factory for the camera devices
  */
-class DaqDeviceFactory: public ModuleFactoryBranch
+class CameraFactory: public ModuleFactoryBranch
 {
 public:
-    DaqDeviceFactory(ModuleFactory* parent, std::string selector):
+    CameraFactory(ModuleFactory* parent, std::string selector):
         ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
-    virtual ~DaqDeviceFactory() { }
+    virtual ~CameraFactory() { }
 
-    std::string name() { return "DaqDeviceFactory"; }
+    std::string name() { return "CameraFactory"; }
     std::string description()
-    {
-        return "Factory to create DAQ modules that interface"
-                " DAQ boards. ";
-    }
+        { return "Factory to create modules that interface cameras"; }
 
     std::string selectDescription()
-    {
-        return "Demo select() with multiple selector choice. "
-                "See selectValueList()";
-    }
+        { return "Select the camera type"; }
 
     std::vector<std::string> selectValueList();
 
@@ -62,4 +56,4 @@ private:
     ModuleFactoryBranch* newChildFactory(std::string selector);
 };
 
-#endif /* SRC_DAQDEVICEFACTORY_H_ */
+#endif /* SRC_CAMERAFACTORY_H_ */

@@ -191,7 +191,7 @@ void GvExportFactories::exportFactory(std::ostream& out,
     }
 
     out << " ROWSPAN=\"" << selectors.size() << "\"><B>" << (*fact)->name() << "</B></TD>\n"
-           "          <TD PORT=\"" << selectors[0] << "\"> " << selectors[0] << "</TD>\n"
+           "          <TD PORT=\"" << selectors[0] << "\"> " << selectors[0] << " </TD>\n"
            "        </TR>" << std::endl;
 
     if (selectors.size() > 1)

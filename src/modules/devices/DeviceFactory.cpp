@@ -29,12 +29,13 @@
 #include "DeviceFactory.h"
 
 #include "DaqDeviceFactory.h"
+#include "CameraFactory.h"
 
 std::vector<std::string> DeviceFactory::selectValueList()
 {
     std::vector<std::string> list;
     list.push_back("DAQ");
-    // list.push_back("camera");
+    list.push_back("camera");
     // list.push_back("motionStage");
     return list;
 }
@@ -45,10 +46,10 @@ ModuleFactoryBranch* DeviceFactory::newChildFactory(std::string selector)
 	{
 		return new DaqDeviceFactory(this, selector);
 	}
-//	else if (selector.compare("camera") == 0)
-//	{
-//		return new CameraFactory(this, selector);
-//	}
+	else if (selector.compare("camera") == 0)
+	{
+		return new CameraFactory(this, selector);
+	}
 //	else if (selector.compare("motionStage") == 0)
 //	{
 //		return new MotionStageFactory(this, selector);

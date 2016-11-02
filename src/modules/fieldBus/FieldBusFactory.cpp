@@ -1,6 +1,6 @@
 /**
- * @file	src/DaqDeviceFactory.h
- * @date	Mar 2016
+ * @file	src/FieldBusFactory.cpp
+ * @date	Nov 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,40 +26,24 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DAQDEVICEFACTORY_H_
-#define SRC_DAQDEVICEFACTORY_H_
+#include "FieldBusFactory.h"
 
-#include "core/ModuleFactoryBranch.h"
-
-/**
- * DaqDeviceFactory
- *
- * branch factory that selects any DAQ module factory
- */
-class DaqDeviceFactory: public ModuleFactoryBranch
+std::vector<std::string> FieldBusFactory::selectValueList()
 {
-public:
-    DaqDeviceFactory(ModuleFactory* parent, std::string selector):
-        ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
-    virtual ~DaqDeviceFactory() { }
+    std::vector<std::string> list;
+//    list.push_back("modBus");
+    return list;
+}
 
-    std::string name() { return "DaqDeviceFactory"; }
-    std::string description()
-    {
-        return "Factory to create DAQ modules that interface"
-                " DAQ boards. ";
-    }
-
-    std::string selectDescription()
-    {
-        return "Demo select() with multiple selector choice. "
-                "See selectValueList()";
-    }
-
-    std::vector<std::string> selectValueList();
-
-private:
-    ModuleFactoryBranch* newChildFactory(std::string selector);
-};
-
-#endif /* SRC_DAQDEVICEFACTORY_H_ */
+ModuleFactoryBranch* FieldBusFactory::newChildFactory(std::string selector)
+{
+//	if (selector.compare("modBus") == 0)
+//	{
+//		return new ModBusFactory(this, selector);
+//	}
+//	else
+	{
+		poco_bugcheck_msg("Create: unknown selector");
+		throw Poco::BugcheckException();
+	}
+}

@@ -1,6 +1,6 @@
 /**
- * @file	src/DaqDeviceFactory.h
- * @date	Mar 2016
+ * @file	src/CameraFactory.cpp
+ * @date	apr. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,40 +26,21 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DAQDEVICEFACTORY_H_
-#define SRC_DAQDEVICEFACTORY_H_
+#include "CameraFactory.h"
 
-#include "core/ModuleFactoryBranch.h"
-
-/**
- * DaqDeviceFactory
- *
- * branch factory that selects any DAQ module factory
- */
-class DaqDeviceFactory: public ModuleFactoryBranch
+std::vector<std::string> CameraFactory::selectValueList()
 {
-public:
-    DaqDeviceFactory(ModuleFactory* parent, std::string selector):
-        ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
-    virtual ~DaqDeviceFactory() { }
+    std::vector<std::string> list;
 
-    std::string name() { return "DaqDeviceFactory"; }
-    std::string description()
-    {
-        return "Factory to create DAQ modules that interface"
-                " DAQ boards. ";
-    }
+//    list.push_back("uEye");
 
-    std::string selectDescription()
-    {
-        return "Demo select() with multiple selector choice. "
-                "See selectValueList()";
-    }
+    return list;
+}
 
-    std::vector<std::string> selectValueList();
-
-private:
-    ModuleFactoryBranch* newChildFactory(std::string selector);
-};
-
-#endif /* SRC_DAQDEVICEFACTORY_H_ */
+ModuleFactoryBranch* CameraFactory::newChildFactory(std::string selector)
+{
+//    if (selector.compare("Mojo") == 0)
+//        return new MojoCameraFactory(this, selector);
+//    else
+        return NULL;
+}

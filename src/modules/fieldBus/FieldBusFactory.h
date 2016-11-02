@@ -1,6 +1,6 @@
 /**
- * @file	src/DaqDeviceFactory.h
- * @date	Mar 2016
+ * @file	src/FieldBusFactory.h
+ * @date	Nov 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,34 +26,34 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DAQDEVICEFACTORY_H_
-#define SRC_DAQDEVICEFACTORY_H_
+#ifndef SRC_FIELDBUSFACTORY_H_
+#define SRC_FIELDBUSFACTORY_H_
 
-#include "core/ModuleFactoryBranch.h"
+#include "core/ModuleFactory.h"
 
 /**
- * DaqDeviceFactory
+ * FieldBusFactory
  *
- * branch factory that selects any DAQ module factory
+ * Root factory for modules implementing any field bus (ModBus, EtherCAT, ...)
  */
-class DaqDeviceFactory: public ModuleFactoryBranch
+class FieldBusFactory: public ModuleFactory
 {
 public:
-    DaqDeviceFactory(ModuleFactory* parent, std::string selector):
-        ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
-    virtual ~DaqDeviceFactory() { }
+    FieldBusFactory(): ModuleFactory(false) // is not a leaf, is root.
+		{ setLogger(name()); }
 
-    std::string name() { return "DaqDeviceFactory"; }
+    virtual ~FieldBusFactory() { }
+
+    std::string name() { return "FieldBusFactory"; }
     std::string description()
     {
-        return "Factory to create DAQ modules that interface"
-                " DAQ boards. ";
+        return "Factory for modules that implement "
+        		"a field bus";
     }
 
     std::string selectDescription()
     {
-        return "Demo select() with multiple selector choice. "
-                "See selectValueList()";
+        return "Select the field bus type";
     }
 
     std::vector<std::string> selectValueList();
@@ -62,4 +62,4 @@ private:
     ModuleFactoryBranch* newChildFactory(std::string selector);
 };
 
-#endif /* SRC_DAQDEVICEFACTORY_H_ */
+#endif /* SRC_FIELDBUSFACTORY_H_ */
