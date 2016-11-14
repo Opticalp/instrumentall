@@ -1,5 +1,5 @@
 /**
- * @file	src/SeqSource.h
+ * @file	src/core/SeqSource.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

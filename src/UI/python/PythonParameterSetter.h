@@ -1,5 +1,5 @@
 /**
- * @file	src/PythonParameterSetter.h
+ * @file	src/UI/python/PythonParameterSetter.h
  * @date	Aug. 2016
  * @author	PhRG - opticalp.fr
  */

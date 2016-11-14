@@ -1,5 +1,5 @@
 /**
- * @file	src/ThreadManager.cpp
+ * @file	src/core/ThreadManager.cpp
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */

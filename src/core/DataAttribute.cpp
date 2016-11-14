@@ -1,5 +1,5 @@
 /**
- * @file	src/DataAttribute.cpp
+ * @file	src/core/DataAttribute.cpp
  * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */

@@ -1,5 +1,5 @@
 /**
- * @file	src/PythonParameterGetter.cpp
+ * @file	src/UI/python/PythonParameterGetter.cpp
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

@@ -1,5 +1,5 @@
 /**
- * @file	src/DemoBranchFactory.h
+ * @file	src/modules/demo/DemoBranchFactory.h
  * @date	jan. 2016
  * @author	PhRG - opticalp.fr
  */

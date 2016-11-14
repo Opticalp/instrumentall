@@ -1,5 +1,5 @@
 /**
- * @file	src/ExecutionAbortedException.h
+ * @file	src/core/ExecutionAbortedException.h
  * @date	Sept. 2016
  * @author	PhRG - opticalp.fr
  */

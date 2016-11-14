@@ -1,7 +1,7 @@
 /**
  * Definition of the OutPort python class
  * 
- * @file	src/PythonOutPort.h
+ * @file	src/UI/python/PythonOutPort.h
  * @date	feb. 2016
  * @author	PhRG - opticalp.fr
  */

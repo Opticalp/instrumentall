@@ -1,5 +1,5 @@
 /**
- * @file	src/PythonDataProxy.cpp
+ * @file	src/UI/python/PythonDataProxy.cpp
  * @date	Jul 2016
  * @author	PhRG - opticalp.fr
  */

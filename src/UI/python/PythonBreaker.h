@@ -1,7 +1,7 @@
 /**
  * Definition of the Breaker python class
  *
- * @file	src/PythonBreaker.h
+ * @file	src/UI/python/PythonBreaker.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

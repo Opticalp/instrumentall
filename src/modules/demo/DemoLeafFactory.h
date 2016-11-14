@@ -1,5 +1,5 @@
 /**
- * @file	src/DemoLeafFactory.h
+ * @file	src/modules/demo/DemoLeafFactory.h
  * @date	jan. 2016
  * @author	PhRG - opticalp.fr
  */

@@ -1,5 +1,5 @@
 /**
- * @file	src/PythonAPI.h
+ * @file	src/UI/python/PythonAPI.h
  * @date	dec. 2015
  * @author	PhRG - opticalp.fr
  * 

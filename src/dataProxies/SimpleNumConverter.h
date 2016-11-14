@@ -1,5 +1,5 @@
 /**
- * @file	src/SimpleNumConverter.h
+ * @file	src/dataProxies/SimpleNumConverter.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

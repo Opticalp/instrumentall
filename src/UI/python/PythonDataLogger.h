@@ -1,7 +1,7 @@
 /**
  * Definition of the DataLogger python class
  * 
- * @file	src/PythonDataLogger.h
+ * @file	src/UI/python/PythonDataLogger.h
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */

@@ -1,7 +1,7 @@
 /**
  * Definition of the InPort python class
  * 
- * @file	src/PythonInPort.h
+ * @file	src/UI/python/PythonInPort.h
  * @date	feb. 2016
  * @author	PhRG - opticalp.fr
  */

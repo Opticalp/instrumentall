@@ -1,5 +1,5 @@
 /**
- * @file	src/Breaker.h
+ * @file	src/core/Breaker.h
  * @date	jul. 2016
  * @author	PhRG - opticalp.fr
  */

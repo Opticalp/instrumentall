@@ -1,5 +1,5 @@
 /**
- * @file	src/DemoModuleSeqMax.h
+ * @file	src/modules/demo/DemoModuleSeqMax.h
  * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */

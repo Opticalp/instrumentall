@@ -1,5 +1,5 @@
 /**
- * @file	src/PythonMainAppExport.cpp
+ * @file	src/UI/python/PythonMainAppExport.cpp
  * @date	dec. 2015
  * @author	PhRG - opticalp.fr
  */

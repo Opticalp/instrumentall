@@ -1,5 +1,5 @@
 /**
- * @file	src/GraphvizExportTool.h
+ * @file	src/tools/graphviz/GraphvizExportTool.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

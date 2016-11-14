@@ -1,5 +1,5 @@
 /**
- * @file	src/DeviceFactory.h
+ * @file	src/modules/devices/DeviceFactory.h
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */

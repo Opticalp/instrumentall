@@ -1,5 +1,5 @@
 /**
- * @file	src/DemoModuleTwoInputs.h
+ * @file	src/modules/demo/DemoModuleTwoInputs.h
  * @date	june 2016
  * @author	PhRG - opticalp.fr
  */

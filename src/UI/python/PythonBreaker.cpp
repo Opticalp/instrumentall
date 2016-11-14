@@ -1,5 +1,5 @@
 /**
- * @file	src/PythonBreaker.cpp
+ * @file	src/UI/python/PythonBreaker.cpp
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
