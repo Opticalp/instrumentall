@@ -1,7 +1,7 @@
 /**
  * Definition of the Module python class
  * 
- * @file	src/PythonModule.h
+ * @file	src/UI/python/PythonModule.h
  * @date	jan. 2016
  * @author	PhRG - opticalp.fr
  */

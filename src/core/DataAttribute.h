@@ -1,5 +1,5 @@
 /**
- * @file	src/DataAttribute.h
+ * @file	src/core/DataAttribute.h
  * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */

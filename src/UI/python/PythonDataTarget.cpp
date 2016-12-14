@@ -1,5 +1,5 @@
 /**
- * @file	src/PythonDataTarget.cpp
+ * @file	src/UI/python/PythonDataTarget.cpp
  * @date	jul. 2016
  * @author	PhRG - opticalp.fr
  */

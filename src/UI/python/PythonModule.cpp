@@ -1,5 +1,5 @@
 /**
- * @file	src/PythonModule.cpp
+ * @file	src/UI/python/PythonModule.cpp
  * @date	jan. 2016
  * @author	PhRG - opticalp.fr
  */

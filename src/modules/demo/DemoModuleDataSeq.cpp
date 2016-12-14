@@ -1,5 +1,5 @@
 /**
- * @file	src/DemoModuleDataSeq.cpp
+ * @file	src/modules/demo/DemoModuleDataSeq.cpp
  * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */

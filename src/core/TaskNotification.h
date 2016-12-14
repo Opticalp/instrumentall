@@ -1,5 +1,5 @@
 /**
- * @file	src/TaskNotification.h
+ * @file	src/core/TaskNotification.h
  * @date	June 2016
  * @author	Applied Informatics Software Engineering GmbH and contributors
  *

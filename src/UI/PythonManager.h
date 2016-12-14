@@ -1,5 +1,5 @@
 /**
- * @file	src/PythonManager.h
+ * @file	src/UI/PythonManager.h
  * @date	nov. 2015
  * @author	PhRG - opticalp.fr
  */

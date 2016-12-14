@@ -1,5 +1,5 @@
 /**
- * @file	src/DataGen.ipp
+ * @file	src/modules/dataGen/DataGen.ipp
  * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */

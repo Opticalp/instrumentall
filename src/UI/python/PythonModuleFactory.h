@@ -1,7 +1,7 @@
 /**
  * Definition of the Factory python class
  * 
- * @file	src/PythonModuleFactory.h
+ * @file	src/UI/python/PythonModuleFactory.h
  * @date	jan. 2016
  * @author	PhRG - opticalp.fr
  */

@@ -1,5 +1,5 @@
 /**
- * @file	src/CameraFactory.h
+ * @file	src/modules/devices/CameraFactory.h
  * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */

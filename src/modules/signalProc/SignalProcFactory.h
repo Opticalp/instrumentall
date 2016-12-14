@@ -1,5 +1,5 @@
 /**
- * @file	src/SignalProcFactory.h
+ * @file	src/modules/signalProc/SignalProcFactory.h
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */

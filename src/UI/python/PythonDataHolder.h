@@ -1,7 +1,7 @@
 /**
- * Definition of th DataHolder python class
+ * Definition of the DataHolder python class
  *
- * @file	src/PythonDataHolder.h
+ * @file	src/UI/python/PythonDataHolder.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

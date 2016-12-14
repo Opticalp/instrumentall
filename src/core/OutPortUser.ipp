@@ -1,5 +1,5 @@
 /**
- * @file	src/OutPortUser.ipp
+ * @file	src/core/OutPortUser.ipp
  * @date	June 2016
  * @author	PhRG - opticalp.fr
  */

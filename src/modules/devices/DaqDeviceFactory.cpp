@@ -1,5 +1,5 @@
 /**
- * @file	src/DaqDeviceFactory.cpp
+ * @file	src/modules/devices/DaqDeviceFactory.cpp
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */

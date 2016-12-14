@@ -1,5 +1,5 @@
 /**
- * @file	src/GvExportFactories.h
+ * @file	src/tools/graphviz/GvExportFactories.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

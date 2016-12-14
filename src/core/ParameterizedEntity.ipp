@@ -1,5 +1,5 @@
 /**
- * @file	src/ParameterizedEntity.ipp
+ * @file	src/core/ParameterizedEntity.ipp
  * @date	June 2016
  * @author	PhRG - opticalp.fr
  *

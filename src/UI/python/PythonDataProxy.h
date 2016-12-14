@@ -1,7 +1,7 @@
 /**
  * Definition of the DataProxy python class
  * 
- * @file	src/PythonDataProxy.h
+ * @file	src/UI/python/PythonDataProxy.h
  * @date	Jul 2016
  * @author	PhRG - opticalp.fr
  */

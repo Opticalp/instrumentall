@@ -1,7 +1,7 @@
 /**
  * Definition of the DataTarget python class
  * 
- * @file	src/PythonDataTarget.h
+ * @file	src/UI/python/PythonDataTarget.h
  * @date	jul. 2016
  * @author	PhRG - opticalp.fr
  */

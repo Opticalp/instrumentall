@@ -1,5 +1,5 @@
 /**
- * @file	src/DemoModuleSeqAccu.h
+ * @file	src/modules/demo/DemoModuleSeqAccu.h
  * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */

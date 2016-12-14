@@ -1,7 +1,7 @@
 /**
  * Definition of the Task python class
  * 
- * @file	src/PythonTask.h
+ * @file	src/UI/python/PythonTask.h
  * @date	june 2016
  * @author	PhRG - opticalp.fr
  */

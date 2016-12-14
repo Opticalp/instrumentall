@@ -1,6 +1,6 @@
 /**
- * @file	DepPython.cpp
- * @date	20 nov. 2015
+ * @file	src/UI/python/DepPython.cpp
+ * @date	Nov. 2015
  * @author	PhRG - opticalp.fr
  */
 

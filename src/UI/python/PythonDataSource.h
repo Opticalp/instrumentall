@@ -1,7 +1,7 @@
 /**
  * Definition of the DataSource python class
  * 
- * @file	src/PythonDataSource.h
+ * @file	src/UI/python/PythonDataSource.h
  * @date	jul. 2016
  * @author	PhRG - opticalp.fr
  */

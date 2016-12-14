@@ -1,5 +1,5 @@
 /**
- * @file	src/DataGeneratorFactory.cpp
+ * @file	src/modules/dataGen/DataGeneratorFactory.cpp
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */

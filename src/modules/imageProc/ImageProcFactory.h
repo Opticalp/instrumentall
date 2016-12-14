@@ -1,5 +1,5 @@
 /**
- * @file	src/ImageProcFactory.h
+ * @file	src/modules/imageProc/ImageProcFactory.h
  * @date	Apr 2016
  * @author	PhRG - opticalp.fr
  */

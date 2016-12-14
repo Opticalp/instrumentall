@@ -1,5 +1,5 @@
 /**
- * @file	src/MainApplication.h
+ * @file	src/core/MainApplication.h
  * @date	nov. 2015
  * @author	PhRG - opticalp.fr
  *

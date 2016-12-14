@@ -1,5 +1,5 @@
 /**
- * @file	src/ParameterizedWithGetters.h
+ * @file	src/core/ParameterizedWithGetters.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

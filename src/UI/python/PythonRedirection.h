@@ -1,5 +1,5 @@
 /**
- * @file	src/PythonRedirection.h
+ * @file	src/UI/python/PythonRedirection.h
  * @date	nov. 2015
  * @author	PhRG - opticalp.fr
  * 

@@ -1,5 +1,5 @@
 /**
- * @file	src/FieldBusFactory.h
+ * @file	src/modules/fieldBus/FieldBusFactory.h
  * @date	Nov 2016
  * @author	PhRG - opticalp.fr
  */

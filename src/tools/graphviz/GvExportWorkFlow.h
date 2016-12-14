@@ -1,5 +1,5 @@
 /**
- * @file	src/GvExportWorkFlow.h
+ * @file	src/tools/graphviz/GvExportWorkFlow.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

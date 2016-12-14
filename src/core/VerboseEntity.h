@@ -1,5 +1,5 @@
 /**
- * @file	src/VerboseEntity.h
+ * @file	src/core/VerboseEntity.h
  * @date	dec. 2015
  * @author	PhRG - opticalp.fr
  */

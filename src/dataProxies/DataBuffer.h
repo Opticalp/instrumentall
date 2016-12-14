@@ -1,5 +1,5 @@
 /**
- * @file	src/DataBuffer.h
+ * @file	src/dataProxies/DataBuffer.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */
