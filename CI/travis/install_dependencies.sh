@@ -21,29 +21,29 @@ if [ $BUILD_POCO == true ] || [ "$TRAVIS_OS_NAME" == "linux" ]
 then
     echo "BUILD_POCO option active"
 
-    echo "updating cmake to 3.1.0 (3.0.0 required for poco build) "
-    CMAKE_VERSION_MAJOR_MINOR="3.1"
-    CMAKE_VERSION_PATCH="0"
-    CMAKE_VERSION="${CMAKE_VERSION_MAJOR_MINOR}.${CMAKE_VERSION_PATCH}"
     wget -V
     echo "as soon as wget is 1.13, we should disable certificate checking"
 
     if [ "$TRAVIS_OS_NAME" == "linux" ]
     then 
+        echo "updating cmake to 3.1.0 (3.0.0 required for poco build) "
+        CMAKE_VERSION_MAJOR_MINOR="3.1"
+        CMAKE_VERSION_PATCH="0"
+        CMAKE_VERSION="${CMAKE_VERSION_MAJOR_MINOR}.${CMAKE_VERSION_PATCH}"
         echo "Linux: getting directly recent CMake binaries..."
         cd
         wget --no-check-certificate "https://www.cmake.org/files/v${CMAKE_VERSION_MAJOR_MINOR}/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
         tar -xzvf cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz --strip 1 --exclude="*/doc/*" --exclude="*/man/*"
         cd $CURRENT_DIR
-    else
-        echo "Not Linux. CMake needs to be built from sources. "
-        wget --no-check-certificate "https://www.cmake.org/files/v${CMAKE_VERSION_MAJOR_MINOR}/cmake-${CMAKE_VERSION}.tar.gz"
-        tar xzf "cmake-${CMAKE_VERSION}.tar.gz"
-        cd "cmake-${CMAKE_VERSION}"
-        cmake -DCMAKE_INSTALL_PREFIX=~ .
-        make -j2
-        make install
-        cd ..
+#    else
+#        echo "Not Linux. CMake needs to be built from sources. "
+#        wget --no-check-certificate "https://www.cmake.org/files/v${CMAKE_VERSION_MAJOR_MINOR}/cmake-${CMAKE_VERSION}.tar.gz"
+#        tar xzf "cmake-${CMAKE_VERSION}.tar.gz"
+#        cd "cmake-${CMAKE_VERSION}"
+#        cmake -DCMAKE_INSTALL_PREFIX=~ .
+#        make -j2
+#        make install
+#        cd ..
     fi
     export PATH="~/bin:${PATH}"
     # check that the version in PATH is the right one
