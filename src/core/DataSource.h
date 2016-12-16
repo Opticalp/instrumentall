@@ -1,5 +1,5 @@
 /**
- * @file	src/DataSource.h
+ * @file	src/core/DataSource.h
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

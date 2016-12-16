@@ -1,5 +1,5 @@
 /**
- * @file	src/ParameterWorker.cpp
+ * @file	src/core/ParameterWorker.cpp
  * @date	Aug. 2016
  * @author	PhRG - opticalp.fr
  */

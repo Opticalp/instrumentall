@@ -1,5 +1,5 @@
 /**
- * @file	src/DataTarget.cpp
+ * @file	src/core/DataTarget.cpp
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

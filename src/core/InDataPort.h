@@ -1,5 +1,5 @@
 /**
- * @file	src/InDataPort.h
+ * @file	src/core/InDataPort.h
  * @date	feb. 2016
  * @author	PhRG - opticalp.fr
  */

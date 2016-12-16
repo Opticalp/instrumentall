@@ -1,5 +1,5 @@
 /**
- * @file	src/DataProxy.cpp
+ * @file	src/core/DataProxy.cpp
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

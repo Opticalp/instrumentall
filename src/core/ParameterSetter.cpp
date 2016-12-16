@@ -1,5 +1,5 @@
 /**
- * @file	src/ParameterSetter.cpp
+ * @file	src/core/ParameterSetter.cpp
  * @date	Aug. 2016
  * @author	PhRG - opticalp.fr
  */

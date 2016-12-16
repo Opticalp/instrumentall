@@ -1,5 +1,5 @@
 /**
- * @file	src/Module.h
+ * @file	src/core/Module.h
  * @date	dec. 2015
  * @author	PhRG - opticalp.fr
  */

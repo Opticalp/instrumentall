@@ -1,5 +1,5 @@
 /**
- * @file	src/Dispatcher.h
+ * @file	src/core/Dispatcher.h
  * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */

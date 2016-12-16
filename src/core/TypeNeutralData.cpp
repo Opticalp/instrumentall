@@ -1,5 +1,5 @@
 /**
- * @file	src/TypeNeutralData.cpp
+ * @file	src/core/TypeNeutralData.cpp
  * @date	june 2016
  * @author	PhRG - opticalp.fr
  */

@@ -1,5 +1,5 @@
 /**
- * @file	src/DepPoco.h
+ * @file	src/core/DepPoco.h
  * @date	nov. 2015
  * @author	PhRG - opticalp.fr
  */

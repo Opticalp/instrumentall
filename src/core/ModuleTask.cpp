@@ -1,5 +1,5 @@
 /**
- * @file	src/ModuleTask.cpp
+ * @file	src/core/ModuleTask.cpp
  * @date	31 mai 2016
  * @author	PhRG - opticalp.fr
  */

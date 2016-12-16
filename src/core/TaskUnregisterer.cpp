@@ -1,5 +1,5 @@
 /**
- * @file	src/TaskUnregisterer.cpp
+ * @file	src/core/TaskUnregisterer.cpp
  * @date	Oct. 2016
  * @author	PhRG - opticalp.fr
  */

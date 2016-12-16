@@ -1,5 +1,5 @@
 /**
- * @file	src/InPort.cpp
+ * @file	src/core/InPort.cpp
  * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */

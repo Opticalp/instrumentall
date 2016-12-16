@@ -1,5 +1,5 @@
 /**
- * @file	src/DataLogger.h
+ * @file	src/core/DataLogger.h
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */

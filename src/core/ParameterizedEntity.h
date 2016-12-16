@@ -1,5 +1,5 @@
 /**
- * @file	src/ParameterizedEntity.h
+ * @file	src/core/ParameterizedEntity.h
  * @date	June 2016
  * @author	PhRG - opticalp.fr
  */

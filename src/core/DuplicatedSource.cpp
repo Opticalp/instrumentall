@@ -1,5 +1,5 @@
 /**
- * @file	src/DuplicatedSource.cpp
+ * @file	src/core/DuplicatedSource.cpp
  * @date	Jul. 2016
  * @author	PhRG - opticalp.fr
  */

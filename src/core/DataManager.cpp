@@ -1,5 +1,5 @@
 /**
- * @file	src/DataManager.cpp
+ * @file	src/core/DataManager.cpp
  * @date	Feb. 2016
  * @author	PhRG - opticalp.fr
  */
