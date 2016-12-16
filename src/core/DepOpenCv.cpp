@@ -71,13 +71,17 @@ std::string DepOpenCv::buildTimeVersion()
 
 std::string DepOpenCv::runTimeVersion()
 {
-	std::string full(cv::getBuildInformation());
+#if CV_MAJOR_VERSION > 2 || CV_MINOR_VERSION >= 4
+    std::string full(cv::getBuildInformation());
 
-	if (full.empty())
-		return "";
+    if (full.empty())
+        return "";
 
-	Poco::StringTokenizer tok(full, "\n");
+    Poco::StringTokenizer tok(full, "\n");
     return tok[1];
+#else
+    return "unknown: build time version is too old. ";
+#endif
 }
 
 #endif /* HAVE_OPENCV */
