@@ -36,3 +36,7 @@ THE SOFTWARE.
 #define IS_FORK      @IS_FORK@
 #define FORK_NAME    "@FORK_NAME@"
 #define ROOT_VERSION "@ROOT_VERSION@"
+
+#ifdef HAVE_OPENCV
+#    define OPENCV_VERSION "@OCV_VERSION@"
+#endif /* HAVE_OPENCV */
