@@ -101,5 +101,16 @@ then
     fi
 fi
 
+echo "Getting openCV from github repo"
+git clone https://github.com/Itseez/opencv.git
+cd opencv
+mkdir build
+cd build
+cmake ..
+make -j2
+sudo make -j2 install
+cd ../..
+echo "openCV installed"
+
 cd $CURRENT_DIR
 pwd
