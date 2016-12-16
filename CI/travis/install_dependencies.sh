@@ -22,10 +22,12 @@ then
     echo "BUILD_POCO option active"
 
     wget -V
-    echo "as soon as wget is 1.13, we should disable certificate checking"
+    echo "as soon as wget version is > 1.10, we should disable certificate checking"
 
     if [ "$TRAVIS_OS_NAME" == "linux" ]
     then 
+        echo "current cmake version is:"
+        cmake --version
         echo "updating cmake to 3.1.0 (3.0.0 required for poco build) "
         CMAKE_VERSION_MAJOR_MINOR="3.1"
         CMAKE_VERSION_PATCH="0"
