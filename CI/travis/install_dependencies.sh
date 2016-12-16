@@ -101,15 +101,20 @@ then
     fi
 fi
 
-echo "Getting openCV from github repo"
-git clone https://github.com/Itseez/opencv.git
-cd opencv
-mkdir build
-cd build
-cmake ..
-make -j2
-sudo make -j2 install
-cd ../..
+echo "Installing openCV from the packages"
+if [ $TRAVIS_OS_NAME == linux ] 
+then 
+    echo "using apt-get"
+    sudo apt-get install libopencv-dev -q -y 
+    # echo "opencv lib installed with apt-get" 
+fi
+if [ $TRAVIS_OS_NAME == osx ] 
+then 
+    echo "using homebrew"
+    brew tap homebrew/science
+    brew install opencv
+    # echo "opencv lib installed with homebrew" 
+fi
 echo "openCV installed"
 
 cd $CURRENT_DIR
