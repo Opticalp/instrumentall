@@ -52,3 +52,14 @@ if "%ARCH%"=="Win64" (
 ) else (
   set PYTHONHOME=C:\Python27
 )
+
+echo "Install OpenCV using chocolatey"
+choco upgrade chocolatey
+choco info opencv
+set OPENCV=c:\jojo
+choco install opencv --params="/Environment /InstallationPath:%OPENCV%" --version=2.4.13 -y
+echo "OpenCV installed"
+
+call refreshenv
+echo "PATH is now: %PATH%"
+echo "OPENCV_DIR is: %OPENCV_DIR%"
