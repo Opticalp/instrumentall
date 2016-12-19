@@ -29,11 +29,13 @@ init:
 - set POCO_INSTALL_PREFIX=%PROGRAMFILES%\Poco
 - set OPENCV_BASE_DIR=%PROGRAMFILES%
 - set OPENCV_DIR=%PROGRAMFILES%\opencv
-- set OPENCV_VERSION=2.4.13
-- set OPENCV_CMAKE=-Dno-opencv="true"
-- if "%ARCH%"=="Win64" ( set OPENCV_PATH=build\x64 ) else ( set OPENCV_PATH=build\x86 )
-- if "%GENERATOR%"=="Visual Studio 11 2012" ( set OPENCV_PATH=%OPENCV_PATH%\vc11\bin ; set OPENCV_CMAKE=-DOpenCV_DIR="%OPENCV_DIR%\build") 
-#- if "%GENERATOR%"=="Visual Studio 12 2013" ( set OPENCV_PATH=%OPENCV_PATH%\vc12\bin ; set OPENCV_CMAKE=-DOpenCV_DIR="%OPENCV_DIR%\build") 
+- if "%GENERATOR%"=="Visual Studio 11 2012" ( set OPENCV_VERSION=2.4.13) else ( set OPENCV_VERSION=3.1.0)
+- set OPENCV_CMAKE=-DOpenCV_DIR="%OPENCV_DIR%\build" 
+- if "%ARCH%"=="Win64" ( set OPENCV_DLL_PATH=build\x64) else ( set OPENCV_DLL_PATH=build\x86)
+- if "%GENERATOR%"=="Visual Studio 11 2012" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc11\bin)
+- if "%GENERATOR%"=="Visual Studio 12 2013" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc12\bin) 
+- if "%GENERATOR%"=="Visual Studio 14 2015" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc14\bin) 
+- if "%GENERATOR%"=="MinGW Makefiles" ( set OPENCV_CMAKE=-Dno-opencv="true")
 - set PATH=C:\MinGW\bin;%PATH%;%POCO_INSTALL_PREFIX%\bin;%OPENCV_DIR%\%OPENCV_DLL_PATH%
 # - set PATH=%PATH%;%ProgramFiles(x86)%\Windows Kits\10\bin\x86 # to be used if using MinGW
 
@@ -41,7 +43,7 @@ install:
 - if "%GENERATOR%"=="MinGW Makefiles" ( set SH_COMMAND=gulash.exe ) else ( set SH_COMMAND=sh.exe )
 - if "%GENERATOR%"=="MinGW Makefiles" ( move "%PROGRAMFILES%\Git\usr\bin\sh.exe" "%PROGRAMFILES%\Git\usr\bin\%SH_COMMAND%" )
 - if NOT [%ARCH%] == [] ( set GENERATOR=%GENERATOR% %ARCH%)
-- call %APPVEYOR_BUILD_FOLDER%\CI\appveyor\install_dependencies.bat # install poco
+- call %APPVEYOR_BUILD_FOLDER%\CI\appveyor\install_dependencies.bat # install poco, openCV
 
 before_build:
 - cd %APPVEYOR_BUILD_FOLDER%
