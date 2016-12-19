@@ -15,19 +15,13 @@ environment:
   matrix:
   - GENERATOR: Visual Studio 11 2012
     ARCH: Win64
-    OPENCV_DLL_PATH: build\x64\vc11\bin
   - GENERATOR: Visual Studio 11 2012
-    OPENCV_DLL_PATH: build\x86\vc11\bin
 #  - GENERATOR: Visual Studio 12 2013
 #    ARCH: Win64
-#    OPENCV_DLL_PATH: build\x64\vc12\bin
 #  - GENERATOR: Visual Studio 12 2013
-#    OPENCV_DLL_PATH: build\x86\vc12\bin
   - GENERATOR: Visual Studio 14 2015
     ARCH: Win64
-    OPENCV_DLL_PATH: build\x64\vc14\bin
   - GENERATOR: Visual Studio 14 2015
-    OPENCV_DLL_PATH: build\x86\vc14\bin
 #  - GENERATOR: MinGW Makefiles  # poco is not compiling with this yet... (1.6.0)
 
 init:
@@ -36,6 +30,10 @@ init:
 - set OPENCV_BASE_DIR=%PROGRAMFILES%
 - set OPENCV_DIR=%PROGRAMFILES%\opencv
 - set OPENCV_VERSION=2.4.13
+- set OPENCV_CMAKE=-Dno-opencv="true"
+- if "%ARCH%"=="Win64" ( set OPENCV_PATH=build\x64 ) else ( set OPENCV_PATH=build\x86 )
+- if "%GENERATOR%"=="Visual Studio 11 2012" ( set OPENCV_PATH=%OPENCV_PATH%\vc11\bin ; set OPENCV_CMAKE=-DOpenCV_DIR="%OPENCV_DIR%\build") 
+#- if "%GENERATOR%"=="Visual Studio 12 2013" ( set OPENCV_PATH=%OPENCV_PATH%\vc12\bin ; set OPENCV_CMAKE=-DOpenCV_DIR="%OPENCV_DIR%\build") 
 - set PATH=C:\MinGW\bin;%PATH%;%POCO_INSTALL_PREFIX%\bin;%OPENCV_DIR%\%OPENCV_DLL_PATH%
 # - set PATH=%PATH%;%ProgramFiles(x86)%\Windows Kits\10\bin\x86 # to be used if using MinGW
 
@@ -50,7 +48,7 @@ before_build:
 - mkdir build
 - cd build
 - cmake --help
-- cmake -G"%GENERATOR%" .. -DPoco_DIR="%POCO_INSTALL_PREFIX%\lib\cmake\Poco" -DOpenCV_DIR="%OPENCV_DIR%\build"
+- cmake -G"%GENERATOR%" .. -DPoco_DIR="%POCO_INSTALL_PREFIX%\lib\cmake\Poco" %OPENCV_CMAKE%
 
 build_script:
 - env

@@ -53,11 +53,14 @@ if "%ARCH%"=="Win64" (
   set PYTHONHOME=C:\Python27
 )
 
-echo Install OpenCV using curl and 7zip
-curl -fSL -o opencv.exe -m 300 http://downloads.sourceforge.net/project/opencvlibrary/opencv-win/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%.exe
-echo Downloading from sourceforge done. 
-REM opencv.exe -y -o"%OPENCV_BASE_DIR"
-call 7z x opencv.exe -o"%OPENCV_BASE_DIR%"
-dir "%OPENCV_DIR%"
-echo OpenCV installed
-
+if "%OPENCV_CMAKE%"=="-Dno-opencv=\"true\"" (
+  echo The OpenCV binaries for the given generator were not found. OpenCV disabled. 
+) else (
+  echo Install OpenCV using curl and 7zip
+  curl -fSL -o opencv.exe -m 300 http://downloads.sourceforge.net/project/opencvlibrary/opencv-win/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%.exe
+  echo Downloading from sourceforge done. 
+  REM opencv.exe -y -o"%OPENCV_BASE_DIR"
+  call 7z x opencv.exe -o"%OPENCV_BASE_DIR%"
+  dir "%OPENCV_DIR%"
+  echo OpenCV installed
+)
