@@ -14,7 +14,8 @@ clone_folder: c:\projects\instrumentall
 init:
 - env
 - set POCO_INSTALL_PREFIX=%PROGRAMFILES%\Poco
-- set OPENCV_DIR=%PROGRAMFILES%\OpenCV
+- set OPENCV_BASE_DIR=%PROGRAMFILES%
+- set OPENCV_DIR=%PROGRAMFILES%\opencv
 - set OPENCV_VERSION=2.4.13
 - set PATH=C:\MinGW\bin;%PATH%;%POCO_INSTALL_PREFIX%\bin;%OPENCV_DIR%\bin
 # - set PATH=%PATH%;%ProgramFiles(x86)%\Windows Kits\10\bin\x86 # to be used if using MinGW
@@ -43,7 +44,7 @@ before_build:
 - mkdir build
 - cd build
 - cmake --help
-- cmake -G"%GENERATOR%" .. -DPoco_DIR="%POCO_INSTALL_PREFIX%\lib\cmake\Poco"
+- cmake -G"%GENERATOR%" .. -DPoco_DIR="%POCO_INSTALL_PREFIX%\lib\cmake\Poco" -DOpenCV_DIR="%OPENCV_DIR%\build"
 
 build_script:
 - cmake --build . --config %CONFIGURATION%
