@@ -14,7 +14,9 @@ clone_folder: c:\projects\instrumentall
 init:
 - env
 - set POCO_INSTALL_PREFIX=%PROGRAMFILES%\Poco
-- set PATH=C:\MinGW\bin;%PATH%;%POCO_INSTALL_PREFIX%\bin
+- set OPENCV_DIR=%PROGRAMFILES%\OpenCV
+- set OPENCV_VERSION=2.4.13
+- set PATH=C:\MinGW\bin;%PATH%;%POCO_INSTALL_PREFIX%\bin;%OPENCV_DIR%\bin
 # - set PATH=%PATH%;%ProgramFiles(x86)%\Windows Kits\10\bin\x86 # to be used if using MinGW
 
 environment:

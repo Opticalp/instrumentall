@@ -56,10 +56,9 @@ if "%ARCH%"=="Win64" (
 echo "Install OpenCV using chocolatey"
 choco upgrade chocolatey
 choco info opencv
-set OPENCV=c:\jojo
-choco install opencv --params="/Environment /InstallationPath:%OPENCV%" --version=2.4.13 -y
+REM choco install opencv --params="/Environment /InstallationPath:%OPENCV_DIR%" --version=2.4.13 -y
+choco install opencv --params="/InstallationPath:%OPENCV_DIR%" --version=%OPENCV_VERSION% -y
 echo "OpenCV installed"
 
-call refreshenv
-echo "PATH is now: %PATH%"
-echo "OPENCV_DIR is: %OPENCV_DIR%"
+REM call refreshenv
+
