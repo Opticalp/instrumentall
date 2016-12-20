@@ -21,7 +21,7 @@ environment:
 #  - GENERATOR: Visual Studio 12 2013
   - GENERATOR: Visual Studio 14 2015
     ARCH: Win64
-  - GENERATOR: Visual Studio 14 2015
+#  - GENERATOR: Visual Studio 14 2015 # openCV has no pre-built for x86/vc14
 #  - GENERATOR: MinGW Makefiles  # poco is not compiling with this yet... (1.6.0)
 
 init:
@@ -29,7 +29,7 @@ init:
 - set POCO_INSTALL_PREFIX=%PROGRAMFILES%\Poco
 - set OPENCV_BASE_DIR=%PROGRAMFILES%
 - set OPENCV_DIR=%PROGRAMFILES%\opencv
-- if "%GENERATOR%"=="Visual Studio 11 2012" ( set OPENCV_VERSION=2.4.13) else ( set OPENCV_VERSION=3.1.0)
+- if "%GENERATOR%"=="Visual Studio 14 2015" ( set OPENCV_VERSION=3.1.0) else ( set OPENCV_VERSION=2.4.13)
 - set OPENCV_CMAKE=-DOpenCV_DIR="%OPENCV_DIR%\build" 
 - if "%ARCH%"=="Win64" ( set OPENCV_DLL_PATH=build\x64) else ( set OPENCV_DLL_PATH=build\x86)
 - if "%GENERATOR%"=="Visual Studio 11 2012" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc11\bin)
