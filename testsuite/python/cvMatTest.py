@@ -56,6 +56,27 @@ def myMain():
     task.wait()
     print task.name + " state is " + task.state()
 
+    print "Attaching a data logger to show the image..."
+    loggerClasses = dataLoggerClasses() # DataManager::dataLoggerClasses()
+    print "Available data logger classes: "
+    for loggerClass in loggerClasses:
+        print " - " + loggerClass + ": " + loggerClasses[loggerClass]
+    
+    print 'Logger creation using the constructor: DataLogger("ShowImageLogger")'
+    logger = DataLogger("ShowImageLogger") 
+    print "Logger description: " + logger.description
+    
+    imgGen.outPort("data").register(logger)
+
+    runModule(imgGen)
+    time.sleep(1) # wait 1s in order to show the image
+
+    print "Set output value to 255"
+    imgGen.setParameterValue("value", 255)
+
+    runModule(imgGen)
+    time.sleep(1) # wait 1s in order to show the image
+
 ##    print "Return value is: " + str(mod1.outPort("data").getDataValue())
 ##    if ( abs(mod1.outPort("data").getDataValue()-3.14) > 0.01 ):
 ##        raise RuntimeError("Wrong return value: 3.14 expected. ")
@@ -139,6 +160,7 @@ def myMain():
 # main body    
 import sys
 import os
+import time
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
