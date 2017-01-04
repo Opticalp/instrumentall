@@ -30,6 +30,9 @@ THE SOFTWARE.
 
 #include "DemoBranchFactory.h"
 #include "DemoLeafFactory.h"
+#include "modules/GenericLeafFactory.h"
+
+#include "DemoModuleA.h"
 
 std::vector<std::string> DemoBranchFactory::selectValueList()
 {
@@ -48,5 +51,10 @@ std::vector<std::string> DemoBranchFactory::selectValueList()
 
 ModuleFactoryBranch* DemoBranchFactory::newChildFactory(std::string selector)
 {
-    return new DemoLeafFactory(this, selector);
+    if (selector.compare("leafA") == 0)
+        return new GenericLeafFactory<DemoModuleA>("DemoLeafAFactory",
+                "Example code for using the GenericLeafFactory",
+                this, selector);
+    else
+        return new DemoLeafFactory(this, selector);
 }
