@@ -61,10 +61,10 @@ CameraFromFiles::CameraFromFiles(ModuleFactory* parent, std::string customName):
             "CR-separated list of files to be used as image sources",
             ParamItem::typeString);
     currentImgPath = imgPaths.begin();
-    addParameter(paramDataType, "dataType", "image data type in OpenCV notation (\"CV_8U\","
-            "\"CV_8UC3\", \"CV_64FC3\"...)", ParamItem::typeString, "CV_8U");
+    addParameter(paramForceGrayscale, "forceGrayscale", "force a color image to be grayscale (ON). "
+            "Leave as is elsewhere (OFF)", ParamItem::typeString, "ON");
 
-    setStrParameterValue(paramDataType, getStrParameterDefaultValue(paramDataType));
+    setStrParameterValue(paramForceGrayscale, getStrParameterDefaultValue(paramForceGrayscale));
 
     // ports
     setInPortCount(inPortCnt);
@@ -73,7 +73,7 @@ CameraFromFiles::CameraFromFiles(ModuleFactory* parent, std::string customName):
 //    addInPort("inPortA", "data in", DataItem::typeInteger, inPortA);
     addTrigPort("trig", "Launch the image generation", trigPort);
 
-    addOutPort("acqReady", "acquisition ready trigger", DataItem::typeInteger, acqReadyOutPort);
+    addOutPort("acqReady", "acquisition ready trigger", DataItem::typeInt32, acqReadyOutPort);
     addOutPort("image", "image from file", DataItem::typeCvMat, imgOutPort);
 
     notifyCreation();
@@ -84,35 +84,95 @@ CameraFromFiles::CameraFromFiles(ModuleFactory* parent, std::string customName):
 
 void CameraFromFiles::process(int startCond)
 {
-    poco_information(logger(), name() + " processing...");
+    // first tests: do not make the difference between direct run or trigged run.
+    switch (startCond)
+    {
+    case noDataStartState:
+        poco_information(logger(), name() + " processing direct launch.");
+        break;
+    case allDataStartState:
+        poco_information(logger(), name() + " processing trigged launch.");
+        break;
+    default:
+        poco_bugcheck_msg("impossible start condition");
+        throw Poco::BugcheckException();
+    }
+
+    dataLock.readLock();
+
+    if (currentImgPath == imgPaths.end())
+    {
+        poco_notice(logger(), "end of image path stack reached, "
+                "starting again from the beginning");
+        currentImgPath = imgPaths.begin();
+    }
+
+    if (currentImgPath == imgPaths.end())
+    {
+        poco_warning(logger(), "No image path in the stack. "
+                "Please fill the \"files\" parameter");
+        return;
+    }
+
+    Poco::Path fullImagePath = imgDir;
+    fullImagePath.append(*currentImgPath);
+
+    dataLock.unlock();
+
+    DataAttributeOut attr;
+
+    processingTerminated();
+
+    reserveOutPort(acqReadyOutPort);
+
+    Poco::Int32* pInt32;
+    getDataToWrite<Poco::Int32>(acqReadyOutPort, pInt32);
+    *pInt32 = 1;
+    notifyOutPortReady(acqReadyOutPort, attr);
+
+    poco_information(logger(),"acq ready output port set");
+
+    reserveOutPort(imgOutPort);
+
+    cv::Mat* pMat;
+    getDataToWrite<cv::Mat>(imgOutPort, pMat);
+
+    // Read the image file (returns empty Mat if any error occurs)
+    if (forceGrayscale)
+    {
+        poco_information(logger(),
+            "Retrieving the image in gray scale format");
+        *pMat = cv::imread(fullImagePath.toString().c_str(),
+                CV_LOAD_IMAGE_GRAYSCALE);
+    }
+    else
+    {
+        poco_information(logger(),
+            "Retrieving the image in original color format");
+        *pMat = cv::imread(fullImagePath.toString().c_str(),
+                CV_LOAD_IMAGE_UNCHANGED);
+    }
+
+    if (!pMat->data)
+        poco_warning(logger(), "Empty image. Check the given file name. ");
+
+    notifyOutPortReady(imgOutPort, attr);
 }
 
 std::string CameraFromFiles::getStrParameterValue(size_t paramIndex)
 {
+    Poco::RWLock::ScopedReadLock lock(dataLock);
     switch (paramIndex)
     {
     case paramDirectory:
         return imgDir.toString();
     case paramFiles:
         return Poco::cat(std::string("\n"), imgPaths.begin(), imgPaths.end());
-    case paramDataType:
-        switch (imgDataType)
-        {
-        case CV_8UC3:
-            return "CV_8UC3";
-        case CV_16UC3:
-            return "CV_16UC3";
-        case CV_64FC3:
-            return "CV_64FC3";
-        case CV_16U:
-            return "CV_16U";
-        case CV_64F:
-            return "CV_64F";
-        case CV_8U:
-        default:
-            return "CV_8U";
-        }
-        break;
+    case paramForceGrayscale:
+        if (forceGrayscale)
+            return "ON";
+        else
+            return "OFF";
     default:
         poco_bugcheck_msg("getStrParameterValue: wrong index");
         throw Poco::BugcheckException();
@@ -121,6 +181,8 @@ std::string CameraFromFiles::getStrParameterValue(size_t paramIndex)
 
 void CameraFromFiles::setStrParameterValue(size_t paramIndex, std::string value)
 {
+    Poco::RWLock::ScopedWriteLock lock(dataLock);
+
     switch (paramIndex)
     {
     case paramDirectory:
@@ -132,24 +194,17 @@ void CameraFromFiles::setStrParameterValue(size_t paramIndex, std::string value)
         Poco::StringTokenizer tok(value, "\n",
                 Poco::StringTokenizer::TOK_IGNORE_EMPTY | Poco::StringTokenizer::TOK_TRIM);
         imgPaths.assign(tok.begin(), tok.end());
+        currentImgPath = imgPaths.begin();
         break;
     }
-    case paramDataType:
-        if ((value.compare("CV_8UC1") == 0) || (value.compare("CV_8U") == 0))
-            imgDataType = CV_8U;
-        else if ((value.compare("CV_16UC1") == 0) || (value.compare("CV_16U") == 0))
-            imgDataType = CV_16U;
-        else if ((value.compare("CV_64FC1") == 0) || (value.compare("CV_64F") == 0))
-            imgDataType = CV_64F;
-        else if (value.compare("CV_8UC3") == 0)
-            imgDataType = CV_8UC3;
-        else if (value.compare("CV_16UC3") == 0)
-            imgDataType = CV_16UC3;
-        else if (value.compare("CV_64FC3") == 0)
-            imgDataType = CV_64FC3;
+    case paramForceGrayscale:
+        if (Poco::icompare(value, "ON") == 0)
+            forceGrayscale = true;
+        else if (Poco::icompare(value, "OFF") == 0)
+            forceGrayscale = false;
         else
             throw Poco::DataFormatException("setParameterValue",
-                    value + ": Unrecognized image data format");
+                    value + ": forceGrayscale can only be set to ON or OFF");
         break;
     default:
         poco_bugcheck_msg("setStrParameterValue: wrong index");

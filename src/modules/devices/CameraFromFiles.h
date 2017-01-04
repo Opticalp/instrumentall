@@ -65,7 +65,7 @@ private:
     {
         paramDirectory,
         paramFiles,
-        paramDataType,
+        paramForceGrayscale,
         paramCnt
     };
 
@@ -76,7 +76,7 @@ private:
     std::vector< std::string > imgPaths; ///< paths of the images
     std::vector< std::string >::iterator currentImgPath; ///< position of the next image to be generated from imgPaths.
 
-    int imgDataType; ///< OpenCV image data type of the image to be emitted.
+    bool forceGrayscale;
 
     /// Indexes of the input ports
     enum inPorts
@@ -93,6 +93,7 @@ private:
         outPortCnt
     };
 
+    Poco::RWLock dataLock; ///< general lock for any data of this module
 };
 
 #endif /* HAVE_OPENCV */
