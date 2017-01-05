@@ -64,7 +64,7 @@ void ShowImageLogger::log()
         cv::imshow( name(), img );
 
         // take time to effectively display the image
-        cv::waitKey(50);
+        cv::waitKey(100);
     }
     else
     {

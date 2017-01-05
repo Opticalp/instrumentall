@@ -115,7 +115,7 @@ void CameraFromFiles::process(int startCond)
     }
 
     Poco::Path fullImagePath = imgDir;
-    fullImagePath.append(*currentImgPath);
+    fullImagePath.append(*currentImgPath++);
 
     dataLock.unlock();
 
