@@ -256,6 +256,11 @@ protected:
     virtual void lazyCancel() = 0;
     virtual void moduleReset() = 0;
 
+    /**
+     * Check if the given parameter has a default value defined in the conf file
+     */
+    bool hasParameterDefaultValue(size_t index);
+
 private:
     ParameterizedEntity();
 

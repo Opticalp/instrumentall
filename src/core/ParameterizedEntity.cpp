@@ -67,6 +67,12 @@ void ParameterizedEntity::addParameter(size_t index, std::string name, std::stri
     hardCodedValues.insert(std::pair<size_t, std::string>(index, hardCodedValue));
 }
 
+bool ParameterizedEntity::hasParameterDefaultValue(size_t index)
+{
+    std::string keyStr = confPrefixKey + "." + paramSet.at(index).name;
+    return appConf().hasProperty(keyStr);
+}
+
 std::string ParameterizedEntity::getParameterDefaultValue(size_t index)
 {
     // 1. check in the conf file
@@ -268,4 +274,3 @@ void ParameterizedEntity::applyParameters()
 		}
 	}
 }
-

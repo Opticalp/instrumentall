@@ -31,6 +31,7 @@
 
 #include "DataTarget.h"
 #include "VerboseEntity.h"
+#include "ParameterizedEntity.h"
 
 #include "Poco/Runnable.h"
 #include "Poco/Mutex.h"
@@ -49,6 +50,7 @@ using Poco::Mutex;
  * as linking to this method.
  */
 class DataLogger: public DataTarget,
+    public ParameterizedEntity,
     public Poco::Runnable, public Poco::RefCountedObject,
     public VerboseEntity
 {
@@ -59,7 +61,11 @@ public:
 	 * In the implementations, the constructor could set
 	 * the unique name of the logger.
 	 */
-    DataLogger(std::string implementationName): className(implementationName) { }
+    DataLogger(std::string implementationName):
+        className(implementationName),
+        ParameterizedEntity("dataLogger." + implementationName)
+        {   }
+
     virtual ~DataLogger() { }
 
     /**
@@ -101,6 +107,17 @@ protected:
      * using a static ref counter.
      */
     void setName(size_t refCount);
+
+    /**
+     * Set a new name for the data logger
+     *
+     *  - change logger()
+     *  - change ParameterizedEntity prefix key
+     *  - reload the default parameters if any
+     */
+    void setName(std::string newName);
+
+    Poco::Logger& logger() { return VerboseEntity::logger(); }
 
 private:
     DataLogger();
