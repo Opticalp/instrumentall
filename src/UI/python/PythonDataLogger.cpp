@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "core/Dispatcher.h"
 #include "PythonDataLogger.h"
 #include "PythonOutPort.h"
+#include "PythonParameterizedEntity.h"
 
 #include "Poco/Util/Application.h"
 
@@ -193,6 +194,21 @@ PyObject* pyDataLoggerDetach(DataLoggerMembers* self)
 			  .unbind(*self->logger);
 
 	Py_RETURN_NONE;
+}
+
+PyObject* pyDataLoggerGetParameterSet(DataLoggerMembers* self)
+{
+    return pyGetParameterSet(*self->logger);
+}
+
+PyObject* pyDataLoggerGetParameterValue(DataLoggerMembers* self, PyObject* args)
+{
+    return pyGetParameterValue(*self->logger, args);
+}
+
+PyObject* pyDataLoggerSetParameterValue(DataLoggerMembers* self, PyObject* args)
+{
+    return pySetParameterValue(*self->logger, args);
 }
 
 #endif /* HAVE_PYTHON27 */

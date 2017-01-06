@@ -108,10 +108,49 @@ static PyMethodDef pyMethodDataLoggerDetach =
     "Detach the logger from its data source"
 };
 
+/// DataLogger::parameterSet() python wrapper
+extern "C" PyObject* pyDataLoggerGetParameterSet(DataLoggerMembers *self);
+
+static PyMethodDef pyMethodDataLoggerGetParameterSet =
+{
+    "getParameterSet",
+    (PyCFunction)pyDataLoggerGetParameterSet,
+    METH_NOARGS,
+    "Retrieve the parameter set"
+};
+
+/// DataLogger::getParameterValue python wrapper
+extern "C"
+PyObject* pyDataLoggerGetParameterValue(DataLoggerMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataLoggerGetParameterValue =
+{
+    "getParameterValue",
+    (PyCFunction)pyDataLoggerGetParameterValue,
+    METH_VARARGS,
+    "getParameterValue(paramName): get the value of the given parameter"
+};
+
+/// DataLogger::setParameterValue python wrapper
+extern "C"
+PyObject* pyDataLoggerSetParameterValue(DataLoggerMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataLoggerSetParameterValue =
+{
+    "setParameterValue",
+    (PyCFunction)pyDataLoggerSetParameterValue,
+    METH_VARARGS,
+    "setParameterValue(paramName, value): set the value of the given parameter"
+};
+
 /// exported methods
 static PyMethodDef pyDataLoggerMethods[] = {
         pyMethodDataLoggerSource,
         pyMethodDataLoggerDetach,
+
+        pyMethodDataLoggerGetParameterSet,
+        pyMethodDataLoggerGetParameterValue,
+        pyMethodDataLoggerSetParameterValue,
 
         {NULL} // sentinel
 };
