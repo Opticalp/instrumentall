@@ -59,7 +59,7 @@ public:
 	 * In the implementations, the constructor could set
 	 * the unique name of the logger.
 	 */
-    DataLogger() { }
+    DataLogger(std::string implementationName): className(implementationName) { }
     virtual ~DataLogger() { }
 
     /**
@@ -68,6 +68,13 @@ public:
      * This method release the data after the logging.
      */
     void run();
+
+    /**
+     * Get the data logger implementation class name
+     *
+     * @see DataLogger::DataLogger(std::string implementationName)
+     */
+    const std::string& getClassName() const { return className; }
 
 protected:
     /**
@@ -86,6 +93,8 @@ protected:
     virtual void log() = 0;
 
 private:
+    DataLogger();
+
     /**
      * Launch run() in a new thread using the ThreadManager
      */
@@ -98,6 +107,8 @@ private:
 	void targetCancel() { }
 	void targetWaitCancelled() { }
 	void targetReset() { }
+
+	std::string className; ///< data logger implementation class name
 
     Poco::FastMutex mutex; ///< data logger main mutex
 };
