@@ -33,6 +33,7 @@ THE SOFTWARE.
 #include "PythonDataLogger.h"
 #include "PythonOutPort.h"
 #include "PythonParameterizedEntity.h"
+#include "PythonVerboseEntity.h"
 
 #include "Poco/Util/Application.h"
 
@@ -209,6 +210,16 @@ PyObject* pyDataLoggerGetParameterValue(DataLoggerMembers* self, PyObject* args)
 PyObject* pyDataLoggerSetParameterValue(DataLoggerMembers* self, PyObject* args)
 {
     return pySetParameterValue(*self->logger, args);
+}
+
+PyObject* pyDataLoggerSetVerbosity(DataLoggerMembers* self, PyObject* args)
+{
+    return pySetVerbosity(*self->logger, args);
+}
+
+PyObject* pyDataLoggerGetVerbosity(DataLoggerMembers* self, PyObject* args)
+{
+    return pyGetVerbosity(*self->logger, args);
 }
 
 #endif /* HAVE_PYTHON27 */

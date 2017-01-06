@@ -143,6 +143,30 @@ static PyMethodDef pyMethodDataLoggerSetParameterValue =
     "setParameterValue(paramName, value): set the value of the given parameter"
 };
 
+/// DataLogger::setVerbosity python wrapper
+extern "C"
+PyObject* pyDataLoggerSetVerbosity(DataLoggerMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataLoggerSetVerbosity =
+{
+    "setVerbosity",
+    (PyCFunction)pyDataLoggerSetVerbosity,
+    METH_VARARGS,
+    "getVerbosity: set the dataLogger logger verbosity (with integer value)"
+};
+
+/// DataLogger::getVerbosity python wrapper
+extern "C"
+PyObject* pyDataLoggerGetVerbosity(DataLoggerMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataLoggerGetVerbosity =
+{
+    "getVerbosity",
+    (PyCFunction)pyDataLoggerGetVerbosity,
+    METH_NOARGS,
+    "getVerbosity: set the dataLogger logger verbosity"
+};
+
 /// exported methods
 static PyMethodDef pyDataLoggerMethods[] = {
         pyMethodDataLoggerSource,
@@ -151,6 +175,9 @@ static PyMethodDef pyDataLoggerMethods[] = {
         pyMethodDataLoggerGetParameterSet,
         pyMethodDataLoggerGetParameterValue,
         pyMethodDataLoggerSetParameterValue,
+
+        pyMethodDataLoggerSetVerbosity,
+        pyMethodDataLoggerGetVerbosity,
 
         {NULL} // sentinel
 };
