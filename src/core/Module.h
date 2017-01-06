@@ -30,9 +30,7 @@
 #define SRC_MODULE_H_
 
 #include "VerboseEntity.h"
-#include "ParameterizedEntity.h"
-#include "ParameterizedWithGetters.h"
-#include "ParameterizedWithSetters.h"
+#include "ParameterizedEntityWithWorkers.h"
 #include "InPortUser.h"
 #include "OutPortUser.h"
 #include "ModuleTask.h"
@@ -67,9 +65,7 @@ class ModuleFactory;
  * modules (after having set runningTask).
  */
 class Module: public VerboseEntity,
-	public ParameterizedEntity,
-	public ParameterizedWithGetters,
-	public ParameterizedWithSetters,
+	public ParameterizedEntityWithWorkers,
 	public InPortUser, public OutPortUser
 {
 public:
@@ -92,9 +88,7 @@ public:
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
 	      mParent(parent),
-		  ParameterizedEntity("module." + name),
-		  ParameterizedWithGetters(this),
-		  ParameterizedWithSetters(this),
+		  ParameterizedEntityWithWorkers("module." + name),
 		  reseting (false), resetDone(false),
 		  lazyCancelling(false),
 		  waitingCancelled(0),
@@ -110,9 +104,7 @@ public:
 
 	Module(ModuleFactory* parent, std::string name, bool applyParametersFromSettersWhenAllSet):
 	      mParent(parent),
-		  ParameterizedEntity("module." + name),
-		  ParameterizedWithGetters(this),
-		  ParameterizedWithSetters(this, applyParametersFromSettersWhenAllSet),
+		  ParameterizedEntityWithWorkers("module." + name, applyParametersFromSettersWhenAllSet),
 		  reseting (false), resetDone(false),
 		  lazyCancelling(false),
           waitingCancelled(0),

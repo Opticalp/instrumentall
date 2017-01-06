@@ -30,7 +30,7 @@
 
 #include "PythonParameterSetter.h"
 
-#include "core/ParameterizedEntity.h"
+#include "core/ParameterizedEntityWithWorkers.h"
 
 using Poco::AutoPtr;
 

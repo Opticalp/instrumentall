@@ -227,8 +227,7 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
 }
 
 DataPocoLogger::DataPocoLogger():
-        DataLogger("DataPocoLogger"),
-        VerboseEntity("DataLogger.DataPocoLogger") // startup logger name
+        DataLogger("DataPocoLogger")
 {
 	setName(refCount);
 

@@ -63,7 +63,8 @@ public:
 	 */
     DataLogger(std::string implementationName):
         className(implementationName),
-        ParameterizedEntity("dataLogger." + implementationName)
+        ParameterizedEntity("dataLogger." + implementationName),
+        VerboseEntity("dataLogger." + implementationName) // startup logger name
         {   }
 
     virtual ~DataLogger() { }
