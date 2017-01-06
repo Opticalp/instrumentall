@@ -85,6 +85,15 @@ public:
 
     std::string name() { return mName; }
 
+    /**
+     * Set a new name for the data logger
+     *
+     *  - change logger()
+     *  - change ParameterizedEntity prefix key
+     *  - reload the default parameters if any
+     */
+    void setName(std::string newName);
+
 protected:
     /**
      * Log the data
@@ -108,15 +117,6 @@ protected:
      * using a static ref counter.
      */
     void setName(size_t refCount);
-
-    /**
-     * Set a new name for the data logger
-     *
-     *  - change logger()
-     *  - change ParameterizedEntity prefix key
-     *  - reload the default parameters if any
-     */
-    void setName(std::string newName);
 
     Poco::Logger& logger() { return VerboseEntity::logger(); }
 

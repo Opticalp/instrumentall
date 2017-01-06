@@ -197,6 +197,34 @@ PyObject* pyDataLoggerDetach(DataLoggerMembers* self)
 	Py_RETURN_NONE;
 }
 
+PyObject* pyDataLoggerSetName(DataLoggerMembers* self, PyObject* args)
+{
+    char* charName;
+
+    if (!PyArg_ParseTuple(args, "s:setName", &charName))
+        return NULL;
+
+    std::string newName(charName);
+    try
+    {
+        (*self->logger)->setName(newName);
+
+        // update name
+        PyObject* tmp = NULL;
+        tmp = self->name;
+        self->name = PyString_FromString((*self->logger)->name().c_str());
+        Py_XDECREF(tmp);
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
 PyObject* pyDataLoggerGetParameterSet(DataLoggerMembers* self)
 {
     return pyGetParameterSet(*self->logger);

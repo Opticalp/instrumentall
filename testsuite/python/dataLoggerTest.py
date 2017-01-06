@@ -67,6 +67,13 @@ def myMain():
     logger = DataLogger("DataPocoLogger") 
     print " - Name: " + logger.name
     print " - Description: " + logger.description
+
+    print 'Changing logger name to "myLogger"'
+    logger.setName("myLogger")
+    if logger.name != "myLogger":
+        raise RuntimeError("the returned name is not the assigned one. got: " + logger.name)
+    print " - Name: " + logger.name
+    print " - Description: " + logger.description    
     
     print 'And once again: DataLogger("DataPocoLogger")'
     logger1 = DataLogger("DataPocoLogger") 
