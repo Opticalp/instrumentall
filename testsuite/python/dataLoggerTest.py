@@ -118,6 +118,38 @@ def myMain():
     runModule(mod1)
     waitAll()
 
+    print "Retrieve the data logger parameters: "
+    params = logger.getParameterSet()
+
+    for param in params:
+        value = logger.getParameterValue(param["name"])
+        if not isinstance(value, basestring):
+            value = str(value)
+        print ( " - " + param["name"] + ": " + param["descr"] +
+                " ; value = " + value )
+        
+    print "Trying to set some parameter values: "
+    print " - set intParam to 666"
+    logger.setParameterValue("intParam", 666)
+    print " - set floatParam to 0"
+    logger.setParameterValue("floatParam", 0)
+    print " - set strParam to mojo"
+    logger.setParameterValue("strParam", "mojo")
+
+    print "Get the new values: "    
+    for param in params:
+        value = logger.getParameterValue(param["name"])
+        if not isinstance(value, basestring):
+            value = str(value)
+        print " - " + param["name"] + ": " +  value
+
+    if logger.getParameterValue("intParam") != 666:
+        raise RuntimeError("intParam error. Should have got 666")
+    if abs(logger.getParameterValue("floatParam")) > 0.01:
+        raise RuntimeError("floatParam error. Should have got 0")
+    if logger.getParameterValue("strParam")!="mojo":
+        raise RuntimeError("strParam error. Should have got \"mojo\"")
+
     print "End of script dataLoggerTest.py"
     
 # main body    

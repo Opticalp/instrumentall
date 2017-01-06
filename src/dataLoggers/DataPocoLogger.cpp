@@ -227,10 +227,18 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
 }
 
 DataPocoLogger::DataPocoLogger():
-        DataLogger("DataPocoLogger")
+        DataLogger("DataPocoLogger"),
+        iPar(421), fPar(3.14), sPar("Caramba")
 {
 	setName(refCount);
 
     setRecLogger("DataLogger." + name());
+
+    // parameters
+    setParameterCount(paramCnt);
+    addParameter(paramInt, "intParam", "simple integer parameter", ParamItem::typeInteger, "1515");
+    addParameter(paramFloat, "floatParam", "simple floating point parameter", ParamItem::typeFloat);
+    addParameter(paramStr, "strParam", "simple character string parameter", ParamItem::typeString);
+
     refCount++;
 }
