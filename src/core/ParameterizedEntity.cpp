@@ -70,7 +70,17 @@ void ParameterizedEntity::addParameter(size_t index, std::string name, std::stri
 bool ParameterizedEntity::hasParameterDefaultValue(size_t index)
 {
     std::string keyStr = confPrefixKey + "." + paramSet.at(index).name;
-    return appConf().hasProperty(keyStr);
+    poco_information(logger(), "checking if key: " + keyStr + " is present for " + name());
+    if (appConf().hasProperty(keyStr))
+    {
+        poco_information(logger(), "key " + keyStr + " is present");
+        return true;
+    }
+    else
+    {
+        poco_information(logger(), "key " + keyStr + " is NOT present");
+        return false;
+    }
 }
 
 std::string ParameterizedEntity::getParameterDefaultValue(size_t index)

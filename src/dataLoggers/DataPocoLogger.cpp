@@ -232,7 +232,7 @@ DataPocoLogger::DataPocoLogger():
 {
 	setName(refCount);
 
-    setRecLogger("DataLogger." + name());
+    setRecLogger("dataLogger." + name());
 
     // parameters
     setParameterCount(paramCnt);

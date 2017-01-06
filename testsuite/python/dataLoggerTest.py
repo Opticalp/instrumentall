@@ -27,6 +27,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from os.path import *
 
 def myMain():
     """Main function. Run the tests. """
@@ -149,6 +150,25 @@ def myMain():
         raise RuntimeError("floatParam error. Should have got 0")
     if logger.getParameterValue("strParam")!="mojo":
         raise RuntimeError("strParam error. Should have got \"mojo\"")
+
+    cfgFile = join(join(dirname(dirname(realpath(__file__))),"resources"),"modParamTest.properties")
+    print "Load test config file: modParamTest.properties from " + cfgFile
+    loadConfiguration(cfgFile)
+
+    print "change data logger name"
+    logger.setName("tester")
+
+    print "Get the new values: "    
+    for param in params:
+        value = logger.getParameterValue(param["name"])
+        if not isinstance(value, basestring):
+            value = str(value)
+        print " - " + param["name"] + ": " +  value
+
+    if logger.getParameterValue("strParam")!="instrumentall":
+        raise RuntimeError("strParam error. Should have got \"instrumentall\"")
+
+    loadConfiguration(cfgFile)
 
     print "End of script dataLoggerTest.py"
     
