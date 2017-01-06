@@ -232,6 +232,7 @@ DataPocoLogger::DataPocoLogger()
 	if (refCount)
 		mName += Poco::NumberFormatter::format(refCount);
 
+	setLogger("DataLogger.DataPocoLogger");
     setRecLogger("DataLogger." + mName);
     refCount++;
 }

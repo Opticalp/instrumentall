@@ -30,6 +30,7 @@
 #define SRC_DATALOGGER_H_
 
 #include "DataTarget.h"
+#include "VerboseEntity.h"
 
 #include "Poco/Runnable.h"
 #include "Poco/Mutex.h"
@@ -47,7 +48,9 @@ using Poco::Mutex;
  * static method. DataTarget::description can be implemented
  * as linking to this method.
  */
-class DataLogger: public DataTarget, public Poco::Runnable, public Poco::RefCountedObject
+class DataLogger: public DataTarget,
+    public Poco::Runnable, public Poco::RefCountedObject,
+    public VerboseEntity
 {
 public:
 	/**
