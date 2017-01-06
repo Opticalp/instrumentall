@@ -76,6 +76,8 @@ public:
      */
     const std::string& getClassName() const { return className; }
 
+    std::string name() { return mName; }
+
 protected:
     /**
      * Log the data
@@ -91,6 +93,14 @@ protected:
      * The data is released by the calling function.
      */
     virtual void log() = 0;
+
+    /**
+     * Set data logger internal name
+     *
+     * This function shall be called in the constructor implementation,
+     * using a static ref counter.
+     */
+    void setName(size_t refCount);
 
 private:
     DataLogger();
@@ -109,6 +119,7 @@ private:
 	void targetReset() { }
 
 	std::string className; ///< data logger implementation class name
+	std::string mName;
 
     Poco::FastMutex mutex; ///< data logger main mutex
 };

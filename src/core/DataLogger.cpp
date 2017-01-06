@@ -31,6 +31,7 @@
 #include "ThreadManager.h"
 
 #include "Poco/Util/Application.h"
+#include "Poco/NumberFormatter.h"
 
 void DataLogger::runTarget()
 {
@@ -57,4 +58,15 @@ void DataLogger::run()
 	}
 
 	releaseInputData();
+}
+
+void DataLogger::setName(size_t refCount)
+{
+    if (className.empty())
+        poco_bugcheck_msg("trying to set the name of the data logger "
+                "but its class name is empty");
+
+    mName = className;
+    if (refCount)
+        mName += Poco::NumberFormatter::format(refCount);
 }

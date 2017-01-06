@@ -229,11 +229,9 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
 DataPocoLogger::DataPocoLogger():
         DataLogger("DataPocoLogger")
 {
-	mName = getClassName();
-	if (refCount)
-		mName += Poco::NumberFormatter::format(refCount);
+	setName(refCount);
 
 	setLogger("DataLogger." + getClassName());
-    setRecLogger("DataLogger." + mName);
+    setRecLogger("DataLogger." + name());
     refCount++;
 }
