@@ -33,6 +33,7 @@ THE SOFTWARE.
 #include "PythonModuleFactory.h"
 #include "PythonModule.h"
 #include "PythonParameterizedEntity.h"
+#include "PythonVerboseEntity.h"
 
 extern "C" void pyModDealloc(ModMembers* self)
 {
@@ -437,21 +438,12 @@ PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args)
 
 PyObject* pyModSetVerbosity(ModMembers* self, PyObject* args)
 {
-	int prio;
-
-    if (!PyArg_ParseTuple(args, "i:setVerbosity", &prio))
-        return NULL;
-
-    (**self->module)->setVerbosity(prio);
-
-    Py_RETURN_NONE;
+    return pySetVerbosity(**self->module, args);
 }
 
 PyObject* pyModGetVerbosity(ModMembers* self, PyObject* args)
 {
-	long prio = (**self->module)->getVerbosity();
-
-	return PyInt_FromLong(prio);
+    return pyGetVerbosity(**self->module, args);
 }
 
 #include "PythonParameterGetter.h"
