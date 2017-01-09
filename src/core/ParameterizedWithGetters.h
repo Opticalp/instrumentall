@@ -35,12 +35,12 @@
 
 #include <set>
 
-class ParameterizedEntity;
+class ParameterizedEntityWithWorkers;
 
 /**
  * ParameterizedWithGetters
  *
- * Manage a ParameterGetter set for a ParameterizedEntity
+ * Manage a ParameterGetter set for a ParameterizedEntityWithWorkers
  */
 class ParameterizedWithGetters
 {
@@ -49,7 +49,7 @@ public:
 	 * Constructor
 	 *
 	 */
-	ParameterizedWithGetters(ParameterizedEntity* entity):
+	ParameterizedWithGetters(ParameterizedEntityWithWorkers* entity):
 		self(entity)
 	{
 	}
@@ -78,7 +78,7 @@ public:
 		{ return getters; }
 
 private:
-	ParameterizedEntity* self;
+	ParameterizedEntityWithWorkers* self;
 	std::set< Poco::AutoPtr<ParameterGetter> > getters;
 };
 

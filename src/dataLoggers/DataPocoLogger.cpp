@@ -226,12 +226,19 @@ void DataPocoLogger::logVectorValue(DataItem::DataTypeEnum dataType)
     poco_information(recLogger(), msg);
 }
 
-DataPocoLogger::DataPocoLogger()
+DataPocoLogger::DataPocoLogger():
+        DataLogger("DataPocoLogger"),
+        iPar(421), fPar(3.14), sPar("Caramba")
 {
-	mName = "DataPocoLogger";
-	if (refCount)
-		mName += Poco::NumberFormatter::format(refCount);
+	setName(refCount);
 
-    setRecLogger("DataLogger." + mName);
+    setRecLogger("dataLogger." + name());
+
+    // parameters
+    setParameterCount(paramCnt);
+    addParameter(paramInt, "intParam", "simple integer parameter", ParamItem::typeInteger, "1515");
+    addParameter(paramFloat, "floatParam", "simple floating point parameter", ParamItem::typeFloat);
+    addParameter(paramStr, "strParam", "simple character string parameter", ParamItem::typeString);
+
     refCount++;
 }

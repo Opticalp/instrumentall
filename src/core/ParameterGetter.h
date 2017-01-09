@@ -35,7 +35,7 @@
 
 #include "Poco/RefCountedObject.h"
 
-class ParameterizedEntity;
+class ParameterizedEntityWithWorkers;
 
 /**
  * ParameterGetter
@@ -50,7 +50,7 @@ class ParameterGetter:
 		public Poco::RefCountedObject
 {
 public:
-	ParameterGetter(ParameterizedEntity* parameterized, size_t paramIndex);
+	ParameterGetter(ParameterizedEntityWithWorkers* parameterized, size_t paramIndex);
 	virtual ~ParameterGetter() { }
 
 	std::string name() { return mName; }

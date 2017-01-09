@@ -31,6 +31,7 @@
 #include "ThreadManager.h"
 
 #include "Poco/Util/Application.h"
+#include "Poco/NumberFormatter.h"
 
 void DataLogger::runTarget()
 {
@@ -57,4 +58,50 @@ void DataLogger::run()
 	}
 
 	releaseInputData();
+}
+
+void DataLogger::setName(size_t refCount)
+{
+    if (className.empty())
+        poco_bugcheck_msg("trying to set the name of the data logger "
+                "but its class name is empty");
+
+    mName = className;
+    if (refCount)
+        mName += Poco::NumberFormatter::format(refCount);
+}
+
+void DataLogger::setName(std::string newName)
+{
+    mName = newName;
+    std::string identifier = "dataLogger." + getClassName() + "." + newName;
+    setLogger(identifier);
+    setPrefixKey(identifier);
+
+    ParameterSet paramSet;
+    getParameterSet(&paramSet);
+    for (size_t index = 0; index < paramSet.size(); index++)
+    {
+        if (hasParameterDefaultValue(index))
+        {
+            poco_information(logger(), "Setting " + name() + " parameter "
+                    + paramSet[index].name + " default value from conf file");
+            switch (paramSet[index].datatype)
+            {
+            case ParamItem::typeInteger:
+                setParameterValue<Poco::Int64>(index, getIntParameterDefaultValue(index));
+                break;
+            case ParamItem::typeFloat:
+                setParameterValue<double>(index, getFloatParameterDefaultValue(index));
+                break;
+            case ParamItem::typeString:
+                setParameterValue<std::string>(index, getStrParameterDefaultValue(index));
+                break;
+            default:
+                poco_bugcheck_msg("unknown parameter data type");
+            }
+        }
+    }
+
+    applyParameters();
 }
