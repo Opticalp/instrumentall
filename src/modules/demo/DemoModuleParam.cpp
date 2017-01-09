@@ -33,7 +33,7 @@
 size_t DemoModuleParam::refCount = 0;
 
 DemoModuleParam::DemoModuleParam(ModuleFactory* parent, std::string customName):
-    Module(parent), iPar(421), fPar(3.14), sPar("Caramba")
+    Module(parent, customName), iPar(421), fPar(3.14), sPar("Caramba")
 {
     setInternalName("DemoModuleParam" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);

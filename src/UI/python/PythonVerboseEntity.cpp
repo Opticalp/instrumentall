@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/demo/DemoModuleB.cpp
- * @date	feb. 2016
+ * @file	src/UI/python/pythonVerboseEntity.cpp
+ * @date	Jan. 2017
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,26 +26,28 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleB.h"
-#include "Poco/NumberFormatter.h"
 
-size_t DemoModuleB::refCount = 0;
+#ifdef HAVE_PYTHON27
 
-DemoModuleB::DemoModuleB(ModuleFactory* parent, std::string customName):
-                Module(parent, customName)
+#include "PythonVerboseEntity.h"
+
+PyObject* pySetVerbosity(VerboseEntity* pEntity, PyObject* args)
 {
-    // poco_information(logger(),"Creating a new demo module B");
+    int prio;
 
-    setInternalName("DemoModuleB" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
-    setLogger("module." + name());
+    if (!PyArg_ParseTuple(args, "i:setVerbosity", &prio))
+        return NULL;
 
-    // ports
-    setOutPortCount(outPortCnt);
-    addOutPort("outPortA", "demo port that transmits nothing", DataItem::typeInteger, outPortA);
+    pEntity->setVerbosity(prio);
 
-    notifyCreation();
-
-    // if nothing failed
-    refCount++;
+    Py_RETURN_NONE;
 }
+
+PyObject* pyGetVerbosity(VerboseEntity* pEntity, PyObject* args)
+{
+    long prio = pEntity->getVerbosity();
+
+    return PyInt_FromLong(prio);
+}
+
+#endif /* HAVE_PYTHON27 */

@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/demo/DemoModuleB.cpp
- * @date	feb. 2016
+ * @file	src/UI/python/PythonParameterizedEntity.h
+ * @date	Jan. 2017
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,26 +26,18 @@
  THE SOFTWARE.
  */
 
-#include "DemoModuleB.h"
-#include "Poco/NumberFormatter.h"
+#ifndef SRC_UI_PYTHON_PYTHONPARAMETERIZEDENTITY_H_
+#define SRC_UI_PYTHON_PYTHONPARAMETERIZEDENTITY_H_
 
-size_t DemoModuleB::refCount = 0;
+#ifdef HAVE_PYTHON27
 
-DemoModuleB::DemoModuleB(ModuleFactory* parent, std::string customName):
-                Module(parent, customName)
-{
-    // poco_information(logger(),"Creating a new demo module B");
+#include "PythonAPI.h"
 
-    setInternalName("DemoModuleB" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
-    setLogger("module." + name());
+#include "core/ParameterizedEntity.h"
 
-    // ports
-    setOutPortCount(outPortCnt);
-    addOutPort("outPortA", "demo port that transmits nothing", DataItem::typeInteger, outPortA);
+PyObject* pyGetParameterSet(ParameterizedEntity* pEntity);
+PyObject* pyGetParameterValue(ParameterizedEntity* pEntity, PyObject *args);
+PyObject* pySetParameterValue(ParameterizedEntity* pEntity, PyObject *args);
 
-    notifyCreation();
-
-    // if nothing failed
-    refCount++;
-}
+#endif /* HAVE_PYTHON27 */
+#endif /* SRC_UI_PYTHON_PYTHONPARAMETERIZEDENTITY_H_ */

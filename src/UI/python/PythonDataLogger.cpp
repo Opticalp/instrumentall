@@ -32,6 +32,8 @@ THE SOFTWARE.
 #include "core/Dispatcher.h"
 #include "PythonDataLogger.h"
 #include "PythonOutPort.h"
+#include "PythonParameterizedEntity.h"
+#include "PythonVerboseEntity.h"
 
 #include "Poco/Util/Application.h"
 
@@ -193,6 +195,59 @@ PyObject* pyDataLoggerDetach(DataLoggerMembers* self)
 			  .unbind(*self->logger);
 
 	Py_RETURN_NONE;
+}
+
+PyObject* pyDataLoggerSetName(DataLoggerMembers* self, PyObject* args)
+{
+    char* charName;
+
+    if (!PyArg_ParseTuple(args, "s:setName", &charName))
+        return NULL;
+
+    std::string newName(charName);
+    try
+    {
+        (*self->logger)->setName(newName);
+
+        // update name
+        PyObject* tmp = NULL;
+        tmp = self->name;
+        self->name = PyString_FromString((*self->logger)->name().c_str());
+        Py_XDECREF(tmp);
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+PyObject* pyDataLoggerGetParameterSet(DataLoggerMembers* self)
+{
+    return pyGetParameterSet(*self->logger);
+}
+
+PyObject* pyDataLoggerGetParameterValue(DataLoggerMembers* self, PyObject* args)
+{
+    return pyGetParameterValue(*self->logger, args);
+}
+
+PyObject* pyDataLoggerSetParameterValue(DataLoggerMembers* self, PyObject* args)
+{
+    return pySetParameterValue(*self->logger, args);
+}
+
+PyObject* pyDataLoggerSetVerbosity(DataLoggerMembers* self, PyObject* args)
+{
+    return pySetVerbosity(*self->logger, args);
+}
+
+PyObject* pyDataLoggerGetVerbosity(DataLoggerMembers* self, PyObject* args)
+{
+    return pyGetVerbosity(*self->logger, args);
 }
 
 #endif /* HAVE_PYTHON27 */

@@ -27,10 +27,10 @@
  */
 
 #include "ParameterWorker.h"
-#include "ParameterizedEntity.h"
+#include "ParameterizedEntityWithWorkers.h"
 #include "TypeNeutralData.h"
 
-int ParameterWorker::paramDataType(ParameterizedEntity* parameterized,
+int ParameterWorker::paramDataType(ParameterizedEntityWithWorkers* parameterized,
 		size_t paramIndex)
 {
 	if (parameterized == NULL)
@@ -62,7 +62,7 @@ int ParameterWorker::paramDataType(ParameterizedEntity* parameterized,
 	}
 }
 
-ParameterWorker::ParameterWorker(ParameterizedEntity* parameterized,
+ParameterWorker::ParameterWorker(ParameterizedEntityWithWorkers* parameterized,
 		size_t paramIndex):
 		parent(parameterized),
 		mParamIndex(paramIndex),

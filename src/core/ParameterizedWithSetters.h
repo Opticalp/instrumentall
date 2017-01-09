@@ -35,12 +35,12 @@
 
 #include <set>
 
-class ParameterizedEntity;
+class ParameterizedEntityWithWorkers;
 
 /**
  * ParameterizedWithSetters
  *
- * Manage a ParameterSetter set for a ParameterizedEntity
+ * Manage a ParameterSetter set for a ParameterizedEntityWithWorkers
  */
 class ParameterizedWithSetters
 {
@@ -48,11 +48,11 @@ public:
 	/**
 	 * Constructor
 	 *
-	 * @param entity ParameterizedEntity managing the parameters
+	 * @param entity ParameterizedEntityWithWorkers managing the parameters
 	 * @param apply flag to determine if applyParameters should be
 	 * called directly, once all parameter setters where called.
 	 */
-	ParameterizedWithSetters(ParameterizedEntity* entity, bool apply = true):
+	ParameterizedWithSetters(ParameterizedEntityWithWorkers* entity, bool apply = true):
 		self(entity), preApply(apply)
 	{
 	}
@@ -85,7 +85,7 @@ public:
 		{ return setters; }
 
 	/**
-	 * Called by a ParameterSetter to notify the ParameterizedEntity
+	 * Called by a ParameterSetter to notify the ParameterizedEntityWithWorkers
 	 * that a parameter will be set
 	 *
 	 * lock alreadySetLock if the parameter setting is possible (return value is true)
@@ -126,7 +126,7 @@ public:
 	void parametersTreated();
 
 private:
-	ParameterizedEntity* self;
+	ParameterizedEntityWithWorkers* self;
 	std::set< Poco::AutoPtr<ParameterSetter> > setters;
 
 	bool preApply; ///< determine if the parameters have to be applied immediately when all set

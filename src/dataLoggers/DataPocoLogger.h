@@ -37,6 +37,8 @@
  * DataPocoLogger
  *
  * Very simple data logger that outputs data into a Poco::Logger
+ *
+ * Exhibit some dummy parameters for testing purpose.
  */
 class DataPocoLogger: public DataLogger
 {
@@ -44,8 +46,6 @@ public:
     DataPocoLogger();
 
     virtual ~DataPocoLogger() { }
-
-    std::string name() { return mName; }
 
     std::string description() { return classDescription(); }
 
@@ -56,7 +56,6 @@ public:
 
 private:
     static size_t refCount;
-    std::string mName;
 
     bool isSupportedInputDataType(int datatype);
 
@@ -87,6 +86,55 @@ private:
      * called by runTask()
      */
     void logVectorValue(DataItem::DataTypeEnum dataType);
+
+    enum params
+    {
+        paramInt,
+        paramFloat,
+        paramStr,
+        paramCnt
+    };
+
+    Poco::Int64 iPar; ///< storage for integer parameter
+    double fPar; ///< storage for float parameter
+    std::string sPar; ///< storage for char string parameter
+
+    Poco::Int64 getIntParameterValue(size_t paramIndex)
+    {
+        poco_assert(paramIndex == paramInt);
+        return iPar;
+    }
+
+    double getFloatParameterValue(size_t paramIndex)
+    {
+        poco_assert(paramIndex == paramFloat);
+        return fPar;
+    }
+
+    std::string getStrParameterValue(size_t paramIndex)
+    {
+        poco_assert(paramIndex == paramStr);
+        return sPar;
+    }
+
+    void setIntParameterValue(size_t paramIndex, Poco::Int64 value)
+    {
+        poco_assert(paramIndex == paramInt);
+        iPar = value;
+    }
+
+    void setFloatParameterValue(size_t paramIndex, double value)
+    {
+        poco_assert(paramIndex == paramFloat);
+        fPar = value;
+    }
+
+    void setStrParameterValue(size_t paramIndex, std::string value)
+    {
+        poco_assert(paramIndex == paramStr);
+        sPar = value;
+    }
+
 };
 
 #endif /* SRC_DATAPOCOLOGGER_H_ */

@@ -28,7 +28,7 @@
 
 #include "ParameterizedWithSetters.h"
 
-#include "ParameterizedEntity.h"
+#include "ParameterizedEntityWithWorkers.h"
 #include "ExecutionAbortedException.h"
 
 using Poco::AutoPtr;
