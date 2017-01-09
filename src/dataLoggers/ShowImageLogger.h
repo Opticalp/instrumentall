@@ -44,8 +44,6 @@ public:
     ShowImageLogger();
     virtual ~ShowImageLogger() { }
 
-    std::string name() { return mName; }
-
     std::string description() { return classDescription(); }
 
     static std::string classDescription()
@@ -55,7 +53,6 @@ public:
 
 private:
     static size_t refCount;
-    std::string mName;
 
     bool isSupportedInputDataType(int datatype);
 

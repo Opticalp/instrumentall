@@ -68,6 +68,7 @@ def myMain():
     print 'Logger creation using the constructor: DataLogger("ShowImageLogger")'
     logger = DataLogger("ShowImageLogger") 
     print "Logger description: " + logger.description
+    logger.setName("imgShow")
     
     cam.outPort("image").register(logger)
 

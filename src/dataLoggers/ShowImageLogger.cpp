@@ -43,11 +43,10 @@
 
 size_t ShowImageLogger::refCount = 0;
 
-ShowImageLogger::ShowImageLogger()
+ShowImageLogger::ShowImageLogger():
+        DataLogger("ShowImageLogger")
 {
-    mName = "ShowImageLogger";
-    if (refCount)
-        mName += Poco::NumberFormatter::format(refCount);
+    setName(refCount);
 
     refCount++;
 }
