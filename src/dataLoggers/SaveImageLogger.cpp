@@ -78,8 +78,24 @@ void SaveImageLogger::log()
             imgPath.append(prefix + extension);
         }
 
-        // write image.
-        cv::imwrite(imgPath.toString(), img);
+        if (img.type()!=CV_8U && img.type()!=CV_16U)
+        {
+            double min,max;
+            cv::minMaxLoc(img,&min,&max);
+
+            cv::Mat tmpImg; // temporary image
+            img.convertTo(
+                    tmpImg,      // output image
+                    CV_8U,       // depth
+                    255.0/max ); // scale factor
+
+            // save image
+            cv::imwrite(imgPath.toString(), tmpImg);
+        }
+        else
+        {
+            cv::imwrite(imgPath.toString(), img);
+        }
 
         // increment parameters
         nextIndex++;
