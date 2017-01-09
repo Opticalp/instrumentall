@@ -11,12 +11,6 @@ configuration:
 
 clone_folder: c:\projects\instrumentall
 
-init:
-- env
-- set POCO_INSTALL_PREFIX=%PROGRAMFILES%\Poco
-- set PATH=C:\MinGW\bin;%PATH%;%POCO_INSTALL_PREFIX%\bin
-# - set PATH=%PATH%;%ProgramFiles(x86)%\Windows Kits\10\bin\x86 # to be used if using MinGW
-
 environment:
   matrix:
   - GENERATOR: Visual Studio 11 2012
@@ -27,23 +21,39 @@ environment:
 #  - GENERATOR: Visual Studio 12 2013
   - GENERATOR: Visual Studio 14 2015
     ARCH: Win64
-  - GENERATOR: Visual Studio 14 2015
+#  - GENERATOR: Visual Studio 14 2015 # openCV has no pre-built for x86/vc14
 #  - GENERATOR: MinGW Makefiles  # poco is not compiling with this yet... (1.6.0)
+
+init:
+- env
+- set POCO_INSTALL_PREFIX=%PROGRAMFILES%\Poco
+- set OPENCV_BASE_DIR=%PROGRAMFILES%
+- set OPENCV_DIR=%PROGRAMFILES%\opencv
+- if "%GENERATOR%"=="Visual Studio 14 2015" ( set OPENCV_VERSION=3.1.0) else ( set OPENCV_VERSION=2.4.13)
+- set OPENCV_CMAKE=-DOpenCV_DIR="%OPENCV_DIR%\build" 
+- if "%ARCH%"=="Win64" ( set OPENCV_DLL_PATH=build\x64) else ( set OPENCV_DLL_PATH=build\x86)
+- if "%GENERATOR%"=="Visual Studio 11 2012" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc11\bin)
+- if "%GENERATOR%"=="Visual Studio 12 2013" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc12\bin) 
+- if "%GENERATOR%"=="Visual Studio 14 2015" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc14\bin) 
+- if "%GENERATOR%"=="MinGW Makefiles" ( set OPENCV_CMAKE=-Dno-opencv="true")
+- set PATH=C:\MinGW\bin;%PATH%;%POCO_INSTALL_PREFIX%\bin;%OPENCV_DIR%\%OPENCV_DLL_PATH%
+# - set PATH=%PATH%;%ProgramFiles(x86)%\Windows Kits\10\bin\x86 # to be used if using MinGW
 
 install:
 - if "%GENERATOR%"=="MinGW Makefiles" ( set SH_COMMAND=gulash.exe ) else ( set SH_COMMAND=sh.exe )
 - if "%GENERATOR%"=="MinGW Makefiles" ( move "%PROGRAMFILES%\Git\usr\bin\sh.exe" "%PROGRAMFILES%\Git\usr\bin\%SH_COMMAND%" )
 - if NOT [%ARCH%] == [] ( set GENERATOR=%GENERATOR% %ARCH%)
-- call %APPVEYOR_BUILD_FOLDER%\CI\appveyor\install_dependencies.bat # install poco
+- call %APPVEYOR_BUILD_FOLDER%\CI\appveyor\install_dependencies.bat # install poco, openCV
 
 before_build:
 - cd %APPVEYOR_BUILD_FOLDER%
 - mkdir build
 - cd build
 - cmake --help
-- cmake -G"%GENERATOR%" .. -DPoco_DIR="%POCO_INSTALL_PREFIX%\lib\cmake\Poco"
+- cmake -G"%GENERATOR%" .. -DPoco_DIR="%POCO_INSTALL_PREFIX%\lib\cmake\Poco" %OPENCV_CMAKE%
 
 build_script:
+- env
 - cmake --build . --config %CONFIGURATION%
 
 test_script:

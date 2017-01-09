@@ -36,6 +36,7 @@
 
 #include "DepPoco.h"
 #include "UI/python/DepPython.h"
+#include "DepOpenCv.h"
 
 #include "UI/PythonManager.h"
 #include "Dispatcher.h"
@@ -55,6 +56,9 @@ MainApplication::MainApplication(): _helpRequested(false)
 
     // deps.push_back(new MyDependency); //template
     deps.push_back(new DepPoco);
+#ifdef HAVE_OPENCV
+    deps.push_back(new DepOpenCv);
+#endif
 
     Application::instance().addSubsystem(new ModuleManager);
     Application::instance().addSubsystem(new Dispatcher);

@@ -1,6 +1,6 @@
 /**
- * @file	src/modules/devices/CameraFactory.cpp
- * @date	apr. 2016
+ * @file	src/core/DepOpenCv.h
+ * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,32 +26,30 @@
  THE SOFTWARE.
  */
 
-#include "CameraFactory.h"
-
-#include "modules/GenericLeafFactory.h"
-#include "modules/devices/CameraFromFiles.h"
-
-std::vector<std::string> CameraFactory::selectValueList()
-{
-    std::vector<std::string> list;
+#ifndef SRC_DEPOPENCV_H_
+#define SRC_DEPOPENCV_H_
 
 #ifdef HAVE_OPENCV
-    list.push_back("fromFiles");
-#endif
 
-    return list;
-}
+#include "Dependency.h"
 
-ModuleFactoryBranch* CameraFactory::newChildFactory(std::string selector)
+/**
+ * DepOpenCv
+ *
+ * Description of Open Computer Vision (openCV) external library
+ */
+class DepOpenCv: public Dependency
 {
-#ifdef HAVE_OPENCV
-    if (selector.compare("fromFiles") == 0)
-        return new GenericLeafFactory<CameraFromFiles>(
-                "CameraFromFilesFactory",
-                "Module factory to construct a fake camera "
-                "generating images from files",
-                this, selector);
-    else
-#endif
-        return NULL;
-}
+public:
+    DepOpenCv() { }
+
+    std::string name();
+    std::string description();
+    std::string URL();
+    std::string license();
+    std::string buildTimeVersion();
+    std::string runTimeVersion();
+};
+
+#endif /* HAVE_OPENCV */
+#endif /* SRC_DEPOPENCV_H_ */

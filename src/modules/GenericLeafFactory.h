@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/devices/CameraFactory.cpp
- * @date	apr. 2016
+ * @file	src/modules/GenericLeafFactory.h
+ * @date	Jan. 2017
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,32 +26,40 @@
  THE SOFTWARE.
  */
 
-#include "CameraFactory.h"
+#ifndef SRC_MODULES_GENERICLEAFFACTORY_H_
+#define SRC_MODULES_GENERICLEAFFACTORY_H_
 
-#include "modules/GenericLeafFactory.h"
-#include "modules/devices/CameraFromFiles.h"
+#include "core/ModuleFactoryBranch.h"
 
-std::vector<std::string> CameraFactory::selectValueList()
+/**
+ * Generic module factory
+ * 
+ * countRemain() returns always 1.
+ */
+template <class M>
+class GenericLeafFactory: public ModuleFactoryBranch
 {
-    std::vector<std::string> list;
+public:
+    GenericLeafFactory(std::string nameParam, std::string descrParam,
+            ModuleFactory* parent, std::string selector):
+                ModuleFactoryBranch(parent, selector), // leaf = true (default)
+                sName(nameParam),
+                sDescription(descrParam)
+        { setLogger(sName); }
 
-#ifdef HAVE_OPENCV
-    list.push_back("fromFiles");
-#endif
+    virtual ~GenericLeafFactory() { }
 
-    return list;
-}
+    std::string name() { return sName; }
+    std::string description() { return sDescription; }
 
-ModuleFactoryBranch* CameraFactory::newChildFactory(std::string selector)
-{
-#ifdef HAVE_OPENCV
-    if (selector.compare("fromFiles") == 0)
-        return new GenericLeafFactory<CameraFromFiles>(
-                "CameraFromFilesFactory",
-                "Module factory to construct a fake camera "
-                "generating images from files",
-                this, selector);
-    else
-#endif
-        return NULL;
-}
+    size_t countRemain() { return 1; }
+
+private:
+    Module* newChildModule(std::string customName)
+        { return new M(this, customName); }
+
+    std::string sName;
+    std::string sDescription;
+};
+
+#endif /* SRC_MODULES_GENERICLEAFFACTORY_H_ */

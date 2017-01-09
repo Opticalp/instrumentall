@@ -66,6 +66,9 @@ DataGen::DataGen(ModuleFactory* parent, std::string customName, int dataType):
     case DataItem::typeUInt32:
     case DataItem::typeInt64:
     case DataItem::typeUInt64:
+#ifdef HAVE_OPENCV
+    case DataItem::typeCvMat:
+#endif
     	paramType = ParamItem::typeInteger;
     	break;
     case DataItem::typeFloat:
@@ -218,6 +221,11 @@ void DataGen::sendData()
 	case DataItem::typeString:
 		getDataToWrite<std::string>(outPortData, pString);
 		break;
+#ifdef HAVE_OPENCV
+    case DataItem::typeCvMat:
+        getDataToWrite<cv::Mat>(outPortData, pCvMat);
+        break;
+#endif
 
     case DataItem::typeInt32 | DataItem::contVector:
         getDataToWrite< std::vector<Poco::Int32> >(outPortData, pVectInt32);
@@ -240,6 +248,11 @@ void DataGen::sendData()
     case DataItem::typeString | DataItem::contVector:
         getDataToWrite< std::vector<std::string> >(outPortData, pVectString);
 		break;
+#ifdef HAVE_OPENCV
+    case DataItem::typeCvMat | DataItem::contVector:
+        getDataToWrite< std::vector<cv::Mat> >(outPortData, pVectCvMat);
+        break;
+#endif
 
     default:
 		// already verified in constructor!
@@ -292,6 +305,12 @@ void DataGen::sendData()
         *pString = sQueue.front();
         sQueue.pop();
         break;
+#ifdef HAVE_OPENCV
+    case DataItem::typeCvMat:
+        *pCvMat = fillOutCvMat(iQueue.front());
+        iQueue.pop();
+        break;
+#endif
 
     case DataItem::typeInt32 | DataItem::contVector:
         *pVectInt32 = fillOutIntVect<Poco::Int32>(DataItem::typeInt32);
@@ -314,6 +333,11 @@ void DataGen::sendData()
     case DataItem::typeString | DataItem::contVector:
         *pVectString = fillOutStrVect();
         break;
+#ifdef HAVE_OPENCV
+    case DataItem::typeCvMat | DataItem::contVector:
+        *pVectCvMat = fillOutCvMatVect();
+        break;
+#endif
 
     default:
         // already verified in constructor!
@@ -438,4 +462,3 @@ void DataGen::reset()
     seqStart = 0;
     seqEnd = 0;
 }
-

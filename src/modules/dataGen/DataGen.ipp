@@ -89,3 +89,47 @@ inline std::vector<std::string> DataGen::fillOutStrVect()
 
     return retList;
 }
+
+#ifdef HAVE_OPENCV
+inline cv::Mat DataGen::fillOutCvMat(Poco::Int64 seed)
+{
+//    #if CV_MAJOR_VERSION == 2
+//    // do opencv 2 code
+//    #elif CV_MAJOR_VERSION == 3
+//    // do opencv 3 code
+//    #endif
+
+    // make a 640x1024 OpenCV matrix.
+    cv::Mat M(640, 1024, CV_8U, CV_RGB(0,0,0));
+    cv::putText(M, "InstrumentAll -- test pattern --",
+            cv::Point(30, 60),
+            cv::FONT_HERSHEY_PLAIN, 2.0,
+            CV_RGB(seed, seed, seed), 2, CV_AA);
+
+//    // create a window for display.
+//     cv::namedWindow( "test it", CV_WINDOW_AUTOSIZE );
+//     // Show our image inside it.
+//     cv::imshow( "test it", M );
+//
+//     //poco_information(logger(),"Waiting for key stroke...");
+//     cv::waitKey(1000);
+//     //poco_information(logger(),"Got it!");
+//
+//     cv::destroyWindow("test it");
+
+    return M;
+}
+
+inline std::vector<cv::Mat> DataGen::fillOutCvMatVect()
+{
+    std::vector<cv::Mat> retList;
+
+    while (!iQueue.empty())
+    {
+        retList.push_back(fillOutCvMat(iQueue.front()));
+        iQueue.pop();
+    }
+
+    return retList;
+}
+#endif

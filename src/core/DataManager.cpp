@@ -35,6 +35,10 @@
 
 // loggers
 #include "dataLoggers/DataPocoLogger.h"
+#ifdef HAVE_OPENCV
+#    include "dataLoggers/ShowImageLogger.h"
+#    include "dataLoggers/SaveImageLogger.h"
+#endif
 
 // proxies
 #include "dataProxies/DataBuffer.h"
@@ -62,6 +66,13 @@ DataManager::DataManager():
     // Register data loggers in the factory using the C++ class name
     loggerFactory.registerClass<DataPocoLogger>("DataPocoLogger");
     loggerClasses.insert(classPair("DataPocoLogger", DataPocoLogger::classDescription()));
+
+#ifdef HAVE_OPENCV
+    loggerFactory.registerClass<ShowImageLogger>("ShowImageLogger");
+    loggerClasses.insert(classPair("ShowImageLogger", ShowImageLogger::classDescription()));
+    loggerFactory.registerClass<SaveImageLogger>("SaveImageLogger");
+    loggerClasses.insert(classPair("SaveImageLogger", SaveImageLogger::classDescription()));
+#endif
 
     // Register data proxies in the factory using the (augmented) C++ class name
     std::string proxyName;

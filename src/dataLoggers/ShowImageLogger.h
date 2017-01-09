@@ -1,6 +1,6 @@
 /**
- * @file	src/modules/devices/CameraFactory.cpp
- * @date	apr. 2016
+ * @file	src/dataLoggers/ShowImageLogger.h
+ * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,32 +26,38 @@
  THE SOFTWARE.
  */
 
-#include "CameraFactory.h"
-
-#include "modules/GenericLeafFactory.h"
-#include "modules/devices/CameraFromFiles.h"
-
-std::vector<std::string> CameraFactory::selectValueList()
-{
-    std::vector<std::string> list;
+#ifndef SRC_SHOWIMAGELOGGER_H_
+#define SRC_SHOWIMAGELOGGER_H_
 
 #ifdef HAVE_OPENCV
-    list.push_back("fromFiles");
-#endif
 
-    return list;
-}
+#include "core/DataLogger.h"
 
-ModuleFactoryBranch* CameraFactory::newChildFactory(std::string selector)
+/**
+ * ShowImageLogger
+ *
+ * Data logger that displays an image
+ */
+class ShowImageLogger: public DataLogger
 {
-#ifdef HAVE_OPENCV
-    if (selector.compare("fromFiles") == 0)
-        return new GenericLeafFactory<CameraFromFiles>(
-                "CameraFromFilesFactory",
-                "Module factory to construct a fake camera "
-                "generating images from files",
-                this, selector);
-    else
-#endif
-        return NULL;
-}
+public:
+    ShowImageLogger();
+    virtual ~ShowImageLogger() { }
+
+    std::string description() { return classDescription(); }
+
+    static std::string classDescription()
+        { return "Display an image"; }
+
+    void log();
+
+private:
+    static size_t refCount;
+
+    bool isSupportedInputDataType(int datatype);
+
+    std::set<int> supportedInputDataType();
+};
+
+#endif /* HAVE_OPENCV */
+#endif /* SRC_SHOWIMAGELOGGER_H_ */

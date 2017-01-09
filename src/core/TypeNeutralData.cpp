@@ -55,6 +55,11 @@ TypeNeutralData::TypeNeutralData(int datatype):
     case (typeString | contScalar):
         dataStore = reinterpret_cast<void*>(new std::string);
         break;
+#ifdef HAVE_OPENCV
+    case (typeCvMat | contScalar):
+        dataStore =  reinterpret_cast<void*>(new cv::Mat);
+        break;
+#endif
 
     // vector containers
     case (typeInt32 | contVector):
@@ -78,6 +83,11 @@ TypeNeutralData::TypeNeutralData(int datatype):
     case (typeString | contVector):
         dataStore = reinterpret_cast<void*>(new std::vector<std::string>);
         break;
+#ifdef HAVE_OPENCV
+    case (typeCvMat | contVector):
+        dataStore =  reinterpret_cast<void*>(new std::vector<cv::Mat>);
+        break;
+#endif
 
     // others
     case typeUndefined:
@@ -216,6 +226,11 @@ TypeNeutralData::~TypeNeutralData()
     case (typeString | contScalar):
         delete reinterpret_cast<std::string*>(dataStore);
         break;
+#ifdef HAVE_OPENCV
+    case (typeCvMat | contScalar):
+        delete reinterpret_cast<cv::Mat*>(dataStore);
+        break;
+#endif
 
     // vector containers
     case (typeInt32 | contVector):
@@ -239,6 +254,11 @@ TypeNeutralData::~TypeNeutralData()
     case (typeString | contVector):
         delete reinterpret_cast<std::vector<std::string>*>(dataStore);
         break;
+#ifdef HAVE_OPENCV
+    case (typeCvMat | contVector):
+        delete reinterpret_cast<std::vector<cv::Mat>*>(dataStore);
+        break;
+#endif
 
     // others
     case typeUndefined:
@@ -277,6 +297,11 @@ std::string TypeNeutralData::dataTypeShortStr(int datatype)
     case typeString:
         desc = "str";
         break;
+#ifdef HAVE_OPENCV
+    case typeCvMat:
+        desc = "cvMat";
+        break;
+#endif
     default:
         return "";
     }
@@ -314,6 +339,10 @@ int TypeNeutralData::getTypeFromShortStr(std::string typeName)
         retType |= typeDblFloat;
     else if (tmp.compare("str") == 0)
         retType |= typeString;
+#ifdef HAVE_OPENCV
+    else if (tmp.compare("cvMat") == 0)
+        retType |= typeCvMat;
+#endif
 
     return retType;
 }

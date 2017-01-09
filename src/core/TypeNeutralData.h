@@ -31,6 +31,10 @@
 
 #include "Poco/Exception.h"
 
+#ifdef HAVE_OPENCV
+#   include "opencv2/opencv.hpp"
+#endif
+
 /**
  * TypeNeutralData
  *
@@ -68,6 +72,11 @@ public:
 
         // character string
         typeString,
+
+#ifdef HAVE_OPENCV
+        // OpenCV image
+        typeCvMat,
+#endif
 
         typeCnt // count the types
     };
@@ -219,6 +228,11 @@ inline std::string TypeNeutralData::dataTypeStr(int datatype)
     case typeString:
         desc += "character string";
         break;
+#ifdef HAVE_OPENCV
+    case typeCvMat:
+        desc += "OpenCV matrix";
+        break;
+#endif
     default:
         return "";
     }
