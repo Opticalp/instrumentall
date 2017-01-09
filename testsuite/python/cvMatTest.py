@@ -28,6 +28,8 @@
 # THE SOFTWARE.
 
 
+import os
+
 def myMain():
     """Main function. Run the tests. """
     
@@ -65,7 +67,7 @@ def myMain():
     print 'Logger creation using the constructor: DataLogger("ShowImageLogger")'
     logger = DataLogger("ShowImageLogger") 
     print "Logger description: " + logger.description
-    
+
     imgGen.outPort("data").register(logger)
 
     runModule(imgGen)
@@ -74,9 +76,22 @@ def myMain():
     print "Set output value to 255"
     imgGen.setParameterValue("value", 255)
 
+    print "Add a save image logger"
+    saver = DataLogger("SaveImageLogger")
+    imgGen.outPort("data").register(saver)
+
+    files = os.listdir(".")
+    if files.count("img_01.png")>0:
+        os.remove("img_01.png")
+
     runModule(imgGen)
     time.sleep(1) # wait 1s in order to show the image
 
+    print "check if the image is present in the current directory"
+    files = os.listdir(".")
+    if files.count("img_01.png")!=1:
+        raise RuntimeError("image img_01.png not created")
+    
 ##    print "Return value is: " + str(mod1.outPort("data").getDataValue())
 ##    if ( abs(mod1.outPort("data").getDataValue()-3.14) > 0.01 ):
 ##        raise RuntimeError("Wrong return value: 3.14 expected. ")

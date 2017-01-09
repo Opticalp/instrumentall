@@ -69,7 +69,7 @@ void SaveImageLogger::log()
 
         if (digits)
         {
-            std::string fullIndex = Poco::NumberFormatter::format(nextIndex, digits);
+            std::string fullIndex = Poco::NumberFormatter::format0(nextIndex, digits);
             std::string index(fullIndex.end()-digits, fullIndex.end()); // cheap modulo
             imgPath.append(prefix + index + extension);
         }
