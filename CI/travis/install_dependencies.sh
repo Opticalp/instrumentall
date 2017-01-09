@@ -105,7 +105,7 @@ echo "Installing openCV from the packages"
 if [ $TRAVIS_OS_NAME == linux ] 
 then 
     echo "using apt-get"
-    sudo apt-get install libopencv-dev -q -y 
+    sudo apt-get install libopencv-dev xvfb -q -y 
     # echo "opencv lib installed with apt-get" 
 fi
 if [ $TRAVIS_OS_NAME == osx ] 
