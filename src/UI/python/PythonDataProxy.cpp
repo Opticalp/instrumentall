@@ -189,11 +189,11 @@ PyObject* pyDataProxyDetach(DataProxyMembers* self)
 {
 	Poco::Util::Application::instance()
 			  .getSubsystem<Dispatcher>()
-			  .unbind(reinterpret_cast<DataSource*>((*self->proxy).get()));
+			  .unbind(static_cast<DataSource*>((*self->proxy).get()));
 
 	Poco::Util::Application::instance()
 			  .getSubsystem<Dispatcher>()
-			  .unbind(reinterpret_cast<DataTarget*>((*self->proxy).get()));
+			  .unbind(static_cast<DataTarget*>((*self->proxy).get()));
 
 	Py_RETURN_NONE;
 }

@@ -114,12 +114,12 @@ DataAttribute::allSeqComp DataAttribute::compareSeqLists(const std::vector<size_
     size_t sizeL = lhs.size();
     size_t sizeR = rhs.size();
 
-    size_t indexL = sizeL-1;
-    size_t indexR = sizeR-1;
+    size_t indexL = sizeL;
+    size_t indexR = sizeR;
 
-    for (; (indexL < 0) || (indexR < 0); indexR--, indexL--)
+    for (; indexL && indexR; indexR--, indexL--)
     {
-        if (lhs[indexL] != rhs[indexR])
+        if (lhs[indexL-1] != rhs[indexR-1])
             return lhsNoRhs;
     }
 

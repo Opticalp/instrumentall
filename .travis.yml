@@ -12,6 +12,11 @@ os:
     - linux
     - osx
 
+matrix:
+    exclude:
+    - compiler: gcc
+      os: osx
+
 before_install:
 #    - echo $LANG
 #    - echo $LC_ALL
@@ -21,6 +26,8 @@ before_install:
 install: ./CI/travis/install_dependencies.sh
 
 before_script:
+    - env
+    - $CXX -dM -E -x c++ /dev/null
     - mkdir build
     - cd build
     - cmake ..
