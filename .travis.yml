@@ -26,6 +26,8 @@ before_install:
 install: ./CI/travis/install_dependencies.sh
 
 before_script:
+    - env
+    - $CXX -dM -E -x c++ /dev/null
     - export DISPLAY=:99.0
     - sh -e /etc/init.d/xvfb start
     - sleep 3 # give xvfb some time to start
