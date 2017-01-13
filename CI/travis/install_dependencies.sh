@@ -112,6 +112,8 @@ fi
 if [ $TRAVIS_OS_NAME == osx ] 
 then 
     echo "using homebrew"
+    brew tap homebrew/python
+    brew link --overwrite numpy # to avoid version conflict when installing openCV
     brew tap homebrew/science
     brew install opencv
     # echo "opencv lib installed with homebrew" 
