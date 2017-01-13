@@ -1,5 +1,5 @@
 /**
- * @file	src/ParameterizedEntity.h
+ * @file	src/core/ParameterizedEntity.h
  * @date	June 2016
  * @author	PhRG - opticalp.fr
  */
@@ -144,18 +144,6 @@ public:
      */
     virtual void applyParameters();
 
-    /**
-     * To be used by the parameter setters to cancel the corresponding module
-     */
-    void cancel() { lazyCancel(); }
-
-    virtual void waitCancelled() = 0;
-
-    /**
-     * To be used by the parameter setters to reset the corresponding module
-     */
-    void reset() { moduleReset(); }
-
 protected:
     /**
 	 * Change the prefix key
@@ -253,8 +241,10 @@ protected:
 
     virtual Poco::Logger& logger() = 0;
 
-    virtual void lazyCancel() = 0;
-    virtual void moduleReset() = 0;
+    /**
+     * Check if the given parameter has a default value defined in the conf file
+     */
+    bool hasParameterDefaultValue(size_t index);
 
 private:
     ParameterizedEntity();

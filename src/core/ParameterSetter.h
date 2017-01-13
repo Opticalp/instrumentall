@@ -35,7 +35,7 @@
 #include "Poco/RefCountedObject.h"
 #include "Poco/Thread.h"
 
-class ParameterizedEntity;
+class ParameterizedEntityWithWorkers;
 class ParameterizedWithSetters;
 
 /**
@@ -49,7 +49,7 @@ class ParameterSetter:
 		public Poco::RefCountedObject
 {
 public:
-	ParameterSetter(ParameterizedEntity* parameterized,
+	ParameterSetter(ParameterizedEntityWithWorkers* parameterized,
 			size_t paramIndex,
 			ParameterizedWithSetters* handler,
 			bool immediate);

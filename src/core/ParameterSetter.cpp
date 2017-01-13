@@ -1,5 +1,5 @@
 /**
- * @file	src/ParameterSetter.cpp
+ * @file	src/core/ParameterSetter.cpp
  * @date	Aug. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -27,7 +27,7 @@
  */
 
 #include "ParameterSetter.h"
-#include "ParameterizedEntity.h"
+#include "ParameterizedEntityWithWorkers.h"
 #include "ParameterizedWithSetters.h"
 #include "ExecutionAbortedException.h"
 
@@ -35,7 +35,7 @@
 
 size_t ParameterSetter::refCount = 0;
 
-ParameterSetter::ParameterSetter(ParameterizedEntity* parameterized,
+ParameterSetter::ParameterSetter(ParameterizedEntityWithWorkers* parameterized,
 		size_t paramIndex,
 		ParameterizedWithSetters* handler,
 		bool immediate):

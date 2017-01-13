@@ -1,5 +1,5 @@
 /**
- * @file	src/ExecutionAbortedException.cpp
+ * @file	src/core/ExecutionAbortedException.cpp
  * @date	Sept. 2016
  * @author	PhRG - opticalp.fr
  */

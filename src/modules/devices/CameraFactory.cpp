@@ -28,19 +28,30 @@
 
 #include "CameraFactory.h"
 
+#include "modules/GenericLeafFactory.h"
+#include "modules/devices/CameraFromFiles.h"
+
 std::vector<std::string> CameraFactory::selectValueList()
 {
     std::vector<std::string> list;
 
-//    list.push_back("uEye");
+#ifdef HAVE_OPENCV
+    list.push_back("fromFiles");
+#endif
 
     return list;
 }
 
 ModuleFactoryBranch* CameraFactory::newChildFactory(std::string selector)
 {
-//    if (selector.compare("Mojo") == 0)
-//        return new MojoCameraFactory(this, selector);
-//    else
+#ifdef HAVE_OPENCV
+    if (selector.compare("fromFiles") == 0)
+        return new GenericLeafFactory<CameraFromFiles>(
+                "CameraFromFilesFactory",
+                "Module factory to construct a fake camera "
+                "generating images from files",
+                this, selector);
+    else
+#endif
         return NULL;
 }

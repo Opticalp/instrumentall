@@ -1,5 +1,5 @@
 /**
- * @file	src/MergeableTask.cpp
+ * @file	src/core/MergeableTask.cpp
  * @date	May 2016
  * @author	Applied Informatics Software Engineering GmbH and contributors
  *

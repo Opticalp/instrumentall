@@ -28,7 +28,7 @@
 
 #include "ParameterizedWithGetters.h"
 
-#include "ParameterizedEntity.h"
+#include "ParameterizedEntityWithWorkers.h"
 
 using Poco::AutoPtr;
 

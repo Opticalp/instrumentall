@@ -125,6 +125,9 @@ private:
     float* pFloat;
     double* pDblFloat;
     std::string* pString;
+#ifdef HAVE_OPENCV
+    cv::Mat* pCvMat;
+#endif
 
     std::vector<Poco::Int32>* pVectInt32;
     std::vector<Poco::UInt32>* pVectUInt32;
@@ -133,6 +136,9 @@ private:
     std::vector<float>* pVectFloat;
     std::vector<double>* pVectDblFloat;
     std::vector<std::string>* pVectString;
+#ifdef HAVE_OPENCV
+    std::vector<cv::Mat>* pVectCvMat;
+#endif
 
     /// Convenience function to fill out the output vector
     template <typename T>
@@ -142,6 +148,13 @@ private:
     std::vector<T> fillOutFloatVect(int dataType);
 
     std::vector<std::string> fillOutStrVect();
+
+#ifdef HAVE_OPENCV
+    /// Create a pattern from the integer parameter
+    cv::Mat fillOutCvMat(Poco::Int64 seed);
+    /// Fill out the output vector using fillOutCvMat
+    std::vector<cv::Mat> fillOutCvMatVect();
+#endif
 };
 
 #include "DataGen.ipp"

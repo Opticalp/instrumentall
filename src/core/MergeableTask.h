@@ -1,5 +1,5 @@
 /**
- * @file	src/MergeableTask.h
+ * @file	src/core/MergeableTask.h
  * @date	May 2016
  * @author	Applied Informatics Software Engineering GmbH and contributors
  *

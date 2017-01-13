@@ -1,5 +1,5 @@
 /**
- * @file	src/Dependency.h
+ * @file	src/core/Dependency.h
  * @date	nov. 2015
  * @author	PhRG - opticalp.fr
  */

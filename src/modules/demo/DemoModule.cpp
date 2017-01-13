@@ -33,7 +33,7 @@
 size_t DemoModule::refCount = 0;
 
 DemoModule::DemoModule(ModuleFactory* parent, std::string customName):
-        Module(parent)
+        Module(parent, customName)
 {
     // poco_information(logger(),"Creating a new demo module");
 

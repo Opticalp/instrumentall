@@ -596,7 +596,7 @@ PyObject* pyOutPortLoggers(OutPortMembers *self)
         pyLogger->name = PyString_FromString(tmpLogger->name().c_str());
         Py_XDECREF(tmp);
 
-        std::map<std::string, std::string>::iterator loggerClass = classes.find(tmpLogger->name());
+        std::map<std::string, std::string>::iterator loggerClass = classes.find(tmpLogger->getClassName());
         if (loggerClass == classes.end())
         {
             PyErr_SetString(PyExc_RuntimeError, "Logger description not found" );

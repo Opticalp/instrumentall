@@ -1,5 +1,5 @@
 /**
- * @file	src/TypeNeutralData.ipp
+ * @file	src/core/TypeNeutralData.ipp
  * @date	june 2016
  * @author	PhRG - opticalp.fr
  */
@@ -86,6 +86,15 @@ void TypeNeutralData::checkType<std::string>()
     checkDataType(typeString);
 }
 
+#ifdef HAVE_OPENCV
+template <> inline
+void TypeNeutralData::checkType<cv::Mat>()
+{
+    checkContScalar();
+    checkDataType(typeCvMat);
+}
+#endif
+
 //
 // vector containers
 //
@@ -138,6 +147,15 @@ void TypeNeutralData::checkType< std::vector<std::string> >()
     checkContVector();
     checkDataType(typeString);
 }
+
+#ifdef HAVE_OPENCV
+template <> inline
+void TypeNeutralData::checkType< std::vector<cv::Mat> >()
+{
+    checkContVector();
+    checkDataType(typeCvMat);
+}
+#endif
 
 //
 // default template - should not be called.

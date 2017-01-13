@@ -1,5 +1,5 @@
 /**
- * @file	src/TrigPort.cpp
+ * @file	src/core/TrigPort.cpp
  * @date	apr. 2016
  * @author	PhRG - opticalp.fr
  */

@@ -27,14 +27,14 @@
  */
 
 #include "ParameterGetter.h"
-#include "ParameterizedEntity.h"
+#include "ParameterizedEntityWithWorkers.h"
 #include "ExecutionAbortedException.h"
 
 #include "Poco/NumberFormatter.h"
 
 size_t ParameterGetter::refCount = 0;
 
-ParameterGetter::ParameterGetter(ParameterizedEntity* parameterized,
+ParameterGetter::ParameterGetter(ParameterizedEntityWithWorkers* parameterized,
 		size_t paramIndex):
 				ParameterWorker(parameterized, paramIndex),
 //				DataSource(paramDataType(parameterized, paramIndex)),

@@ -27,6 +27,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from os.path import *
 
 def myMain():
     """Main function. Run the tests. """
@@ -67,6 +68,13 @@ def myMain():
     logger = DataLogger("DataPocoLogger") 
     print " - Name: " + logger.name
     print " - Description: " + logger.description
+
+    print 'Changing logger name to "myLogger"'
+    logger.setName("myLogger")
+    if logger.name != "myLogger":
+        raise RuntimeError("the returned name is not the assigned one. got: " + logger.name)
+    print " - Name: " + logger.name
+    print " - Description: " + logger.description    
     
     print 'And once again: DataLogger("DataPocoLogger")'
     logger1 = DataLogger("DataPocoLogger") 
@@ -110,6 +118,57 @@ def myMain():
     print "And re-run..."
     runModule(mod1)
     waitAll()
+
+    print "Retrieve the data logger parameters: "
+    params = logger.getParameterSet()
+
+    for param in params:
+        value = logger.getParameterValue(param["name"])
+        if not isinstance(value, basestring):
+            value = str(value)
+        print ( " - " + param["name"] + ": " + param["descr"] +
+                " ; value = " + value )
+        
+    print "Trying to set some parameter values: "
+    print " - set intParam to 666"
+    logger.setParameterValue("intParam", 666)
+    print " - set floatParam to 0"
+    logger.setParameterValue("floatParam", 0)
+    print " - set strParam to mojo"
+    logger.setParameterValue("strParam", "mojo")
+
+    print "Get the new values: "    
+    for param in params:
+        value = logger.getParameterValue(param["name"])
+        if not isinstance(value, basestring):
+            value = str(value)
+        print " - " + param["name"] + ": " +  value
+
+    if logger.getParameterValue("intParam") != 666:
+        raise RuntimeError("intParam error. Should have got 666")
+    if abs(logger.getParameterValue("floatParam")) > 0.01:
+        raise RuntimeError("floatParam error. Should have got 0")
+    if logger.getParameterValue("strParam")!="mojo":
+        raise RuntimeError("strParam error. Should have got \"mojo\"")
+
+    cfgFile = join(join(dirname(dirname(realpath(__file__))),"resources"),"modParamTest.properties")
+    print "Load test config file: modParamTest.properties from " + cfgFile
+    loadConfiguration(cfgFile)
+
+    print "change data logger name"
+    logger.setName("tester")
+
+    print "Get the new values: "    
+    for param in params:
+        value = logger.getParameterValue(param["name"])
+        if not isinstance(value, basestring):
+            value = str(value)
+        print " - " + param["name"] + ": " +  value
+
+    if logger.getParameterValue("strParam")!="instrumentall":
+        raise RuntimeError("strParam error. Should have got \"instrumentall\"")
+
+    loadConfiguration(cfgFile)
 
     print "End of script dataLoggerTest.py"
     

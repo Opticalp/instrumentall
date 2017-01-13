@@ -1,5 +1,5 @@
 /**
- * @file	src/ModuleCanceller.h
+ * @file	src/core/ModuleCanceller.h
  * @date	Sept. 2016
  * @author	PhRG - opticalp.fr
  */

@@ -1,5 +1,5 @@
 /**
- * @file	src/DataLogger.h
+ * @file	src/core/DataLogger.h
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
@@ -30,6 +30,8 @@
 #define SRC_DATALOGGER_H_
 
 #include "DataTarget.h"
+#include "VerboseEntity.h"
+#include "ParameterizedEntity.h"
 
 #include "Poco/Runnable.h"
 #include "Poco/Mutex.h"
@@ -47,7 +49,10 @@ using Poco::Mutex;
  * static method. DataTarget::description can be implemented
  * as linking to this method.
  */
-class DataLogger: public DataTarget, public Poco::Runnable, public Poco::RefCountedObject
+class DataLogger: public DataTarget,
+    public ParameterizedEntity,
+    public Poco::Runnable, public Poco::RefCountedObject,
+    public VerboseEntity
 {
 public:
 	/**
@@ -56,7 +61,12 @@ public:
 	 * In the implementations, the constructor could set
 	 * the unique name of the logger.
 	 */
-    DataLogger() { }
+    DataLogger(std::string implementationName):
+        className(implementationName),
+        ParameterizedEntity("dataLogger." + implementationName),
+        VerboseEntity("dataLogger." + implementationName) // startup logger name
+        {   }
+
     virtual ~DataLogger() { }
 
     /**
@@ -65,6 +75,24 @@ public:
      * This method release the data after the logging.
      */
     void run();
+
+    /**
+     * Get the data logger implementation class name
+     *
+     * @see DataLogger::DataLogger(std::string implementationName)
+     */
+    const std::string& getClassName() const { return className; }
+
+    std::string name() { return mName; }
+
+    /**
+     * Set a new name for the data logger
+     *
+     *  - change logger()
+     *  - change ParameterizedEntity prefix key
+     *  - reload the default parameters if any
+     */
+    void setName(std::string newName);
 
 protected:
     /**
@@ -82,7 +110,19 @@ protected:
      */
     virtual void log() = 0;
 
+    /**
+     * Set data logger internal name
+     *
+     * This function shall be called in the constructor implementation,
+     * using a static ref counter.
+     */
+    void setName(size_t refCount);
+
+    Poco::Logger& logger() { return VerboseEntity::logger(); }
+
 private:
+    DataLogger();
+
     /**
      * Launch run() in a new thread using the ThreadManager
      */
@@ -95,6 +135,9 @@ private:
 	void targetCancel() { }
 	void targetWaitCancelled() { }
 	void targetReset() { }
+
+	std::string className; ///< data logger implementation class name
+	std::string mName;
 
     Poco::FastMutex mutex; ///< data logger main mutex
 };

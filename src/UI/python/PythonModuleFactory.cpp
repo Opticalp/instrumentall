@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "core/ModuleManager.h"
 #include "PythonModuleFactory.h"
 #include "PythonModule.h"
+#include "PythonVerboseEntity.h"
 
 extern "C" void pyModFactDealloc(ModFactMembers* self)
 {
@@ -367,21 +368,12 @@ PyObject* pyModFactGetChildModules(ModFactMembers *self)
 
 PyObject* pyModFactSetVerbosity(ModFactMembers* self, PyObject* args)
 {
-	int prio;
-
-    if (!PyArg_ParseTuple(args, "i:setVerbosity", &prio))
-        return NULL;
-
-    (**self->moduleFactory)->setVerbosity(prio);
-
-    Py_RETURN_NONE;
+    return pySetVerbosity(**self->moduleFactory, args);
 }
 
 PyObject* pyModFactGetVerbosity(ModFactMembers* self, PyObject* args)
 {
-	long prio = (**self->moduleFactory)->getVerbosity();
-
-	return PyInt_FromLong(prio);
+    return pyGetVerbosity(**self->moduleFactory, args);
 }
 
 #endif /* HAVE_PYTHON27 */

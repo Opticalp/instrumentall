@@ -1,5 +1,5 @@
 /**
- * @file	src/ParameterSet.h
+ * @file	src/core/ParameterSet.h
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */

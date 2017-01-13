@@ -14,6 +14,9 @@ project ( Instrumentall )
 # set search path for project specific cmake modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
+option (no-opencv
+    "if specified, don't try to use the OpenCV libraries"    )
+
 # main sources
 # custom parameters
 set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin" )
@@ -70,6 +73,18 @@ endif ( )
 
 target_link_libraries( instrumentall  Poco::Foundation Poco::Util )
 
+# find OpenCV
+if ( NOT no-opencv ) 
+    find_package( OpenCV REQUIRED )
+    message ( STATUS "OpenCV ${OpenCV_VERSION} was found" )
+    message ( STATUS "OpenCV installed components are: ${OpenCV_LIB_COMPONENTS}" )
+    
+    # set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+
+    add_definitions ( -DHAVE_OPENCV )
+    target_link_libraries( instrumentall ${OpenCV_LIBS} )
+endif ( NOT no-opencv ) 
+
 ## generate build info
 
 ADD_CUSTOM_TARGET(
@@ -79,6 +94,7 @@ ADD_CUSTOM_TARGET(
                      -D VERSION_FILE=${CMAKE_SOURCE_DIR}/VERSION
                      -D FORK_NAME_FILE=${CMAKE_SOURCE_DIR}/fork_NAME
                      -D FORK_VERSION_FILE=${CMAKE_SOURCE_DIR}/fork_VERSION
+                     -D OCV_VERSION=${OpenCV_VERSION}
                      -P ${CMAKE_SOURCE_DIR}/versionBuild/version.cmake
 )
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/version)

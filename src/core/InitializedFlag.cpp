@@ -1,5 +1,5 @@
 /**
- * @file	src/InitializedFlag.cpp
+ * @file	src/core/InitializedFlag.cpp
  * @date	Oct. 2016
  * @author	PhRG - opticalp.fr
  */

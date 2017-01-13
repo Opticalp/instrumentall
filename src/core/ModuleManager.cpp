@@ -1,5 +1,5 @@
 /**
- * @file	src/ModuleManager.cpp
+ * @file	src/core/ModuleManager.cpp
  * @date	dec. 2015
  * @author	PhRG - opticalp.fr
  */

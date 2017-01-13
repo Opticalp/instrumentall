@@ -1,5 +1,5 @@
 /**
- * @file	src/ParameterWorker.h
+ * @file	src/core/ParameterWorker.h
  * @date	Aug. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -33,7 +33,7 @@
 
 #include <string>
 
-class ParameterizedEntity;
+class ParameterizedEntityWithWorkers;
 
 /**
  * ParameterWorker
@@ -43,7 +43,7 @@ class ParameterizedEntity;
 class ParameterWorker
 {
 public:
-	ParameterWorker(ParameterizedEntity* parameterized, size_t paramIndex);
+	ParameterWorker(ParameterizedEntityWithWorkers* parameterized, size_t paramIndex);
 	virtual ~ParameterWorker() { }
 
 	/**
@@ -53,7 +53,7 @@ public:
 	void invalidate()
 		{ parent = NULL; }
 
-	ParameterizedEntity* getParent() const
+	ParameterizedEntityWithWorkers* getParent() const
 		{ return parent; }
 
 	/**
@@ -78,14 +78,14 @@ protected:
 	 * @param paramIndex parameter index for the parameterized entity
 	 * @return TypeNeutralData::DataTypeEnum of the given parameter
 	 */
-	static int paramDataType(ParameterizedEntity* parameterized, size_t paramIndex);
+	static int paramDataType(ParameterizedEntityWithWorkers* parameterized, size_t paramIndex);
 
 	bool yield() { Poco::Thread::yield(); return false; }
 
 private:
 	ParameterWorker();
 
-	ParameterizedEntity* parent;
+	ParameterizedEntityWithWorkers* parent;
 	size_t mParamIndex;
 	int mDatatype;
 };

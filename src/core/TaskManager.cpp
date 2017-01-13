@@ -1,5 +1,5 @@
 /**
- * @file	src/TaskManager.cpp
+ * @file	src/core/TaskManager.cpp
  * @date	June 2016
  * @author	Applied Informatics Software Engineering GmbH and contributors
  *

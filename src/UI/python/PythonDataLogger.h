@@ -97,7 +97,7 @@ static PyMethodDef pyMethodDataLoggerSource =
     "Retrieve the source Port object"
 };
 
-/// python wrapper to get the target ports of the current output port
+/// python wrapper to release the dataLogger from its data source
 extern "C" PyObject* pyDataLoggerDetach(DataLoggerMembers *self);
 
 static PyMethodDef pyMethodDataLoggerDetach =
@@ -108,10 +108,93 @@ static PyMethodDef pyMethodDataLoggerDetach =
     "Detach the logger from its data source"
 };
 
+/// python wrapper to set the name of the dataLogger
+extern "C"
+PyObject* pyDataLoggerSetName(DataLoggerMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataLoggerSetName =
+{
+    "setName",
+    (PyCFunction)pyDataLoggerSetName,
+    METH_VARARGS,
+    "setName(newName): set a new name for the data logger, "
+    "change the parameters prefix key for the conf file, "
+    "load the parameters from the conf file if any. "
+};
+
+
+/// DataLogger::parameterSet() python wrapper
+extern "C" PyObject* pyDataLoggerGetParameterSet(DataLoggerMembers *self);
+
+static PyMethodDef pyMethodDataLoggerGetParameterSet =
+{
+    "getParameterSet",
+    (PyCFunction)pyDataLoggerGetParameterSet,
+    METH_NOARGS,
+    "Retrieve the parameter set"
+};
+
+/// DataLogger::getParameterValue python wrapper
+extern "C"
+PyObject* pyDataLoggerGetParameterValue(DataLoggerMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataLoggerGetParameterValue =
+{
+    "getParameterValue",
+    (PyCFunction)pyDataLoggerGetParameterValue,
+    METH_VARARGS,
+    "getParameterValue(paramName): get the value of the given parameter"
+};
+
+/// DataLogger::setParameterValue python wrapper
+extern "C"
+PyObject* pyDataLoggerSetParameterValue(DataLoggerMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataLoggerSetParameterValue =
+{
+    "setParameterValue",
+    (PyCFunction)pyDataLoggerSetParameterValue,
+    METH_VARARGS,
+    "setParameterValue(paramName, value): set the value of the given parameter"
+};
+
+/// DataLogger::setVerbosity python wrapper
+extern "C"
+PyObject* pyDataLoggerSetVerbosity(DataLoggerMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataLoggerSetVerbosity =
+{
+    "setVerbosity",
+    (PyCFunction)pyDataLoggerSetVerbosity,
+    METH_VARARGS,
+    "getVerbosity: set the dataLogger logger verbosity (with integer value)"
+};
+
+/// DataLogger::getVerbosity python wrapper
+extern "C"
+PyObject* pyDataLoggerGetVerbosity(DataLoggerMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataLoggerGetVerbosity =
+{
+    "getVerbosity",
+    (PyCFunction)pyDataLoggerGetVerbosity,
+    METH_NOARGS,
+    "getVerbosity: set the dataLogger logger verbosity"
+};
+
 /// exported methods
 static PyMethodDef pyDataLoggerMethods[] = {
         pyMethodDataLoggerSource,
         pyMethodDataLoggerDetach,
+
+        pyMethodDataLoggerSetName,
+
+        pyMethodDataLoggerGetParameterSet,
+        pyMethodDataLoggerGetParameterValue,
+        pyMethodDataLoggerSetParameterValue,
+
+        pyMethodDataLoggerSetVerbosity,
+        pyMethodDataLoggerGetVerbosity,
 
         {NULL} // sentinel
 };

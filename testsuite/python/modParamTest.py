@@ -66,6 +66,13 @@ def myMain():
             value = str(value)
         print " - " + param["name"] + ": " +  value 
 
+    if mod1.getParameterValue("intParam") != 666:
+        raise RuntimeError("intParam error. Should have got 666")
+    if abs(mod1.getParameterValue("floatParam")) > 0.01:
+        raise RuntimeError("floatParam error. Should have got 0")
+    if mod1.getParameterValue("strParam")!="mojo":
+        raise RuntimeError("strParam error. Should have got \"mojo\"")
+    
     cfgFile = join(join(dirname(dirname(realpath(__file__))),"resources"),"modParamTest.properties")
     print "Load test config file: modParamTest.properties from " + cfgFile
 
@@ -74,6 +81,9 @@ def myMain():
     
     val = fac.select("branch").select("leafParam").create("testParamMod").getParameterValue("intParam")
     print "intParam value is: " + str(val)
+
+    if val != 808:
+        raise RuntimeError("intParam error. Should have got 808 (from config file)")
         
     print "End of script modParamTest.py"
     

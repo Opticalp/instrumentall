@@ -102,5 +102,22 @@ then
     fi
 fi
 
+echo "Installing openCV from the packages"
+if [ $TRAVIS_OS_NAME == linux ] 
+then 
+    echo "using apt-get"
+    sudo apt-get install libopencv-dev xvfb -q -y 
+    # echo "opencv lib installed with apt-get" 
+fi
+if [ $TRAVIS_OS_NAME == osx ] 
+then 
+    echo "using homebrew"
+    /usr/bin/yes | pip uninstall numpy # see: travis-ci/travis-ci#6688
+    brew tap homebrew/science
+    brew install opencv
+    # echo "opencv lib installed with homebrew" 
+fi
+echo "openCV installed"
+
 cd $CURRENT_DIR
 pwd
