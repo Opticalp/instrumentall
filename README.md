@@ -10,7 +10,4 @@ Wide-purpose instrumentation software
 The current effort consists with porting the actual Instrumentall development version (private SVN) to GitHub. 
 This work includes deep cleaning of the code and Continuous Integration management. 
 
-# More informations
- * [Installation instructions](doc/install.md) 
- * [Branching model](doc/branching.md)
- * [Contributing](doc/contributing.md)
+[More informations](doc/README.md)
