@@ -156,7 +156,7 @@ void SaveImageLogger::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
         if (digits < 0)
             throw Poco::RangeException("setParameterValue",
                     "parameter digits has to be positive");
-        digits = value;
+        digits = static_cast<int>(value);
         break;
     case paramNextIndex:
         nextIndex = value;
