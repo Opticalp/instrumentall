@@ -41,7 +41,6 @@ class DaqDeviceFactory: public ModuleFactoryBranch
 public:
     DaqDeviceFactory(ModuleFactory* parent, std::string selector):
         ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
-    virtual ~DaqDeviceFactory() { }
 
     std::string name() { return "DaqDeviceFactory"; }
     std::string description()

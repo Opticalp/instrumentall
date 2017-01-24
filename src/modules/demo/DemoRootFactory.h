@@ -45,8 +45,6 @@ public:
     DemoRootFactory(): ModuleFactory(false) // is not a leaf, is root.
         { setLogger(name()); }
 
-    virtual ~DemoRootFactory() { }
-
     std::string name() { return "DemoRootFactory"; }
     std::string description()
     {

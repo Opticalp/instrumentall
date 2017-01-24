@@ -42,8 +42,6 @@ public:
     SignalProcFactory(): ModuleFactory(false) // is not a leaf, is root.
 		{ setLogger(name()); }
 
-    virtual ~SignalProcFactory() { }
-
     std::string name() { return "SignalProcFactory"; }
     std::string description()
     {
