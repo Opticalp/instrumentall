@@ -15,7 +15,8 @@ The installation can only be achieved via build (Jan., 2017).
  * [OpenCV](http://opencv.org) if you want to work with images
  
 ## Other tools
- You may want to generate documentation using [Doxygen](http://www.doxygen.org)
+ * To render the graphs exported by *InstrumentAll*, a [DOT](http://www.graphviz.org/Documentation.php)-language interpreter is needed
+ * You may want to generate documentation using [Doxygen](http://www.doxygen.org)
  
 ## Example scripts
  Some install examples can be found in the CI files:
