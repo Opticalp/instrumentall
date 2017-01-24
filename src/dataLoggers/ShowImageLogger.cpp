@@ -42,6 +42,7 @@
 
 
 size_t ShowImageLogger::refCount = 0;
+size_t ShowImageLogger::winCount = 0;
 
 ShowImageLogger::ShowImageLogger():
         DataLogger("ShowImageLogger")
@@ -57,10 +58,11 @@ void ShowImageLogger::log()
 
     if (img.data)
     {
+		std::string winName = name() + Poco::NumberFormatter::format(winCount++);
         // create a window for display.
-        cv::namedWindow( name(), CV_WINDOW_AUTOSIZE );
+        cv::namedWindow( winName, CV_WINDOW_AUTOSIZE );
         // Show our image inside it.
-        cv::imshow( name(), img );
+        cv::imshow( winName, img );
 
         // take time to effectively display the image
         cv::waitKey(100);
