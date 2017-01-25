@@ -42,8 +42,6 @@ public:
     DeviceFactory(): ModuleFactory(false) // is not a leaf, is root.
 		{ setLogger(name()); }
 
-    virtual ~DeviceFactory() { }
-
     std::string name() { return "DeviceFactory"; }
     std::string description()
     {

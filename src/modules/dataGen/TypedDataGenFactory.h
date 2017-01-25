@@ -42,7 +42,6 @@ class TypedDataGenFactory: public ModuleFactoryBranch
 public:
     TypedDataGenFactory(ModuleFactory* parent, std::string selector):
         ModuleFactoryBranch(parent, selector) { setLogger(name()); }
-    virtual ~TypedDataGenFactory() { }
 
     std::string name() { return getSelector() + "DataGenFactory"; }
     std::string description();

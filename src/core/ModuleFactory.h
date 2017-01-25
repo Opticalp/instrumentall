@@ -284,6 +284,13 @@ protected:
                 "This factory is not able to create a new child module. ");
     }
 
+    /**
+     * Cleaning function called during self deletion
+     *
+     * called after the child modules and factories are deleted.
+     */
+    virtual void terminate() { }
+
 private:
     /**
      * Direct child factories

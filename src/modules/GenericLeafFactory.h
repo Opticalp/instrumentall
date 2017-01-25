@@ -47,8 +47,6 @@ public:
                 sDescription(descrParam)
         { setLogger(sName); }
 
-    virtual ~GenericLeafFactory() { }
-
     std::string name() { return sName; }
     std::string description() { return sDescription; }
 

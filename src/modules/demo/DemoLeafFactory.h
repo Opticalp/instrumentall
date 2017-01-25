@@ -44,7 +44,6 @@ class DemoLeafFactory: public ModuleFactoryBranch
 public:
     DemoLeafFactory(ModuleFactory* parent, std::string selector):
         ModuleFactoryBranch(parent, selector) { setLogger(name()); }
-    virtual ~DemoLeafFactory() { }
 
     std::string name() { return std::string("Demo" + getSelector() + "Factory"); }
     std::string description()
