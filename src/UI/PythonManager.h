@@ -154,6 +154,7 @@ private:
      * @throw Poco::Exception if the interpreter is not initialized
      */
     void checkInit();
+    bool isInit();
 
     /// set variable in python env
     void setVar(double value, const char* name, const char* module = "instru");

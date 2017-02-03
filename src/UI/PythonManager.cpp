@@ -60,7 +60,8 @@ PythonManager::PythonManager():
 
 PythonManager::~PythonManager()
 {
-    uninitialize();
+    if (isInit())
+        uninitialize();
 }
 
 
@@ -108,6 +109,16 @@ void PythonManager::uninitialize()
 {
     poco_information(logger(), "Python manager uninitializing...");
 
+    try
+    {
+        checkInit();
+    }
+    catch (Poco::Exception&)
+    {
+        poco_error(logger(), "Trying to uninit the Python Manager "
+                "that is not initialized");
+    }
+
     // purge added variables
     std::vector<_varItem> varStoreCopy(_addedVarStore);
 
@@ -129,6 +140,8 @@ void PythonManager::uninitialize()
     _addedVarStore.clear();
 
     Py_Finalize();
+
+    poco_information(logger(), "Python manager uninitialized. ");
 }
 
 int PythonManager::main(Application& app)
@@ -329,6 +342,11 @@ void PythonManager::checkInit()
     if (!Py_IsInitialized())
         throw Poco::Exception("PythonManager::runScript()",
                 "The Python interpreter is not initialized. ");
+}
+
+bool PythonManager::isInit()
+{
+    return Py_IsInitialized();
 }
 
 void PythonManager::setVar(double value, const char* name, const char* module)
