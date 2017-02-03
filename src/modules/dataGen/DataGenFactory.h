@@ -44,8 +44,6 @@ public:
     DataGenFactory(): ModuleFactory(false) // is not a leaf, is root.
         { setLogger(name()); }
 
-    virtual ~DataGenFactory() { }
-
     std::string name() { return "DataGenFactory"; }
 
     std::string description()

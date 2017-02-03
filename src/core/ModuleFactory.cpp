@@ -47,6 +47,8 @@ ModuleFactory::~ModuleFactory()
 
     deleteChildFactories();
 
+    terminate();
+
     if (!isRoot())
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeFactory(this);
 }

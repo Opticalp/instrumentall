@@ -42,8 +42,6 @@ public:
     ImageProcFactory(): ModuleFactory(false) // is not a leaf, is root.
 		{ setLogger(name()); }
 
-    virtual ~ImageProcFactory() { }
-
     std::string name() { return "ImageProcFactory"; }
     std::string description()
     {

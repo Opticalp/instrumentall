@@ -79,7 +79,12 @@ if ( NOT no-opencv )
     message ( STATUS "OpenCV ${OpenCV_VERSION} was found" )
     message ( STATUS "OpenCV installed components are: ${OpenCV_LIB_COMPONENTS}" )
     
-    # set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+	if ( ${OpenCV_VERSION} VERSION_GREATER 2.3.3 )
+	    set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+		set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL RELEASE)
+	else ( ${OpenCV_VERSION} VERSION_GREATER 2.3.3 )
+		message ( WARNING "OpenCV version less than 2.3.3. Undefined behaviour in relWithDebInfo and minSizeRel can occur. ")
+	endif ( )
 
     add_definitions ( -DHAVE_OPENCV )
     target_link_libraries( instrumentall ${OpenCV_LIBS} )

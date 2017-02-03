@@ -53,6 +53,7 @@ public:
 
 private:
     static size_t refCount;
+	static size_t winCount;
 
     bool isSupportedInputDataType(int datatype);
 

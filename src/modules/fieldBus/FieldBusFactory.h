@@ -42,8 +42,6 @@ public:
     FieldBusFactory(): ModuleFactory(false) // is not a leaf, is root.
 		{ setLogger(name()); }
 
-    virtual ~FieldBusFactory() { }
-
     std::string name() { return "FieldBusFactory"; }
     std::string description()
     {

@@ -41,7 +41,6 @@ class CameraFactory: public ModuleFactoryBranch
 public:
     CameraFactory(ModuleFactory* parent, std::string selector):
         ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
-    virtual ~CameraFactory() { }
 
     std::string name() { return "CameraFactory"; }
     std::string description()
