@@ -38,6 +38,9 @@
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
 
+
+class PyThreadKeeper;
+
 /**
  * PythonManager
  *
@@ -47,6 +50,8 @@
  *
  * Child class of Poco::Util::Subsystem to
  * handle command line options (initscript, iconsole, execute).
+ *
+ * Since 2.0.0-dev.31: multithreading (almost) ready. TODO: setVar/getVar lock
  */
 class PythonManager: public Poco::Util::Subsystem, VerboseEntity
 {
@@ -212,6 +217,8 @@ private:
     std::vector<_varItem> _addedVarStore;
 
     bool iconsoleFlag;
+
+    PyThreadKeeper* pyMultiThread; ///< allow to launch python executions in multiple C++ threads
 };
 
 //
@@ -221,6 +228,7 @@ inline const char * PythonManager::name() const
 {
     return "PythonManager";
 }
+
 
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_PYTHONMANAGER_H_ */

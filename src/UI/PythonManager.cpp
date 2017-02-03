@@ -34,6 +34,8 @@
 #include "Poco/File.h"
 
 #include "python/PythonRedirection.h"
+#include "python/ScopedGIL.h"
+#include "python/PyThreadKeeper.h"
 
 #include "PythonManager.h"
 
@@ -88,6 +90,8 @@ void PythonManager::initialize(Application& app)
     std::string commandName = app.config().getString("application.argv[0]");
     Py_SetProgramName(const_cast<char*>(commandName.c_str()));
 
+    PyEval_InitThreads();
+
     Py_Initialize();
 
     const int argc = 1;
@@ -98,6 +102,8 @@ void PythonManager::initialize(Application& app)
     setPyStderrForwarder(&stderrForwarder);
 
     exposeAPI();
+
+    pyMultiThread = new PyThreadKeeper();
 
     if (app.config().hasProperty(CONF_KEY_PY_INITSCRIPT))
     {
@@ -118,6 +124,9 @@ void PythonManager::uninitialize()
         poco_error(logger(), "Trying to uninit the Python Manager "
                 "that is not initialized");
     }
+
+    delete pyMultiThread;
+    poco_information(logger(), "Python main thread restored");
 
     // purge added variables
     std::vector<_varItem> varStoreCopy(_addedVarStore);
@@ -185,7 +194,6 @@ void PythonManager::errorMessage(std::string errorMsg)
     poco_error(logger(), errorMsg);
 }
 
-
 void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFile)
 {
     checkInit();
@@ -231,6 +239,8 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
     }
 
     scriptFile.makeAbsolute();
+
+    ScopedGIL GIL;
 
     setVar(scriptFile.toString().c_str(),"__file__","__main__");
 
@@ -633,6 +643,5 @@ void PythonManager::defineOptions(OptionSet & options)
             .argument("INITSCRIPT")
             .binding(CONF_KEY_PY_INITSCRIPT));
 }
-
 
 #endif /* HAVE_PYTHON27 */
