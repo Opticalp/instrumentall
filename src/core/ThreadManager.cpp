@@ -39,7 +39,7 @@
 #include "Poco/AutoPtr.h"
 
 #define CONF_KEY_WATCHDOG_TIMEOUT "watchdog.timeout"
-#define TIMEOUT_DEFAULT 10000
+#define TIMEOUT_DEFAULT 5000
 
 using Poco::NObserver;
 
