@@ -41,24 +41,16 @@ void WatchDog::run()
 
     active = true;
 
-    bool frozen = false;
-
-    // init: get current list of tasks
-    // get thread count
-    size_t tskLstSiz = threadMan->taskManager.taskList().size();
+    // init taskListFrozen query
+    threadMan->taskListFrozen(true);
+    threadMan->threadCountNotChanged(true);
 
     // loop: check that the tasks change.
     // if not, check that the thread count change.
     // else, cancelAll. (if tasks count != 0 of thread count != self)
     while (!stopMe.tryWait(timeout))
     {
-        size_t tskLstSizNew = threadMan->taskManager.taskList().size();
-
-        // very cheap check -- TODO: implement better test
-        if (tskLstSiz && (tskLstSiz == tskLstSizNew))
-            frozen = true;
-
-        if (frozen)
+        if (threadMan->taskListFrozen() && threadMan->threadCountNotChanged())
         {
             threadMan->cancelAll();
             break;

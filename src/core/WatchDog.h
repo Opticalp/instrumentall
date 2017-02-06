@@ -35,7 +35,7 @@
 class ThreadManager;
 
 /**
- * 
+ * Runnable to check that the task list is evoluting
  */
 class WatchDog: public Poco::Runnable
 {

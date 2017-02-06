@@ -181,6 +181,18 @@ public:
      */
     void startWatchDog();
 
+    /**
+     * @param init true does not run the check. just init the function.
+     * @return true if the task list remains the same and its size is non-null
+     */
+    bool taskListFrozen(bool init = false);
+
+    /**
+     * @param init true does not run the check. just init the function.
+     * @return true if the thread pool remains the same and its size is != 1 (self)
+     */
+    bool threadCountNotChanged(bool init = false);
+
 private:
     WatchDog watchDog;
 
@@ -197,7 +209,8 @@ private:
 
     bool cancellingAll;
 
-    friend class WatchDog;
+    size_t lastThreadCount;
+    std::set<MergeableTask*> lastTaskList;
 };
 
 #endif /* SRC_THREADMANAGER_H_ */

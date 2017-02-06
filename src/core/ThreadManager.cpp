@@ -46,7 +46,7 @@ using Poco::NObserver;
 ThreadManager::ThreadManager():
         VerboseEntity(name()),
         threadPool(2,32), // TODO set maxCapacity from config file
-        taskManager(threadPool),
+        taskManager(threadPool), lastThreadCount(0),
 		cancellingAll(false),
 		watchDog(this, TIMEOUT_DEFAULT)
 {
@@ -431,4 +431,62 @@ void ThreadManager::defineOptions(Poco::Util::OptionSet& options)
             .repeatable(false)
             .argument("TIMEOUT")
             .binding(CONF_KEY_WATCHDOG_TIMEOUT));
+}
+
+bool ThreadManager::taskListFrozen(bool init)
+{
+    TaskManager::TaskList newList = taskManager.taskList();
+
+    bool frozen = true;
+
+    if (init)
+    {
+        frozen = false;
+    }
+    else if (lastTaskList.size() != newList.size())
+    {
+        frozen = false;
+    }
+    else if (newList.size()==0)
+    {
+        lastTaskList.clear();
+        return false;
+    }
+    else
+    {
+        for (TaskManager::TaskList::iterator it = newList.begin(),
+                ite = newList.end(); it != ite; it++)
+        {
+            if (lastTaskList.count(*it) == 0)
+            {
+                frozen = false;
+                break;
+            }
+        }
+    }
+
+    lastTaskList.clear();
+    for (TaskManager::TaskList::iterator it = newList.begin(),
+            ite = newList.end(); it != ite; it++)
+        lastTaskList.insert(*it);
+
+    return frozen;
+}
+
+bool ThreadManager::threadCountNotChanged(bool init)
+{
+    size_t newThreadCount = threadPool.used();
+
+    if (init)
+    {
+        lastThreadCount = newThreadCount;
+        return false;
+    }
+
+    bool frozen = false;
+    if ((newThreadCount != 1) && (newThreadCount == lastThreadCount))
+        frozen = true;
+
+    lastThreadCount = newThreadCount;
+    return frozen;
 }
