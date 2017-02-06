@@ -34,6 +34,7 @@
 #include "ModuleTask.h"
 #include "TaskManager.h"
 #include "TaskNotification.h"
+#include "WatchDog.h"
 
 #include "Poco/ThreadPool.h"
 #include "Poco/Runnable.h"
@@ -45,6 +46,7 @@
 #include <set>
 
 class DataLogger;
+class WatchDog;
 
 using Poco::AutoPtr;
 
@@ -53,6 +55,8 @@ using Poco::AutoPtr;
  *
  * Contain the task manager of the system that is used to launch each
  * {{{Module::runTask}}} and the data logger tasks
+ *
+ * 2.0.0-dev.31: add watchDog
  */
 class ThreadManager: public Poco::Util::Subsystem, VerboseEntity
 {
@@ -63,7 +67,7 @@ public:
      * Add the observers
      */
     ThreadManager();
-    virtual ~ThreadManager() { }
+    virtual ~ThreadManager();
 
     /**
       * Subsystem name
@@ -78,8 +82,7 @@ public:
       * Initialize
       *
       */
-     void initialize(Poco::Util::Application& app)
-         { setLogger(name()); }
+     void initialize(Poco::Util::Application& app);
 
      // void reinitialize(Application & app); // not needed. By default: uninit, then init.
 
@@ -88,11 +91,18 @@ public:
       *
       *
       */
-     void uninitialize()
-         { poco_information(logger(), "ThreadManager::uninitialize()"); }
+     void uninitialize();
+
      ///@}
 
-    void onStarted(const AutoPtr<TaskStartedNotification>& pNf);
+     /**
+      * Called before the Application's command line processing begins.
+      *
+      * Allow command line arguments support.
+      */
+     void defineOptions(Poco::Util::OptionSet & options);
+
+     void onStarted(const AutoPtr<TaskStartedNotification>& pNf);
 //    void onProgress(const AutoPtr<TaskProgressNotification> pNf);
     void onFailed(const AutoPtr<TaskFailedNotification>& pNf);
     void onFailedOnCancellation(const AutoPtr<TaskFailedOnCancellationNotification>& pNf);
@@ -165,6 +175,20 @@ public:
     void startRunnable(Poco::Runnable& runnable);
 
 private:
+    /**
+     * Launch a watchdog to check that the program is not frozen.
+     *
+     * The watchdog is active until the uninitialization of the ThreadManager.
+     *
+     * To be called when a command line option is detected
+     *
+     * @param milliseconds timeout value
+     */
+    void startWatchDog(long milliseconds);
+    void stopWatchDog();
+
+    WatchDog watchDog;
+
     TaskManager taskManager;
     Poco::ThreadPool threadPool;
 
@@ -177,6 +201,8 @@ private:
     Poco::RWLock  taskListLock; ///< restrict access to pendingModTasks
 
     bool cancellingAll;
+
+    friend class WatchDog;
 };
 
 #endif /* SRC_THREADMANAGER_H_ */

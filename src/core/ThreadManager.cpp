@@ -38,13 +38,17 @@
 #include "Poco/ThreadPool.h"
 #include "Poco/AutoPtr.h"
 
+#define CONF_KEY_WATCHDOG_TIMEOUT "watchdog.timeout"
+#define TIMEOUT_DEFAULT 10000
+
 using Poco::NObserver;
 
 ThreadManager::ThreadManager():
         VerboseEntity(name()),
         threadPool(2,32), // TODO set maxCapacity from config file
         taskManager(threadPool),
-		cancellingAll(false)
+		cancellingAll(false),
+		watchDog(this)
 {
     taskManager.addObserver(
             NObserver<ThreadManager, TaskStartedNotification>(
@@ -63,6 +67,51 @@ ThreadManager::ThreadManager():
                         *this, &ThreadManager::onEnslaved ) );
 
     threadPool.addCapacity(32);
+}
+
+ThreadManager::~ThreadManager()
+{
+    if (watchDog.isActive())
+        poco_warning(logger(), "Watchdog active at ThreadManager deletion!");
+
+    if (taskManager.taskList().size())
+        poco_warning(logger(), "Task list not empty at ThreadManager deletion!");
+
+    threadPool.collect();
+    if (threadPool.used())
+        poco_warning(logger(), "Thread pool busy at ThreadManager deletion!");
+
+    if (pendingModTasks.size())
+        poco_warning(logger(), "Pending tasks remain at ThreadManager deletion!");
+}
+
+void ThreadManager::initialize(Poco::Util::Application& app)
+{
+    setLogger(name());
+
+    if (app.config().hasProperty(CONF_KEY_WATCHDOG_TIMEOUT))
+    {
+        long timeout = TIMEOUT_DEFAULT; // default value
+
+        try
+        {
+            timeout = app.config().getInt64(CONF_KEY_WATCHDOG_TIMEOUT);
+        }
+        catch (Poco::SyntaxException&)
+        {
+            poco_information(logger(), "Using watchdog timeout hardcoded value");
+        }
+
+        poco_information(logger(), "starting watchdog...");
+        startWatchDog(timeout);
+    }
+}
+
+void ThreadManager::uninitialize()
+{
+    poco_information(logger(), "ThreadManager::uninitializing...");
+    stopWatchDog();
+    poco_information(logger(), "ThreadManager::uninitialized.");
 }
 
 void ThreadManager::onStarted(const AutoPtr<TaskStartedNotification>& pNf)
@@ -263,7 +312,7 @@ void ThreadManager::waitAll()
     // joinAll does not work here,
     // since it seems that it locks the recursive creation of new threads...
     // We use an event instead.
-    while (count() || threadPool.used() || cancellingAll)
+    while (count() || (threadPool.used() - watchDog.isActive()) || cancellingAll)
     {
         //Poco::TaskManager::TaskList list = taskManager.taskList();
         //std::string nameList("\n");
@@ -342,7 +391,7 @@ void ThreadManager::cancelAll()
 
 	poco_information(logger(), "CancelAll: All active tasks cancelled. Wait for them to delete. ");
 
-	while (count() || threadPool.used())
+	while (count() || (threadPool.used() - watchDog.isActive()))
 		Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
 
 	poco_information(logger(), "No more pending task. Wait for all modules being ready... ");
@@ -360,4 +409,32 @@ void ThreadManager::cancelAll()
 void ThreadManager::startRunnable(Poco::Runnable& runnable)
 {
     threadPool.start(runnable);
+}
+
+void ThreadManager::startWatchDog(long milliseconds)
+{
+    watchDog.setTimeout(milliseconds);
+    startRunnable(watchDog);
+}
+
+void ThreadManager::stopWatchDog()
+{
+    watchDog.stop();
+}
+
+using Poco::Util::Option;
+using Poco::Util::OptionSet;
+
+void ThreadManager::defineOptions(Poco::Util::OptionSet& options)
+{
+    options.addOption(
+        Option(
+                "watchdog", "w",
+                "specify the watchdog timeout: TIMEOUT, "
+                "time after which the application is considered as frozen "
+                "if the tasks have not evolved. " )
+            .required(false)
+            .repeatable(false)
+            .argument("TIMEOUT")
+            .binding(CONF_KEY_WATCHDOG_TIMEOUT));
 }
