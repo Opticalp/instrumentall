@@ -35,6 +35,7 @@
 #include "modules/imageProc/ImageProcFactory.h"
 #include "modules/devices/DeviceFactory.h"
 #include "modules/fieldBus/FieldBusFactory.h"
+#include "modules/extern/ExternFactory.h"
 
 ModuleManager::ModuleManager():
 	VerboseEntity(name())
@@ -47,6 +48,7 @@ ModuleManager::ModuleManager():
     addFactory(new ImageProcFactory);
     addFactory(new DeviceFactory);
     addFactory(new FieldBusFactory);
+    addFactory(new ExternFactory);
 }
 
 ModuleManager::~ModuleManager()
