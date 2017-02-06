@@ -175,6 +175,7 @@ int PythonManager::main(Application& app)
     {
         Poco::Util::Application::instance().getSubsystem<ThreadManager>().startWatchDog();
         runScript(app, Poco::Path(app.config().getString(CONF_KEY_PY_SCRIPT)));
+        Poco::Util::Application::instance().getSubsystem<ThreadManager>().waitAll();
     }
 
     return Application::EXIT_OK;
