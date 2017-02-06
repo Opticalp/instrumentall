@@ -33,6 +33,7 @@ THE SOFTWARE.
 #include "modules/GenericLeafFactory.h"
 
 #include "DemoModuleA.h"
+#include "DemoModuleFreeze.h"
 
 std::vector<std::string> DemoBranchFactory::selectValueList()
 {
@@ -46,6 +47,7 @@ std::vector<std::string> DemoBranchFactory::selectValueList()
 	list.push_back("leafForwarder");
 	list.push_back("leafParam");
 	list.push_back("leafTwoInputs");
+	list.push_back("freezer");
 	return list;
 }
 
@@ -54,6 +56,10 @@ ModuleFactoryBranch* DemoBranchFactory::newChildFactory(std::string selector)
     if (selector.compare("leafA") == 0)
         return new GenericLeafFactory<DemoModuleA>("DemoLeafAFactory",
                 "Example code for using the GenericLeafFactory",
+                this, selector);
+    if (selector.compare("freezer") == 0)
+        return new GenericLeafFactory<DemoModuleFreeze>("DemoFreezerFactory",
+                "Create a freezing module to test the watchdog",
                 this, selector);
     else
         return new DemoLeafFactory(this, selector);
