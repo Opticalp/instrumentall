@@ -30,9 +30,11 @@
 
 #include "core/ThreadManager.h"
 
+#include "Poco/Thread.h"
+
 void WatchDog::run()
 {
-    stopMe = false;
+    stopMe.reset();
 
     if (active)
         return;
@@ -48,10 +50,8 @@ void WatchDog::run()
     // loop: check that the tasks change.
     // if not, check that the thread count change.
     // else, cancelAll. (if tasks count != 0 of thread count != self)
-    while (!stopMe)
+    while (!stopMe.tryWait(timeout))
     {
-        Poco::Thread::sleep(timeout);
-
         size_t tskLstSizNew = threadMan->taskManager.taskList().size();
 
         // very cheap check -- TODO: implement better test
@@ -66,4 +66,10 @@ void WatchDog::run()
     }
 
     active = false;
+}
+
+void WatchDog::stop()
+{
+    stopMe.set();
+    Poco::Thread::yield();
 }

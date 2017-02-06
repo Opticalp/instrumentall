@@ -48,7 +48,7 @@ ThreadManager::ThreadManager():
         threadPool(2,32), // TODO set maxCapacity from config file
         taskManager(threadPool),
 		cancellingAll(false),
-		watchDog(this)
+		watchDog(this, TIMEOUT_DEFAULT)
 {
     taskManager.addObserver(
             NObserver<ThreadManager, TaskStartedNotification>(
@@ -91,11 +91,9 @@ void ThreadManager::initialize(Poco::Util::Application& app)
 
     if (app.config().hasProperty(CONF_KEY_WATCHDOG_TIMEOUT))
     {
-        long timeout = TIMEOUT_DEFAULT; // default value
-
         try
         {
-            timeout = app.config().getInt64(CONF_KEY_WATCHDOG_TIMEOUT);
+            watchDog.setTimeout(app.config().getInt64(CONF_KEY_WATCHDOG_TIMEOUT));
         }
         catch (Poco::SyntaxException&)
         {
@@ -103,14 +101,14 @@ void ThreadManager::initialize(Poco::Util::Application& app)
         }
 
         poco_information(logger(), "starting watchdog...");
-        startWatchDog(timeout);
+        startWatchDog();
     }
 }
 
 void ThreadManager::uninitialize()
 {
     poco_information(logger(), "ThreadManager::uninitializing...");
-    stopWatchDog();
+    watchDog.stop();
     poco_information(logger(), "ThreadManager::uninitialized.");
 }
 
@@ -411,16 +409,12 @@ void ThreadManager::startRunnable(Poco::Runnable& runnable)
     threadPool.start(runnable);
 }
 
-void ThreadManager::startWatchDog(long milliseconds)
+void ThreadManager::startWatchDog()
 {
-    watchDog.setTimeout(milliseconds);
-    startRunnable(watchDog);
+//    if (!watchDog.isActive())
+        startRunnable(watchDog);
 }
 
-void ThreadManager::stopWatchDog()
-{
-    watchDog.stop();
-}
 
 using Poco::Util::Option;
 using Poco::Util::OptionSet;

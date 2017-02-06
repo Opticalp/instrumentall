@@ -174,19 +174,14 @@ public:
      */
     void startRunnable(Poco::Runnable& runnable);
 
-private:
     /**
      * Launch a watchdog to check that the program is not frozen.
      *
      * The watchdog is active until the uninitialization of the ThreadManager.
-     *
-     * To be called when a command line option is detected
-     *
-     * @param milliseconds timeout value
      */
-    void startWatchDog(long milliseconds);
-    void stopWatchDog();
+    void startWatchDog();
 
+private:
     WatchDog watchDog;
 
     TaskManager taskManager;

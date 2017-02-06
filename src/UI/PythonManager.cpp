@@ -33,6 +33,8 @@
 #include "Poco/String.h" // trim
 #include "Poco/File.h"
 
+#include "core/ThreadManager.h"
+
 #include "python/PythonRedirection.h"
 #include "python/ScopedGIL.h"
 #include "python/PyThreadKeeper.h"
@@ -171,6 +173,7 @@ int PythonManager::main(Application& app)
     }
     else if (app.config().hasProperty(CONF_KEY_PY_SCRIPT))
     {
+        Poco::Util::Application::instance().getSubsystem<ThreadManager>().startWatchDog();
         runScript(app, Poco::Path(app.config().getString(CONF_KEY_PY_SCRIPT)));
     }
 

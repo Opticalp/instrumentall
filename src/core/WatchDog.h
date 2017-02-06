@@ -30,6 +30,7 @@
 #define SRC_CORE_WATCHDOG_H_
 
 #include "Poco/Runnable.h"
+#include "Poco/Event.h"
 
 class ThreadManager;
 
@@ -39,8 +40,8 @@ class ThreadManager;
 class WatchDog: public Poco::Runnable
 {
 public:
-    WatchDog(ThreadManager* parent):
-        threadMan(parent), timeout(10000),
+    WatchDog(ThreadManager* parent, long milliseconds):
+        threadMan(parent), timeout(milliseconds),
         active (false), stopMe(false)
         {   }
 
@@ -61,8 +62,7 @@ public:
     int isActive()
         { if (active) return 1; else return 0; }
 
-    void stop()
-        { stopMe = true; }
+    void stop();
 
 private:
     ThreadManager* threadMan;
@@ -70,7 +70,7 @@ private:
     long timeout; ///< timeout in milliseconds
 
     bool active; ///< activity flag
-    bool stopMe; ///< stop request flag
+    Poco::Event stopMe; ///< stop request flag
 };
 
 #endif /* SRC_CORE_WATCHDOG_H_ */
