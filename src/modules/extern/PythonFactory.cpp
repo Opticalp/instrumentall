@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/extern/PythonModule.h
+ * @file	src/modules/extern/PythonFactory.cpp
  * @date	Feb. 2017
  * @author	PhRG - opticalp.fr
  */
@@ -26,47 +26,41 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_EXTERN_PYTHONMODULE_H_
-#define SRC_MODULES_EXTERN_PYTHONMODULE_H_
-
 #ifdef HAVE_PYTHON27
 
-#include "core/Module.h"
+#include "PythonFactory.h"
 
-/**
- * Python Module
- *
- * When all the input ports are trigged, the python script is launched.
- * The input ports are released when the script returns.
- *
- * There is no output port. DataGen modules should be used instead.
- *
- * The count of input ports is determined using the factory selector.
- * This selector is a semi-colon-separated list of trig port names.
- */
-class PythonModule: public Module
+#include "modules/GenericLeafFactory.h"
+#include "modules/extern/PythonModule.h"
+
+#include "Poco/RegularExpression.h"
+
+std::vector<std::string> PythonFactory::selectValueList()
 {
-public:
-    PythonModule(ModuleFactory* parent, std::string customName);
+    std::vector<std::string> list;
+    list.push_back("");
+    return list;
+}
 
-    std::string description();
+ModuleFactoryBranch* PythonFactory::newChildFactory(std::string selector)
+{
+    return new GenericLeafFactory<PythonModule>(
+            "PyModWithPortsFactory",
+            "Factory to create modules that launch a python script "
+            "given the ports in selector",
+            this, selector);
+}
 
-private:
-    static size_t refCount; ///< reference counter to generate a unique internal name
+std::string PythonFactory::validateSelector(std::string selector)
+{
+    if (selector.empty())
+        return "";
 
-    void process(int startCond);
-
-    enum params
-    {
-        paramScriptFilePath,
-        paramCnt
-    };
-
-    std::string getStrParameterValue(size_t paramIndex);
-    void setStrParameterValue(size_t paramIndex, std::string value);
-
-    std::string scriptPath;
-};
+    Poco::RegularExpression regex("^\\w+(\\s*;\\s*\\w+)*$");
+    if (!regex.match(selector))
+        throw Poco::InvalidArgumentException("Unrecognized selector: " + selector);
+    else
+        return selector;
+}
 
 #endif /* HAVE_PYTHON27 */
-#endif /* SRC_MODULES_EXTERN_PYTHONMODULE_H_ */

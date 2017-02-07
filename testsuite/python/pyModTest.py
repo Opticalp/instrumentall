@@ -38,27 +38,36 @@ def myMain():
     print("Retrieved factory: " + fac.name)
     
     print("Create module from python factory")
-    pyMod = fac.select("python").create("pyMod")
-    print("module " + pyMod.name + " created. ")
+    pyMod0 = fac.select("python").select("trigA;trigB").create("pyMod0")
+    print("module " + pyMod0.name + " created. ")
     
-    print("Set the trig port count")
-    pyMod.setParameterValue("inPortCount",1)
+    if len(pyMod0.inPorts()) is not 2:
+        raise RuntimeError("Bad trig port count")
+    
+    global pyMod
+    pyMod = fac.select("python").select("trig").create("pyMod")
+    print("module " + pyMod.name + " created. ")
     
     if len(pyMod.inPorts()) is not 1:
         raise RuntimeError("Bad trig port count")
     
+    scriptFile = join(join(dirname(dirname(realpath(__file__))),"resources"),"pyModScript.py")
+    print("Load script file: " + scriptFile)
+    pyMod.setParameterValue("scriptFilePath",scriptFile)
+
     print("Create a module to trig pyMod")
     floatGen = Factory("DataGenFactory").select("float").create("floatGenerator")
     print("set generated value to 3.14")
     floatGen.setParameterValue("value",3.14)
     
-    bind(floatGen.outPort("data"), pyMod.inPort("trig0"))
+    bind(floatGen.outPort("data"), pyMod.inPort("trig"))
     
-    Na = 6.022e23 
+    global Na 
+    Na = 6.022e23
     
     runModule(floatGen)
         
-    print "End of script pyModTest.py"
+    print("End of script pyModTest.py")
     
 # main body    
 import sys

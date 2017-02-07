@@ -31,34 +31,28 @@
 def myMain():
     """Main function. Do simple things. """
     
-    print("pyMod executing script...")
+    print("pyMod executing script... pyMod is launched via the pyModTest.py script of /testsuite/python")
     
-    print(dir())
+    print("Na was defined as global in the main script. Its value is: " + str(Na)) 
     
-#     pyMod = Module("pyMod") # self
-#     
-#     fac = Factory("DemoRootFactory")
-#     print "Using DemoRootFactory. "
-#     
-#     print "Create module from freezer factory"
-#     freezer = fac.select("branch").select("freezer").create("freezer")
-# 
-#     runModule(freezer)
-# 
-#     try:
-#         waitAll()
-#     except RuntimeError:
-#         print("ok, waitAll raised exception on watchdog timeout")
-#         return
-#     
-#     raise RuntimeError("watchdog timeout should have happen during waitAll")
+    # pyMod = Module("pyMod") # self can be retrieved like that
     
+    print("Retrieve the pyMod declared as global in the main script")
+    global pyMod 
+    print("pyMod name is: " + pyMod.name)
+    
+    print("Checking the source value...")
+    if abs(pyMod.inPort("trig").getSourcePort().getDataValue() - 3.14) > 0.01:
+        raise RuntimeError("source port data: 3.14 was expected. ")
+    
+    print("source value OK (3.14). ")     
+         
     print "End of pyMod script"
     
 # main body    
 import sys
 import os
-    
+
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])

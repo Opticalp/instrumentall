@@ -30,10 +30,12 @@
 
 #include "PythonModule.h"
 
+#include "core/ModuleFactoryBranch.h"
 #include "UI/PythonManager.h"
 
 #include "Poco/NumberFormatter.h"
 #include "Poco/Path.h"
+#include "Poco/StringTokenizer.h"
 
 size_t PythonModule::refCount = 0;
 
@@ -45,22 +47,30 @@ PythonModule::PythonModule(ModuleFactory* parent, std::string customName):
     setCustomName(customName);
     setLogger("module." + name());
 
-    // the input ports are defined by setParameterValue
+    // the input ports are defined by the parent factory selector.
+    std::string sel(static_cast<ModuleFactoryBranch*>(parent)->getSelector());
+    if (!sel.empty())
+    {
+        Poco::StringTokenizer tok(sel, ";", Poco::StringTokenizer::TOK_TRIM);
+        size_t tokCnt = tok.count();
+        setInPortCount(tokCnt);
+        for (size_t ind = 0; ind < tokCnt; ind++)
+            addTrigPort(tok[ind], "auto-generated trig port, "
+                    "retrieved from parent factory selector parsing", ind);
+
+        poco_information(logger(), Poco::NumberFormatter::format(tokCnt)
+            + " trig ports were created for " + name());
+    }
 
     // no output port
 
     // parameters
     setParameterCount(paramCnt);
-    addParameter(paramInPortCount, "inPortCount",
-            "Set the input port count. "
-            "The value can not be changed if non-zero. ",
-            ParamItem::typeInteger, "0");
     addParameter(paramScriptFilePath, "scriptFilePath",
             "path to the python script to be executed when trigged",
             ParamItem::typeString, "");
 
     // set parameter defaults
-    setIntParameterValue(paramInPortCount, getIntParameterDefaultValue(paramInPortCount));
     setStrParameterValue(paramScriptFilePath, getStrParameterDefaultValue(paramScriptFilePath));
 
     notifyCreation();
@@ -83,37 +93,6 @@ void PythonModule::process(int startCond)
         Poco::Util::Application::instance().getSubsystem<PythonManager>().runScript(scriptPath);
     else
         throw Poco::RuntimeException("process", "The script file path is not defined");
-}
-
-Poco::Int64 PythonModule::getIntParameterValue(size_t paramIndex)
-{
-    poco_assert(paramIndex == paramInPortCount);
-
-    return getInPortCount();
-}
-
-void PythonModule::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
-{
-    poco_assert(paramIndex == paramInPortCount);
-
-    if (getInPortCount())
-        throw Poco::RuntimeException("setParameterValue",
-                "impossible to set inPortCount parameter: "
-                "input ports are already present");
-
-    if (value == 0)
-        return;
-
-    if (value < 0)
-        throw Poco::RangeException("setParameterValue",
-                "inPortCount has to be positive");
-
-    setInPortCount(value);
-    for (Poco::Int64 ind = 0; ind < value; ind++)
-        addTrigPort("trig" + Poco::NumberFormatter::format(ind),
-                "Auto-generated trig port. "
-                "The count of trig ports is defined "
-                "by the inPortCount parameter", ind);
 }
 
 std::string PythonModule::getStrParameterValue(size_t paramIndex)

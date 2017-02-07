@@ -28,8 +28,7 @@
 
 #include "ExternFactory.h"
 
-#include "modules/GenericLeafFactory.h"
-#include "modules/extern/PythonModule.h"
+#include "modules/extern/PythonFactory.h"
 
 std::vector<std::string> ExternFactory::selectValueList()
 {
@@ -45,10 +44,7 @@ ModuleFactoryBranch* ExternFactory::newChildFactory(std::string selector)
 #ifdef HAVE_PYTHON27
     if (selector.compare("python") == 0)
     {
-        return new GenericLeafFactory<PythonModule>(
-                "PythonModuleFactory",
-                "Factory to create modules that launch a python script",
-                this, selector);
+        return new PythonFactory(this, selector);
     }
     else
 #endif
