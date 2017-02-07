@@ -48,6 +48,8 @@ ThreadManager::ThreadManager():
         threadPool(2,32), // TODO set maxCapacity from config file
         taskManager(threadPool), lastThreadCount(0),
 		cancellingAll(false),
+		cancelEvent(true), // autoreset
+		moduleFailure(false),
 		watchDog(this, TIMEOUT_DEFAULT)
 {
     taskManager.addObserver(
@@ -133,7 +135,15 @@ void ThreadManager::onFailed(const AutoPtr<TaskFailedNotification>& pNf)
         poco_information(logger(),
         		modTask->name() + ": module failed. Cancellation request");
 
-    	modTask->moduleCancel();
+        if (!moduleFailure)
+        {
+            moduleFailure = true;
+            cancelEvent.set();
+            modTask->moduleCancel();
+            moduleFailure = false;
+        }
+        else
+            modTask->moduleCancel();
     }
 
     // TODO:
@@ -300,12 +310,14 @@ size_t ThreadManager::count()
     return pendingModTasks.size();
 }
 
-#define TIME_LAPSE_WAIT_ALL 5
+#define TIME_LAPSE_WAIT_ALL 50
 #include "ModuleManager.h"
 
 void ThreadManager::waitAll()
 {
 	bool stoppedOnCancel = false;
+	bool stoppedOnFailure = false;
+	cancelEvent.reset();
 
     // joinAll does not work here,
     // since it seems that it locks the recursive creation of new threads...
@@ -322,20 +334,28 @@ void ThreadManager::waitAll()
 
         //poco_information(logger(), "active threads are : " + nameList);
 
-        Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
-
-        if (cancellingAll)
-        	stoppedOnCancel = true;
+        if (stoppedOnCancel)
+            Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+        else if (cancelEvent.tryWait(TIME_LAPSE_WAIT_ALL))
+        {
+            if (moduleFailure)
+                stoppedOnFailure = true;
+            else // if (cancellingAll)
+                stoppedOnCancel = true;
+        }
     }
 
-    if (stoppedOnCancel)
+    if (stoppedOnCancel || stoppedOnFailure)
     {
         ModuleManager& modMan = Poco::Util::Application::instance().getSubsystem<ModuleManager>();
 
         while (!modMan.allModuleReady())
             Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
 
-    	throw Poco::RuntimeException("waitAll","Cancellation upon user request");
+        if (stoppedOnFailure)
+            throw Poco::RuntimeException("waitAll","Stopped on module failure");
+        else // stoppedOnCancel
+            throw Poco::RuntimeException("waitAll","Cancellation upon user request");
     }
 
     poco_information(logger(), "All threads have stopped. ");
@@ -372,6 +392,7 @@ void ThreadManager::cancelAll()
         return;
 
 	cancellingAll = true;
+	cancelEvent.set();
 
 	taskListLock.readLock();
 	std::set<ModuleTaskPtr> tempModTasks = pendingModTasks;

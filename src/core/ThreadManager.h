@@ -42,6 +42,7 @@
 #include "Poco/Util/Subsystem.h"
 #include "Poco/RWLock.h"
 #include "Poco/AutoPtr.h"
+#include "Poco/Event.h"
 
 #include <set>
 
@@ -208,6 +209,8 @@ private:
     Poco::RWLock  taskListLock; ///< restrict access to pendingModTasks
 
     bool cancellingAll;
+    bool moduleFailure; ///< to be used by waitAll to check if a single module failed
+    Poco::Event cancelEvent; ///< to be used by waitAll in case of cancellation (single module or cancelAll)
 
     size_t lastThreadCount;
     std::set<MergeableTask*> lastTaskList;
