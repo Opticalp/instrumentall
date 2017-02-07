@@ -87,6 +87,10 @@ ThreadManager::~ThreadManager()
         poco_warning(logger(), "Pending tasks remain at ThreadManager deletion!");
 }
 
+#ifdef POCO_VERSION_H
+#include "Poco/Version.h"
+#endif
+
 void ThreadManager::initialize(Poco::Util::Application& app)
 {
     setLogger(name());
@@ -95,7 +99,11 @@ void ThreadManager::initialize(Poco::Util::Application& app)
     {
         try
         {
+#if ( POCO_VERSION >= 0x01050000 )
             watchDog.setTimeout(app.config().getInt64(CONF_KEY_WATCHDOG_TIMEOUT));
+#else
+            watchDog.setTimeout(app.config().getInt(CONF_KEY_WATCHDOG_TIMEOUT));
+#endif
         }
         catch (Poco::SyntaxException&)
         {
