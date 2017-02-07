@@ -85,9 +85,6 @@ def myMain():
     time.sleep(0.5)
     runModule(Y)
 
-    print "Wait for them to finish"
-    waitAll()
-    
 ##    print "hold input port A (from module X)"
 ##    demo2.inPort("portA").holdData("on")
 ##    print "change Y to 3.14"

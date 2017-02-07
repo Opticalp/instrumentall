@@ -103,7 +103,6 @@ def myMain():
 
     print "Run module mod1"
     runModule(mod1)
-    waitAll()
     
     print "End of script dataBufferTest.py"
     

@@ -38,13 +38,19 @@
 #include "Poco/ThreadPool.h"
 #include "Poco/AutoPtr.h"
 
+#define CONF_KEY_WATCHDOG_TIMEOUT "watchdog.timeout"
+#define TIMEOUT_DEFAULT 5000
+
 using Poco::NObserver;
 
 ThreadManager::ThreadManager():
         VerboseEntity(name()),
         threadPool(2,32), // TODO set maxCapacity from config file
-        taskManager(threadPool),
-		cancellingAll(false)
+        taskManager(threadPool), lastThreadCount(0),
+		cancellingAll(false),
+		cancelEvent(true), // autoreset
+		moduleFailure(false),
+		watchDog(this, TIMEOUT_DEFAULT)
 {
     taskManager.addObserver(
             NObserver<ThreadManager, TaskStartedNotification>(
@@ -63,6 +69,57 @@ ThreadManager::ThreadManager():
                         *this, &ThreadManager::onEnslaved ) );
 
     threadPool.addCapacity(32);
+}
+
+ThreadManager::~ThreadManager()
+{
+    if (watchDog.isActive())
+        poco_warning(logger(), "Watchdog active at ThreadManager deletion!");
+
+    if (taskManager.taskList().size())
+        poco_warning(logger(), "Task list not empty at ThreadManager deletion!");
+
+    threadPool.collect();
+    if (threadPool.used())
+        poco_warning(logger(), "Thread pool busy at ThreadManager deletion!");
+
+    if (pendingModTasks.size())
+        poco_warning(logger(), "Pending tasks remain at ThreadManager deletion!");
+}
+
+#ifdef POCO_VERSION_H
+#include "Poco/Version.h"
+#endif
+
+void ThreadManager::initialize(Poco::Util::Application& app)
+{
+    setLogger(name());
+
+    if (app.config().hasProperty(CONF_KEY_WATCHDOG_TIMEOUT))
+    {
+        try
+        {
+#if ( POCO_VERSION >= 0x01050000 )
+            watchDog.setTimeout(app.config().getInt64(CONF_KEY_WATCHDOG_TIMEOUT));
+#else
+            watchDog.setTimeout(app.config().getInt(CONF_KEY_WATCHDOG_TIMEOUT));
+#endif
+        }
+        catch (Poco::SyntaxException&)
+        {
+            poco_information(logger(), "Using watchdog timeout hardcoded value");
+        }
+
+        poco_information(logger(), "starting watchdog...");
+        startWatchDog();
+    }
+}
+
+void ThreadManager::uninitialize()
+{
+    poco_information(logger(), "ThreadManager::uninitializing...");
+    watchDog.stop();
+    poco_information(logger(), "ThreadManager::uninitialized.");
 }
 
 void ThreadManager::onStarted(const AutoPtr<TaskStartedNotification>& pNf)
@@ -86,7 +143,15 @@ void ThreadManager::onFailed(const AutoPtr<TaskFailedNotification>& pNf)
         poco_information(logger(),
         		modTask->name() + ": module failed. Cancellation request");
 
-    	modTask->moduleCancel();
+        if (!moduleFailure)
+        {
+            moduleFailure = true;
+            cancelEvent.set();
+            modTask->moduleCancel();
+            moduleFailure = false;
+        }
+        else
+            modTask->moduleCancel();
     }
 
     // TODO:
@@ -253,17 +318,19 @@ size_t ThreadManager::count()
     return pendingModTasks.size();
 }
 
-#define TIME_LAPSE_WAIT_ALL 5
+#define TIME_LAPSE_WAIT_ALL 50
 #include "ModuleManager.h"
 
 void ThreadManager::waitAll()
 {
 	bool stoppedOnCancel = false;
+	bool stoppedOnFailure = false;
+	cancelEvent.reset();
 
     // joinAll does not work here,
     // since it seems that it locks the recursive creation of new threads...
     // We use an event instead.
-    while (count() || threadPool.used() || cancellingAll)
+    while (count() || (threadPool.used() - watchDog.isActive()) || cancellingAll)
     {
         //Poco::TaskManager::TaskList list = taskManager.taskList();
         //std::string nameList("\n");
@@ -275,20 +342,28 @@ void ThreadManager::waitAll()
 
         //poco_information(logger(), "active threads are : " + nameList);
 
-        Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
-
-        if (cancellingAll)
-        	stoppedOnCancel = true;
+        if (stoppedOnCancel)
+            Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+        else if (cancelEvent.tryWait(TIME_LAPSE_WAIT_ALL))
+        {
+            if (moduleFailure)
+                stoppedOnFailure = true;
+            else // if (cancellingAll)
+                stoppedOnCancel = true;
+        }
     }
 
-    if (stoppedOnCancel)
+    if (stoppedOnCancel || stoppedOnFailure)
     {
         ModuleManager& modMan = Poco::Util::Application::instance().getSubsystem<ModuleManager>();
 
         while (!modMan.allModuleReady())
             Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
 
-    	throw Poco::RuntimeException("waitAll","Cancellation upon user request");
+        if (stoppedOnFailure)
+            throw Poco::RuntimeException("waitAll","Stopped on module failure");
+        else // stoppedOnCancel
+            throw Poco::RuntimeException("waitAll","Cancellation upon user request");
     }
 
     poco_information(logger(), "All threads have stopped. ");
@@ -325,6 +400,7 @@ void ThreadManager::cancelAll()
         return;
 
 	cancellingAll = true;
+	cancelEvent.set();
 
 	taskListLock.readLock();
 	std::set<ModuleTaskPtr> tempModTasks = pendingModTasks;
@@ -342,7 +418,7 @@ void ThreadManager::cancelAll()
 
 	poco_information(logger(), "CancelAll: All active tasks cancelled. Wait for them to delete. ");
 
-	while (count() || threadPool.used())
+	while (count() || (threadPool.used() - watchDog.isActive()))
 		Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
 
 	poco_information(logger(), "No more pending task. Wait for all modules being ready... ");
@@ -360,4 +436,86 @@ void ThreadManager::cancelAll()
 void ThreadManager::startRunnable(Poco::Runnable& runnable)
 {
     threadPool.start(runnable);
+}
+
+void ThreadManager::startWatchDog()
+{
+//    if (!watchDog.isActive())
+        startRunnable(watchDog);
+}
+
+
+using Poco::Util::Option;
+using Poco::Util::OptionSet;
+
+void ThreadManager::defineOptions(Poco::Util::OptionSet& options)
+{
+    options.addOption(
+        Option(
+                "watchdog", "w",
+                "specify the watchdog timeout: TIMEOUT, "
+                "time after which the application is considered as frozen "
+                "if the tasks have not evolved. " )
+            .required(false)
+            .repeatable(false)
+            .argument("TIMEOUT")
+            .binding(CONF_KEY_WATCHDOG_TIMEOUT));
+}
+
+bool ThreadManager::taskListFrozen(bool init)
+{
+    TaskManager::TaskList newList = taskManager.taskList();
+
+    bool frozen = true;
+
+    if (init)
+    {
+        frozen = false;
+    }
+    else if (lastTaskList.size() != newList.size())
+    {
+        frozen = false;
+    }
+    else if (newList.size()==0)
+    {
+        lastTaskList.clear();
+        return false;
+    }
+    else
+    {
+        for (TaskManager::TaskList::iterator it = newList.begin(),
+                ite = newList.end(); it != ite; it++)
+        {
+            if (lastTaskList.count(*it) == 0)
+            {
+                frozen = false;
+                break;
+            }
+        }
+    }
+
+    lastTaskList.clear();
+    for (TaskManager::TaskList::iterator it = newList.begin(),
+            ite = newList.end(); it != ite; it++)
+        lastTaskList.insert(*it);
+
+    return frozen;
+}
+
+bool ThreadManager::threadCountNotChanged(bool init)
+{
+    size_t newThreadCount = threadPool.used();
+
+    if (init)
+    {
+        lastThreadCount = newThreadCount;
+        return false;
+    }
+
+    bool frozen = false;
+    if ((newThreadCount != 1) && (newThreadCount == lastThreadCount))
+        frozen = true;
+
+    lastThreadCount = newThreadCount;
+    return frozen;
 }

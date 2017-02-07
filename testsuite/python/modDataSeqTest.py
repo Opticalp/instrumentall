@@ -87,7 +87,6 @@ def myMain():
 
     runModule(mod1)
     runModule(mod1)
-    waitAll()
 
     print "End of script modDataSeqTest.py"
     

@@ -33,7 +33,11 @@
 #include "Poco/String.h" // trim
 #include "Poco/File.h"
 
+#include "core/ThreadManager.h"
+
 #include "python/PythonRedirection.h"
+#include "python/ScopedGIL.h"
+#include "python/PyThreadKeeper.h"
 
 #include "PythonManager.h"
 
@@ -60,7 +64,8 @@ PythonManager::PythonManager():
 
 PythonManager::~PythonManager()
 {
-    uninitialize();
+    if (isInit())
+        uninitialize();
 }
 
 
@@ -87,6 +92,8 @@ void PythonManager::initialize(Application& app)
     std::string commandName = app.config().getString("application.argv[0]");
     Py_SetProgramName(const_cast<char*>(commandName.c_str()));
 
+    PyEval_InitThreads();
+
     Py_Initialize();
 
     const int argc = 1;
@@ -98,6 +105,8 @@ void PythonManager::initialize(Application& app)
 
     exposeAPI();
 
+    pyMultiThread = new PyThreadKeeper();
+
     if (app.config().hasProperty(CONF_KEY_PY_INITSCRIPT))
     {
         runScript(app, app.config().getString(CONF_KEY_PY_INITSCRIPT));
@@ -107,6 +116,19 @@ void PythonManager::initialize(Application& app)
 void PythonManager::uninitialize()
 {
     poco_information(logger(), "Python manager uninitializing...");
+
+    try
+    {
+        checkInit();
+    }
+    catch (Poco::Exception&)
+    {
+        poco_error(logger(), "Trying to uninit the Python Manager "
+                "that is not initialized");
+    }
+
+    delete pyMultiThread;
+    poco_information(logger(), "Python main thread restored");
 
     // purge added variables
     std::vector<_varItem> varStoreCopy(_addedVarStore);
@@ -129,6 +151,8 @@ void PythonManager::uninitialize()
     _addedVarStore.clear();
 
     Py_Finalize();
+
+    poco_information(logger(), "Python manager uninitialized. ");
 }
 
 int PythonManager::main(Application& app)
@@ -149,7 +173,9 @@ int PythonManager::main(Application& app)
     }
     else if (app.config().hasProperty(CONF_KEY_PY_SCRIPT))
     {
+        Poco::Util::Application::instance().getSubsystem<ThreadManager>().startWatchDog();
         runScript(app, Poco::Path(app.config().getString(CONF_KEY_PY_SCRIPT)));
+        Poco::Util::Application::instance().getSubsystem<ThreadManager>().waitAll();
     }
 
     return Application::EXIT_OK;
@@ -171,7 +197,6 @@ void PythonManager::errorMessage(std::string errorMsg)
 {
     poco_error(logger(), errorMsg);
 }
-
 
 void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFile)
 {
@@ -218,6 +243,8 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
     }
 
     scriptFile.makeAbsolute();
+
+    ScopedGIL GIL;
 
     setVar(scriptFile.toString().c_str(),"__file__","__main__");
 
@@ -329,6 +356,11 @@ void PythonManager::checkInit()
     if (!Py_IsInitialized())
         throw Poco::Exception("PythonManager::runScript()",
                 "The Python interpreter is not initialized. ");
+}
+
+bool PythonManager::isInit()
+{
+    return Py_IsInitialized();
 }
 
 void PythonManager::setVar(double value, const char* name, const char* module)
@@ -615,6 +647,5 @@ void PythonManager::defineOptions(OptionSet & options)
             .argument("INITSCRIPT")
             .binding(CONF_KEY_PY_INITSCRIPT));
 }
-
 
 #endif /* HAVE_PYTHON27 */

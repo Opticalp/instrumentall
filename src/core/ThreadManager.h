@@ -34,6 +34,7 @@
 #include "ModuleTask.h"
 #include "TaskManager.h"
 #include "TaskNotification.h"
+#include "WatchDog.h"
 
 #include "Poco/ThreadPool.h"
 #include "Poco/Runnable.h"
@@ -41,10 +42,12 @@
 #include "Poco/Util/Subsystem.h"
 #include "Poco/RWLock.h"
 #include "Poco/AutoPtr.h"
+#include "Poco/Event.h"
 
 #include <set>
 
 class DataLogger;
+class WatchDog;
 
 using Poco::AutoPtr;
 
@@ -53,6 +56,8 @@ using Poco::AutoPtr;
  *
  * Contain the task manager of the system that is used to launch each
  * {{{Module::runTask}}} and the data logger tasks
+ *
+ * 2.0.0-dev.31: add watchDog
  */
 class ThreadManager: public Poco::Util::Subsystem, VerboseEntity
 {
@@ -63,7 +68,7 @@ public:
      * Add the observers
      */
     ThreadManager();
-    virtual ~ThreadManager() { }
+    virtual ~ThreadManager();
 
     /**
       * Subsystem name
@@ -78,8 +83,7 @@ public:
       * Initialize
       *
       */
-     void initialize(Poco::Util::Application& app)
-         { setLogger(name()); }
+     void initialize(Poco::Util::Application& app);
 
      // void reinitialize(Application & app); // not needed. By default: uninit, then init.
 
@@ -88,11 +92,18 @@ public:
       *
       *
       */
-     void uninitialize()
-         { poco_information(logger(), "ThreadManager::uninitialize()"); }
+     void uninitialize();
+
      ///@}
 
-    void onStarted(const AutoPtr<TaskStartedNotification>& pNf);
+     /**
+      * Called before the Application's command line processing begins.
+      *
+      * Allow command line arguments support.
+      */
+     void defineOptions(Poco::Util::OptionSet & options);
+
+     void onStarted(const AutoPtr<TaskStartedNotification>& pNf);
 //    void onProgress(const AutoPtr<TaskProgressNotification> pNf);
     void onFailed(const AutoPtr<TaskFailedNotification>& pNf);
     void onFailedOnCancellation(const AutoPtr<TaskFailedOnCancellationNotification>& pNf);
@@ -164,7 +175,28 @@ public:
      */
     void startRunnable(Poco::Runnable& runnable);
 
+    /**
+     * Launch a watchdog to check that the program is not frozen.
+     *
+     * The watchdog is active until the uninitialization of the ThreadManager.
+     */
+    void startWatchDog();
+
+    /**
+     * @param init true does not run the check. just init the function.
+     * @return true if the task list remains the same and its size is non-null
+     */
+    bool taskListFrozen(bool init = false);
+
+    /**
+     * @param init true does not run the check. just init the function.
+     * @return true if the thread pool remains the same and its size is != 1 (self)
+     */
+    bool threadCountNotChanged(bool init = false);
+
 private:
+    WatchDog watchDog;
+
     TaskManager taskManager;
     Poco::ThreadPool threadPool;
 
@@ -177,6 +209,11 @@ private:
     Poco::RWLock  taskListLock; ///< restrict access to pendingModTasks
 
     bool cancellingAll;
+    bool moduleFailure; ///< to be used by waitAll to check if a single module failed
+    Poco::Event cancelEvent; ///< to be used by waitAll in case of cancellation (single module or cancelAll)
+
+    size_t lastThreadCount;
+    std::set<MergeableTask*> lastTaskList;
 };
 
 #endif /* SRC_THREADMANAGER_H_ */
