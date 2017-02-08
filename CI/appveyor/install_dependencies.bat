@@ -54,7 +54,7 @@ if "%ARCH%"=="Win64" (
 )
 
 echo Install OpenCV using curl and 7zip
-curl -fSL -o opencv.exe -m 300 http://downloads.sourceforge.net/project/opencvlibrary/opencv-win/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%.exe
+curl -fSL -o opencv.exe -m 600 http://downloads.sourceforge.net/project/opencvlibrary/opencv-win/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%.exe
 echo Downloading from sourceforge done. 
 REM opencv.exe -y -o"%OPENCV_BASE_DIR"
 call 7z x opencv.exe -o"%OPENCV_BASE_DIR%"
