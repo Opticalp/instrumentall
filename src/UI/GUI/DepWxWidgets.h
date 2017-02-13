@@ -1,5 +1,5 @@
 /**
- * @file	src/DepWxWidgets.h
+ * @file	src/UI/GUI/DepWxWidgets.h
  * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -33,6 +33,8 @@
 
 #include "core/Dependency.h"
 
+class CustomWxApp;
+
 /**
  * DepWxWidgets
  *
@@ -41,7 +43,7 @@
 class DepWxWidgets: public Dependency
 {
 public:
-    DepWxWidgets();
+    DepWxWidgets() { }
 
     std::string name();
     std::string description();
@@ -51,7 +53,8 @@ public:
     std::string runTimeVersion();
 
 private:
-    std::string runtimeVer;
+    static std::string runtimeVer;
+    friend class CustomWxApp;
 };
 
 #endif /* HAVE_WX_WIDGETS */

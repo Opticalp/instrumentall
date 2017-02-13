@@ -1,5 +1,5 @@
 /**
- * @file	src/UI/GUI/DepWxWidgets.cpp
+ * @file	src/UI/GUI/GuiProcessingUnit.h
  * @date	Apr. 2016
  * @author	PhRG - opticalp.fr
  */
@@ -26,46 +26,67 @@
  THE SOFTWARE.
  */
 
+#ifndef SRC_GUIPROCESSINGUNIT_H_
+#define SRC_GUIPROCESSINGUNIT_H_
+
 #ifdef HAVE_WXWIDGETS
 
-#include "DepWxWidgets.h"
+#include "core/VerboseEntity.h"
 
-std::string DepWxWidgets::runtimeVer = "unknown";
+#include "Poco/SharedPtr.h"
+#include "Poco/Path.h"
 
-std::string DepWxWidgets::name()
+#ifdef HAVE_OPENCV
+#  include "opencv2/opencv.hpp"
+#endif
+
+class TopFrame;
+class ImagePanel;
+
+/**
+ * GuiProcessingUnit
+ *
+ * Handle all the processing behind the GUI
+ */
+class GuiProcessingUnit: private VerboseEntity
 {
-    return "wxWidgets";
-}
+public:
+    GuiProcessingUnit(TopFrame* parent);
+    virtual ~GuiProcessingUnit();
 
-std::string DepWxWidgets::description()
-{
-    return "Cross-platform GUI Library";
-}
+//    void registerImagePanel(ImagePanel* imgPnl)
+//        { imagePanel = imgPnl; }
 
-std::string DepWxWidgets::URL()
-{
-    return "http://www.wxwidgets.org/";
-}
+    void setPyGuiScript(Poco::Path scriptPath)
+    {  guiScript = scriptPath; }
 
-std::string DepWxWidgets::license()
-{
-    return "Copyright (c) 1998-2005 Julian Smart, Robert Roebling et al \n"
-           "wxWidgets is currently licenced under the \"wxWindows Library Licence\" "
-           "pending approval of the \"wxWidgets Library Licence\" which will be identical "
-           "apart from the name.";
-}
+    /// run python script
+    void runPyScript(Poco::Path scriptPath);
 
-#include "wx/version.h"
-#include "wx/string.h"
+    /// run GUI script once
+    void runPyScript();
 
-std::string DepWxWidgets::buildTimeVersion()
-{
-    return std::string(wxString(wxVERSION_STRING).utf8_str());
-}
+    /// run GUI script in loop
+    void runLoopPyScript();
 
-std::string DepWxWidgets::runTimeVersion()
-{
-    return runtimeVer;
-}
+    /// emergency stop (cancelAll)
+    void stop();
+
+    bool isRunning();
+
+//#ifdef HAVE_OPENCV
+//    void showImage(cv::Mat img);
+//#endif
+
+private:
+    TopFrame* topFrame;
+//    ImagePanel* imagePanel;
+
+    Poco::Path guiScript;
+
+    bool stopRequest;
+    bool runningScript;
+};
 
 #endif /* HAVE_WXWIDGETS */
+#endif /* SRC_GUIPROCESSINGUNIT_H_ */

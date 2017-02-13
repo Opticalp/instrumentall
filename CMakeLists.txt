@@ -95,17 +95,33 @@ endif ( NOT no-opencv )
 # find wxWidgets
 if ( NOT no-wxwidgets )
     # Note that for MinGW users the order of libs is important!
-    find_package(wxWidgets COMPONENTS xrc core base)
-    if(wxWidgets_FOUND)
-        message ( STATUS "wxWidgets found: ${wxWidgets_LIBRARIES}")
-        include(${wxWidgets_USE_FILE})
+    find_package(wxWidgets REQUIRED COMPONENTS xrc core base)
+
+    message ( STATUS "wxWidgets found: ${wxWidgets_LIBRARIES}")
+    include(${wxWidgets_USE_FILE})
+
+    message ( STATUS "find_package(wxwidgets) added the definitions: ${wxWidgets_DEFINITIONS}" )
+    add_definitions ( -DHAVE_WXWIDGETS )
+    target_link_libraries( instrumentall ${wxWidgets_LIBRARIES})
     
-        message ( STATUS "find_package(wxwidgets) added the definitions: ${wxWidgets_DEFINITIONS}" )
-        add_definitions ( -DHAVE_WXWIDGETS )
-        target_link_libraries( instrumentall ${wxWidgets_LIBRARIES})
-    else (wxWidgets_FOUND)
-        message ( WARNING "wxWidgets not found" )
-    endif (wxWidgets_FOUND)
+    # add some files 
+    # include ( ${PROJECT_SOURCE_DIR}/cmake/wxwidgets.cmake )
+    
+    # or keep it here
+    # copy resource files
+    file (
+      GLOB_RECURSE
+      resource_files
+      "${PROJECT_SOURCE_DIR}/conf/rc/*.xrc"
+      "${PROJECT_SOURCE_DIR}/conf/rc/*.png"
+      "${PROJECT_SOURCE_DIR}/conf/rc/*.jpg"
+      )
+      
+    file (
+      COPY ${resource_files}
+      DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/conf/rc/
+      FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+      )
 endif ( NOT no-wxwidgets )
 
 ## generate build info
@@ -138,29 +154,29 @@ file (
 # raw tests __without__ test framework
 # test that the final binary is executable
 if (UNIX)
-    add_test (
-        NAME instruExec
-        COMMAND $<TARGET_FILE:instrumentall>
-        )
+#    add_test (
+#        NAME instruExec
+#        COMMAND $<TARGET_FILE:instrumentall>
+#        )
     add_test (
         NAME instruHelp
         COMMAND $<TARGET_FILE:instrumentall> --help
         )
-    add_test (
-        NAME instruConf
-        COMMAND $<TARGET_FILE:instrumentall> --config-file=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test.properties
-        )
+#    add_test (
+#        NAME instruConf
+#        COMMAND $<TARGET_FILE:instrumentall> --config-file=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test.properties
+#        )
 else (UNIX)
-    add_test (
-        NAME instruExec
-        COMMAND $<TARGET_FILE:instrumentall>
-        )
+#    add_test (
+#        NAME instruExec
+#        COMMAND $<TARGET_FILE:instrumentall>
+#        )
     add_test (
         NAME instruHelp
         COMMAND $<TARGET_FILE:instrumentall> /help
         )
-    add_test (
-        NAME instruConf
-        COMMAND $<TARGET_FILE:instrumentall> /config-file=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test.properties
-        )
+#    add_test (
+#        NAME instruConf
+#        COMMAND $<TARGET_FILE:instrumentall> /config-file=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test.properties
+#        )
 endif (UNIX)
