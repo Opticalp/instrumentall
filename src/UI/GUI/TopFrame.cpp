@@ -76,11 +76,8 @@ wxBEGIN_EVENT_TABLE(TopFrame, wxFrame)
 
     EVT_BUTTON(XRCID("startBtn"), TopFrame::onStart)
     EVT_BUTTON(wxID_STOP, TopFrame::onStop)
-//    EVT_TOGGLEBUTTON(XRCID("pauseButton"), TopFrame::onPause)
     EVT_BUTTON(wxID_EXIT, TopFrame::onExit)
 
-//    EVT_BUTTON(XRCID("imageContinueButton"), TopFrame::onNextImage)
-//
 //    EVT_BUTTON(wxID_ZOOM_IN, TopFrame::onZoomIn)
 //    EVT_BUTTON(wxID_ZOOM_OUT, TopFrame::onZoomOut)
 //    EVT_BUTTON(wxID_ZOOM_FIT, TopFrame::onZoomHome)
@@ -135,7 +132,13 @@ void TopFrame::onExit(wxCommandEvent& event)
 void TopFrame::onStart(wxCommandEvent& event)
 {
     if (isRunning())
+    {
+        wxMessageBox(
+                "A script is already running...",
+                "Start GUI script",
+                wxOK | wxICON_ERROR );
         return;
+    }
 
     try
     {
@@ -149,14 +152,9 @@ void TopFrame::onStart(wxCommandEvent& event)
     }
     catch (Poco::Exception& e)
     {
-    	wxLogError("Please, check the parameter fields...");
+    	wxLogError("Not able to start the GUI script");
 	}
 }
-
-//void TopFrame::onPause(wxCommandEvent& event)
-//{
-//
-//}
 
 void TopFrame::onStop(wxCommandEvent& event)
 {
@@ -169,7 +167,13 @@ void TopFrame::onStop(wxCommandEvent& event)
 void TopFrame::onRunScriptMenu(wxCommandEvent& event)
 {
     if (isRunning())
+    {
+        wxMessageBox(
+                "A script is already running...",
+                "Run script",
+                wxOK | wxICON_ERROR );
         return;
+    }
 
     wxFileDialog fileDlg(this,
             "Open python script", "", "",
@@ -191,8 +195,8 @@ void TopFrame::onRunScriptMenu(wxCommandEvent& event)
 
 void TopFrame::onGuiScriptMenu(wxCommandEvent& event)
 {
-    if (isRunning())
-        return;
+//    if (isRunning())
+//        return;
 
     wxFileDialog fileDlg(this,
             "Select GUI python script", "", "",
@@ -239,6 +243,11 @@ void TopFrame::stBarText(std::string msg, int pos)
 		throw Poco::RangeException("statusBar position");
 
 	stBar->SetStatusText(msg, pos);
+}
+
+void TopFrame::reportError(std::string errorMsg)
+{
+    wxLogError(errorMsg.c_str());
 }
 
 #endif /* HAVE_WXWIDGETS */

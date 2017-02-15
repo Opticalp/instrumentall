@@ -36,6 +36,7 @@
 
 #include "wx/frame.h"
 
+#include "core/ErrorReporter.h"
 #include "GuiProcessingUnit.h"
 
 /**
@@ -44,7 +45,7 @@
  * wxFrame derived class defining the app main window using a XRC resource
  * file.
  */
-class TopFrame: public wxFrame
+class TopFrame: public wxFrame, public ErrorReporter
 {
 public:
     TopFrame(wxWindow* parent=(wxWindow *)NULL);
@@ -60,6 +61,8 @@ public:
     GuiProcessingUnit* getGuiProcUnit() { return &core; }
 
     void stBarText(std::string msg, int pos=0);
+
+    void reportError(std::string errorMsg);
 
 private:
     GuiProcessingUnit core;
@@ -85,8 +88,6 @@ private:
     void onStart(wxCommandEvent& event);
     /// stop button event handler
     void onStop(wxCommandEvent& event);
-
-//    void onPause(wxCommandEvent& event);
 
     /**
      * Listener in the main thread

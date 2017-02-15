@@ -47,7 +47,8 @@
 
 GuiProcessingUnit::GuiProcessingUnit(TopFrame* parent):
     topFrame(parent), // imagePanel(NULL),
-	stopRequest(false), runningScript(false)
+    pyRunner(parent),
+	stopRequest(false)
 {
     setLogger("GuiProcessingUnit");
 
@@ -62,9 +63,18 @@ GuiProcessingUnit::~GuiProcessingUnit()
 
 void GuiProcessingUnit::runPyScript(Poco::Path scriptPath)
 {
-	// TODO: execute in a thread
-    // runningScript = true;
-    Poco::Util::Application::instance().getSubsystem<PythonManager>().runScript(scriptPath);
+    if (isRunning())
+    {
+        topFrame->reportError("a script is already running: " + pyRunner.getScript());
+        return;
+    }
+
+
+    // TODO: lock?
+    stopRequest = false;
+    pyRunner.setRepeat(false);
+    pyRunner.setScript(scriptPath);
+    pyThread.start(pyRunner);
     // waitAll()
 
     //    if (breakOnError)
@@ -78,7 +88,7 @@ void GuiProcessingUnit::runPyScript(Poco::Path scriptPath)
     //    			"The fab thread ended successfully. ");
 
     //    runningScript = false;
-    //    stopRequest = false;
+        stopRequest = false;
     //    topFrame->stBarText("", 0);
     //    topFrame->updateDisplay();
 }
@@ -90,10 +100,17 @@ void GuiProcessingUnit::runPyScript()
 
 void GuiProcessingUnit::runLoopPyScript()
 {
-	// TODO: execute in a thread
-//    runningScript = true;
-    Poco::Util::Application::instance().getSubsystem<PythonManager>().runScript(guiScript);
-    // waitAll()
+    if (isRunning())
+    {
+        topFrame->reportError("a script is already running: " + pyRunner.getScript());
+        return;
+    }
+
+    // TODO: lock?
+    stopRequest = false;
+    pyRunner.setRepeat(true);
+    pyRunner.setScript(guiScript);
+    pyThread.start(pyRunner);
 
 //    if (breakOnError)
 //    	poco_warning(logger(),
@@ -106,14 +123,14 @@ void GuiProcessingUnit::runLoopPyScript()
 //    			"The fab thread ended successfully. ");
 
 //    runningScript = false;
-//    stopRequest = false;
+    stopRequest = false;
 //    topFrame->stBarText("", 0);
 //    topFrame->updateDisplay();
 }
 
 void GuiProcessingUnit::stop()
 {
-    if (runningScript)
+    if (isRunning())
     	stopRequest = true;
 
     Poco::Util::Application::instance().getSubsystem<ThreadManager>().cancelAll();
@@ -122,7 +139,7 @@ void GuiProcessingUnit::stop()
 bool GuiProcessingUnit::isRunning()
 {
 	// TODO: fix it using threads etc. see runPyScript and runLoopPyScript
-	return runningScript;
+	return pyThread.isRunning();
 }
 
 //#ifdef HAVE_OPENCV

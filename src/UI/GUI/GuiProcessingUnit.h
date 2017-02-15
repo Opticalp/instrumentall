@@ -33,8 +33,12 @@
 
 #include "core/VerboseEntity.h"
 
+#include "UI/python/PythonScriptRunner.h"
+
 #include "Poco/SharedPtr.h"
 #include "Poco/Path.h"
+
+#include "Poco/Thread.h"
 
 #ifdef HAVE_OPENCV
 #  include "opencv2/opencv.hpp"
@@ -42,6 +46,7 @@
 
 class TopFrame;
 class ImagePanel;
+
 
 /**
  * GuiProcessingUnit
@@ -84,8 +89,11 @@ private:
 
     Poco::Path guiScript;
 
+    PythonScriptRunner pyRunner;
+
+    Poco::Thread pyThread;
+
     bool stopRequest;
-    bool runningScript;
 };
 
 #endif /* HAVE_WXWIDGETS */
