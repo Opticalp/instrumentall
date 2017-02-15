@@ -83,6 +83,12 @@ public:
 //    void showImage(cv::Mat img);
 //#endif
 
+    std::string getStatusBarTxt(int field);
+    void setStatusBarTxt(std::string txt, int field);
+
+    std::string getTextCtrlTxt();
+    void setTextCtrlTxt(std::string txt);
+
 private:
     TopFrame* topFrame;
 //    ImagePanel* imagePanel;

@@ -237,13 +237,32 @@ void TopFrame::updateDisplay()
 //#endif
 //}
 
-void TopFrame::stBarText(std::string msg, int pos)
+void TopFrame::setStatusBarTxt(std::string msg, int pos)
 {
 	if (pos<0 || pos>1)
 		throw Poco::RangeException("statusBar position");
 
 	stBar->SetStatusText(msg, pos);
 }
+
+std::string TopFrame::getStatusBarTxt(int pos)
+{
+    if (pos<0 || pos>1)
+        throw Poco::RangeException("statusBar position");
+
+    return std::string(stBar->GetStatusText(pos));
+}
+
+void TopFrame::setTextCtrlTxt(std::string txt)
+{
+    XRCCTRL(*this,"textCtrl",wxTextCtrl)->SetValue(txt.c_str());
+}
+
+std::string TopFrame::getTextCtrlTxt()
+{
+    return std::string(XRCCTRL(*this,"textCtrl",wxTextCtrl)->GetValue());
+}
+
 
 void TopFrame::reportError(std::string errorMsg)
 {

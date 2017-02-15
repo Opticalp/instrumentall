@@ -1,6 +1,6 @@
 /**
- * @file	src/modules/GenericLeafFactory.h
- * @date	Jan. 2017
+ * @file	src/module/UI/uiFactory.h
+ * @date	Feb. 2017
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,45 +26,38 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_GENERICLEAFFACTORY_H_
-#define SRC_MODULES_GENERICLEAFFACTORY_H_
+#ifndef SRC_MODULES_UI_UIFACTORY_H_
+#define SRC_MODULES_UI_UIFACTORY_H_
 
-#include "core/ModuleFactoryBranch.h"
+#include "core/ModuleFactory.h"
 
 /**
- * Generic module factory
+ * UiFactory
  * 
- * countRemain() returns always 1.
+ * Root factory for modules that interface user interactions
  */
-template <class M>
-class GenericLeafFactory: public ModuleFactoryBranch
+class UiFactory: public ModuleFactory
 {
 public:
-    GenericLeafFactory(std::string nameParam, std::string descrParam,
-            ModuleFactory* parent, std::string selector, bool unique = false):
-                ModuleFactoryBranch(parent, selector), // leaf = true (default)
-                sName(nameParam), sDescription(descrParam),
-                uniqueChildModule(unique)
-        { setLogger(sName); }
+    UiFactory(): ModuleFactory(false) // is not a leaf, is root.
+        { setLogger(name()); }
 
-    std::string name() { return sName; }
-    std::string description() { return sDescription; }
-
-    size_t countRemain()
+    std::string name() { return "UiFactory"; }
+    std::string description()
     {
-        if (uniqueChildModule && getChildModules().size())
-            return 0;
-        else
-            return 1;
+        return "Factory for modules that interface "
+                "user interactions";
     }
 
-private:
-    Module* newChildModule(std::string customName)
-        { return new M(this, customName); }
+    std::string selectDescription()
+    {
+        return "Select the interface";
+    }
 
-    std::string sName;
-    std::string sDescription;
-    bool uniqueChildModule;
+    std::vector<std::string> selectValueList();
+
+private:
+    ModuleFactoryBranch* newChildFactory(std::string selector);
 };
 
-#endif /* SRC_MODULES_GENERICLEAFFACTORY_H_ */
+#endif /* SRC_MODULES_UI_UIFACTORY_H_ */

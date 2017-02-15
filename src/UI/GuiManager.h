@@ -83,6 +83,9 @@ public:
     /// get the script. get an empty path if no script was given by the user.
     Poco::Path getScript() { return scriptPath; }
 
+    /**
+     * @return GuiProcessingUnit if the GUI was initialized, else: NULL
+     */
     GuiProcessingUnit* getGuiProcUnit();
 
 private:

@@ -107,6 +107,28 @@ bool GuiProcessingUnit::isScriptRunning()
 	return pyThread.isRunning();
 }
 
+std::string GuiProcessingUnit::getStatusBarTxt(int field)
+{
+    return topFrame->getStatusBarTxt(field);
+}
+
+void GuiProcessingUnit::setStatusBarTxt(std::string txt, int field)
+{
+    topFrame->setStatusBarTxt(txt, field);
+    topFrame->updateDisplay();
+}
+
+std::string GuiProcessingUnit::getTextCtrlTxt()
+{
+    return topFrame->getTextCtrlTxt();
+}
+
+void GuiProcessingUnit::setTextCtrlTxt(std::string txt)
+{
+    topFrame->setTextCtrlTxt(txt);
+    topFrame->updateDisplay();
+}
+
 //#ifdef HAVE_OPENCV
 //void GuiProcessingUnit::showImage(cv::Mat img)
 //{

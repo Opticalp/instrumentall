@@ -60,7 +60,11 @@ public:
 
     GuiProcessingUnit* getGuiProcUnit() { return &core; }
 
-    void stBarText(std::string msg, int pos=0);
+    void setStatusBarTxt(std::string msg, int pos=0);
+    std::string getStatusBarTxt(int pos);
+
+    void setTextCtrlTxt(std::string txt);
+    std::string getTextCtrlTxt();
 
     void reportError(std::string errorMsg);
 

@@ -36,12 +36,12 @@
 #include "modules/devices/DeviceFactory.h"
 #include "modules/fieldBus/FieldBusFactory.h"
 #include "modules/extern/ExternFactory.h"
+#include "modules/UI/UiFactory.h"
 
 ModuleManager::ModuleManager():
 	VerboseEntity(name())
 {
     // Add root factories
-    // Their constructor explicitly calls ModuleFactory(false)
     addFactory(new DemoRootFactory);
     addFactory(new DataGenFactory);
     addFactory(new SignalProcFactory);
@@ -49,6 +49,7 @@ ModuleManager::ModuleManager():
     addFactory(new DeviceFactory);
     addFactory(new FieldBusFactory);
     addFactory(new ExternFactory);
+    addFactory(new UiFactory);
 }
 
 ModuleManager::~ModuleManager()
