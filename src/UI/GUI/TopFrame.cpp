@@ -78,9 +78,9 @@ wxBEGIN_EVENT_TABLE(TopFrame, wxFrame)
     EVT_BUTTON(wxID_STOP, TopFrame::onStop)
     EVT_BUTTON(wxID_EXIT, TopFrame::onExit)
 
-//    EVT_BUTTON(wxID_ZOOM_IN, TopFrame::onZoomIn)
-//    EVT_BUTTON(wxID_ZOOM_OUT, TopFrame::onZoomOut)
-//    EVT_BUTTON(wxID_ZOOM_FIT, TopFrame::onZoomHome)
+    EVT_BUTTON(wxID_ZOOM_IN, TopFrame::onZoomIn)
+    EVT_BUTTON(wxID_ZOOM_OUT, TopFrame::onZoomOut)
+    EVT_BUTTON(wxID_ZOOM_FIT, TopFrame::onZoomFit)
 
     EVT_COMMAND(wxID_ANY, RefreshEvent, TopFrame::forceRefresh)
 wxEND_EVENT_TABLE()
@@ -102,19 +102,12 @@ TopFrame::TopFrame(wxWindow* parent):
     // go maximized
 //    Maximize(true);
 
-//    _imagePanel = XRCCTRL(*this, "imagePanel", ImagePanel);
-
-//    // link to the interfacing processor
-//    GuiProperties::initWxFrame(this);
+    imgPanel = XRCCTRL(*this, "imagePanel", ImagePanel);
 
     stBar = XRCCTRL(*this,"topFrameStatusbar", wxStatusBar);
 
-//    stBar->SetStatusText("my name is joe");
-//    stBar->SetStatusText("my name is jack",1);
-}
-
-TopFrame::~TopFrame()
-{
+    stBar->SetStatusText("WxWidgets initialized...");
+//    stBar->SetStatusText("field #1 start text",1);
 }
 
 void TopFrame::onWxAbout(wxCommandEvent& event)
@@ -262,6 +255,67 @@ std::string TopFrame::getTextCtrlTxt()
 {
     return std::string(XRCCTRL(*this,"textCtrl",wxTextCtrl)->GetValue());
 }
+
+#ifdef HAVE_OPENCV
+void TopFrame::setImage(cv::Mat img)
+{
+//    _waitImageOk = true;
+//     XRCCTRL(*this,"imageContinueButton",wxButton)->Enable(true);
+
+     imgPanel->setImage(img);
+
+//     if (milliseconds)
+//         for (int i=0 ; i< milliseconds/100 ; i++)
+//         {
+//             if (_waitImageOk)
+//                 wxMilliSleep(100);
+//             else
+//                 break;
+//         }
+//     else
+//         while (true)
+//         {
+//             if (_waitImageOk)
+//                 wxMilliSleep(100);
+//             else
+//                 break;
+//         }
+//
+//     XRCCTRL(*this,"imageContinueButton",wxButton)->Enable(false);
+}
+
+void TopFrame::onZoomIn(wxCommandEvent& event)
+{
+    imgPanel->incZoom();
+
+    // do not call refresh directly! since we can be in a worker thread...
+    wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
+    evt->SetEventObject(this);
+    QueueEvent( evt );
+}
+
+void TopFrame::onZoomOut(wxCommandEvent& event)
+{
+    imgPanel->decZoom();
+
+    // do not call refresh directly! since we can be in a worker thread...
+    wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
+    evt->SetEventObject(this);
+    QueueEvent( evt );
+}
+
+void TopFrame::onZoomFit(wxCommandEvent& event)
+{
+    imgPanel->zoomReset();
+
+    // do not call refresh directly! since we can be in a worker thread...
+    wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
+    evt->SetEventObject(this);
+    QueueEvent( evt );
+}
+
+
+#endif /* HAVE_OPENCV */
 
 
 void TopFrame::reportError(std::string errorMsg)

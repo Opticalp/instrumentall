@@ -39,6 +39,12 @@
 #include "core/ErrorReporter.h"
 #include "GuiProcessingUnit.h"
 
+#ifdef HAVE_OPENCV
+#include "ImagePanel.h"
+
+#include "opencv2/core/core.hpp"
+#endif
+
 /**
  * TopFrame
  *
@@ -49,7 +55,16 @@ class TopFrame: public wxFrame, public ErrorReporter
 {
 public:
     TopFrame(wxWindow* parent=(wxWindow *)NULL);
-    virtual ~TopFrame();
+    virtual ~TopFrame() { }
+
+#ifdef HAVE_OPENCV
+    /**
+     * set an image into the image panel
+     *
+     * @param img opencv image to display
+     */
+    void setImage(cv::Mat img);
+#endif
 
     /**
      * Refresh the display with new values
@@ -92,6 +107,17 @@ private:
     void onStart(wxCommandEvent& event);
     /// stop button event handler
     void onStop(wxCommandEvent& event);
+
+#ifdef HAVE_OPENCV
+    /// zoom in button handler
+    void onZoomIn(wxCommandEvent& event);
+    /// zoom out button handler
+    void onZoomOut(wxCommandEvent& event);
+    /// zoom fit button handler
+    void onZoomFit(wxCommandEvent& event);
+
+    ImagePanel* imgPanel;
+#endif
 
     /**
      * Listener in the main thread

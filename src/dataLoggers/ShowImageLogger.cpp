@@ -32,6 +32,9 @@
 
 #include "core/DataItem.h"
 
+#include "UI/GuiManager.h"
+#include "UI/GUI/GuiProcessingUnit.h"
+
 #include "Poco/NumberFormatter.h"
 
 #include "opencv2/opencv.hpp"
@@ -58,14 +61,28 @@ void ShowImageLogger::log()
 
     if (img.data)
     {
-		std::string winName = name() + Poco::NumberFormatter::format(winCount++);
-        // create a window for display.
-        cv::namedWindow( winName, CV_WINDOW_AUTOSIZE );
-        // Show our image inside it.
-        cv::imshow( winName, img );
+#ifdef HAVE_WXWIDGETS
+        // try gui mode
+        GuiProcessingUnit* guiProc =
+                Poco::Util::Application::instance()
+                    .getSubsystem<GuiManager>()
+                    .getGuiProcUnit();
+        if (guiProc != NULL)
+        {
+            guiProc->showImage(img);
+        }
+        else
+#endif /* HAVE_WXWIDGETS */
+        {
+            std::string winName = name() + Poco::NumberFormatter::format(winCount++);
+            // create a window for display.
+            cv::namedWindow( winName, CV_WINDOW_AUTOSIZE );
+            // Show our image inside it.
+            cv::imshow( winName, img );
 
-        // take time to effectively display the image
-        cv::waitKey(100);
+            // take time to effectively display the image
+            cv::waitKey(100);
+        }
     }
     else
     {

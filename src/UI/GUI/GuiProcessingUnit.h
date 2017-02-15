@@ -79,9 +79,9 @@ public:
 
     bool isScriptRunning();
 
-//#ifdef HAVE_OPENCV
-//    void showImage(cv::Mat img);
-//#endif
+#ifdef HAVE_OPENCV
+    void showImage(cv::Mat img);
+#endif
 
     std::string getStatusBarTxt(int field);
     void setStatusBarTxt(std::string txt, int field);
@@ -91,7 +91,6 @@ public:
 
 private:
     TopFrame* topFrame;
-//    ImagePanel* imagePanel;
 
     Poco::Path guiScript;
 

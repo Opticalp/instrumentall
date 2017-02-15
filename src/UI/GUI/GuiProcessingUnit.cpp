@@ -129,12 +129,12 @@ void GuiProcessingUnit::setTextCtrlTxt(std::string txt)
     topFrame->updateDisplay();
 }
 
-//#ifdef HAVE_OPENCV
-//void GuiProcessingUnit::showImage(cv::Mat img)
-//{
-//    imagePanel->setImage(img);
-//}
-//
-//#endif
+#ifdef HAVE_OPENCV
+void GuiProcessingUnit::showImage(cv::Mat img)
+{
+    topFrame->setImage(img);
+}
+
+#endif
 
 #endif /* HAVE_WXWIDGETS */
