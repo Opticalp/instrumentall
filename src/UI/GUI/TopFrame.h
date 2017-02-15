@@ -67,7 +67,7 @@ public:
 private:
     GuiProcessingUnit core;
 
-    bool isRunning() { return core.isRunning(); }
+    bool isRunning() { return core.isScriptRunning(); }
 
     wxStatusBar* stBar;
 

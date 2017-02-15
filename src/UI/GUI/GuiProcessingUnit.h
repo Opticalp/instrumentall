@@ -66,7 +66,7 @@ public:
     {  guiScript = scriptPath; }
 
     /// run python script
-    void runPyScript(Poco::Path scriptPath);
+    void runPyScript(Poco::Path scriptPath, bool repeat = false);
 
     /// run GUI script once
     void runPyScript();
@@ -77,7 +77,7 @@ public:
     /// emergency stop (cancelAll)
     void stop();
 
-    bool isRunning();
+    bool isScriptRunning();
 
 //#ifdef HAVE_OPENCV
 //    void showImage(cv::Mat img);
@@ -91,9 +91,7 @@ private:
 
     PythonScriptRunner pyRunner;
 
-    Poco::Thread pyThread;
-
-    bool stopRequest;
+    Poco::Thread pyThread; ///< thread for the pyRunner
 };
 
 #endif /* HAVE_WXWIDGETS */

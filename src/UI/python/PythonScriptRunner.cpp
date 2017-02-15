@@ -28,100 +28,77 @@
 
 #ifdef HAVE_WXWIDGETS
 
+
 #include "Poco/Util/Application.h"
 #include "UI/PythonManager.h"
+#include "core/ThreadManager.h"
 
 #include "PythonScriptRunner.h"
 
-#define WAIT_FOR_UNLOCK_TIMEOUT_MS 5000
+#define WAIT_FOR_UNLOCK_TIMEOUT_MS 500
 
 PythonScriptRunner::PythonScriptRunner(ErrorReporter* parentErrorReporter):
     errReporter(parentErrorReporter),
-	loop(false), cancelRequested(false)
+	loop(false), cancelRequested(false),
+	running(false)
 {
 
 }
 
 void PythonScriptRunner::run()
 {
-	_mutex.lock(WAIT_FOR_UNLOCK_TIMEOUT_MS);
+    running = true;
+    Poco::Mutex::ScopedLock lock(mMutex);
 
-	try
-	{
-		if (!loop)
-		{
-		    try
-		    {
+    try
+    {
+        if (!loop)
+        {
+            Poco::Util::Application::instance()
+                .getSubsystem<PythonManager>()
+                .runScript(scriptPath);
+        }
+        else
+        {
+            while (!cancelRequested)
+            {
                 Poco::Util::Application::instance()
                     .getSubsystem<PythonManager>()
                     .runScript(scriptPath);
-		    }
-		    catch (Poco::Exception& e)
-		    {
-		        errReporter->reportError("PythonScript "
-		                + scriptPath.toString() + " error: "
-		                + e.displayText());
-		    }
-		}
-		else
-		{
-			cancelRequested = false;
-			runLoop();
-		}
-	}
-	catch (Poco::Exception&)
-	{
-		_mutex.unlock();
-		throw;
-	}
+                Poco::Util::Application::instance()
+                    .getSubsystem<ThreadManager>().waitAll();
+            }
+        }
+    }
+    catch (Poco::Exception& e)
+    {
+        if (cancelRequested)
+            errReporter->reportError("PythonScript "
+                + scriptPath.toString() + " error: "
+                + e.displayText());
+    }
+    catch (...) // anyhow: running in a thread, the info would not be forwarded
+    {
+        errReporter->reportError("PythonScript "
+            + scriptPath.toString() + " error: **UNKNOWN**");
+    }
 
-	_mutex.unlock();
+    running = false;
 }
 
-bool PythonScriptRunner::setScript(Poco::Path newScriptPath)
+bool PythonScriptRunner::setScriptAndLock(Poco::Path newScriptPath, bool repeat)
 {
-    // the lock isn't required since we check if the thread is running
-    // before doing any action...
-    if (_mutex.tryLock(WAIT_FOR_UNLOCK_TIMEOUT_MS))
+    if (!running && mMutex.tryLock())
     {
         scriptPath = newScriptPath;
-        _mutex.unlock();
+        loop = repeat;
+        cancelRequested = false;
         return true;
     }
     else
     {
         return false;
     }
-}
-
-void PythonScriptRunner::runLoop()
-{
-	while (true)
-	{
-		if (!cancelRequested)
-		{
-            try
-            {
-                Poco::Util::Application::instance()
-                    .getSubsystem<PythonManager>()
-                    .runScript(scriptPath);
-
-                // TODO:
-                //waitAll
-            }
-            catch (Poco::Exception& e)
-            {
-                errReporter->reportError("PythonScript "
-                        + scriptPath.toString() + " error: "
-                        + e.displayText());
-                break;
-            }
-		}
-		else
-		{
-		    break;
-		}
-	}
 }
 
 #endif /* HAVE_WXWIDGETS */

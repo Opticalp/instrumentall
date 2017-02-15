@@ -47,8 +47,7 @@
 
 GuiProcessingUnit::GuiProcessingUnit(TopFrame* parent):
     topFrame(parent), // imagePanel(NULL),
-    pyRunner(parent),
-	stopRequest(false)
+    pyRunner(parent)
 {
     setLogger("GuiProcessingUnit");
 
@@ -61,36 +60,28 @@ GuiProcessingUnit::~GuiProcessingUnit()
 
 }
 
-void GuiProcessingUnit::runPyScript(Poco::Path scriptPath)
+void GuiProcessingUnit::runPyScript(Poco::Path scriptPath, bool repeat)
 {
-    if (isRunning())
+    if (isScriptRunning())
     {
         topFrame->reportError("a script is already running: " + pyRunner.getScript());
         return;
     }
 
+    if (pyRunner.setScriptAndLock(scriptPath, repeat))
+    {
+        try
+        {
+            pyThread.start(pyRunner);
+        }
+        catch (...)
+        {
+            pyRunner.releaseStartLock();
+            throw;
+        }
 
-    // TODO: lock?
-    stopRequest = false;
-    pyRunner.setRepeat(false);
-    pyRunner.setScript(scriptPath);
-    pyThread.start(pyRunner);
-    // waitAll()
-
-    //    if (breakOnError)
-    //    	poco_warning(logger(),
-    //    			"The fab thread ended on error: " + errMsg);
-    //    else if (stopRequest)
-    //    	poco_warning(logger(),
-    //    			"processFab ended on stop request");
-    //    else
-    //    	poco_information(logger(),
-    //    			"The fab thread ended successfully. ");
-
-    //    runningScript = false;
-        stopRequest = false;
-    //    topFrame->stBarText("", 0);
-    //    topFrame->updateDisplay();
+        pyRunner.releaseStartLock();
+    }
 }
 
 void GuiProcessingUnit::runPyScript()
@@ -100,45 +91,19 @@ void GuiProcessingUnit::runPyScript()
 
 void GuiProcessingUnit::runLoopPyScript()
 {
-    if (isRunning())
-    {
-        topFrame->reportError("a script is already running: " + pyRunner.getScript());
-        return;
-    }
-
-    // TODO: lock?
-    stopRequest = false;
-    pyRunner.setRepeat(true);
-    pyRunner.setScript(guiScript);
-    pyThread.start(pyRunner);
-
-//    if (breakOnError)
-//    	poco_warning(logger(),
-//    			"The fab thread ended on error: " + errMsg);
-//    else if (stopRequest)
-//    	poco_warning(logger(),
-//    			"processFab ended on stop request");
-//    else
-//    	poco_information(logger(),
-//    			"The fab thread ended successfully. ");
-
-//    runningScript = false;
-    stopRequest = false;
-//    topFrame->stBarText("", 0);
-//    topFrame->updateDisplay();
+    runPyScript(guiScript, true);
 }
 
 void GuiProcessingUnit::stop()
 {
-    if (isRunning())
-    	stopRequest = true;
+    if (isScriptRunning())
+    	pyRunner.cancel();
 
     Poco::Util::Application::instance().getSubsystem<ThreadManager>().cancelAll();
 }
 
-bool GuiProcessingUnit::isRunning()
+bool GuiProcessingUnit::isScriptRunning()
 {
-	// TODO: fix it using threads etc. see runPyScript and runLoopPyScript
 	return pyThread.isRunning();
 }
 
@@ -149,17 +114,5 @@ bool GuiProcessingUnit::isRunning()
 //}
 //
 //#endif
-//
-//void GuiProcessingUnit::newImage()
-//{
-//    try
-//    {
-//        (*findAfCam())->runModule();
-//    }
-//    catch (Poco::Exception& e)
-//    {
-//        poco_error(logger(), e.displayText());
-//    }
-//}
 
 #endif /* HAVE_WXWIDGETS */
