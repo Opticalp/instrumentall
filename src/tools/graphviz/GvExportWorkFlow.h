@@ -31,7 +31,11 @@
 
 #include "GraphvizExportTool.h"
 
+#include <set>
+
 class OutPort;
+class DataTarget;
+class DataSource;
 
 /**
  * Export the workflow as a graphviz dot graph
@@ -53,11 +57,33 @@ private:
 
 	void exportGraph(std::ostream& out);
 
+	/**
+	 * Seek for entities using the data produced by the given source
+	 */
+	void propagateTopDown(DataSource* source);
+
+	/**
+	 * Seek for entities producing data for the given target
+	 */
+	void propagateBottomUp(DataTarget* target);
+
+    /**
+     * Export an edge
+     */
+    void exportEdge(DataSource* source, DataTarget* target);
+
 	void exportNodes(std::ostream& out);
 	void exportEdges(std::ostream& out);
 	void exportSeqEdges(std::ostream& out);
 
 	std::vector< SharedPtr<Module*> > modulesList; ///< all the modules
+
+	std::set<DataLogger*> loggers;
+	std::set<DataProxy*> proxies;
+	std::set<DuplicatedSource*> dupSources;
+
+    std::set<DataTarget*> involvedTargets;
+
 	std::vector< SharedPtr<OutPort*> > outPorts; ///< output ports that have targets
 	std::vector< SharedPtr<OutPort*> > outSeqPorts; ///< output ports that have seq targets
 

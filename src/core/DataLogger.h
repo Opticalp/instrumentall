@@ -76,6 +76,8 @@ public:
      */
     void run();
 
+    virtual std::string description() = 0;
+
     /**
      * Get the data logger implementation class name
      *

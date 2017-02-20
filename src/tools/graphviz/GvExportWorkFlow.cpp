@@ -61,6 +61,9 @@ void GvExportWorkFlow::exportGraph(std::ostream& out)
 
  	out << "digraph workflow {\n" << std::endl;
 
+
+ 	// TODO: seek nodes (propagation)
+
 	exportNodes(out);
 
 	if (drawEdges)
