@@ -159,18 +159,22 @@ void GvExportWorkFlow::propagateTopDown(std::ostream& out, DataSource* source)
 
         // target is: data proxy
         DataProxy* proxy = dynamic_cast<DataProxy*>(*it);
-        if (proxy && proxies.insert(proxy).second)
+        if (proxy)
         {
-            exportDataProxyNode(out, proxy);
-            propagateTopDown(out, proxy);
+            if (proxies.insert(proxy).second)
+            {
+                exportDataProxyNode(out, proxy);
+                propagateTopDown(out, proxy);
+            }
             continue;
         }
 
         // target is: data logger
         DataLogger* logger = dynamic_cast<DataLogger*>(*it);
-        if (logger && loggers.insert(logger).second)
+        if (logger)
         {
-            exportDataLoggerNode(out, logger);
+            if (loggers.insert(logger).second)
+                exportDataLoggerNode(out, logger);
             continue;
         }
 
@@ -205,22 +209,26 @@ void GvExportWorkFlow::propagateBottomUp(std::ostream& out, DataTarget* target)
 
     // source is: duplicated source
     DuplicatedSource* dupSrc = dynamic_cast<DuplicatedSource*>(source);
-    if (dupSrc && dupSources.insert(dupSrc).second)
+    if (dupSrc)
     {
-        exportDuplicatedSourceNode(out, dupSrc);
+        if (dupSources.insert(dupSrc).second)
+            exportDuplicatedSourceNode(out, dupSrc);
         return;
     }
 
     // source is: data proxy
     DataProxy* proxy = dynamic_cast<DataProxy*>(source);
-    if (proxy && proxies.insert(proxy).second)
+    if (proxy)
     {
-        exportDataProxyNode(out, proxy);
-        propagateBottomUp(out, proxy);
+        if (proxies.insert(proxy).second)
+        {
+            exportDataProxyNode(out, proxy);
+            propagateBottomUp(out, proxy);
+        }
         return;
     }
 
-    throw Poco::NotImplementedException("GraphvizExport->getPortName",
+    throw Poco::NotImplementedException("GraphvizExport->propagateBottomUp",
             "The given data source is not recognized");
 
 }

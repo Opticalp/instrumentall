@@ -52,8 +52,6 @@ class SeqTarget;
  *  - data proxies
  *  - data loggers
  *  - duplicated sources
- *
- * Seq data links are only implemented betw. modules.
  */
 class GvExportWorkFlow: public GraphvizExportTool
 {

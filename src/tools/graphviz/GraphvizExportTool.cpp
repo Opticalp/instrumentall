@@ -279,14 +279,14 @@ void GraphvizExportTool::exportDataProxyNode(std::ostream& out,
         DataProxy* proxy)
 {
     out << "    " << proxy->name() << " [shape=box, label=\"";
-    out << proxy->description() << ": \n" << proxy->name() << "\"];" << std::endl;
+    out << "data proxy: \n" << proxy->name() << "\"];" << std::endl;
 }
 
 void GraphvizExportTool::exportDataLoggerNode(std::ostream& out,
         DataLogger* logger)
 {
     out << "    " << logger->name() << " [shape=box, label=\"";
-    out << logger->description() << ": \n" << logger->name() << "\"];" << std::endl;
+    out << "data logger: \n" << logger->name() << "\"];" << std::endl;
 }
 
 void GraphvizExportTool::exportDuplicatedSourceNode(std::ostream& out,
@@ -322,7 +322,7 @@ std::string GraphvizExportTool::getPortName(DataSource* source)
         return proxy->name() + ":s";
 
     throw Poco::NotImplementedException("GraphvizExport->getPortName",
-            "The given data source is not recognized");
+            "The given data source is not recognized: " + source->name());
 }
 
 std::string GraphvizExportTool::getPortName(DataTarget* target)
@@ -353,7 +353,7 @@ std::string GraphvizExportTool::getPortName(DataTarget* target)
         return logger->name() + ":n";
 
     throw Poco::NotImplementedException("GraphvizExport->getPortName",
-            "The given data target is not recognized");
+            "The given data target is not recognized: " + target->name());
 }
 
 #include "Poco/StringTokenizer.h"
