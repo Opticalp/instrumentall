@@ -98,7 +98,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 				.getSubsystem<Dispatcher>()
 				.getInPort(*it);
 
-		out << "<" << portNameSuffix(getPortName(*port)) << "> " << (*port)->name();
+		out << "<" << portNameBase(getPortName(*port)) << "> " << (*port)->name();
 		it++;
 		if (it != ite)
 			out << " | ";
@@ -114,7 +114,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 			.getSubsystem<Dispatcher>()
 			.getOutPort(*it);
 
-		out << "<" << portNameSuffix(getPortName(*port)) << "> " << (*port)->name();
+		out << "<" << portNameBase(getPortName(*port)) << "> " << (*port)->name();
 		it++;
 		if (it != ite)
 			out << " | ";
@@ -210,7 +210,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 							.getSubsystem<Dispatcher>()
 							.getInPort(inP.at(col-1));
 
-					out << "        <TD PORT=\"" << portNameSuffix(getPortName(*port)) << "\">";
+					out << "        <TD PORT=\"" << portNameBase(getPortName(*port)) << "\">";
 					out << (*port)->name() << "</TD>" << std::endl;
 				}
 				else if ((col-1)%outP.size() == 0)
@@ -221,7 +221,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 							.getInPort(inP.at((col-1)/outP.size()));
 
 					out << "        <TD COLSPAN=\"" << outP.size() << "\" ";
-					out << "PORT=\"" << portNameSuffix(getPortName(*port)) << "\">";
+					out << "PORT=\"" << portNameBase(getPortName(*port)) << "\">";
 					out << (*port)->name() << "</TD>" << std::endl;;
 				}
 			}
@@ -252,7 +252,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 							.getSubsystem<Dispatcher>()
 							.getOutPort(outP.at(col-1));
 
-					out << "        <TD PORT=\"" << portNameSuffix(getPortName(*port)) << "\">";
+					out << "        <TD PORT=\"" << portNameBase(getPortName(*port)) << "\">";
 					out << (*port)->name() << "</TD>" << std::endl;
 				}
 				else if ((col-1)%inP.size() == 0)
@@ -263,7 +263,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 							.getOutPort(outP.at((col-1)/inP.size()));
 
 					out << "        <TD COLSPAN=\"" << inP.size() << "\" ";
-					out << "PORT=\"" << portNameSuffix(getPortName(*port)) << "\">";
+					out << "PORT=\"" << portNameBase(getPortName(*port)) << "\">";
 					out << (*port)->name() << "</TD>" << std::endl;;
 				}
 			}
@@ -304,12 +304,12 @@ std::string GraphvizExportTool::getPortName(DataSource* source)
     // source is: module out port
     OutPort* outPort = dynamic_cast<OutPort*>(source);
     if (outPort)
-        return outPort->parent()->name() + ":outPort_" + outPort->name();
+        return outPort->parent()->name() + ":outPort_" + outPort->name() + ":s";
 
     // source is: parameter getter
     ParameterGetter* paramGet = dynamic_cast<ParameterGetter*>(source);
     if (paramGet)
-        return paramGet->getParent()->name() + ":param_" + paramGet->name();
+        return paramGet->getParent()->name() + ":param_" + paramGet->name() + ":w";
 
     // source is: duplicated source
     DuplicatedSource* dupSrc = dynamic_cast<DuplicatedSource*>(source);
@@ -330,17 +330,17 @@ std::string GraphvizExportTool::getPortName(DataTarget* target)
     // target is: module in port
     InPort* inPort = dynamic_cast<InPort*>(target);
     if (inPort)
-        return inPort->parent()->name() + ":inPort_" + inPort->name();
+        return inPort->parent()->name() + ":inPort_" + inPort->name() + ":n";
 
     // target is: parameter getter
     ParameterGetter* paramGet = dynamic_cast<ParameterGetter*>(target);
     if (paramGet)
-        return paramGet->getParent()->name() + ":param_" + paramGet->name();
+        return paramGet->getParent()->name() + ":param_" + paramGet->name() + ":w";
 
     // target is: parameter setter
     ParameterSetter* paramSet = dynamic_cast<ParameterSetter*>(target);
     if (paramSet)
-        return paramSet->getParent()->name() + ":param_" + paramSet->name();
+        return paramSet->getParent()->name() + ":param_" + paramSet->name() + ":w";
 
     // target is: data proxy
     DataProxy* proxy = dynamic_cast<DataProxy*>(target);
@@ -358,10 +358,10 @@ std::string GraphvizExportTool::getPortName(DataTarget* target)
 
 #include "Poco/StringTokenizer.h"
 
-std::string GraphvizExportTool::portNameSuffix(std::string complete)
+std::string GraphvizExportTool::portNameBase(std::string complete)
 {
     Poco::StringTokenizer tok(complete, ":");
-    if (tok.count() == 2)
+    if (tok.count() == 3)
         return tok[1];
     else
         poco_bugcheck_msg(("bad port name: " + complete

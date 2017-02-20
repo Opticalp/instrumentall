@@ -30,6 +30,8 @@
 
 #include "core/Module.h"
 #include "core/InPort.h"
+#include "core/SeqSource.h"
+#include "core/SeqTarget.h"
 #include "core/OutPort.h"
 #include "core/DataProxy.h"
 #include "core/DataLogger.h"
@@ -96,13 +98,7 @@ void GvExportWorkFlow::exportNodes(std::ostream& out)
                     .getOutPort(*it);
 
             if ((*port)->getDataTargets().size())
-            {
-                outPorts.push_back(port);
                 propagateTopDown(out, *port);
-            }
-
-            if ((*port)->getSeqTargets().size())
-                outSeqPorts.push_back(port);
         }
 
         std::vector<InPort*> morePorts = (**it)->getInPorts();
@@ -151,6 +147,10 @@ void GvExportWorkFlow::propagateTopDown(std::ostream& out, DataSource* source)
     {
         involvedTargets.insert(*it);
 
+        SeqTarget* seqTgt = dynamic_cast<SeqTarget*>(*it);
+        if (seqTgt && seqTgt->getSeqSource())
+            seqTargets.insert(seqTgt);
+
         // target is: a module
         if ( dynamic_cast<InPort*>(*it)
                 || dynamic_cast<ParameterGetter*>(*it)
@@ -194,6 +194,10 @@ void GvExportWorkFlow::propagateBottomUp(std::ostream& out, DataTarget* target)
 
     involvedTargets.insert(target);
 
+    SeqTarget* seqTgt = dynamic_cast<SeqTarget*>(target);
+    if (seqTgt && seqTgt->getSeqSource())
+        seqTargets.insert(seqTgt);
+
     // source is: module out port
     if ( dynamic_cast<OutPort*>(source)
             || dynamic_cast<ParameterGetter*>(source) )
@@ -225,41 +229,35 @@ void GvExportWorkFlow::exportEdges(std::ostream& out)
 {
     out << "    /* edges */" << std::endl;
 
-    for (std::vector< SharedPtr<OutPort*> >::iterator it = outPorts.begin(),
-            ite = outPorts.end(); it != ite; it++)
-    {
-        out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
-
+//    for (std::vector< SharedPtr<OutPort*> >::iterator it = outPorts.begin(),
+//            ite = outPorts.end(); it != ite; it++)
+//    {
+//        out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
+//
 //	FIXME
 //        std::set<DataTargets*> targets = (**it)->getDataTargets();
 //
 //        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
 //                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
 //            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
-
-        out << "};" << std::endl;
-    }
-
-    out << std::endl;
+//
+//        out << "};" << std::endl;
+//    }
+//
+//    out << std::endl;
 }
 
 void GvExportWorkFlow::exportSeqEdges(std::ostream& out)
 {
     out << "    /* sequence edges */" << std::endl;
 
-    for (std::vector< SharedPtr<OutPort*> >::iterator it = outSeqPorts.begin(),
-            ite = outSeqPorts.end(); it != ite; it++)
+    for (std::set<SeqTarget*>::iterator it = seqTargets.begin(),
+            ite = seqTargets.end(); it != ite; it++)
     {
-        out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
-
-// FIXME
-//        std::vector<SharedPtr<InPort*> > targets = (**it)->getSeqTargets();
-//
-//        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-//                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-//            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
-//
-        out << "}[style=dotted];" << std::endl;
+        SeqSource* source = (*it)->getSeqSource();
+        out << "    " << getPortName(source) << " -> ";
+        out << getPortName(*it) << " ";
+        out << "[style=dotted];" << std::endl;
     }
 
     out << std::endl;

@@ -95,7 +95,7 @@ protected:
     std::string getPortName(DataSource* source);
     std::string getPortName(DataTarget* target);
 
-    std::string portNameSuffix(std::string complete);
+    std::string portNameBase(std::string complete);
 };
 
 #endif /* SRC_GRAPHVIZEXPORTTOOL_H_ */

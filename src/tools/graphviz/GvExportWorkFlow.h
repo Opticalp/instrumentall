@@ -33,9 +33,9 @@
 
 #include <set>
 
-class OutPort;
 class DataTarget;
 class DataSource;
+class SeqTarget;
 
 /**
  * Export the workflow as a graphviz dot graph
@@ -97,9 +97,7 @@ private:
 	std::set<DuplicatedSource*> dupSources;
 
     std::set<DataTarget*> involvedTargets;
-
-	std::vector< SharedPtr<OutPort*> > outPorts; ///< output ports that have targets
-	std::vector< SharedPtr<OutPort*> > outSeqPorts; ///< output ports that have seq targets
+	std::set<SeqTarget*> seqTargets; ///< involved seq targets
 
 	bool drawEdges;
 };
