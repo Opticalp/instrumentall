@@ -229,6 +229,14 @@ void GvExportWorkFlow::exportEdges(std::ostream& out)
 {
     out << "    /* edges */" << std::endl;
 
+    for (std::set<DataTarget*>::iterator it = involvedTargets.begin(),
+            ite = involvedTargets.end(); it != ite; it++)
+    {
+        DataSource* source = (*it)->getDataSource();
+        out << "    " << getPortName(source) << " -> ";
+        out << getPortName(*it) << " ;" << std::endl;
+    }
+
 //    for (std::vector< SharedPtr<OutPort*> >::iterator it = outPorts.begin(),
 //            ite = outPorts.end(); it != ite; it++)
 //    {
@@ -243,8 +251,8 @@ void GvExportWorkFlow::exportEdges(std::ostream& out)
 //
 //        out << "};" << std::endl;
 //    }
-//
-//    out << std::endl;
+
+    out << std::endl;
 }
 
 void GvExportWorkFlow::exportSeqEdges(std::ostream& out)
