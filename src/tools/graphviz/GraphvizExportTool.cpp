@@ -289,7 +289,7 @@ void GraphvizExportTool::exportDataLoggerNode(std::ostream& out,
     out << logger->description() << ": \n" << logger->name() << "\"];" << std::endl;
 }
 
-void GraphvizExportTool::exportDuplicatedDataNode(std::ostream& out,
+void GraphvizExportTool::exportDuplicatedSourceNode(std::ostream& out,
         DuplicatedSource* source)
 {
     out << "    " << source->name()
@@ -301,22 +301,22 @@ void GraphvizExportTool::exportDuplicatedDataNode(std::ostream& out,
 
 std::string GraphvizExportTool::getPortName(DataSource* source)
 {
-    // source is : module out port
+    // source is: module out port
     OutPort* outPort = dynamic_cast<OutPort*>(source);
     if (outPort)
         return outPort->parent()->name() + ":outPort_" + outPort->name();
 
-    // source is : parameter getter
+    // source is: parameter getter
     ParameterGetter* paramGet = dynamic_cast<ParameterGetter*>(source);
     if (paramGet)
         return paramGet->getParent()->name() + ":param_" + paramGet->name();
 
-    // source is : duplicated source
+    // source is: duplicated source
     DuplicatedSource* dupSrc = dynamic_cast<DuplicatedSource*>(source);
     if (dupSrc)
         return dupSrc->name() + ":s";
 
-    // source is : data proxy
+    // source is: data proxy
     DataProxy* proxy = dynamic_cast<DataProxy*>(source);
     if (proxy)
         return proxy->name() + ":s";
@@ -327,27 +327,27 @@ std::string GraphvizExportTool::getPortName(DataSource* source)
 
 std::string GraphvizExportTool::getPortName(DataTarget* target)
 {
-    // target is : module in port
+    // target is: module in port
     InPort* inPort = dynamic_cast<InPort*>(target);
     if (inPort)
         return inPort->parent()->name() + ":inPort_" + inPort->name();
 
-    // target is : parameter getter
+    // target is: parameter getter
     ParameterGetter* paramGet = dynamic_cast<ParameterGetter*>(target);
     if (paramGet)
         return paramGet->getParent()->name() + ":param_" + paramGet->name();
 
-    // target is : parameter setter
+    // target is: parameter setter
     ParameterSetter* paramSet = dynamic_cast<ParameterSetter*>(target);
     if (paramSet)
         return paramSet->getParent()->name() + ":param_" + paramSet->name();
 
-    // target is : data proxy
+    // target is: data proxy
     DataProxy* proxy = dynamic_cast<DataProxy*>(target);
     if (proxy)
         return proxy->name() + ":n";
 
-    // target is : data logger
+    // target is: data logger
     DataLogger* logger = dynamic_cast<DataLogger*>(target);
     if (logger)
         return logger->name() + ":n";

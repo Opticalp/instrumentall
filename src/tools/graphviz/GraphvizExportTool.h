@@ -90,7 +90,7 @@ protected:
     /**
      * Export a duplicated data source
      */
-    void exportDuplicatedDataNode(std::ostream& out, DuplicatedSource* source);
+    void exportDuplicatedSourceNode(std::ostream& out, DuplicatedSource* source);
 
     std::string getPortName(DataSource* source);
     std::string getPortName(DataTarget* target);
