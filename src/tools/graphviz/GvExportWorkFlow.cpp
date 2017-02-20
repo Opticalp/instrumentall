@@ -242,23 +242,11 @@ void GvExportWorkFlow::exportEdges(std::ostream& out)
     {
         DataSource* source = (*it)->getDataSource();
         out << "    " << getPortName(source) << " -> ";
-        out << getPortName(*it) << " ;" << std::endl;
+        out << getPortName(*it) ;
+        if (dynamic_cast<ParameterGetter*>(*it))
+            out << " [arrowhead=none]";
+        out << " ;" << std::endl;
     }
-
-//    for (std::vector< SharedPtr<OutPort*> >::iterator it = outPorts.begin(),
-//            ite = outPorts.end(); it != ite; it++)
-//    {
-//        out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
-//
-//	FIXME
-//        std::set<DataTargets*> targets = (**it)->getDataTargets();
-//
-//        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-//                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-//            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
-//
-//        out << "};" << std::endl;
-//    }
 
     out << std::endl;
 }

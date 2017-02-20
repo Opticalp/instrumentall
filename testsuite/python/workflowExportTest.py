@@ -78,6 +78,18 @@ def myMain():
     print("add a data logger to mod2 output")
     logger = DataLogger("DataPocoLogger")
     mod2.outPorts()[0].register(logger)
+    
+    print("Create module from leafParam factory")
+    modParam = Factory("DemoRootFactory").select("branch").select("leafParam").create("modParam")
+    print("module " + modParam.name + " created. ")
+    print("Build param getters using the int parameter...")
+    getInt = modParam.buildParameterGetter("intParam")
+    print("Bind a module to the param getter")
+    bind(mod1.outPorts()[0], DataTarget(getInt))
+    print("Create Data logger to print the output of the param getter")
+    loggerInt = DataLogger("DataPocoLogger")
+    print("Bind the loggers to the param getter")
+    bind(DataSource(getInt), DataTarget(loggerInt))
 
     print("Export workflow to workflow.gv")
     exportWorkflow("workflow.gv")

@@ -309,7 +309,7 @@ std::string GraphvizExportTool::getPortName(DataSource* source)
     // source is: parameter getter
     ParameterGetter* paramGet = dynamic_cast<ParameterGetter*>(source);
     if (paramGet)
-        return paramGet->getParent()->name() + ":param_" + paramGet->name() + ":w";
+        return paramGet->getParent()->name() + ":param_" + paramGet->getParameterName() + ":w";
 
     // source is: duplicated source
     DuplicatedSource* dupSrc = dynamic_cast<DuplicatedSource*>(source);
@@ -335,12 +335,12 @@ std::string GraphvizExportTool::getPortName(DataTarget* target)
     // target is: parameter getter
     ParameterGetter* paramGet = dynamic_cast<ParameterGetter*>(target);
     if (paramGet)
-        return paramGet->getParent()->name() + ":param_" + paramGet->name() + ":w";
+        return paramGet->getParent()->name() + ":param_" + paramGet->getParameterName() + ":w";
 
     // target is: parameter setter
     ParameterSetter* paramSet = dynamic_cast<ParameterSetter*>(target);
     if (paramSet)
-        return paramSet->getParent()->name() + ":param_" + paramSet->name() + ":w";
+        return paramSet->getParent()->name() + ":param_" + paramSet->getParameterName() + ":w";
 
     // target is: data proxy
     DataProxy* proxy = dynamic_cast<DataProxy*>(target);
