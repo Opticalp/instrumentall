@@ -56,7 +56,7 @@ DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customNa
 }
 
 #define MAX_INDEX 8
-#define WAIT_TIME 200
+#define WAIT_TIME 150
 
 void DemoModuleDataSeq::process(int startCond)
 {

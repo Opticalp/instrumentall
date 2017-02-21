@@ -88,14 +88,14 @@ void GvExportWorkFlow::exportNodes(std::ostream& out)
 
         std::vector<OutPort*> ports = (**it)->getOutPorts();
 
-        for (std::vector<OutPort*>::iterator it = ports.begin(),
-                ite = ports.end(); it != ite; it++)
+        for (std::vector<OutPort*>::iterator pit = ports.begin(),
+                pite = ports.end(); pit != pite; pit++)
         {
             // retrieve shared port from dispatcher
             SharedPtr<OutPort*> port =
                     Poco::Util::Application::instance()
                     .getSubsystem<Dispatcher>()
-                    .getOutPort(*it);
+                    .getOutPort(*pit);
 
             if ((*port)->getDataTargets().size())
                 propagateTopDown(out, *port);
@@ -103,32 +103,32 @@ void GvExportWorkFlow::exportNodes(std::ostream& out)
 
         std::vector<InPort*> morePorts = (**it)->getInPorts();
 
-        for (std::vector<InPort*>::iterator it = morePorts.begin(),
-                ite = morePorts.end(); it != ite; it++)
+        for (std::vector<InPort*>::iterator pit = morePorts.begin(),
+                pite = morePorts.end(); pit != pite; pit++)
         {
             // retrieve shared port from dispatcher
             SharedPtr<InPort*> morePort =
                     Poco::Util::Application::instance()
                     .getSubsystem<Dispatcher>()
-                    .getInPort(*it);
+                    .getInPort(*pit);
 
             propagateBottomUp(out, *morePort);
         }
 
         // check for parameter workers
         std::set< Poco::AutoPtr<ParameterGetter> > paramGetters = (**it)->getParameterGetters();
-        for (std::set< Poco::AutoPtr<ParameterGetter> >::iterator it = paramGetters.begin(),
-                ite = paramGetters.end(); it != ite; it++)
+        for (std::set< Poco::AutoPtr<ParameterGetter> >::iterator git = paramGetters.begin(),
+                gite = paramGetters.end(); git != gite; git++)
         {
-            propagateBottomUp(out, const_cast<ParameterGetter*>(it->get()));
-            propagateTopDown(out, const_cast<ParameterGetter*>(it->get()));
+            propagateBottomUp(out, const_cast<ParameterGetter*>(git->get()));
+            propagateTopDown(out, const_cast<ParameterGetter*>(git->get()));
         }
 
         std::set< Poco::AutoPtr<ParameterSetter> > paramSetters = (**it)->getParameterSetters();
-        for (std::set< Poco::AutoPtr<ParameterSetter> >::iterator it = paramSetters.begin(),
-                ite = paramSetters.end(); it != ite; it++)
+        for (std::set< Poco::AutoPtr<ParameterSetter> >::iterator sit = paramSetters.begin(),
+                site = paramSetters.end(); sit != site; sit++)
         {
-            propagateBottomUp(out, const_cast<ParameterSetter*>(it->get()));
+            propagateBottomUp(out, const_cast<ParameterSetter*>(sit->get()));
         }
     }
 
