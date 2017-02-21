@@ -31,6 +31,8 @@
 #include "core/ModuleFactory.h"
 #include "core/ModuleFactoryBranch.h"
 
+#include <list>
+
 GvExportFactories::GvExportFactories(
         std::vector<SharedPtr<ModuleFactory*> > factories, bool withModules):
         drawModules(withModules)
@@ -74,17 +76,24 @@ void GvExportFactories::exportGraph(std::ostream& out)
 
 void GvExportFactories::seekChildrenFactories()
 {
-    for (std::set< SharedPtr<ModuleFactory*> >::iterator it = factorySet.begin(),
-            ite = factorySet.end(); it != ite; it++)
+    std::list< SharedPtr<ModuleFactory*> > tmpFacList(factorySet.begin(), factorySet.end());
+
+    while (!tmpFacList.empty())
     {
-        if ((**it)->isLeaf())
+        SharedPtr<ModuleFactory*> item = tmpFacList.front();
+        tmpFacList.pop_front();
+
+        if ((*item)->isLeaf())
             continue;
 
-        std::vector< Poco::SharedPtr<ModuleFactory*> > children = (**it)->getChildFactories();
+        std::vector< Poco::SharedPtr<ModuleFactory*> > children = (*item)->getChildFactories();
 
         for (std::vector< SharedPtr<ModuleFactory*> >::iterator child = children.begin(),
                 childe = children.end(); child != childe; child++)
+        {
+            tmpFacList.push_back(*child);
             factorySet.insert(*child);
+        }
     }
 }
 

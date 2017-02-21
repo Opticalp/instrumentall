@@ -31,6 +31,11 @@
 #include "core/Module.h"
 #include "core/InPort.h"
 #include "core/OutPort.h"
+#include "core/DataProxy.h"
+#include "core/DataLogger.h"
+#include "core/DuplicatedSource.h"
+#include "core/ParameterGetter.h"
+#include "core/ParameterSetter.h"
 #include "core/Dispatcher.h"
 
 #include "Poco/Util/Application.h"
@@ -93,7 +98,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 				.getSubsystem<Dispatcher>()
 				.getInPort(*it);
 
-		out << "<inPort_" << (*port)->name() << "> " << (*port)->name();
+		out << "<" << portNameBase(getPortName(*port)) << "> " << (*port)->name();
 		it++;
 		if (it != ite)
 			out << " | ";
@@ -109,7 +114,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 			.getSubsystem<Dispatcher>()
 			.getOutPort(*it);
 
-		out << "<outPort_" << (*port)->name() << "> " << (*port)->name();
+		out << "<" << portNameBase(getPortName(*port)) << "> " << (*port)->name();
 		it++;
 		if (it != ite)
 			out << " | ";
@@ -205,7 +210,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 							.getSubsystem<Dispatcher>()
 							.getInPort(inP.at(col-1));
 
-					out << "        <TD PORT=\"inPort_" << (*port)->name() << "\">";
+					out << "        <TD PORT=\"" << portNameBase(getPortName(*port)) << "\">";
 					out << (*port)->name() << "</TD>" << std::endl;
 				}
 				else if ((col-1)%outP.size() == 0)
@@ -216,7 +221,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 							.getInPort(inP.at((col-1)/outP.size()));
 
 					out << "        <TD COLSPAN=\"" << outP.size() << "\" ";
-					out << "PORT=\"inPort_" << (*port)->name() << "\">";
+					out << "PORT=\"" << portNameBase(getPortName(*port)) << "\">";
 					out << (*port)->name() << "</TD>" << std::endl;;
 				}
 			}
@@ -247,7 +252,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 							.getSubsystem<Dispatcher>()
 							.getOutPort(outP.at(col-1));
 
-					out << "        <TD PORT=\"outPort_" << (*port)->name() << "\">";
+					out << "        <TD PORT=\"" << portNameBase(getPortName(*port)) << "\">";
 					out << (*port)->name() << "</TD>" << std::endl;
 				}
 				else if ((col-1)%inP.size() == 0)
@@ -258,7 +263,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 							.getOutPort(outP.at((col-1)/inP.size()));
 
 					out << "        <TD COLSPAN=\"" << inP.size() << "\" ";
-					out << "PORT=\"outPort_" << (*port)->name() << "\">";
+					out << "PORT=\"" << portNameBase(getPortName(*port)) << "\">";
 					out << (*port)->name() << "</TD>" << std::endl;;
 				}
 			}
@@ -268,4 +273,99 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 
 	out << "      </TABLE>\n    >];" << std::endl;
 #endif
+}
+
+void GraphvizExportTool::exportDataProxyNode(std::ostream& out,
+        DataProxy* proxy)
+{
+    out << "    " << proxy->name() << " [shape=box, label=\"";
+    out << "data proxy: \n" << proxy->name() << "\"];" << std::endl;
+}
+
+void GraphvizExportTool::exportDataLoggerNode(std::ostream& out,
+        DataLogger* logger)
+{
+    out << "    " << logger->name() << " [shape=box, label=\"";
+    out << "data logger: \n" << logger->name() << "\"];" << std::endl;
+}
+
+void GraphvizExportTool::exportDuplicatedSourceNode(std::ostream& out,
+        DuplicatedSource* source)
+{
+    out << "    " << source->name()
+        << " [shape=box, label=\""
+                  << source->name()
+        << "\"];"
+        << std::endl;
+}
+
+std::string GraphvizExportTool::getPortName(DataSource* source)
+{
+    // source is: module out port
+    OutPort* outPort = dynamic_cast<OutPort*>(source);
+    if (outPort)
+        return outPort->parent()->name() + ":outPort_" + outPort->name() + ":s";
+
+    // source is: parameter getter
+    ParameterGetter* paramGet = dynamic_cast<ParameterGetter*>(source);
+    if (paramGet)
+        return paramGet->getParent()->name() + ":param_" + paramGet->getParameterName() + ":w";
+
+    // source is: duplicated source
+    DuplicatedSource* dupSrc = dynamic_cast<DuplicatedSource*>(source);
+    if (dupSrc)
+        return dupSrc->name() + ":s";
+
+    // source is: data proxy
+    DataProxy* proxy = dynamic_cast<DataProxy*>(source);
+    if (proxy)
+        return proxy->name() + ":s";
+
+    throw Poco::NotImplementedException("GraphvizExport->getPortName",
+            "The given data source is not recognized: " + source->name());
+}
+
+std::string GraphvizExportTool::getPortName(DataTarget* target)
+{
+    // target is: module in port
+    InPort* inPort = dynamic_cast<InPort*>(target);
+    if (inPort)
+        return inPort->parent()->name() + ":inPort_" + inPort->name() + ":n";
+
+    // target is: parameter getter
+    ParameterGetter* paramGet = dynamic_cast<ParameterGetter*>(target);
+    if (paramGet)
+        return paramGet->getParent()->name() + ":param_" + paramGet->getParameterName() + ":w";
+
+    // target is: parameter setter
+    ParameterSetter* paramSet = dynamic_cast<ParameterSetter*>(target);
+    if (paramSet)
+        return paramSet->getParent()->name() + ":param_" + paramSet->getParameterName() + ":w";
+
+    // target is: data proxy
+    DataProxy* proxy = dynamic_cast<DataProxy*>(target);
+    if (proxy)
+        return proxy->name() + ":n";
+
+    // target is: data logger
+    DataLogger* logger = dynamic_cast<DataLogger*>(target);
+    if (logger)
+        return logger->name() + ":n";
+
+    throw Poco::NotImplementedException("GraphvizExport->getPortName",
+            "The given data target is not recognized: " + target->name());
+}
+
+#include "Poco/StringTokenizer.h"
+
+std::string GraphvizExportTool::portNameBase(std::string complete)
+{
+    Poco::StringTokenizer tok(complete, ":");
+    if (tok.count() == 3)
+        return tok[1];
+    else
+        poco_bugcheck_msg(("bad port name: " + complete
+                + ", can not be split").c_str() );
+
+    throw Poco::BugcheckException();
 }

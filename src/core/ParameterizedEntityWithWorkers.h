@@ -58,6 +58,8 @@ public:
 
     virtual ~ParameterizedEntityWithWorkers() { }
 
+    virtual std::string name() = 0;
+
     /**
      * To be used by the parameter setters to cancel the corresponding module
      */

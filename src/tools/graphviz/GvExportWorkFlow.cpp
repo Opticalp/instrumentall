@@ -30,7 +30,12 @@
 
 #include "core/Module.h"
 #include "core/InPort.h"
+#include "core/SeqSource.h"
+#include "core/SeqTarget.h"
 #include "core/OutPort.h"
+#include "core/DataProxy.h"
+#include "core/DataLogger.h"
+#include "core/DuplicatedSource.h"
 #include "core/Dispatcher.h"
 
 #include "Poco/Util/Application.h"
@@ -83,43 +88,164 @@ void GvExportWorkFlow::exportNodes(std::ostream& out)
 
         std::vector<OutPort*> ports = (**it)->getOutPorts();
 
-        for (std::vector<OutPort*>::iterator it = ports.begin(),
-                ite = ports.end(); it != ite; it++)
+        for (std::vector<OutPort*>::iterator pit = ports.begin(),
+                pite = ports.end(); pit != pite; pit++)
         {
             // retrieve shared port from dispatcher
             SharedPtr<OutPort*> port =
                     Poco::Util::Application::instance()
                     .getSubsystem<Dispatcher>()
-                    .getOutPort(*it);
+                    .getOutPort(*pit);
 
             if ((*port)->getDataTargets().size())
-                outPorts.push_back(port);
+                propagateTopDown(out, *port);
+        }
 
-            if ((*port)->getSeqTargets().size())
-                outSeqPorts.push_back(port);
+        std::vector<InPort*> morePorts = (**it)->getInPorts();
+
+        for (std::vector<InPort*>::iterator pit = morePorts.begin(),
+                pite = morePorts.end(); pit != pite; pit++)
+        {
+            // retrieve shared port from dispatcher
+            SharedPtr<InPort*> morePort =
+                    Poco::Util::Application::instance()
+                    .getSubsystem<Dispatcher>()
+                    .getInPort(*pit);
+
+            propagateBottomUp(out, *morePort);
+        }
+
+        // check for parameter workers
+        std::set< Poco::AutoPtr<ParameterGetter> > paramGetters = (**it)->getParameterGetters();
+        for (std::set< Poco::AutoPtr<ParameterGetter> >::iterator git = paramGetters.begin(),
+                gite = paramGetters.end(); git != gite; git++)
+        {
+            propagateBottomUp(out, const_cast<ParameterGetter*>(git->get()));
+            propagateTopDown(out, const_cast<ParameterGetter*>(git->get()));
+        }
+
+        std::set< Poco::AutoPtr<ParameterSetter> > paramSetters = (**it)->getParameterSetters();
+        for (std::set< Poco::AutoPtr<ParameterSetter> >::iterator sit = paramSetters.begin(),
+                site = paramSetters.end(); sit != site; sit++)
+        {
+            propagateBottomUp(out, const_cast<ParameterSetter*>(sit->get()));
         }
     }
 
     out << std::endl;
 }
 
+void GvExportWorkFlow::propagateTopDown(std::ostream& out, DataSource* source)
+{
+    std::set<DataTarget*> targets = source->getDataTargets();
+
+    if (targets.empty())
+        return;
+
+    for (std::set<DataTarget*>::iterator it = targets.begin(),
+            ite = targets.end(); it != ite; it++)
+    {
+        involvedTargets.insert(*it);
+
+        SeqTarget* seqTgt = dynamic_cast<SeqTarget*>(*it);
+        if (seqTgt && seqTgt->getSeqSource())
+            seqTargets.insert(seqTgt);
+
+        // target is: a module
+        if ( dynamic_cast<InPort*>(*it)
+                || dynamic_cast<ParameterGetter*>(*it)
+                || dynamic_cast<ParameterSetter*>(*it) )
+            continue;
+
+        // target is: data proxy
+        DataProxy* proxy = dynamic_cast<DataProxy*>(*it);
+        if (proxy)
+        {
+            if (proxies.insert(proxy).second)
+            {
+                exportDataProxyNode(out, proxy);
+                propagateTopDown(out, proxy);
+            }
+            continue;
+        }
+
+        // target is: data logger
+        DataLogger* logger = dynamic_cast<DataLogger*>(*it);
+        if (logger)
+        {
+            if (loggers.insert(logger).second)
+                exportDataLoggerNode(out, logger);
+            continue;
+        }
+
+        throw Poco::NotImplementedException("GraphvizExport->propagateTopDown",
+                "The given data target is not recognized");
+    }
+}
+
+void GvExportWorkFlow::propagateBottomUp(std::ostream& out, DataTarget* target)
+{
+    DataSource* source;
+
+    try
+    {
+        source = target->getDataSource();
+    }
+    catch (Poco::NullPointerException&)
+    {
+        return;
+    }
+
+    involvedTargets.insert(target);
+
+    SeqTarget* seqTgt = dynamic_cast<SeqTarget*>(target);
+    if (seqTgt && seqTgt->getSeqSource())
+        seqTargets.insert(seqTgt);
+
+    // source is: module out port
+    if ( dynamic_cast<OutPort*>(source)
+            || dynamic_cast<ParameterGetter*>(source) )
+        return;
+
+    // source is: duplicated source
+    DuplicatedSource* dupSrc = dynamic_cast<DuplicatedSource*>(source);
+    if (dupSrc)
+    {
+        if (dupSources.insert(dupSrc).second)
+            exportDuplicatedSourceNode(out, dupSrc);
+        return;
+    }
+
+    // source is: data proxy
+    DataProxy* proxy = dynamic_cast<DataProxy*>(source);
+    if (proxy)
+    {
+        if (proxies.insert(proxy).second)
+        {
+            exportDataProxyNode(out, proxy);
+            propagateBottomUp(out, proxy);
+        }
+        return;
+    }
+
+    throw Poco::NotImplementedException("GraphvizExport->propagateBottomUp",
+            "The given data source is not recognized");
+
+}
+
 void GvExportWorkFlow::exportEdges(std::ostream& out)
 {
     out << "    /* edges */" << std::endl;
 
-    for (std::vector< SharedPtr<OutPort*> >::iterator it = outPorts.begin(),
-            ite = outPorts.end(); it != ite; it++)
+    for (std::set<DataTarget*>::iterator it = involvedTargets.begin(),
+            ite = involvedTargets.end(); it != ite; it++)
     {
-        out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
-
-//	FIXME
-//        std::set<DataTargets*> targets = (**it)->getDataTargets();
-//
-//        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-//                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-//            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
-
-        out << "};" << std::endl;
+        DataSource* source = (*it)->getDataSource();
+        out << "    " << getPortName(source) << " -> ";
+        out << getPortName(*it) ;
+        if (dynamic_cast<ParameterGetter*>(*it))
+            out << " [arrowhead=none]";
+        out << " ;" << std::endl;
     }
 
     out << std::endl;
@@ -129,20 +255,19 @@ void GvExportWorkFlow::exportSeqEdges(std::ostream& out)
 {
     out << "    /* sequence edges */" << std::endl;
 
-    for (std::vector< SharedPtr<OutPort*> >::iterator it = outSeqPorts.begin(),
-            ite = outSeqPorts.end(); it != ite; it++)
+    for (std::set<SeqTarget*>::iterator it = seqTargets.begin(),
+            ite = seqTargets.end(); it != ite; it++)
     {
-        out << "    " << (**it)->parent()->name() << ":outPort_" << (**it)->name() << ":s -> { ";
-
-// FIXME
-//        std::vector<SharedPtr<InPort*> > targets = (**it)->getSeqTargets();
-//
-//        for (std::vector<SharedPtr<InPort*> >::iterator tgtIt = targets.begin(),
-//                tgtIte = targets.end(); tgtIt != tgtIte; tgtIt++)
-//            out << (**tgtIt)->parent()->name() << ":inPort_" << (**tgtIt)->name() << ":n ";
-//
-        out << "}[style=dotted];" << std::endl;
+        SeqSource* source = (*it)->getSeqSource();
+        out << "    " << getPortName(source) << " -> ";
+        out << getPortName(*it) << " ";
+        out << "[style=dotted];" << std::endl;
     }
 
     out << std::endl;
 }
+
+void GvExportWorkFlow::exportEdge(std::ostream& out, DataSource* source, DataTarget* target)
+{
+}
+
