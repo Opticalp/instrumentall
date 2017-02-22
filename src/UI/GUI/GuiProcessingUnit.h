@@ -74,6 +74,11 @@ public:
     /// run GUI script in loop
     void runLoopPyScript();
 
+    /**
+     * Launch guiscript if autostart
+     */
+    void init();
+
     /// emergency stop (cancelAll)
     void stop();
 

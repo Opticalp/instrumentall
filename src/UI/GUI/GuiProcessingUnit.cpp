@@ -123,6 +123,19 @@ std::string GuiProcessingUnit::getTextCtrlTxt()
     return topFrame->getTextCtrlTxt();
 }
 
+void GuiProcessingUnit::init()
+{
+	if (Poco::Util::Application::instance()
+	                    .getSubsystem<GuiManager>().autostart())
+	{
+#ifdef GUI_SCRIPT_LOOP
+    	runLoopPyScript();
+#else
+    	runPyScript();
+#endif
+	}
+}
+
 void GuiProcessingUnit::setTextCtrlTxt(std::string txt)
 {
     topFrame->setTextCtrlTxt(txt);

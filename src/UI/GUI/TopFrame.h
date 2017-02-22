@@ -32,7 +32,7 @@
 #ifdef HAVE_WXWIDGETS
 
 // to be defined if the GUI script has to be called in loop.
-#define GUI_SCRIPT_LOOP
+//#define GUI_SCRIPT_LOOP
 
 #include "wx/frame.h"
 
@@ -93,6 +93,7 @@ private:
     // Event handlers (these functions should _not_ be virtual)
     /// General exit function
     void onExit(wxCommandEvent& event);
+    void onClose(wxCloseEvent& event);
 
     /// run script menu event handler
     void onRunScriptMenu(wxCommandEvent& event);

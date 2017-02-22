@@ -32,6 +32,7 @@ THE SOFTWARE.
 
 #include "GUI/CustomWxApp.h"
 #include "GUI/TopFrame.h"
+#include "GUI/GuiProcessingUnit.h"
 
 /// @name Custom config keys
 ///@{
@@ -42,7 +43,8 @@ using Poco::Util::Application;
 
 GuiManager::GuiManager() :
     VerboseEntity(name()),
-    guiRun(false)
+    guiRun(false),
+	autostartFlag(false)
 {
 
 }
@@ -87,6 +89,7 @@ GuiProcessingUnit* GuiManager::getGuiProcUnit()
 
 using Poco::Util::Option;
 using Poco::Util::OptionSet;
+using Poco::Util::OptionCallback;
 
 void GuiManager::defineOptions(OptionSet & options)
 {
@@ -104,7 +107,28 @@ void GuiManager::defineOptions(OptionSet & options)
 			.argument("SCRIPT")
             .binding(CONF_KEY_GUI_SCRIPT)
             .group("interface"));
+
+    options.addOption(
+        Option(
+                "autostart", "a",
+                "directly start the gui script at launching" )
+            .required(false)
+            .repeatable(false)
+            .callback(OptionCallback<GuiManager>(
+                                this, &GuiManager::handleAutostart) ));
 }
 
+void GuiManager::handleAutostart(const std::string& name,
+		const std::string& value)
+{
+	// check if a gui script is defined
+	if ( ! Poco::Util::Application::instance().config().hasProperty(CONF_KEY_GUI_SCRIPT))
+		poco_error(logger(), "The autostart option can not be set if the gui script is not defined first");
+	else
+	{
+		autostartFlag = true;
+		poco_information(logger(), "autostart flag set.");
+	}
+}
 
 #endif /* HAVE_WXWIDGETS */

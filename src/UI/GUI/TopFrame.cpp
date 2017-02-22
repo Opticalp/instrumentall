@@ -69,6 +69,8 @@ wxDEFINE_EVENT(RefreshEvent, wxCommandEvent);
 // when starting out with wxWidgets.
 
 wxBEGIN_EVENT_TABLE(TopFrame, wxFrame)
+	EVT_CLOSE(TopFrame::onClose)
+
     EVT_MENU(wxID_EXIT, TopFrame::onExit)
     EVT_MENU(XRCID("runScriptMenu"), TopFrame::onRunScriptMenu)
     EVT_MENU(XRCID("guiScriptMenu"), TopFrame::onGuiScriptMenu)
@@ -108,6 +110,8 @@ TopFrame::TopFrame(wxWindow* parent):
 
     stBar->SetStatusText("WxWidgets initialized...");
 //    stBar->SetStatusText("field #1 start text",1);
+
+    core.init();
 }
 
 void TopFrame::onWxAbout(wxCommandEvent& event)
@@ -117,9 +121,13 @@ void TopFrame::onWxAbout(wxCommandEvent& event)
 
 void TopFrame::onExit(wxCommandEvent& event)
 {
-    core.stop();
-
     Close(true);
+}
+
+void TopFrame::onClose(wxCloseEvent& event)
+{
+    core.stop();
+    event.Skip();
 }
 
 void TopFrame::onStart(wxCommandEvent& event)

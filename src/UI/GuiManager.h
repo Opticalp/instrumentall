@@ -88,9 +88,18 @@ public:
      */
     GuiProcessingUnit* getGuiProcUnit();
 
+    bool autostart() { return autostartFlag; }
+
 private:
     /// indicator to tell if the GUI is launched or not
     bool guiRun;
+
+    bool autostartFlag;
+
+    /**
+     * Callback function to handle the use of 'a' or 'autostart' command line option
+     */
+    void handleAutostart(const std::string& name, const std::string& value);
 
     Poco::Path scriptPath;
 };
