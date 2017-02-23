@@ -54,6 +54,8 @@
 
 wxDECLARE_EVENT(RefreshEvent, wxCommandEvent);
 wxDEFINE_EVENT(RefreshEvent, wxCommandEvent);
+wxDECLARE_EVENT(ErrorMsgEvent, wxCommandEvent);
+wxDEFINE_EVENT(ErrorMsgEvent, wxCommandEvent);
 
 //-----------------------------------------------------------------------------
 // Event table: connect the events to the handler functions to process them
@@ -85,6 +87,7 @@ wxBEGIN_EVENT_TABLE(TopFrame, wxFrame)
     EVT_BUTTON(wxID_ZOOM_FIT, TopFrame::onZoomFit)
 
     EVT_COMMAND(wxID_ANY, RefreshEvent, TopFrame::forceRefresh)
+    EVT_COMMAND(wxID_ANY, ErrorMsgEvent, TopFrame::emitErrorMessage)
 wxEND_EVENT_TABLE()
 
 
@@ -325,10 +328,24 @@ void TopFrame::onZoomFit(wxCommandEvent& event)
 
 #endif /* HAVE_OPENCV */
 
+void TopFrame::emitErrorMessage(wxCommandEvent& event)
+{
+	wxStringClientData* msg = dynamic_cast<wxStringClientData*>(event.GetClientObject());
+	wxMessageBox(msg->GetData(),
+			"Error", wxOK | wxCENTRE | wxICON_ERROR);
+//	wxLogError(dynamic_cast<wxStringClientData*>(event.GetClientData())->GetData());
+
+	delete msg;
+}
 
 void TopFrame::reportError(std::string errorMsg)
 {
-    wxLogError(errorMsg.c_str());
+    // do not call refresh directly! since we can be in a worker thread...
+    wxCommandEvent* evt = new wxCommandEvent(ErrorMsgEvent,GetId());
+    wxStringClientData* msg = new wxStringClientData(errorMsg.c_str());
+    evt->SetClientObject(msg);
+    evt->SetEventObject(this);
+    QueueEvent( evt );
 }
 
 void TopFrame::reportStatus(std::string statusMsg)

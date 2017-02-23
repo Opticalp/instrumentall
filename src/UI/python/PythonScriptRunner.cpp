@@ -78,7 +78,7 @@ void PythonScriptRunner::run()
     }
     catch (Poco::Exception& e)
     {
-        if (cancelRequested)
+        if (!cancelRequested)
             errReporter->reportError("PythonScript "
                 + scriptPath.toString() + " error: "
                 + e.displayText());

@@ -129,6 +129,12 @@ private:
      */
     void forceRefresh(wxCommandEvent& event);
 
+    /**
+     * Display an error message using a pop-up dialog
+     *
+     */
+    void emitErrorMessage(wxCommandEvent& event);
+
     // Any class wishing to process wxWidgets events must use this macro
     wxDECLARE_EVENT_TABLE();
 };
