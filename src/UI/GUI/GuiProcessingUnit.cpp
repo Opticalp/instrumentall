@@ -72,7 +72,6 @@ void GuiProcessingUnit::runPyScript(Poco::Path scriptPath, bool repeat)
     {
         try
         {
-        	setStatusBarTxt("Running " + scriptPath.getFileName(), 0);
             pyThread.start(pyRunner);
         }
         catch (...)

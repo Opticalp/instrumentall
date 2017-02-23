@@ -37,6 +37,7 @@ public:
     virtual ~ErrorReporter() { }
 
     virtual void reportError(std::string errMsg) = 0;
+    virtual void reportStatus(std::string statusMsg) { }
 };
 
 #endif /* SRC_CORE_ERRORREPORTER_H_ */

@@ -82,6 +82,7 @@ public:
     std::string getTextCtrlTxt();
 
     void reportError(std::string errorMsg);
+    void reportStatus(std::string statusMsg);
 
 private:
     GuiProcessingUnit core;

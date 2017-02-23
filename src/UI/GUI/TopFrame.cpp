@@ -331,4 +331,9 @@ void TopFrame::reportError(std::string errorMsg)
     wxLogError(errorMsg.c_str());
 }
 
+void TopFrame::reportStatus(std::string statusMsg)
+{
+	setStatusBarTxt(statusMsg, 0);
+}
+
 #endif /* HAVE_WXWIDGETS */

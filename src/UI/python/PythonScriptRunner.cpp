@@ -54,12 +54,18 @@ void PythonScriptRunner::run()
     {
         if (!loop)
         {
+        	errReporter->reportStatus("Running "
+        			+ scriptPath.getFileName()
+					+ "...");
             Poco::Util::Application::instance()
                 .getSubsystem<PythonManager>()
                 .runScript(scriptPath);
         }
         else
         {
+        	errReporter->reportStatus("Running "
+        			+ scriptPath.getFileName()
+        			+ " (loop)...");
             while (!cancelRequested)
             {
                 Poco::Util::Application::instance()
@@ -82,6 +88,8 @@ void PythonScriptRunner::run()
         errReporter->reportError("PythonScript "
             + scriptPath.toString() + " error: **UNKNOWN**");
     }
+
+	errReporter->reportStatus(scriptPath.getFileName() + " done.");
 
     running = false;
 }
