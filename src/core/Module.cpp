@@ -455,7 +455,7 @@ bool Module::taskIsStarting(bool orRunning)
 {
 //    Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
 
-    if (!startingTask.isNull())
+    if (!startingTask.isNull() && !startingTask->isSlave())
     {
         poco_information(logger(), name() + ": a task is already starting ("
                 + startingTask->name() + ")");
