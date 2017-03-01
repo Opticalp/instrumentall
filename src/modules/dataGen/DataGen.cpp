@@ -109,8 +109,8 @@ DataGen::DataGen(ModuleFactory* parent, std::string customName, int dataType):
 std::string DataGen::description()
 {
 	std::string descr = DataItem::dataTypeStr(mDataType);
-	descr += " data generator Module. "
-			"The parameter sets the value that will be sent. "
+	descr += " data generator Module. \n"
+			"The parameter sets the value that will be sent. \n"
 			"The \"value\" parameter is stacked (fifo)! ";
 	return descr;
 }

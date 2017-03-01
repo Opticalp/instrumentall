@@ -39,6 +39,7 @@
 #include "core/Dispatcher.h"
 
 #include "Poco/Util/Application.h"
+#include "Poco/String.h"
 
 #include <fstream>
 #include <sstream>
@@ -233,7 +234,7 @@ void GraphvizExportTool::exportModuleNode(std::ostream& out,
 				out << "<FONT POINT-SIZE=\"20\"><B>";
 				out << (*mod)->name() << "</B></FONT>";
 				out << "<I> (" << (*mod)->internalName() << ") </I><BR/>";
-				out << (*mod)->description() ;
+				out << Poco::replace((*mod)->description(),"\n","<BR/>") ;
 				out << " </TD> " << std::endl;
 			}
 			else if (row == rows-1)
