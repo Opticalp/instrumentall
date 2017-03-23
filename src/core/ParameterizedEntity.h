@@ -35,6 +35,7 @@
 #include "Poco/Logger.h"
 #include "Poco/Util/Application.h" // layered configuration
 #include "Poco/Mutex.h"
+#include "Poco/RWLock.h"
 #include "Poco/Any.h"
 
 class DataSource;
@@ -134,6 +135,23 @@ public:
     template<typename T> void setParameterValue(size_t paramIndex, T value, bool immediateApply = false);
 
     /**
+     * Try to apply the parameters
+     *
+     * calling overridable applyParameters() method.
+     *
+     * Check if they are pending internal parameter values that
+     * are not aaplied. If all applied, directly return true.
+     *
+     * Check if the lock is available for writing
+     *
+     * Public to be called by the parameter setters
+     *
+     * @param blocking set to true if the paramLock acquisition is blocking.
+     */
+    bool tryApplyParameters(bool blocking = false);
+
+protected:
+    /**
      * Apply the parameters
      *
      * apply the parameter values stored in the temp storage
@@ -144,7 +162,6 @@ public:
      */
     virtual void applyParameters();
 
-protected:
     /**
 	 * Change the prefix key
 	 */
@@ -275,7 +292,9 @@ private:
     Poco::Util::LayeredConfiguration& appConf()
         { return Poco::Util::Application::instance().config(); }
 
-    Poco::Mutex mutex; ///< main mutex (recursive). lock the operations on parameter values
+    Poco::Mutex mutex; ///< main mutex (recursive). lock the operations on parameter internal values
+
+    Poco::RWLock paramLock; ///< lock to prevent setting parameter values while processing
 };
 
 /// templates implementation

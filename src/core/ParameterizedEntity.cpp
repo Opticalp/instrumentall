@@ -251,6 +251,47 @@ bool ParameterizedEntity::getInternalStrParameterValue(size_t paramIndex, std::s
 	return ret;
 }
 
+bool ParameterizedEntity::tryApplyParameters(bool blocking)
+{
+    // we could have locked `mutex` here to read needApplication[]...
+
+    // check if internal values need to be applied
+    bool ret = true;
+    for (size_t index = 0; index < paramSet.size(); index++)
+        if (needApplication[index])
+            ret = false;
+
+    if (ret)
+        return true;
+
+    if (blocking)
+    {
+        Poco::ScopedWriteRWLock lock(paramLock);
+        applyParameters();
+        return true;
+    }
+    else
+    {
+        if (paramLock.tryWriteLock())
+        {
+            try
+            {
+                applyParameters();
+                return true;
+            }
+            catch (...)
+            {
+                paramLock.unlock();
+                throw;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+
 void ParameterizedEntity::applyParameters()
 {
 	for (size_t index = 0; index < paramSet.size(); index++)

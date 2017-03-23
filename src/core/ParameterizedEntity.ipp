@@ -42,7 +42,7 @@ Poco::Int64 ParameterizedEntity::getParameterValue<Poco::Int64>(size_t paramInde
 {
     Poco::Mutex::ScopedLock lock(mutex);
 
-    applyParameters(); // "mutex" is a recursive mutex... OK then.
+    tryApplyParameters(true); // "mutex" is a recursive mutex... OK then.
 
     switch (paramSet[paramIndex].datatype)
     {
@@ -67,7 +67,7 @@ double ParameterizedEntity::getParameterValue<double>(size_t paramIndex)
 {
     Poco::Mutex::ScopedLock lock(mutex);
 
-    applyParameters(); // "mutex" is a recursive mutex... OK then.
+    tryApplyParameters(true); // "mutex" is a recursive mutex... OK then.
 
     switch (paramSet[paramIndex].datatype)
     {
@@ -93,7 +93,7 @@ std::string ParameterizedEntity::getParameterValue<std::string>(size_t paramInde
 {
     Poco::Mutex::ScopedLock lock(mutex);
 
-    applyParameters(); // "mutex" is a recursive mutex... OK then.
+    tryApplyParameters(true); // "mutex" is a recursive mutex... OK then.
 
     switch (paramSet[paramIndex].datatype)
     {
@@ -147,7 +147,7 @@ void ParameterizedEntity::setParameterValue<Poco::Int64>(size_t paramIndex, Poco
     needApplication[paramIndex] = true;
 
     if (immediateApply)
-    	applyParameters();
+        tryApplyParameters(true);
 }
 
 template <> inline
@@ -176,7 +176,7 @@ void ParameterizedEntity::setParameterValue<double>(size_t paramIndex, double va
 	lock.unlock();
 
     if (immediateApply)
-    	applyParameters();
+        tryApplyParameters(true);
 }
 
 /// ParameterizedEntity::getParameter specialization for string parameters
@@ -205,7 +205,7 @@ void ParameterizedEntity::setParameterValue<std::string>(size_t paramIndex, std:
     needApplication[paramIndex] = true;
 
     if (immediateApply)
-    	applyParameters();
+        tryApplyParameters(true);
 }
 
 //

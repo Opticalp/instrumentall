@@ -778,10 +778,15 @@ void Module::waitParameters()
 	{
 		if (yield())
 			throw ExecutionAbortedException(name(),
-					"Apply parameters: Cancellation upon user request");
+					"Wait parameters (tryAllParametersSet): Cancellation upon user request");
 	}
 
-	applyParameters();
+	while (!tryApplyParameters())
+    {
+        if (yield())
+            throw ExecutionAbortedException(name(),
+                    "Wait parameters (tryApplyParameters): Cancellation upon user request");
+    }
 }
 
 bool Module::moduleReady()
