@@ -328,6 +328,17 @@ void ParameterizedEntity::applyParameters()
 
 bool ParameterizedEntity::tryReadLockParameters()
 {
+    if (paramKeptLocked)
+    {
+        if (lockedByProcessing)
+            poco_information(logger(), "params are kept locked. No need to re-lock. ");
+        else
+            poco_bugcheck_msg("params were unlocked before kept locked! ");
+
+        paramKeptLocked = false;
+        return true;
+    }
+
     if (lockedByProcessing)
         poco_bugcheck_msg("A processing should not be able to begin "
                 "as soon as the previous one has not released the param read lock");
@@ -336,8 +347,18 @@ bool ParameterizedEntity::tryReadLockParameters()
     return lockedByProcessing;
 }
 
-void ParameterizedEntity::releaseLockParameters()
+void ParameterizedEntity::releaseLockParameters(bool force)
 {
+    if (force)
+        paramKeptLocked = false;
+
+    if (paramKeptLocked)
+    {
+        poco_information(logger(),
+                "releaseLockParameters: param kept locked, not releasing. ");
+        return;
+    }
+
     if (lockedByProcessing)
     {
         lockedByProcessing = false;
@@ -345,4 +366,12 @@ void ParameterizedEntity::releaseLockParameters()
     }
     else
         poco_warning(logger(), "releaseLockParameters while not locked... ");
+}
+
+void ParameterizedEntity::keepParamLocked()
+{
+    if (paramKeptLocked)
+        poco_bugcheck_msg((name() + ": try to keep param locked but already kept locked.").c_str());
+
+    paramKeptLocked = true;
 }

@@ -165,12 +165,12 @@ void Module::freeInternalName()
     }
 }
 
-void Module::releaseProcessingMutex()
+void Module::releaseProcessingMutex(bool force)
 {
     if (processing)
     {
         processing = false;
-        releaseLockParameters(); // if called by processingTerminated, already unlocked. no matter.
+        releaseLockParameters(force); // if called by processingTerminated, already unlocked. no matter.
         processingUnlock();
     }
 }
@@ -295,7 +295,7 @@ void Module::run(ModuleTask* pTask)
 					+ " === = ==  = = = =  == = = == === = = = ===");
         	throw;
         }
-        releaseProcessingMutex();
+        releaseProcessingMutex(true);
         throw;
     }
 
@@ -325,7 +325,7 @@ void Module::run(ModuleTask* pTask)
 		{
 			releaseAllInPorts();
 			releaseAllOutPorts();
-			releaseProcessingMutex();
+			releaseProcessingMutex(true); // force -> undo keeping parameters locked.
 			releaseOutputMutex();
 		}
 		catch (std::exception& e)
@@ -782,12 +782,15 @@ Poco::AutoPtr<ModuleTask> Module::runModule(bool syncAllowed)
 
 void Module::waitParameters()
 {
-	while (!tryAllParametersSet())
-	{
-		if (yield())
-			throw ExecutionAbortedException(name(),
-					"Wait parameters (tryAllParametersSet): Cancellation upon user request");
-	}
+//    if (isParamKeptLocked())
+//        return;
+
+    while (!tryAllParametersSet())
+    {
+        if (yield())
+            throw ExecutionAbortedException(name(),
+                    "Wait parameters (tryAllParametersSet): Cancellation upon user request");
+    }
 
 	while (!tryApplyParameters())
     {
@@ -1157,6 +1160,9 @@ void Module::moduleReset()
 			+ ": a task is processing... "
 			"It should not happen since cancel is done. ").c_str());
 		}
+
+		releaseLockParameters(true); // force releasing keptParamLocked.
+
 		reset();
 	}
 	catch (...)

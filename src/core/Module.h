@@ -599,7 +599,7 @@ private:
      * Release Module::taskProcessingMutex via startingUnlock
      * if starting is set.
      */
-    void releaseProcessingMutex();
+    void releaseProcessingMutex(bool force = false);
 
 	/**
 	 * Lock the taskStartingMutex

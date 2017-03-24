@@ -64,7 +64,8 @@ public:
 	 */
 	ParameterizedEntity(std::string prefixKey):
 		confPrefixKey(prefixKey),
-		lockedByProcessing(false)
+		lockedByProcessing(false),
+		paramKeptLocked(false)
 	{
 	}
 
@@ -166,10 +167,35 @@ protected:
     /**
      * read lock paramLock
      *
-     * To be called just before processing
+     * To be called just before processing in Module::run(). Shall not be
+     * called directly.
+     *
+     * If the params were kept locked, this method resets the keptLocked
+     * flag: paramKeptLocked.
      */
     bool tryReadLockParameters();
-    void releaseLockParameters();
+
+    /**
+     * Release the read lock acquired with tryReadLockParameters
+     *
+     * Unless the paramKeptLocked flag is set (using keepParamLocked())
+     *
+     * Called by Module::run. Shall not be called directly.
+     */
+    void releaseLockParameters(bool force = false);
+
+    /**
+     * Keep the parameters locked even after process() finishes.
+     *
+     * To be called in Module::process() implementation during a sequence
+     * treatment for example. Should be called at each iteration.
+     *
+     * paramKeptLocked is reset by tryReadLockParameters() called by
+     * Module::run()
+     */
+    void keepParamLocked();
+
+    bool isParamKeptLocked() { return paramKeptLocked; }
 
     /**
 	 * Change the prefix key
@@ -305,6 +331,7 @@ private:
 
     Poco::RWLock paramLock; ///< lock to prevent setting parameter values while processing
     bool lockedByProcessing;
+    bool paramKeptLocked;
 };
 
 /// templates implementation
