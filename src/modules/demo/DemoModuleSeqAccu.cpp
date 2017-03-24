@@ -84,17 +84,9 @@ void DemoModuleSeqAccu::process(int startCond)
         poco_information(logger(), "DemoModuleSeqAccu::runTask(): sequence starting with "
                 + Poco::NumberFormatter::format(*pData));
         accumulator.clear();
-        accumulator.push_back(*pData);
-
-//        // emulate a long task
-//        if (sleep(10*TIME_LAPSE))
-//        {
-//            poco_notice(logger(),
-//                    "DemoModuleSeqMax::runTask(): cancelled!");
-//            return;
-//        }
     }
-    else if (attr.isInSequence(seqIndex))
+
+    if (attr.isInSequence(seqIndex))
     {
         accumulator.push_back(*pData);
 
@@ -119,6 +111,10 @@ void DemoModuleSeqAccu::process(int startCond)
 
             *pOutData = accumulator;
             notifyOutPortReady(outPortA, outAttr);
+        }
+        else
+        {
+            keepParamLocked();
         }
     }
     else
