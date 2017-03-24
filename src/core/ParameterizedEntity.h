@@ -63,7 +63,8 @@ public:
 	 * @see setPrefixKey
 	 */
 	ParameterizedEntity(std::string prefixKey):
-		confPrefixKey(prefixKey)
+		confPrefixKey(prefixKey),
+		lockedByProcessing(false)
 	{
 	}
 
@@ -161,6 +162,14 @@ protected:
      * with previous versions.
      */
     virtual void applyParameters();
+
+    /**
+     * read lock paramLock
+     *
+     * To be called just before processing
+     */
+    bool tryReadLockParameters();
+    void releaseLockParameters();
 
     /**
 	 * Change the prefix key
@@ -295,6 +304,7 @@ private:
     Poco::Mutex mutex; ///< main mutex (recursive). lock the operations on parameter internal values
 
     Poco::RWLock paramLock; ///< lock to prevent setting parameter values while processing
+    bool lockedByProcessing;
 };
 
 /// templates implementation

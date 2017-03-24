@@ -325,3 +325,24 @@ void ParameterizedEntity::applyParameters()
 		}
 	}
 }
+
+bool ParameterizedEntity::tryReadLockParameters()
+{
+    if (lockedByProcessing)
+        poco_bugcheck_msg("A processing should not be able to begin "
+                "as soon as the previous one has not released the param read lock");
+
+    lockedByProcessing = paramLock.tryReadLock();
+    return lockedByProcessing;
+}
+
+void ParameterizedEntity::releaseLockParameters()
+{
+    if (lockedByProcessing)
+    {
+        lockedByProcessing = false;
+        paramLock.unlock();
+    }
+    else
+        poco_warning(logger(), "releaseLockParameters while not locked... ");
+}

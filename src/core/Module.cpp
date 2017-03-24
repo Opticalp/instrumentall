@@ -170,6 +170,7 @@ void Module::releaseProcessingMutex()
     if (processing)
     {
         processing = false;
+        releaseLockParameters(); // if called by processingTerminated, already unlocked. no matter.
         processingUnlock();
     }
 }
@@ -309,6 +310,13 @@ void Module::run(ModuleTask* pTask)
 					"the module is cancelling (2)");
 
 		setRunningState(ModuleTask::processing);
+
+		while (!tryReadLockParameters())
+		    if (yield())
+	            throw ExecutionAbortedException(name() +
+	                    ": can not read lock the parameters in order to run a new task, "
+	                    "the module is cancelling (3)");
+
 		process(startCond);
 	}
 	catch (...)
@@ -333,7 +341,7 @@ void Module::run(ModuleTask* pTask)
 	releaseAllInPorts();
 	releaseAllOutPorts();
     releaseProcessingMutex();
-    releaseOutputMutex();
+    releaseOutputMutex(); // may have been already released by processingTerminated()
 }
 
 bool Module::sleep(long milliseconds)
@@ -1163,6 +1171,8 @@ void Module::moduleReset()
 
 void Module::processingTerminated()
 {
+    releaseLockParameters();
+
     outputMutex.lock();
     outputLocked = true;
 
