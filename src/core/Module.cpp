@@ -509,9 +509,13 @@ bool Module::taskIsPending()
             //      + ": " + (*it)->name()
             //      + " is already running for " + name());
             return true;
-        case MergeableTask::TASK_FALSE_START:
-        case MergeableTask::TASK_IDLE: // probably self
         case MergeableTask::TASK_CANCELLING:
+            //poco_information(logger(), task->name()
+            //      + ": " + (*it)->name()
+            //      + " is cancelling for " + name());
+            return true;
+        case MergeableTask::TASK_FALSE_START:
+        case MergeableTask::TASK_IDLE:
         case MergeableTask::TASK_FINISHED:
         case MergeableTask::TASK_MERGED:
             break;
