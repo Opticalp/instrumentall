@@ -276,6 +276,16 @@ void Module::run(ModuleTask* pTask)
         setRunningState(ModuleTask::applyingParameters);
 		waitParameters();
 
+	    if (!isParamKeptLocked())
+	        parametersTreated();
+
+        while (!tryReadLockParameters())
+            if (yield())
+                throw ExecutionAbortedException(name() +
+                        ": can not read lock the parameters "
+                        "in order to run a new task, "
+                        "the module is cancelling");
+
 		setRunningState(ModuleTask::retrievingInDataLocks);
 
 		startCond = startCondition();
@@ -299,9 +309,6 @@ void Module::run(ModuleTask* pTask)
         throw;
     }
 
-    parametersTreated();
-
-
     try
     {
 		if (isCancelled())
@@ -310,12 +317,6 @@ void Module::run(ModuleTask* pTask)
 					"the module is cancelling (2)");
 
 		setRunningState(ModuleTask::processing);
-
-		while (!tryReadLockParameters())
-		    if (yield())
-	            throw ExecutionAbortedException(name() +
-	                    ": can not read lock the parameters in order to run a new task, "
-	                    "the module is cancelling (3)");
 
 		process(startCond);
 	}
@@ -782,8 +783,8 @@ Poco::AutoPtr<ModuleTask> Module::runModule(bool syncAllowed)
 
 void Module::waitParameters()
 {
-//    if (isParamKeptLocked())
-//        return;
+    if (isParamKeptLocked())
+        return;
 
     while (!tryAllParametersSet())
     {

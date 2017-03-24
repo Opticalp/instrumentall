@@ -159,7 +159,7 @@ using Poco::AnyCast;
 
 bool ParameterizedEntity::getInternalIntParameterValue(size_t paramIndex, Poco::Int64& value)
 {
-    Poco::Mutex::ScopedLock lock(mutex);
+    Poco::Mutex::ScopedLock lock(internalParamMutex);
 
 	try
 	{
@@ -191,7 +191,7 @@ bool ParameterizedEntity::getInternalIntParameterValue(size_t paramIndex, Poco::
 
 bool ParameterizedEntity::getInternalFloatParameterValue(size_t paramIndex, double& value)
 {
-    Poco::Mutex::ScopedLock lock(mutex);
+    Poco::Mutex::ScopedLock lock(internalParamMutex);
 
 	try
 	{
@@ -253,16 +253,18 @@ bool ParameterizedEntity::getInternalStrParameterValue(size_t paramIndex, std::s
 
 bool ParameterizedEntity::tryApplyParameters(bool blocking)
 {
-    // we could have locked `mutex` here to read needApplication[]...
+    {
+        Poco::Mutex::ScopedLock lock(internalParamMutex);
 
-    // check if internal values need to be applied
-    bool ret = true;
-    for (size_t index = 0; index < paramSet.size(); index++)
-        if (needApplication[index])
-            ret = false;
+        // check if internal values need to be applied
+        bool ret = true;
+        for (size_t index = 0; index < paramSet.size(); index++)
+            if (needApplication[index])
+                ret = false;
 
-    if (ret)
-        return true;
+        if (ret)
+            return true;
+    }
 
     if (blocking)
     {

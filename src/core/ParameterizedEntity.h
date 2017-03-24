@@ -130,6 +130,8 @@ public:
      * @warning applyParameters applies to all parameters, not only for
      * the one given by paramName.
      *
+     * @warning internalParamMutex is shortly locked during this operation.
+     *
      * @throw Poco::NotFoundException if the name is not found
      * @throw Poco::DataFormatException if the parameter format does not fit
      */
@@ -161,6 +163,11 @@ protected:
      * Default behavior: call setIntParameterValue, setFloatParameterValue
      * or setStringParameterValue for each parameter to keep compatibility
      * with previous versions.
+     *
+     * A custom implementation should call getInternalIntParameterValue,
+     * getInternalFloatParameterValue, or getInternalStrParameterValue.
+     * Those methods lock internalParamMutex to retrieve the internal values. Please
+     * be aware of the deadlock risk.
      */
     virtual void applyParameters();
 
@@ -270,6 +277,8 @@ protected:
      *
      * Reset the needApplication flag to false
      *
+     * internalParamMutex is locked during this operation.
+     *
      * @param[in] paramIndex parameter index
      * @param[out] value parameter value from the internal storage
      * @return needApplication flag
@@ -327,7 +336,7 @@ private:
     Poco::Util::LayeredConfiguration& appConf()
         { return Poco::Util::Application::instance().config(); }
 
-    Poco::Mutex mutex; ///< main mutex (recursive). lock the operations on parameter internal values
+    Poco::Mutex internalParamMutex; ///< main mutex (recursive). lock the operations on parameter internal values
 
     Poco::RWLock paramLock; ///< lock to prevent setting parameter values while processing
     bool lockedByProcessing;
