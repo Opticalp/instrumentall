@@ -433,6 +433,12 @@ void ThreadManager::cancelAll()
 	cancellingAll = false;
 }
 
+void ThreadManager::cancelAllFromWatchDog()
+{
+	poco_warning(logger(), "WatchDog signaled! cancelling all. ");
+	cancelAll();
+}
+
 void ThreadManager::startRunnable(Poco::Runnable& runnable)
 {
     threadPool.start(runnable);

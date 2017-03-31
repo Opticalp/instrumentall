@@ -26,9 +26,9 @@
  THE SOFTWARE.
  */
 
-#include "core/WatchDog.h"
+#include "WatchDog.h"
 
-#include "core/ThreadManager.h"
+#include "ThreadManager.h"
 
 #include "Poco/Thread.h"
 
@@ -52,7 +52,7 @@ void WatchDog::run()
     {
         if (threadMan->taskListFrozen() && threadMan->threadCountNotChanged())
         {
-            threadMan->cancelAll();
+            threadMan->cancelAllFromWatchDog();
             break;
         }
     }
