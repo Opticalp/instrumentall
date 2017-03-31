@@ -279,13 +279,15 @@ bool ParameterizedEntity::tryApplyParameters(bool blocking)
             try
             {
                 applyParameters();
-                return true;
             }
             catch (...)
             {
                 paramLock.unlock();
                 throw;
             }
+
+            paramLock.unlock();
+            return true;
         }
         else
         {
