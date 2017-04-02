@@ -81,6 +81,7 @@ void DemoModuleSeqMax::process(int startCond)
     if (attr.isStartSequence(seqIndex))
     {
         tmpMax = *pData;
+        keepParamLocked();
     }
     else if (attr.isInSequence(seqIndex))
     {
@@ -111,6 +112,8 @@ void DemoModuleSeqMax::process(int startCond)
             poco_information(logger(), "DemoModuleSeqMax::runTask() outputs: "
                     + Poco::NumberFormatter::format(tmpMax));
         }
+        else
+            keepParamLocked();
     }
     else
         throw Poco::RuntimeException("DemoModuleSeqMax::process",

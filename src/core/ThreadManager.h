@@ -124,6 +124,7 @@ public:
      * Cancel module tasks whenever possible
      */
     void cancelAll();
+    void cancelAllFromWatchDog();
 
     /**
      * Start a runnable in a thread of the thread pool

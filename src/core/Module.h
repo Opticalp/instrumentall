@@ -521,7 +521,10 @@ private:
 
     /**
      * Check if a task is already running or just pending
-     * for this module
+     * for this module.
+     *
+     * A task that is cancelling is considered as pending since
+     * it is not really over yet.
      */
     bool taskIsPending();
 
@@ -599,7 +602,7 @@ private:
      * Release Module::taskProcessingMutex via startingUnlock
      * if starting is set.
      */
-    void releaseProcessingMutex();
+    void releaseProcessingMutex(bool force = false);
 
 	/**
 	 * Lock the taskStartingMutex

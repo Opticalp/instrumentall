@@ -159,7 +159,7 @@ using Poco::AnyCast;
 
 bool ParameterizedEntity::getInternalIntParameterValue(size_t paramIndex, Poco::Int64& value)
 {
-    Poco::Mutex::ScopedLock lock(mutex);
+    Poco::Mutex::ScopedLock lock(internalParamMutex);
 
 	try
 	{
@@ -191,7 +191,7 @@ bool ParameterizedEntity::getInternalIntParameterValue(size_t paramIndex, Poco::
 
 bool ParameterizedEntity::getInternalFloatParameterValue(size_t paramIndex, double& value)
 {
-    Poco::Mutex::ScopedLock lock(mutex);
+    Poco::Mutex::ScopedLock lock(internalParamMutex);
 
 	try
 	{
@@ -251,6 +251,51 @@ bool ParameterizedEntity::getInternalStrParameterValue(size_t paramIndex, std::s
 	return ret;
 }
 
+bool ParameterizedEntity::tryApplyParameters(bool blocking)
+{
+    {
+        Poco::Mutex::ScopedLock lock(internalParamMutex);
+
+        // check if internal values need to be applied
+        bool ret = true;
+        for (size_t index = 0; index < paramSet.size(); index++)
+            if (needApplication[index])
+                ret = false;
+
+        if (ret)
+            return true;
+    }
+
+    if (blocking)
+    {
+        Poco::ScopedWriteRWLock lock(paramLock);
+        applyParameters();
+        return true;
+    }
+    else
+    {
+        if (paramLock.tryWriteLock())
+        {
+            try
+            {
+                applyParameters();
+            }
+            catch (...)
+            {
+                paramLock.unlock();
+                throw;
+            }
+
+            paramLock.unlock();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+
 void ParameterizedEntity::applyParameters()
 {
 	for (size_t index = 0; index < paramSet.size(); index++)
@@ -283,4 +328,54 @@ void ParameterizedEntity::applyParameters()
 					"unknown parameter type");
 		}
 	}
+}
+
+bool ParameterizedEntity::tryReadLockParameters()
+{
+    if (paramKeptLocked)
+    {
+        if (lockedByProcessing)
+            poco_information(logger(), "params are kept locked. No need to re-lock. ");
+        else
+            poco_bugcheck_msg("params were unlocked before kept locked! ");
+
+        paramKeptLocked = false;
+        return true;
+    }
+
+    if (lockedByProcessing)
+        poco_bugcheck_msg("A processing should not be able to begin "
+                "as soon as the previous one has not released the param read lock");
+
+    lockedByProcessing = paramLock.tryReadLock();
+    return lockedByProcessing;
+}
+
+void ParameterizedEntity::releaseLockParameters(bool force)
+{
+    if (force)
+        paramKeptLocked = false;
+
+    if (paramKeptLocked)
+    {
+        poco_information(logger(),
+                "releaseLockParameters: param kept locked, not releasing. ");
+        return;
+    }
+
+    if (lockedByProcessing)
+    {
+        lockedByProcessing = false;
+        paramLock.unlock();
+    }
+    else
+        poco_warning(logger(), "releaseLockParameters while not locked... ");
+}
+
+void ParameterizedEntity::keepParamLocked()
+{
+    if (paramKeptLocked)
+        poco_bugcheck_msg((name() + ": try to keep param locked but already kept locked.").c_str());
+
+    paramKeptLocked = true;
 }

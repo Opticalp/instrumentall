@@ -90,7 +90,7 @@ void ParameterizedWithSetters::trigSetParameter(size_t paramIndex)
         if (paramAlreadySet.size() == setters.size())
         {
             if (preApply)
-                self->applyParameters();
+                self->tryApplyParameters(true);
 
             allSet.set();
         }

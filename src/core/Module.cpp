@@ -165,11 +165,12 @@ void Module::freeInternalName()
     }
 }
 
-void Module::releaseProcessingMutex()
+void Module::releaseProcessingMutex(bool force)
 {
     if (processing)
     {
         processing = false;
+        releaseLockParameters(force); // if called by processingTerminated, already unlocked. no matter.
         processingUnlock();
     }
 }
@@ -275,6 +276,16 @@ void Module::run(ModuleTask* pTask)
         setRunningState(ModuleTask::applyingParameters);
 		waitParameters();
 
+	    if (!isParamKeptLocked())
+	        parametersTreated();
+
+        while (!tryReadLockParameters())
+            if (yield())
+                throw ExecutionAbortedException(name() +
+                        ": can not read lock the parameters "
+                        "in order to run a new task, "
+                        "the module is cancelling");
+
 		setRunningState(ModuleTask::retrievingInDataLocks);
 
 		startCond = startCondition();
@@ -294,12 +305,9 @@ void Module::run(ModuleTask* pTask)
 					+ " === = ==  = = = =  == = = == === = = = ===");
         	throw;
         }
-        releaseProcessingMutex();
+        releaseProcessingMutex(true);
         throw;
     }
-
-    parametersTreated();
-
 
     try
     {
@@ -309,6 +317,7 @@ void Module::run(ModuleTask* pTask)
 					"the module is cancelling (2)");
 
 		setRunningState(ModuleTask::processing);
+
 		process(startCond);
 	}
 	catch (...)
@@ -317,7 +326,7 @@ void Module::run(ModuleTask* pTask)
 		{
 			releaseAllInPorts();
 			releaseAllOutPorts();
-			releaseProcessingMutex();
+			releaseProcessingMutex(true); // force -> undo keeping parameters locked.
 			releaseOutputMutex();
 		}
 		catch (std::exception& e)
@@ -333,7 +342,7 @@ void Module::run(ModuleTask* pTask)
 	releaseAllInPorts();
 	releaseAllOutPorts();
     releaseProcessingMutex();
-    releaseOutputMutex();
+    releaseOutputMutex(); // may have been already released by processingTerminated()
 }
 
 bool Module::sleep(long milliseconds)
@@ -455,7 +464,7 @@ bool Module::taskIsStarting(bool orRunning)
 {
 //    Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
 
-    if (!startingTask.isNull())
+    if (!startingTask.isNull() && !startingTask->isSlave())
     {
         poco_information(logger(), name() + ": a task is already starting ("
                 + startingTask->name() + ")");
@@ -509,9 +518,13 @@ bool Module::taskIsPending()
             //      + ": " + (*it)->name()
             //      + " is already running for " + name());
             return true;
-        case MergeableTask::TASK_FALSE_START:
-        case MergeableTask::TASK_IDLE: // probably self
         case MergeableTask::TASK_CANCELLING:
+            //poco_information(logger(), task->name()
+            //      + ": " + (*it)->name()
+            //      + " is cancelling for " + name());
+            return true;
+        case MergeableTask::TASK_FALSE_START:
+        case MergeableTask::TASK_IDLE:
         case MergeableTask::TASK_FINISHED:
         case MergeableTask::TASK_MERGED:
             break;
@@ -774,14 +787,22 @@ Poco::AutoPtr<ModuleTask> Module::runModule(bool syncAllowed)
 
 void Module::waitParameters()
 {
-	while (!tryAllParametersSet())
-	{
-		if (yield())
-			throw ExecutionAbortedException(name(),
-					"Apply parameters: Cancellation upon user request");
-	}
+    if (isParamKeptLocked())
+        return;
 
-	applyParameters();
+    while (!tryAllParametersSet())
+    {
+        if (yield())
+            throw ExecutionAbortedException(name(),
+                    "Wait parameters (tryAllParametersSet): Cancellation upon user request");
+    }
+
+	while (!tryApplyParameters())
+    {
+        if (yield())
+            throw ExecutionAbortedException(name(),
+                    "Wait parameters (tryApplyParameters): Cancellation upon user request");
+    }
 }
 
 bool Module::moduleReady()
@@ -1144,6 +1165,9 @@ void Module::moduleReset()
 			+ ": a task is processing... "
 			"It should not happen since cancel is done. ").c_str());
 		}
+
+		releaseLockParameters(true); // force releasing keptParamLocked.
+
 		reset();
 	}
 	catch (...)
@@ -1158,6 +1182,8 @@ void Module::moduleReset()
 
 void Module::processingTerminated()
 {
+    releaseLockParameters();
+
     outputMutex.lock();
     outputLocked = true;
 
