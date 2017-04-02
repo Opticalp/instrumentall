@@ -464,7 +464,7 @@ bool Module::taskIsStarting(bool orRunning)
 {
 //    Poco::Mutex::ScopedLock lock(taskMngtMutex); // Ok: recursive mutex
 
-    if (!startingTask.isNull())
+    if (!startingTask.isNull() && !startingTask->isSlave())
     {
         poco_information(logger(), name() + ": a task is already starting ("
                 + startingTask->name() + ")");
@@ -518,9 +518,13 @@ bool Module::taskIsPending()
             //      + ": " + (*it)->name()
             //      + " is already running for " + name());
             return true;
-        case MergeableTask::TASK_FALSE_START:
-        case MergeableTask::TASK_IDLE: // probably self
         case MergeableTask::TASK_CANCELLING:
+            //poco_information(logger(), task->name()
+            //      + ": " + (*it)->name()
+            //      + " is cancelling for " + name());
+            return true;
+        case MergeableTask::TASK_FALSE_START:
+        case MergeableTask::TASK_IDLE:
         case MergeableTask::TASK_FINISHED:
         case MergeableTask::TASK_MERGED:
             break;
