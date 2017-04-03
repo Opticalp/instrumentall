@@ -167,9 +167,9 @@ void Module::freeInternalName()
 
 void Module::releaseProcessingMutex(bool force)
 {
-    if (processing)
+    if (getRunningTask()->isExclusiveProcessing())
     {
-        processing = false;
+        getRunningTask()->exclusiveProcReset();
         releaseLockParameters(force); // if called by processingTerminated, already unlocked. no matter.
         processingUnlock();
     }
@@ -209,7 +209,8 @@ void Module::prepareTaskStart(ModuleTask* pTask)
                     "Start skipped. ");
         }
     }
-    processing = true;
+    poco_assert(!pTask->isExclusiveProcessing());
+    pTask->exclusiveProcSet();
 
     taskMngtMutex.lock();
     startingTask = NULL;
@@ -1154,17 +1155,17 @@ void Module::moduleReset()
 			+ ": a task is starting... "
 			"It should not happen since cancel is done. ").c_str());
 	    }
-//	    processing = false;
-		if (processing)
-		{
-		    poco_error(logger(), name()
-            + ": a task is processing... "
-            "It should not happen since cancel is done. "
-			"== = = == = == == = == = = = = == == = = = == = ");
-			poco_bugcheck_msg((name() 
-			+ ": a task is processing... "
-			"It should not happen since cancel is done. ").c_str());
-		}
+////	    processing = false;
+//		if (processing)
+//		{
+//		    poco_error(logger(), name()
+//            + ": a task is processing... "
+//            "It should not happen since cancel is done. "
+//			"== = = == = == == = == = = = = == == = = = == = ");
+//			poco_bugcheck_msg((name()
+//			+ ": a task is processing... "
+//			"It should not happen since cancel is done. ").c_str());
+//		}
 
 		releaseLockParameters(true); // force releasing keptParamLocked.
 
