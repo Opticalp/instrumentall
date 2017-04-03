@@ -155,6 +155,10 @@ protected:
 	 */
 	void leaveTask();
 
+	void exclusiveProcSet() { exclusiveProcessing = true; }
+	void exclusiveProcReset() { exclusiveProcessing = false; }
+	bool isExclusiveProcessing() { return exclusiveProcessing; }
+
 private:
 	ModuleTask();
 	Module* coreModule;
@@ -168,7 +172,9 @@ private:
 
 	TaskUnregisterer unregisterRunner; ///< used to run the task unregistering (at the coreModule) in an async way
 
-	friend class Module; ///< access to sleep, setProgress, ...
+    bool exclusiveProcessing; ///< flag used to manage Module::taskProcessingMutex
+
+    friend class Module; ///< access to sleep, setProgress, ...
 };
 
 typedef Poco::AutoPtr<ModuleTask>  ModuleTaskPtr;

@@ -38,7 +38,8 @@ ModuleTask::ModuleTask(Module* module, InPort* inPort):
 	runState(NotAvailableRunningState),
 	mTriggingPort(inPort),
 	doneEvent(false), // manual reset
-	unregisterRunner(this)
+	unregisterRunner(this),
+	exclusiveProcessing(false)
 {
 	// commented: registered when queued by the dispatcher
 	// coreModule->registerTask(this);

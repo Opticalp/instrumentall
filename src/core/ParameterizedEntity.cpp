@@ -335,7 +335,7 @@ bool ParameterizedEntity::tryReadLockParameters()
     if (paramKeptLocked)
     {
         if (lockedByProcessing)
-            poco_information(logger(), "params are kept locked. No need to re-lock. ");
+            poco_information(logger(), name() + ": params are kept locked. No need to re-lock. ");
         else
             poco_bugcheck_msg("params were unlocked before kept locked! ");
 

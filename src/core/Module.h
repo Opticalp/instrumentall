@@ -97,7 +97,7 @@ public:
 		  cancelDone(false),
 		  cancelEffective(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
-		  startingTask(NULL), processing(false),
+		  startingTask(NULL),
 		  outputLocked(false)
 	{
 	}
@@ -113,7 +113,7 @@ public:
 		  cancelDone(false),
 		  cancelEffective(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
-		  startingTask(NULL), processing(false),
+		  startingTask(NULL),
 		  outputLocked(false)
 	{
 	}
@@ -595,7 +595,6 @@ private:
 	 * @see processing
 	 */
 	Poco::FastMutex taskProcessingMutex;
-    bool processing;
 	void processingUnlock() { taskProcessingMutex.unlock(); }
 
 	/**
