@@ -227,19 +227,19 @@ void Module::prepareTaskStart(ModuleTask* pTask)
         if (pTask->triggingPort())
         	safeReleaseInPort(pTask->triggingPort()->index());
 
-        releaseProcessingMutex();
+        releaseProcessingMutex(true);
         throw;
     }
 	catch (TaskMergedException&)
 	{
         poco_warning(logger(), pTask->name() + " starting failed (prepareTask)"
         		" on task merged");
-        releaseProcessingMutex();
+        releaseProcessingMutex(false); // do not force parameters lock release
         throw;
 	}
 	catch (...)
 	{
-        releaseProcessingMutex();
+        releaseProcessingMutex(true);
 
         if ((pTask->getState() == MergeableTask::TASK_FINISHED) && pTask->isSlave())
         {
@@ -1191,9 +1191,14 @@ void Module::processingTerminated()
     {
         popTask();
     }
-    catch (...) // cancelled, merged...
+    catch (TaskMergedException&)
     {
-        releaseProcessingMutex();
+        releaseProcessingMutex(false);
+        throw;
+    }
+    catch (...) // cancelled, other error,...
+    {
+        releaseProcessingMutex(true);
         throw;
     }
 
