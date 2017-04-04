@@ -31,7 +31,11 @@
 
 #include "GraphvizExportTool.h"
 
-class OutPort;
+#include <set>
+
+class DataTarget;
+class DataSource;
+class SeqTarget;
 
 /**
  * Export the workflow as a graphviz dot graph
@@ -40,6 +44,14 @@ class OutPort;
  *  - input port names are prefixed with "inPort_"
  *  - output port names are prefixed with "outPort_"
  *
+ * Since 2.0.0-dev.32:
+ *
+ * Implemented entities:
+ *  - modules
+ *  - parameter getters/setters (to modules)
+ *  - data proxies
+ *  - data loggers
+ *  - duplicated sources
  */
 class GvExportWorkFlow: public GraphvizExportTool
 {
@@ -53,13 +65,37 @@ private:
 
 	void exportGraph(std::ostream& out);
 
+	/**
+	 * Seek for entities using the data produced by the given source
+	 *
+	 * propagate until the next known entity
+	 */
+	void propagateTopDown(std::ostream& out, DataSource* source);
+
+	/**
+	 * Seek for entities producing data for the given target
+	 *
+	 * propagate until the next known entity
+	 */
+	void propagateBottomUp(std::ostream& out, DataTarget* target);
+
+    /**
+     * Export an edge
+     */
+    void exportEdge(std::ostream& out, DataSource* source, DataTarget* target);
+
 	void exportNodes(std::ostream& out);
 	void exportEdges(std::ostream& out);
 	void exportSeqEdges(std::ostream& out);
 
 	std::vector< SharedPtr<Module*> > modulesList; ///< all the modules
-	std::vector< SharedPtr<OutPort*> > outPorts; ///< output ports that have targets
-	std::vector< SharedPtr<OutPort*> > outSeqPorts; ///< output ports that have seq targets
+
+	std::set<DataLogger*> loggers;
+	std::set<DataProxy*> proxies;
+	std::set<DuplicatedSource*> dupSources;
+
+    std::set<DataTarget*> involvedTargets;
+	std::set<SeqTarget*> seqTargets; ///< involved seq targets
 
 	bool drawEdges;
 };

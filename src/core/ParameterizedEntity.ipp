@@ -40,14 +40,15 @@ T ParameterizedEntity::getParameterValue(std::string paramName)
 template <> inline
 Poco::Int64 ParameterizedEntity::getParameterValue<Poco::Int64>(size_t paramIndex)
 {
-    Poco::Mutex::ScopedLock lock(mutex);
-
-    applyParameters(); // "mutex" is a recursive mutex... OK then.
+    tryApplyParameters(true); // "mutex" is a recursive mutex... OK then.
 
     switch (paramSet[paramIndex].datatype)
     {
     case ParamItem::typeInteger:
+    {
+        Poco::ScopedReadRWLock lock(paramLock);
         return getIntParameterValue(paramIndex);
+    }
     case ParamItem::typeFloat:
         throw Poco::DataFormatException("getParameterValue",
                 "The parameter " + paramSet[paramIndex].name + " has float type. "
@@ -65,9 +66,7 @@ Poco::Int64 ParameterizedEntity::getParameterValue<Poco::Int64>(size_t paramInde
 template <> inline
 double ParameterizedEntity::getParameterValue<double>(size_t paramIndex)
 {
-    Poco::Mutex::ScopedLock lock(mutex);
-
-    applyParameters(); // "mutex" is a recursive mutex... OK then.
+    tryApplyParameters(true); // "mutex" is a recursive mutex... OK then.
 
     switch (paramSet[paramIndex].datatype)
     {
@@ -76,7 +75,10 @@ double ParameterizedEntity::getParameterValue<double>(size_t paramIndex)
                 "The parameter " + paramSet[paramIndex].name + " has integer type. "
                 "Float was requested. ");
     case ParamItem::typeFloat:
+    {
+        Poco::ScopedReadRWLock lock(paramLock);
         return getFloatParameterValue(paramIndex);
+    }
     case ParamItem::typeString:
         throw Poco::DataFormatException("getParameterValue",
                 "The parameter " + paramSet[paramIndex].name + " has string type. "
@@ -91,9 +93,7 @@ double ParameterizedEntity::getParameterValue<double>(size_t paramIndex)
 template <> inline
 std::string ParameterizedEntity::getParameterValue<std::string>(size_t paramIndex)
 {
-    Poco::Mutex::ScopedLock lock(mutex);
-
-    applyParameters(); // "mutex" is a recursive mutex... OK then.
+    tryApplyParameters(true); // "mutex" is a recursive mutex... OK then.
 
     switch (paramSet[paramIndex].datatype)
     {
@@ -106,7 +106,10 @@ std::string ParameterizedEntity::getParameterValue<std::string>(size_t paramInde
                 "The parameter " + paramSet[paramIndex].name + " has float type. "
                 "String was requested. ");
     case ParamItem::typeString:
+    {
+        Poco::ScopedReadRWLock lock(paramLock);
         return getStrParameterValue(paramIndex);
+    }
     default:
         poco_bugcheck_msg("unrecognized parameter type");
         throw Poco::BugcheckException(); // to avoid compiler warning
@@ -142,12 +145,13 @@ void ParameterizedEntity::setParameterValue<Poco::Int64>(size_t paramIndex, Poco
         throw Poco::BugcheckException(); // to avoid compiler warning
     }
 
-    Poco::Mutex::ScopedLock lock(mutex);
+    Poco::ScopedLockWithUnlock<Poco::Mutex> lock(internalParamMutex);
     paramValues[paramIndex] = Poco::Any(value);
     needApplication[paramIndex] = true;
+    lock.unlock();
 
     if (immediateApply)
-    	applyParameters();
+        tryApplyParameters(true);
 }
 
 template <> inline
@@ -170,13 +174,13 @@ void ParameterizedEntity::setParameterValue<double>(size_t paramIndex, double va
         throw Poco::BugcheckException(); // to avoid compiler warning
     }
 
-    Poco::ScopedLockWithUnlock<Poco::Mutex> lock(mutex);
+    Poco::ScopedLockWithUnlock<Poco::Mutex> lock(internalParamMutex);
     paramValues[paramIndex] = Poco::Any(value);
     needApplication[paramIndex] = true;
 	lock.unlock();
 
     if (immediateApply)
-    	applyParameters();
+        tryApplyParameters(true);
 }
 
 /// ParameterizedEntity::getParameter specialization for string parameters
@@ -200,12 +204,13 @@ void ParameterizedEntity::setParameterValue<std::string>(size_t paramIndex, std:
         throw Poco::BugcheckException(); // to avoid compiler warning
     }
 
-    Poco::Mutex::ScopedLock lock(mutex);
+    Poco::ScopedLockWithUnlock<Poco::Mutex> lock(internalParamMutex);
     paramValues[paramIndex] = Poco::Any(value);
     needApplication[paramIndex] = true;
+    lock.unlock();
 
     if (immediateApply)
-    	applyParameters();
+        tryApplyParameters(true);
 }
 
 //

@@ -40,6 +40,11 @@ using Poco::SharedPtr;
 // #define OBSOLETE_RECORD
 
 class Module;
+class DataProxy;
+class DataLogger;
+class DuplicatedSource;
+class DataSource;
+class DataTarget;
 
 /**
  * Tool to export a data structure into a dot (graphviz) graph.
@@ -71,6 +76,26 @@ protected:
 	 * Export a module
 	 */
 	void exportModuleNode(std::ostream& out, SharedPtr<Module*> mod);
+
+    /**
+     * Export a data proxy
+     */
+    void exportDataProxyNode(std::ostream& out, DataProxy* proxy);
+
+    /**
+     * Export a data logger
+     */
+    void exportDataLoggerNode(std::ostream& out, DataLogger* logger);
+
+    /**
+     * Export a duplicated data source
+     */
+    void exportDuplicatedSourceNode(std::ostream& out, DuplicatedSource* source);
+
+    std::string getPortName(DataSource* source);
+    std::string getPortName(DataTarget* target);
+
+    std::string portNameBase(std::string complete);
 };
 
 #endif /* SRC_GRAPHVIZEXPORTTOOL_H_ */

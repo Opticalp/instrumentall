@@ -97,7 +97,7 @@ public:
 		  cancelDone(false),
 		  cancelEffective(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
-		  startingTask(NULL), processing(false),
+		  startingTask(NULL),
 		  outputLocked(false)
 	{
 	}
@@ -113,7 +113,7 @@ public:
 		  cancelDone(false),
 		  cancelEffective(false),
 		  cancellationListenerRunnable(*this, &Module::cancellationListen),
-		  startingTask(NULL), processing(false),
+		  startingTask(NULL),
 		  outputLocked(false)
 	{
 	}
@@ -521,7 +521,10 @@ private:
 
     /**
      * Check if a task is already running or just pending
-     * for this module
+     * for this module.
+     *
+     * A task that is cancelling is considered as pending since
+     * it is not really over yet.
      */
     bool taskIsPending();
 
@@ -592,14 +595,13 @@ private:
 	 * @see processing
 	 */
 	Poco::FastMutex taskProcessingMutex;
-    bool processing;
 	void processingUnlock() { taskProcessingMutex.unlock(); }
 
 	/**
      * Release Module::taskProcessingMutex via startingUnlock
      * if starting is set.
      */
-    void releaseProcessingMutex();
+    void releaseProcessingMutex(bool force = false);
 
 	/**
 	 * Lock the taskStartingMutex

@@ -103,7 +103,7 @@ def myMain():
 
     print "done, and then in a 'for' loop"
     
-    for value in range(10):
+    for value in range(20):
         mod1.setParameterValue("value", value)
         runModule(mod1)
 
@@ -115,7 +115,7 @@ def myMain():
     runModule(mod1)
     waitAll()
     print "Return value is: " + str(seqAccu.outPorts()[0].getDataValue())
-    if ( seqAccu.outPorts()[0].getDataValue() != [50, 50, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 100] ):
+    if ( seqAccu.outPorts()[0].getDataValue() != [50, 50, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 100] ):
         raise RuntimeError("Wrong return value")
     
     print "Test the vector generation"

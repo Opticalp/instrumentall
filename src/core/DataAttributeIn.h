@@ -62,7 +62,9 @@
  *           // do things with the data in sequence: processing
  *
  *           if (attr.isEndSequence(seqIndex))
- *           // sequence un-initialization stuff (writing output, ...)
+ *               // sequence un-initialization stuff (writing output, ...)
+ *           else
+ *               keepParamLocked();
  *         }
  *         else
  *         {

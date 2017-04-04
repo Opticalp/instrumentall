@@ -93,7 +93,7 @@ def myMain():
     for proxyClass in proxyClasses:
         print " - " + proxyClass + ": " + proxyClasses[proxyClass]
     
-    print 'Proxy creation using the constructor: DataProxy("DataPocoProxy")'
+    print 'Proxy creation using the constructor: DataProxy("DataBufferint32")'
     proxy = DataProxy("DataBufferint32") 
     print " - Name: " + proxy.name
     print " - Description: " + proxy.description

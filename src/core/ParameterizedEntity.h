@@ -35,6 +35,7 @@
 #include "Poco/Logger.h"
 #include "Poco/Util/Application.h" // layered configuration
 #include "Poco/Mutex.h"
+#include "Poco/RWLock.h"
 #include "Poco/Any.h"
 
 class DataSource;
@@ -62,7 +63,9 @@ public:
 	 * @see setPrefixKey
 	 */
 	ParameterizedEntity(std::string prefixKey):
-		confPrefixKey(prefixKey)
+		confPrefixKey(prefixKey),
+		lockedByProcessing(false),
+		paramKeptLocked(false)
 	{
 	}
 
@@ -127,12 +130,31 @@ public:
      * @warning applyParameters applies to all parameters, not only for
      * the one given by paramName.
      *
+     * @warning internalParamMutex is shortly locked during this operation.
+     *
      * @throw Poco::NotFoundException if the name is not found
      * @throw Poco::DataFormatException if the parameter format does not fit
      */
     template<typename T> void setParameterValue(std::string paramName, T value, bool immediateApply = false);
     template<typename T> void setParameterValue(size_t paramIndex, T value, bool immediateApply = false);
 
+    /**
+     * Try to apply the parameters
+     *
+     * calling overridable applyParameters() method.
+     *
+     * Check if they are pending internal parameter values that
+     * are not aaplied. If all applied, directly return true.
+     *
+     * Check if the lock is available for writing
+     *
+     * Public to be called by the parameter setters
+     *
+     * @param blocking set to true if the paramLock acquisition is blocking.
+     */
+    bool tryApplyParameters(bool blocking = false);
+
+protected:
     /**
      * Apply the parameters
      *
@@ -141,10 +163,47 @@ public:
      * Default behavior: call setIntParameterValue, setFloatParameterValue
      * or setStringParameterValue for each parameter to keep compatibility
      * with previous versions.
+     *
+     * A custom implementation should call getInternalIntParameterValue,
+     * getInternalFloatParameterValue, or getInternalStrParameterValue.
+     * Those methods lock internalParamMutex to retrieve the internal values. Please
+     * be aware of the deadlock risk.
      */
     virtual void applyParameters();
 
-protected:
+    /**
+     * read lock paramLock
+     *
+     * To be called just before processing in Module::run(). Shall not be
+     * called directly.
+     *
+     * If the params were kept locked, this method resets the keptLocked
+     * flag: paramKeptLocked.
+     */
+    bool tryReadLockParameters();
+
+    /**
+     * Release the read lock acquired with tryReadLockParameters
+     *
+     * Unless the paramKeptLocked flag is set (using keepParamLocked())
+     *
+     * Called by Module::run. Shall not be called directly.
+     */
+    void releaseLockParameters(bool force = false);
+
+    /**
+     * Keep the parameters locked even after process() finishes.
+     *
+     * To be called in Module::process() implementation during a sequence
+     * treatment for example. Should be called at each iteration.
+     *
+     * paramKeptLocked is reset by tryReadLockParameters() called by
+     * Module::run()
+     */
+    void keepParamLocked();
+
+    bool isParamKeptLocked() { return paramKeptLocked; }
+
     /**
 	 * Change the prefix key
 	 */
@@ -218,6 +277,8 @@ protected:
      *
      * Reset the needApplication flag to false
      *
+     * internalParamMutex is locked during this operation.
+     *
      * @param[in] paramIndex parameter index
      * @param[out] value parameter value from the internal storage
      * @return needApplication flag
@@ -275,7 +336,11 @@ private:
     Poco::Util::LayeredConfiguration& appConf()
         { return Poco::Util::Application::instance().config(); }
 
-    Poco::Mutex mutex; ///< main mutex (recursive). lock the operations on parameter values
+    Poco::Mutex internalParamMutex; ///< main mutex (recursive). lock the operations on parameter internal values
+
+    Poco::RWLock paramLock; ///< lock to prevent setting parameter values while processing
+    bool lockedByProcessing;
+    bool paramKeptLocked;
 };
 
 /// templates implementation
