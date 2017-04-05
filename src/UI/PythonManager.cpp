@@ -246,14 +246,14 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
 
     ScopedGIL GIL;
 
-    setVar(scriptFile.toString().c_str(),"__file__","__main__");
-
     PyObject *py_main, *py_dict;
     py_main = PyImport_AddModule("__main__");
     py_dict = PyModule_GetDict(py_main);
 
     PyObject* exitFct = PySys_GetObject(const_cast<char*>("exit"));
     PyDict_SetItemString(py_dict, "exit", exitFct);
+    PyObject* pyScript = PyString_FromString(scriptFile.toString().c_str());
+    PyDict_SetItemString(py_dict, "__file__", pyScript);
 
     // launch script using python command
     if (PyRun_String("execfile(__file__)", Py_single_input, py_dict, py_dict)==NULL)
@@ -271,7 +271,6 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
                 Poco::RuntimeException e("runScript","The script exited on RuntimeError");
                 poco_error(logger(),e.displayText());
                 PyErr_Print();
-                delVar("__file__","__main__");
                 throw  e;
             }
             else
@@ -280,7 +279,6 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
             			"The script exited on unhandled error. ");
                 poco_error(logger(), e.displayText());
                 PyErr_Print();
-                delVar("__file__","__main__");
                 throw  e;
             }
         }
@@ -290,12 +288,9 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
                 + scriptFile.toString());
             poco_error(logger(),e.displayText());
             PyErr_Print();
-            delVar("__file__","__main__");
             throw e;
         }
     }
-
-    delVar("__file__","__main__");
 
     poco_information(logger(), "python script gracefully executed");
 }
