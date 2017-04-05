@@ -240,13 +240,13 @@ void Module::prepareTaskStart(ModuleTask* pTask)
 	}
 	catch (...)
 	{
-        releaseProcessingMutex(true);
-
         if ((pTask->getState() == MergeableTask::TASK_FINISHED) && pTask->isSlave())
         {
             poco_information(logger(), pTask->name()
             		+ " starting failed (prepareTask):"
             		" was merged and is finished");
+            releaseProcessingMutex();
+
             throw TaskMergedException("Finished slave task. "
                     "Can not run");
         }
@@ -256,6 +256,7 @@ void Module::prepareTaskStart(ModuleTask* pTask)
             		+ " starting failed (prepareTask) on unknown error...");
         }
 
+        releaseProcessingMutex(true);
         throw;
     }
 }
