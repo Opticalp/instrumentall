@@ -525,6 +525,8 @@ pythonDispatchRunModule(PyObject *self, PyObject *args)
 extern "C" PyObject*
 pythonThreadManWaitAll(PyObject *self, PyObject *args)
 {
+    PyThreadState* state = PyEval_SaveThread();
+
 	try
 	{
 		Poco::Util::Application::instance()
@@ -533,12 +535,14 @@ pythonThreadManWaitAll(PyObject *self, PyObject *args)
 	}
 	catch (Poco::RuntimeException& e)
 	{
-	      PyErr_SetString(PyExc_RuntimeError,
-	          ("WaitAll processing error: " + e.displayText()).c_str());
-	      return NULL;
+        PyEval_RestoreThread(state);
+        PyErr_SetString(PyExc_RuntimeError,
+            ("WaitAll processing error: " + e.displayText()).c_str());
+        return NULL;
 	}
 
-    Py_RETURN_NONE;
+	PyEval_RestoreThread(state);
+	Py_RETURN_NONE;
 }
 
 extern "C" PyObject*
