@@ -126,8 +126,17 @@ public:
 
 	/**
 	 * Runnable::run method implementation
+	 *
+	 * duplicate() has to be called previously because release() is called
+	 * at the end
 	 */
 	void run();
+
+	/**
+	 * method used to launch the runnable synchronously.
+	 * duplicate() is called there
+	 */
+	void runSync() { duplicate(); run(); }
 
 	/**
 	 * Retrieve task unique ID
