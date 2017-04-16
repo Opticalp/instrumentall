@@ -34,6 +34,7 @@
 
 #include "OutPort.h"
 
+#include "Poco/Exception.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/NumberParser.h"
 
@@ -49,8 +50,6 @@ void Module::notifyCreation()
 
 Module::~Module()
 {
-	// TODO: tasks?
-
     // notify parent factory
     if (mParent)
     {
@@ -60,8 +59,6 @@ Module::~Module()
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
     }
 }
-
-#include "Poco/Exception.h"
 
 void Module::setInternalName(std::string internalName)
 {

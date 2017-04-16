@@ -126,8 +126,21 @@ public:
 	 *  - module manager
 	 *  - dispatcher
 	 *  - tasks
+	 *
+	 * The Module should not be deleted while running. E.g. CancelAll has
+	 * to be called prior to any operation on the workflow, including Module
+	 * deletion.
 	 */
 	virtual ~Module();
+
+	/**
+	 * Self-delete the module
+	 *
+	 * virtual in order to be implemented differently in EmptyModule
+	 *
+	 * @see Module::~Module()
+	 */
+	virtual void destroy() { delete this; }
 
 	/**
 	 * Custom name of the module

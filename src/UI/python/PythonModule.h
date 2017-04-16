@@ -94,6 +94,17 @@ static PyMemberDef pyModMembers[] =
  */
 extern "C" int pyModInit(ModMembers* self, PyObject *args, PyObject *kwds);
 
+/// Module::destroy() python wrapper
+extern "C" PyObject* pyModDestroy(ModMembers *self);
+
+static PyMethodDef pyMethodModDestroy =
+{
+    "destroy",
+    (PyCFunction)pyModDestroy,
+    METH_NOARGS,
+    "Cleanly self-delete this module. Future ref will drive to the empty module. "
+};
+
 /// Module::parent() python wrapper
 extern "C" PyObject* pyModParent(ModMembers *self);
 
@@ -249,7 +260,9 @@ static PyMethodDef pyMethodModBuildParamSetter =
 
 /// exported methods
 static PyMethodDef pyModMethods[] = {
-	pyMethodModParent,
+	pyMethodModDestroy,
+
+    pyMethodModParent,
 
 	pyMethodModInPorts,
 	pyMethodModInPort,

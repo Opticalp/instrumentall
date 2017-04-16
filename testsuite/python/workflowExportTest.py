@@ -95,6 +95,11 @@ def myMain():
     exportWorkflow("workflow.gv")
     print("Export factories tree to facTree.gv")
     exportFactoriesTree("facTree.gv")
+
+    print("Destroy mod2")    
+    mod2.destroy()
+    print("Export workflow to workflow2.gv")
+    exportWorkflow("workflow2.gv")
             
     print("End of script workflowExportTest.py")
     
