@@ -99,6 +99,9 @@ void GvExportWorkFlow::exportNodes(std::ostream& out)
 
             if ((*port)->getDataTargets().size())
                 propagateTopDown(out, *port);
+
+            std::set<SeqTarget*> seqTgts = (*pit)->getSeqTargets();
+            seqTargets.insert(seqTgts.begin(), seqTgts.end());
         }
 
         std::vector<InPort*> morePorts = (**it)->getInPorts();
@@ -113,6 +116,9 @@ void GvExportWorkFlow::exportNodes(std::ostream& out)
                     .getInPort(*pit);
 
             propagateBottomUp(out, *morePort);
+
+            if ((*pit)->getSeqSource())
+                seqTargets.insert(*pit);
         }
 
         // check for parameter workers
@@ -139,17 +145,10 @@ void GvExportWorkFlow::propagateTopDown(std::ostream& out, DataSource* source)
 {
     std::set<DataTarget*> targets = source->getDataTargets();
 
-    if (targets.empty())
-        return;
-
     for (std::set<DataTarget*>::iterator it = targets.begin(),
             ite = targets.end(); it != ite; it++)
     {
         involvedTargets.insert(*it);
-
-        SeqTarget* seqTgt = dynamic_cast<SeqTarget*>(*it);
-        if (seqTgt && seqTgt->getSeqSource())
-            seqTargets.insert(seqTgt);
 
         // target is: a module
         if ( dynamic_cast<InPort*>(*it)
