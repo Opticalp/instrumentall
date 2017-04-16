@@ -143,6 +143,30 @@ void Dispatcher::resetWorkflow()
             seqUnbind(**it);
         }
     }
+
+    // module param setters and getters
+    std::vector< SharedPtr<Module*> > modules;
+    modules = Poco::Util::Application::instance().getSubsystem<ModuleManager>().getModules();
+
+    for (std::vector< SharedPtr<Module*> >::iterator it=modules.begin(), ite=modules.end();
+            it!=ite; it++)
+    {
+        // check for parameter workers
+        std::set< Poco::AutoPtr<ParameterGetter> > paramGetters = (**it)->getParameterGetters();
+        for (std::set< Poco::AutoPtr<ParameterGetter> >::iterator git = paramGetters.begin(),
+                gite = paramGetters.end(); git != gite; git++)
+        {
+            unbind(static_cast<DataSource*>(const_cast<ParameterGetter*>(git->get())));
+            unbind(static_cast<DataTarget*>(const_cast<ParameterGetter*>(git->get())));
+        }
+
+        std::set< Poco::AutoPtr<ParameterSetter> > paramSetters = (**it)->getParameterSetters();
+        for (std::set< Poco::AutoPtr<ParameterSetter> >::iterator sit = paramSetters.begin(),
+                site = paramSetters.end(); sit != site; sit++)
+        {
+            unbind(static_cast<DataTarget*>(const_cast<ParameterSetter*>(sit->get())));
+        }
+    }
 }
 
 void Dispatcher::addModule(SharedPtr<Module*> module)
