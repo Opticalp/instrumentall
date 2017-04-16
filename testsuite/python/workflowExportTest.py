@@ -100,6 +100,11 @@ def myMain():
     mod2.destroy()
     print("Export workflow to workflow2.gv")
     exportWorkflow("workflow2.gv")
+    
+    print("Reset the workflow")
+    resetWorkflow()
+    print("Export workflow to workflow3.gv")
+    exportWorkflow("workflow3.gv")
             
     print("End of script workflowExportTest.py")
     

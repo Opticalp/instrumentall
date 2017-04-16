@@ -166,6 +166,23 @@ static PyMethodDef pyMethodModManExportFacTreeGraphviz =
 // ----------------------------------------------------------------
 
 /**
+ * @brief Python wrapper to unplug all the modules
+ *
+ * Call Dispatcher::resetWorkflow method
+ *
+ */
+extern "C" PyObject*
+pythonDispatchResetWorkflow(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDispatchResetWorkflow =
+{
+    "resetWorkflow",
+    pythonDispatchResetWorkflow,
+    METH_NOARGS,
+    "Unbind all the workflow connexions. "
+};
+
+/**
  * @brief Python wrapper to bind ports
  *
  * Call Dispatcher::bind(portA, portB) method

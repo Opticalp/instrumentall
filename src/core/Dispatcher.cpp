@@ -118,6 +118,32 @@ void Dispatcher::uninitialize()
     poco_information(logger(), "Dispatcher uninit OK. Locks released");
 }
 
+void Dispatcher::resetWorkflow()
+{
+    if (!initialized)
+        throw Poco::RuntimeException("resetWorkflow",
+                "The dispatcher is not initialized");
+
+    {
+        Poco::ScopedReadRWLock lockIn(inPortsLock);
+        for (std::vector< SharedPtr<InPort*> >::iterator it=allInPorts.begin(), ite=allInPorts.end();
+                it!=ite; it++)
+        {
+            unbind(**it);
+            seqUnbind(**it);
+        }
+    }
+
+    {
+        Poco::ScopedReadRWLock lockOut(outPortsLock);
+        for (std::vector< SharedPtr<OutPort*> >::iterator it=allOutPorts.begin(), ite=allOutPorts.end();
+                it!=ite; it++)
+        {
+            unbind(**it);
+            seqUnbind(**it);
+        }
+    }
+}
 
 void Dispatcher::addModule(SharedPtr<Module*> module)
 {

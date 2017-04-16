@@ -70,6 +70,8 @@ static PyMethodDef EmbMethods[] =
 	pyMethodModManExportFacTreeGraphviz,
 
     // dispatcher
+    pyMethodDispatchResetWorkflow,
+
     pyMethodDispatchBind,
     pyMethodDispatchUnbind,
 

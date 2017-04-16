@@ -277,6 +277,24 @@ PyObject* pythonModManExportFacTreeGraphviz(PyObject* self, PyObject* args)
 #include "PythonDataTarget.h"
 
 extern "C" PyObject*
+pythonDispatchResetWorkflow(PyObject *self, PyObject *args)
+{
+    try
+    {
+        Poco::Util::Application::instance()
+            .getSubsystem<Dispatcher>()
+            .resetWorkflow();
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+extern "C" PyObject*
 pythonDispatchBind(PyObject* self, PyObject* args)
 {
     PyObject *pySource, *pyTarget;
