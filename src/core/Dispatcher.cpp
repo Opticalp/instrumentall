@@ -33,7 +33,7 @@
 #include "Module.h"
 #include "ModuleTask.h"
 #include "DataLogger.h"
-
+#include "DataProxy.h"
 #include "InPort.h"
 #include "InDataPort.h"
 #include "OutPort.h"
@@ -333,7 +333,19 @@ void Dispatcher::unbind(DataTarget* target)
 {
 //	poco_information(logger(), "unbinding target: " + target->name());
 
-    target->detachDataSource();
+    try
+    {
+        DataProxy* proxy = dynamic_cast<DataProxy*>(target->getDataSource());
+        if (proxy)
+            unbind(static_cast<DataTarget*>(proxy));
+
+        target->detachDataSource();
+    }
+    catch (Poco::NullPointerException&)
+    {
+//        poco_information(logger(), "unbinding target: " + target->name()
+//                + " has no source");
+    }
 }
 
 void Dispatcher::unbind(DataSource* source)
@@ -345,7 +357,14 @@ void Dispatcher::unbind(DataSource* source)
 	while (targets.size())
 	{
 		std::set<DataTarget*>::iterator it = targets.begin();
-		unbind(*it);
+		(*it)->incUser();
+        unbind(*it);
+
+        DataProxy* proxy = dynamic_cast<DataProxy*>(*it);
+		if (proxy)
+		    unbind(static_cast<DataSource*>(proxy));
+
+        (*it)->decUser();
 		targets.erase(it);
 	}
 }
