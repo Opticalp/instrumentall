@@ -61,3 +61,8 @@ call 7z x opencv.exe -o"%OPENCV_BASE_DIR%"
 dir "%OPENCV_DIR%"
 echo OpenCV installed
 
+echo Install wxWidgets using curl 
+curl -fSL -o wxWidgets-setup.exe -m 600 https://github.com/wxWidgets/wxWidgets/releases/download/v3.0.2/wxMSW-3.0.2-Setup.exe
+echo Downloading from github done. 
+call wxWidgets-setup.exe /silent /dir="%WXWIN%"
+echo wxWidgets 3.0.2 installed
