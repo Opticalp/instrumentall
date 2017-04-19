@@ -105,6 +105,22 @@ def myMain():
     resetWorkflow()
     print("Export workflow to workflow3.gv")
     exportWorkflow("workflow3.gv")
+    
+    print("rebuild mod2")
+    mod2 = fac.select("branch").select("leafForwarder").create("mod2")
+    print("rebind some connexions before deleting all modules. ")
+    print("1. check that the proxy still exists")
+    print(proxy.name)
+    print("2. check that the module ports exist")
+    print(mod1.outPorts()[0].name)
+    print(mod2.inPorts()[0].name)
+    print("3. bind")
+    bind(mod1.outPorts()[0], mod2.inPorts()[0], proxy)
+    print("4. register logger")
+    bind(mod2.outPorts()[0], DataTarget(logger))
+    print("clear the modules")
+    clearModules()
+    print("OK, modules cleared. ")
             
     print("End of script workflowExportTest.py")
     
