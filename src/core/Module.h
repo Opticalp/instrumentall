@@ -126,8 +126,21 @@ public:
 	 *  - module manager
 	 *  - dispatcher
 	 *  - tasks
+	 *
+	 * The Module should not be deleted while running. E.g. CancelAll has
+	 * to be called prior to any operation on the workflow, including Module
+	 * deletion.
 	 */
 	virtual ~Module();
+
+	/**
+	 * Self-delete the module
+	 *
+	 * virtual in order to be implemented differently in EmptyModule
+	 *
+	 * @see Module::~Module()
+	 */
+	virtual void destroy() { delete this; }
 
 	/**
 	 * Custom name of the module
@@ -476,7 +489,7 @@ private:
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
 
-	static std::vector<std::string> names; ///< list of names of all modules
+	static std::set<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
     /**

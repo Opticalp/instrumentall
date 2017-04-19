@@ -56,6 +56,7 @@ void TaskManager::start(TaskPtr pAutoTask)
 	mTaskList.push_back(pAutoTask);
 	try
 	{
+	    pAutoTask->duplicate();
 		threadPool.start(*pAutoTask, pAutoTask->name());
 	}
 	catch (...)
@@ -81,7 +82,7 @@ void TaskManager::startSync(TaskPtr pAutoTask)
 
 	try
 	{
-		pAutoTask->run();
+		pAutoTask->runSync();
 	}
 	catch (...)
 	{

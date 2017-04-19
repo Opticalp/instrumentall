@@ -33,7 +33,7 @@
 #include "Module.h"
 #include "ModuleTask.h"
 #include "DataLogger.h"
-
+#include "DataProxy.h"
 #include "InPort.h"
 #include "InDataPort.h"
 #include "OutPort.h"
@@ -118,6 +118,56 @@ void Dispatcher::uninitialize()
     poco_information(logger(), "Dispatcher uninit OK. Locks released");
 }
 
+void Dispatcher::resetWorkflow()
+{
+    if (!initialized)
+        throw Poco::RuntimeException("resetWorkflow",
+                "The dispatcher is not initialized");
+
+    {
+        Poco::ScopedReadRWLock lockIn(inPortsLock);
+        for (std::vector< SharedPtr<InPort*> >::iterator it=allInPorts.begin(), ite=allInPorts.end();
+                it!=ite; it++)
+        {
+            unbind(**it);
+            seqUnbind(**it);
+        }
+    }
+
+    {
+        Poco::ScopedReadRWLock lockOut(outPortsLock);
+        for (std::vector< SharedPtr<OutPort*> >::iterator it=allOutPorts.begin(), ite=allOutPorts.end();
+                it!=ite; it++)
+        {
+            unbind(**it);
+            seqUnbind(**it);
+        }
+    }
+
+    // module param setters and getters
+    std::vector< SharedPtr<Module*> > modules;
+    modules = Poco::Util::Application::instance().getSubsystem<ModuleManager>().getModules();
+
+    for (std::vector< SharedPtr<Module*> >::iterator it=modules.begin(), ite=modules.end();
+            it!=ite; it++)
+    {
+        // check for parameter workers
+        std::set< Poco::AutoPtr<ParameterGetter> > paramGetters = (**it)->getParameterGetters();
+        for (std::set< Poco::AutoPtr<ParameterGetter> >::iterator git = paramGetters.begin(),
+                gite = paramGetters.end(); git != gite; git++)
+        {
+            unbind(static_cast<DataSource*>(const_cast<ParameterGetter*>(git->get())));
+            unbind(static_cast<DataTarget*>(const_cast<ParameterGetter*>(git->get())));
+        }
+
+        std::set< Poco::AutoPtr<ParameterSetter> > paramSetters = (**it)->getParameterSetters();
+        for (std::set< Poco::AutoPtr<ParameterSetter> >::iterator sit = paramSetters.begin(),
+                site = paramSetters.end(); sit != site; sit++)
+        {
+            unbind(static_cast<DataTarget*>(const_cast<ParameterSetter*>(sit->get())));
+        }
+    }
+}
 
 void Dispatcher::addModule(SharedPtr<Module*> module)
 {
@@ -307,7 +357,19 @@ void Dispatcher::unbind(DataTarget* target)
 {
 //	poco_information(logger(), "unbinding target: " + target->name());
 
-    target->detachDataSource();
+    try
+    {
+        DataProxy* proxy = dynamic_cast<DataProxy*>(target->getDataSource());
+        if (proxy)
+            unbind(static_cast<DataTarget*>(proxy));
+
+        target->detachDataSource();
+    }
+    catch (Poco::NullPointerException&)
+    {
+//        poco_information(logger(), "unbinding target: " + target->name()
+//                + " has no source");
+    }
 }
 
 void Dispatcher::unbind(DataSource* source)
@@ -319,7 +381,14 @@ void Dispatcher::unbind(DataSource* source)
 	while (targets.size())
 	{
 		std::set<DataTarget*>::iterator it = targets.begin();
-		unbind(*it);
+		(*it)->incUser();
+        unbind(*it);
+
+        DataProxy* proxy = dynamic_cast<DataProxy*>(*it);
+		if (proxy)
+		    unbind(static_cast<DataSource*>(proxy));
+
+        (*it)->decUser();
 		targets.erase(it);
 	}
 }

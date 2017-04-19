@@ -96,8 +96,6 @@ MergeableTask::TaskState MergeableTask::getState() const
 
 void MergeableTask::run()
 {
-	duplicate(); // to keep the task alive, even after the finishedNotification, to execute leaveTask
-
 	TaskManager* pTm = getOwner();
 	if (pTm)
 		pTm->taskStarted(this);

@@ -183,6 +183,26 @@ std::vector< SharedPtr<Module*> > ModuleManager::getModules()
     return list;
 }
 
+void ModuleManager::clearModules()
+{
+    poco_information(logger(), "Clearing all the modules...");
+
+    // dispatcher.resetWorkflow
+    Poco::Util::Application::instance()
+            .getSubsystem<Dispatcher>()
+            .resetWorkflow();
+
+    // clear all modules
+    std::vector< SharedPtr<Module*> > allModCopy = getModules();
+
+    for (std::vector< SharedPtr<Module*> >::iterator it=allModCopy.begin(), ite=allModCopy.end();
+            it!=ite; it++)
+    {
+        (**it)->destroy();
+    }
+
+    poco_information(logger(), "All modules cleared. ");
+}
 
 void ModuleManager::addFactory(ModuleFactory* pFactory)
 {

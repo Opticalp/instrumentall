@@ -129,6 +129,13 @@ public:
      */
      std::vector< SharedPtr<Module*> > getModules();
 
+     /**
+      * Remove all modules
+      *
+      * e.g. to build a brand new workflow
+      */
+     void clearModules();
+
     /**
      * Add a factory to the list
      *

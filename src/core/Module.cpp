@@ -34,10 +34,11 @@
 
 #include "OutPort.h"
 
+#include "Poco/Exception.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/NumberParser.h"
 
-std::vector<std::string> Module::names;
+std::set<std::string> Module::names;
 Poco::RWLock Module::namesLock;
 
 void Module::notifyCreation()
@@ -49,8 +50,6 @@ void Module::notifyCreation()
 
 Module::~Module()
 {
-	// TODO: tasks?
-
     // notify parent factory
     if (mParent)
     {
@@ -59,9 +58,12 @@ Module::~Module()
         // notify module manager
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
     }
-}
 
-#include "Poco/Exception.h"
+    if (!mName.empty())
+        names.erase(mName);
+    if (!mInternalName.empty())
+        names.erase(mInternalName);
+}
 
 void Module::setInternalName(std::string internalName)
 {
@@ -71,7 +73,7 @@ void Module::setInternalName(std::string internalName)
     {
     case nameOk:
         mInternalName = internalName;
-        names.push_back(mInternalName);
+        names.insert(mInternalName);
         namesLock.unlock();
         return;
     case nameExists:
@@ -104,7 +106,7 @@ void Module::setCustomName(std::string customName)
     {
     case nameOk:
         mName = customName;
-        names.push_back(mName);
+        names.insert(mName);
         namesLock.unlock();
         return;
     case nameExists:
@@ -139,11 +141,9 @@ Module::NameStatus Module::checkName(std::string newName)
     if (!regex.match(newName))
         return nameBadSyntax;
 
-    // check existance
-    for (std::vector<std::string>::iterator it = names.begin(),
-            ite = names.end(); it != ite; it++)
-        if (it->compare(newName)==0)
-            return nameExists;
+    // check existence
+    if (names.count(newName))
+        return nameExists;
 
     return nameOk;
 }
@@ -154,15 +154,7 @@ void Module::freeInternalName()
     if (!name().empty())
         return;
 
-    for (std::vector<std::string>::reverse_iterator it = names.rbegin(),
-            ite = names.rend(); it != ite; it++ )
-    {
-        if (it->compare(internalName())==0)
-        {
-            names.erase((it+1).base());
-            return;
-        }
-    }
+    names.erase(internalName());
 }
 
 void Module::releaseProcessingMutex(bool force)
@@ -194,7 +186,18 @@ void Module::prepareTaskStart(ModuleTask* pTask)
             	safeReleaseInPort(pTask->triggingPort()->index());
 
             Poco::Mutex::ScopedLock lock(taskMngtMutex);
-            startingTask = NULL;
+            if (startingTask == pTask)
+                startingTask = NULL;
+            else if (!startingTask.isNull())
+                poco_information(logger(),
+                        pTask->name() + " is cancelling, "
+                        "but the next task in queue ("
+                        + startingTask->name() +
+                        ") was already launched." );
+            else
+                poco_information(logger(),
+                        pTask->name() + " is cancelling, "
+                        "but the next task in queue was already launched." );
 
             throw ExecutionAbortedException(pTask->name() + "::prepareTask",
                     "task cancellation during taskStartingMutex lock wait");
@@ -203,7 +206,18 @@ void Module::prepareTaskStart(ModuleTask* pTask)
         if (pTask->isSlave())
         {
             Poco::Mutex::ScopedLock lock(taskMngtMutex);
-            startingTask = NULL;
+            if (startingTask == pTask)
+                startingTask = NULL;
+            else if (!startingTask.isNull())
+                poco_information(logger(),
+                        pTask->name() + " is merged, "
+                        "and the next task in queue ("
+                        + startingTask->name() +
+                        ") was already launched." );
+            else
+                poco_information(logger(),
+                        pTask->name() + " is merged, "
+                        "and the next task in queue was already launched." );
 
             throw TaskMergedException("Task merged. "
                     "Start skipped. ");
@@ -213,7 +227,12 @@ void Module::prepareTaskStart(ModuleTask* pTask)
     pTask->exclusiveProcSet();
 
     taskMngtMutex.lock();
-    startingTask = NULL;
+    if (startingTask == pTask)
+        startingTask = NULL;
+    else
+        poco_warning(logger(), pTask->name()
+                + " may have been enslaved? "
+                  "startingTask value is not as guessed...");
     taskMngtMutex.unlock();
 
     try
@@ -240,13 +259,13 @@ void Module::prepareTaskStart(ModuleTask* pTask)
 	}
 	catch (...)
 	{
-        releaseProcessingMutex(true);
-
         if ((pTask->getState() == MergeableTask::TASK_FINISHED) && pTask->isSlave())
         {
             poco_information(logger(), pTask->name()
             		+ " starting failed (prepareTask):"
             		" was merged and is finished");
+            releaseProcessingMutex();
+
             throw TaskMergedException("Finished slave task. "
                     "Can not run");
         }
@@ -256,6 +275,7 @@ void Module::prepareTaskStart(ModuleTask* pTask)
             		+ " starting failed (prepareTask) on unknown error...");
         }
 
+        releaseProcessingMutex(true);
         throw;
     }
 }
