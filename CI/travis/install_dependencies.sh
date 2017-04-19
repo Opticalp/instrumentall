@@ -119,5 +119,20 @@ then
 fi
 echo "openCV installed"
 
+echo "Installing wxWidgets from the packages"
+if [ $TRAVIS_OS_NAME == linux ] 
+then 
+    echo "using apt-get"
+    sudo apt-get install libwxgtk3.0-dev xvfb -q -y 
+    echo "wxWidgets lib (wxgtk) installed with apt-get" 
+fi
+if [ $TRAVIS_OS_NAME == osx ] 
+then 
+    echo "using homebrew"
+    brew install wxmac
+    echo "wxwidgets lib (wxmac) installed with homebrew" 
+fi
+echo "wxWidgets installed"
+
 cd $CURRENT_DIR
 pwd
