@@ -207,6 +207,24 @@ pythonModManGetModules(PyObject *self, PyObject *args)
     return pyModules;
 }
 
+extern "C" PyObject*
+pythonModManClearModules(PyObject *self, PyObject *args)
+{
+    try
+    {
+        Poco::Util::Application::instance()
+                .getSubsystem<ModuleManager>()
+                .clearModules();
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
 PyObject* pythonModManExportWFGraphviz(PyObject* self, PyObject* args)
 {
     // convert arg to Poco::Path

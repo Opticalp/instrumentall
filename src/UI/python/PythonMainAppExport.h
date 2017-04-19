@@ -130,6 +130,23 @@ static PyMethodDef pyMethodModManGetModules =
 };
 
 /**
+ * @brief Python wrapper to clear all the modules
+ *
+ * Call ModuleManager::clearModules() method
+ *
+ */
+extern "C" PyObject*
+pythonModManClearModules(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodModManClearModules =
+{
+    "clearModules",
+    pythonModManClearModules,
+    METH_NOARGS,
+    "Clear all the modules"
+};
+
+/**
  * Python wrapper to export the workflow as a graphviz dot graph
  *
  * Call ModuleManager::exportWFGraphviz
