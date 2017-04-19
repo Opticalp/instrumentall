@@ -489,7 +489,7 @@ private:
 	std::string mInternalName; ///< internal name of the module
 	std::string mName; ///< custom name of the module
 
-	static std::vector<std::string> names; ///< list of names of all modules
+	static std::set<std::string> names; ///< list of names of all modules
 	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
     /**
