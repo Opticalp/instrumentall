@@ -130,6 +130,23 @@ static PyMethodDef pyMethodModManGetModules =
 };
 
 /**
+ * @brief Python wrapper to clear all the modules
+ *
+ * Call ModuleManager::clearModules() method
+ *
+ */
+extern "C" PyObject*
+pythonModManClearModules(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodModManClearModules =
+{
+    "clearModules",
+    pythonModManClearModules,
+    METH_NOARGS,
+    "Clear all the modules"
+};
+
+/**
  * Python wrapper to export the workflow as a graphviz dot graph
  *
  * Call ModuleManager::exportWFGraphviz
@@ -164,6 +181,23 @@ static PyMethodDef pyMethodModManExportFacTreeGraphviz =
 // ----------------------------------------------------------------
 //     Dispatcher
 // ----------------------------------------------------------------
+
+/**
+ * @brief Python wrapper to unplug all the modules
+ *
+ * Call Dispatcher::resetWorkflow method
+ *
+ */
+extern "C" PyObject*
+pythonDispatchResetWorkflow(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodDispatchResetWorkflow =
+{
+    "resetWorkflow",
+    pythonDispatchResetWorkflow,
+    METH_NOARGS,
+    "Unbind all the workflow connexions. "
+};
 
 /**
  * @brief Python wrapper to bind ports

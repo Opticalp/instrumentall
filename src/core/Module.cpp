@@ -34,10 +34,11 @@
 
 #include "OutPort.h"
 
+#include "Poco/Exception.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/NumberParser.h"
 
-std::vector<std::string> Module::names;
+std::set<std::string> Module::names;
 Poco::RWLock Module::namesLock;
 
 void Module::notifyCreation()
@@ -49,8 +50,6 @@ void Module::notifyCreation()
 
 Module::~Module()
 {
-	// TODO: tasks?
-
     // notify parent factory
     if (mParent)
     {
@@ -59,9 +58,12 @@ Module::~Module()
         // notify module manager
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
     }
-}
 
-#include "Poco/Exception.h"
+    if (!mName.empty())
+        names.erase(mName);
+    if (!mInternalName.empty())
+        names.erase(mInternalName);
+}
 
 void Module::setInternalName(std::string internalName)
 {
@@ -71,7 +73,7 @@ void Module::setInternalName(std::string internalName)
     {
     case nameOk:
         mInternalName = internalName;
-        names.push_back(mInternalName);
+        names.insert(mInternalName);
         namesLock.unlock();
         return;
     case nameExists:
@@ -104,7 +106,7 @@ void Module::setCustomName(std::string customName)
     {
     case nameOk:
         mName = customName;
-        names.push_back(mName);
+        names.insert(mName);
         namesLock.unlock();
         return;
     case nameExists:
@@ -139,11 +141,9 @@ Module::NameStatus Module::checkName(std::string newName)
     if (!regex.match(newName))
         return nameBadSyntax;
 
-    // check existance
-    for (std::vector<std::string>::iterator it = names.begin(),
-            ite = names.end(); it != ite; it++)
-        if (it->compare(newName)==0)
-            return nameExists;
+    // check existence
+    if (names.count(newName))
+        return nameExists;
 
     return nameOk;
 }
@@ -154,15 +154,7 @@ void Module::freeInternalName()
     if (!name().empty())
         return;
 
-    for (std::vector<std::string>::reverse_iterator it = names.rbegin(),
-            ite = names.rend(); it != ite; it++ )
-    {
-        if (it->compare(internalName())==0)
-        {
-            names.erase((it+1).base());
-            return;
-        }
-    }
+    names.erase(internalName());
 }
 
 void Module::releaseProcessingMutex(bool force)

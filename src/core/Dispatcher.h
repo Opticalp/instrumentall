@@ -92,6 +92,13 @@ public:
      ///@}
 
      /**
+      * Un-plug all the connexions
+      *
+      * Assume that the workflow is not executing...
+      */
+     void resetWorkflow();
+
+     /**
       * Add the ports of a new Module
       *
       * append the new ports (input and output) to their respective lists:

@@ -124,6 +124,22 @@ extern "C" int pyModInit(ModMembers* self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
+PyObject* pyModDestroy(ModMembers* self)
+{
+    try
+    {
+        (**self->module)->destroy();
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
 PyObject* pyModParent(ModMembers* self)
 {
     Poco::SharedPtr<ModuleFactory*> factory;

@@ -207,6 +207,24 @@ pythonModManGetModules(PyObject *self, PyObject *args)
     return pyModules;
 }
 
+extern "C" PyObject*
+pythonModManClearModules(PyObject *self, PyObject *args)
+{
+    try
+    {
+        Poco::Util::Application::instance()
+                .getSubsystem<ModuleManager>()
+                .clearModules();
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
 PyObject* pythonModManExportWFGraphviz(PyObject* self, PyObject* args)
 {
     // convert arg to Poco::Path
@@ -275,6 +293,24 @@ PyObject* pythonModManExportFacTreeGraphviz(PyObject* self, PyObject* args)
 #include "PythonDataProxy.h"
 #include "PythonDataSource.h"
 #include "PythonDataTarget.h"
+
+extern "C" PyObject*
+pythonDispatchResetWorkflow(PyObject *self, PyObject *args)
+{
+    try
+    {
+        Poco::Util::Application::instance()
+            .getSubsystem<Dispatcher>()
+            .resetWorkflow();
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
 
 extern "C" PyObject*
 pythonDispatchBind(PyObject* self, PyObject* args)

@@ -52,6 +52,8 @@ public:
 
     virtual ~EmptyModule() { }
 
+    virtual void destroy() { }
+
     std::string description()
         { return "Replaces an expired module"; }
 };

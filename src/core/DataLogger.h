@@ -67,7 +67,7 @@ public:
         VerboseEntity("dataLogger." + implementationName) // startup logger name
         {   }
 
-    virtual ~DataLogger() { }
+    virtual ~DataLogger() { poco_information(logger(), "deleting " + name()); }
 
     /**
      * Lock the input and launch log()
