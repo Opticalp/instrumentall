@@ -26,6 +26,7 @@ environment:
 
 init:
 - env
+- if "%ARCH%"=="Win64" ( "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64 ) else ( "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 )
 - set POCO_INSTALL_PREFIX=%PROGRAMFILES%\Poco
 - set OPENCV_BASE_DIR=%PROGRAMFILES%
 - set OPENCV_DIR=%PROGRAMFILES%\opencv
