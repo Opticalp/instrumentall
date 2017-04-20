@@ -28,11 +28,18 @@ THE SOFTWARE.
 
 #ifdef HAVE_WXWIDGETS
 
+// wxWidgets includes
+// For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+
+#ifndef WX_PRECOMP
+    #include "wx/wx.h"
+#endif
+
 #include "GuiManager.h"
 
 #include "GUI/CustomWxApp.h"
 #include "GUI/TopFrame.h"
-#include "GUI/GuiProcessingUnit.h"
 
 /// @name Custom config keys
 ///@{

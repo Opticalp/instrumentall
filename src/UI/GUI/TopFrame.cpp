@@ -46,11 +46,11 @@
 //#include "wx/valtext.h" // validator
 #include "wx/statusbr.h"
 
+#include "TopFrame.h"
+
 #include "Poco/Exception.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/NumberParser.h"
-
-#include "TopFrame.h"
 
 wxDECLARE_EVENT(RefreshEvent, wxCommandEvent);
 wxDEFINE_EVENT(RefreshEvent, wxCommandEvent);
