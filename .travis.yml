@@ -21,6 +21,7 @@ before_install:
 #    - echo $LANG
 #    - echo $LC_ALL
     - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get update -qq && echo "linux platform"; fi
+    - if [ $TRAVIS_OS_NAME == linux ] && [ $CC = clang ]; then export CXXFLAGS="$CXXFLAGS -std=gnu++11"; fi
     - if [ $TRAVIS_OS_NAME == osx ]; then brew update && echo "osx platform"; fi
 
 install: ./CI/travis/install_dependencies.sh

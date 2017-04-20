@@ -37,12 +37,14 @@
 #include "DepPoco.h"
 #include "UI/python/DepPython.h"
 #include "DepOpenCv.h"
+#include "UI/GUI/DepWxWidgets.h"
 
 #include "UI/PythonManager.h"
 #include "Dispatcher.h"
 #include "ModuleManager.h"
 #include "DataManager.h"
 #include "ThreadManager.h"
+#include "UI/GuiManager.h"
 
 #include "version.h"
 #include "MainApplication.h"
@@ -69,6 +71,10 @@ MainApplication::MainApplication(): _helpRequested(false)
 #ifdef HAVE_PYTHON27
     deps.push_back(new DepPython);
     Application::instance().addSubsystem(new PythonManager);
+#endif
+#ifdef HAVE_WXWIDGETS
+    deps.push_back(new DepWxWidgets);
+    Application::instance().addSubsystem(new GuiManager);
 #endif
 }
 
@@ -227,6 +233,13 @@ int MainApplication::main(const std::vector<std::string>& args)
         if (myPy.requestFullControl())
         {
             return myPy.main(*this);
+        }
+#endif
+#ifdef HAVE_WXWIDGETS
+        else
+        {
+            GuiManager& myGui = getSubsystem<GuiManager>();
+            return myGui.main(*this);
         }
 #endif
     }

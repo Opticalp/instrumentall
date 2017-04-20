@@ -61,3 +61,14 @@ call 7z x opencv.exe -o"%OPENCV_BASE_DIR%"
 dir "%OPENCV_DIR%"
 echo OpenCV installed
 
+echo Install wxWidgets using curl 
+curl -fSL -o wxWidgets.7z -m 600 https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.0/wxWidgets-3.1.0.7z
+echo Downloading from github done. 
+call 7z x wxWidgets.7z -o%WXWIN%
+echo wxWidgets 3.0.2 downloaded and extracted. 
+cd %WXWIN%\build\msw\
+if "%Configuration%"=="Debug" (
+	nmake -f makefile.vc BUILD=debug SHARED=1
+) else (
+	nmake -f makefile.vc BUILD=release SHARED=1
+)
