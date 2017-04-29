@@ -1,4 +1,4 @@
-#Installation
+# Installation
 
 The installation can only be achieved via build (Jan., 2017). 
 
@@ -11,8 +11,9 @@ The installation can only be achieved via build (Jan., 2017).
 
 ## Dependencies
  * [Poco libs](http://pocoproject.org)
- * [Python 2.7](http://python.org) is the only available UI for the moment
+ * [Python 2.7](http://python.org) is the common CLI
  * [OpenCV](http://opencv.org) if you want to work with images
+ * [wxWidgets 3.x](https://www.wxwidgets.org) for the GUI elements
  
 ## Other tools
  * To render the graphs exported by *InstrumentAll*, a [DOT](http://www.graphviz.org/Documentation.php)-language interpreter is needed
