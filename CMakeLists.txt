@@ -95,7 +95,7 @@ endif ( NOT no-opencv )
 # find wxWidgets
 if ( NOT no-wxwidgets )
     # Note that for MinGW users the order of libs is important!
-    find_package(wxWidgets REQUIRED COMPONENTS xrc core base)
+    find_package(wxWidgets REQUIRED COMPONENTS adv xml html xrc core base)
 
     message ( STATUS "wxWidgets found: ${wxWidgets_LIBRARIES}")
     include(${wxWidgets_USE_FILE})
