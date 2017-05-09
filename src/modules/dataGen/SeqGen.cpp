@@ -122,7 +122,7 @@ void SeqGen::process(int startCond)
             getDataToWrite<Poco::Int64>(outPortData, pData);
 
             if (nextInd == seqSize-1)
-                pOutAttr->startSequence();
+                pOutAttr->endSequence();
 
             *pData = nextInd++;
 
