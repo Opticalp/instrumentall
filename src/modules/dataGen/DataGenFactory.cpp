@@ -27,7 +27,11 @@
  */
 
 #include "DataGenFactory.h"
+
 #include "TypedDataGenFactory.h"
+#include "modules/GenericLeafFactory.h"
+#include "SeqGen.h"
+
 #include "core/DataItem.h"
 
 std::vector<std::string> DataGenFactory::selectValueList()
@@ -40,10 +44,18 @@ std::vector<std::string> DataGenFactory::selectValueList()
         list.push_back(DataItem::dataTypeShortStr(outType | DataItem::contVector));
     }
 
+    list.push_back("seq");
+
     return list;
 }
 
 ModuleFactoryBranch* DataGenFactory::newChildFactory(std::string selector)
 {
-	return new TypedDataGenFactory(this, selector);
+    if (selector.compare("seq"))
+        return new TypedDataGenFactory(this, selector);
+    else
+        return new GenericLeafFactory<SeqGen>(
+                "SeqGenFactory",
+                "Build a sequence generator with possible endless sequence. ",
+                this, selector);
 }
