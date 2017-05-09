@@ -99,6 +99,50 @@ def myMain():
 
     print "Last seq value is: " + str(seqGen.outPorts()[0].getDataValue())
 
+    print "And now, testing the trigged version."
+
+    print "Creating a trigger source"    
+    trig = Factory("DataGenFactory").select("int64").create("trig")
+
+    print "Create a parameter setter to trig AND set the parameter seqSize simultaneously"
+    setter = seqGen.buildParameterSetter("seqSize")
+
+    print "Create module from leafSeqAccu factory"
+    accu = fac.select("leafSeqAccu").create("accu")
+    print "module " + accu.name + " created. "
+
+    print "Make the bindings"
+    bind(trig.outPort("data"),seqGen.inPort("trig"))
+
+    bind(mod3.outPorts()[0], accu.inPort("inPortA"))
+    seqBind(trig.outPort("data"), accu.inPort("inPortA"))
+    bind(trig.outPort("data"),DataTarget(setter))
+
+    print "Export the workflow: seqGenWorkflow.gv"
+    exportWorkflow("seqGenWorkflow.gv")
+
+    print "Set trig value to [3 6 2]"
+    print 'setParameterValue("value", 3)'
+    trig.setParameterValue("value", 3)
+    print 'setParameterValue("seqStart", 1)'
+    trig.setParameterValue("seqStart", 1)
+    print "runModule"
+    runModule(trig)
+    trig.setParameterValue("value", 6)
+    runModule(trig)
+    waitAll() # waitAll before any seqEnd
+
+    print "set seq end"
+    trig.setParameterValue("seqEnd", 1)
+    trig.setParameterValue("value", 2)
+
+    runModule(trig)
+    waitAll() 
+
+    print "seqAccu result is: " + str(accu.outPorts()[0].getDataValue())
+    if accu.outPorts()[0].getDataValue() != [2,5,1]:
+           raise RuntimeError("result should have been [2,5,1]")
+
     print "End of script seqGenTest.py"
     
 # main body    
