@@ -57,9 +57,14 @@ std::string GuiProperties::getStrParameterValue(size_t paramIndex)
 {
     if (guiProc == NULL)
     {
-        poco_warning(logger(), "trying to get a GUI value, "
-                "but the GUI is not loaded");
-        return "GUI not loaded";
+		guiProc = Poco::Util::Application::instance().getSubsystem<GuiManager>().getGuiProcUnit();
+
+        if (guiProc == NULL)
+        {
+            poco_warning(logger(), "trying to get a GUI value, "
+                    "but the GUI is not loaded");
+            return "GUI not loaded";
+        }
     }
 
     switch (paramIndex)
@@ -80,9 +85,14 @@ void GuiProperties::setStrParameterValue(size_t paramIndex, std::string value)
 {
     if (guiProc == NULL)
     {
-        poco_warning(logger(), "trying to set a GUI value, "
-                "but the GUI is not loaded");
-        return;
+		guiProc = Poco::Util::Application::instance().getSubsystem<GuiManager>().getGuiProcUnit();
+
+        if (guiProc == NULL)
+        {
+            poco_warning(logger(), "trying to get a GUI value, "
+                    "but the GUI is not loaded");
+            return;
+        }
     }
 
     switch (paramIndex)
