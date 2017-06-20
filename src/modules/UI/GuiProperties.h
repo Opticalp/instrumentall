@@ -57,7 +57,7 @@ private:
     enum params
     {
         paramStatusBar0,
-        paramStatusBar1,
+//        paramStatusBar1,
         paramTextCtrl,
         paramCnt
     };
