@@ -285,14 +285,14 @@ void GraphvizExportTool::exportDataProxyNode(std::ostream& out,
         DataProxy* proxy)
 {
     out << "    " << proxy->name() << " [shape=box, label=\"";
-    out << "data proxy: \n" << proxy->name() << "\"];" << std::endl;
+    out << "data proxy: \\n" << proxy->name() << "\"];" << std::endl;
 }
 
 void GraphvizExportTool::exportDataLoggerNode(std::ostream& out,
         DataLogger* logger)
 {
     out << "    " << logger->name() << " [shape=box, label=\"";
-    out << "data logger: \n" << logger->name() << "\"];" << std::endl;
+    out << "data logger: \\n" << logger->name() << "\"];" << std::endl;
 }
 
 void GraphvizExportTool::exportDuplicatedSourceNode(std::ostream& out,
