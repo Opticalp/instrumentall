@@ -207,7 +207,24 @@ Module* ModuleFactory::create(std::string customName)
         throw Poco::RuntimeException(name() + "::create()",
                 "ChildFact countRemain() is null! ");
     }
-    else if (countRemain())
+
+    {
+    	// check if a module already exists with this custom name here
+    	Poco::ScopedReadRWLock lock(childModLock);
+
+    	for (std::vector<Module*>::iterator it = childModules.begin(), ite = childModules.end();
+    			it != ite; it++)
+    	{
+    		if ((*it)->name() == customName)
+    		{
+    			poco_notice(logger(), "A module is already existing with the given name, "
+    					"using it. ");
+    			return *it;
+    		}
+    	}
+    }
+
+    if (countRemain())
     {
         Module* module(newChildModule(customName));
         childFactLock.writeLock();
