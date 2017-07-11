@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/control/DataShapingFactory.cpp
+ * @file	src/TypedUnstackArrayFactory.h
  * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */
@@ -26,21 +26,31 @@
  THE SOFTWARE.
  */
 
-#include "DataShapingFactory.h"
+#ifndef SRC_MODULES_CONTROL_TYPEDUNSTACKARRAYFACTORY_H_
+#define SRC_MODULES_CONTROL_TYPEDUNSTACKARRAYFACTORY_H_
 
-#include "UnstackArrayFactory.h"
+#include "core/ModuleFactoryBranch.h"
 
-std::vector<std::string> DataShapingFactory::selectValueList()
+/**
+ * TypedUnstackArrayFactory
+ *
+ * Child factory of UnstackArrayFactory
+ * The selector gives the type of te output.
+ */
+class TypedUnstackArrayFactory: public ModuleFactoryBranch
 {
-	std::vector<std::string> list;
-	list.push_back("unstack");
-	return list;
-}
+public:
+	TypedUnstackArrayFactory(ModuleFactory* parent, std::string selector):
+        ModuleFactoryBranch(parent, selector) { setLogger(name()); }
 
-ModuleFactoryBranch* DataShapingFactory::newChildFactory(std::string selector)
-{
-    if (selector.compare("unstack") == 0)
-        return new UnstackArrayFactory(this, selector);
-    else
-        return NULL;
-}
+    std::string name() { return getSelector() + "UnstackArrayFactory"; }
+    std::string description();
+
+    size_t countRemain() { return 1; }
+
+private:
+    Module* newChildModule(std::string customName);
+
+};
+
+#endif /* SRC_MODULES_CONTROL_TYPEDUNSTACKARRAYFACTORY_H_ */

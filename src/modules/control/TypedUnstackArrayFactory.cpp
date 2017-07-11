@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/control/DataShapingFactory.cpp
+ * @file	src/modules/control/TypedUnstackArrayFactory.cpp
  * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */
@@ -26,21 +26,23 @@
  THE SOFTWARE.
  */
 
-#include "DataShapingFactory.h"
+#include "TypedUnstackArrayFactory.h"
+#include "UnstackArray.h"
+#include "core/DataItem.h"
 
-#include "UnstackArrayFactory.h"
-
-std::vector<std::string> DataShapingFactory::selectValueList()
+std::string TypedUnstackArrayFactory::description()
 {
-	std::vector<std::string> list;
-	list.push_back("unstack");
-	return list;
+    std::string descr("Factory of unstacking array modules for array elements \nof ");
+
+    descr += DataItem::dataTypeStr(DataItem::getTypeFromShortStr(getSelector()));
+    descr += " data";
+
+    return descr;
 }
 
-ModuleFactoryBranch* DataShapingFactory::newChildFactory(std::string selector)
+Module* TypedUnstackArrayFactory::newChildModule(std::string customName)
 {
-    if (selector.compare("unstack") == 0)
-        return new UnstackArrayFactory(this, selector);
-    else
-        return NULL;
+	int datatype = DataItem::getTypeFromShortStr(getSelector());
+
+	return new UnstackArray(this, customName, datatype);
 }

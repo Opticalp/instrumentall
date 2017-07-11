@@ -39,7 +39,7 @@
 class UnstackArray: public Module
 {
 public:
-	UnstackArray(ModuleFactory* parent, std::string customName);
+	UnstackArray(ModuleFactory* parent, std::string customName, int dataType);
 
     std::string description()
     {

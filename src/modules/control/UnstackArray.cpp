@@ -32,7 +32,7 @@
 
 size_t UnstackArray::refCount = 0;
 
-UnstackArray::UnstackArray(ModuleFactory* parent, std::string customName):
+UnstackArray::UnstackArray(ModuleFactory* parent, std::string customName, int dataType):
 	Module(parent, customName)
 {
     setInternalName("UnstackArray" + Poco::NumberFormatter::format(refCount));

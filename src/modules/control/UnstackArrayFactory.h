@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/control/DataShapingFactory.cpp
+ * @file	src/modules/control/UnstackArrayFactory.h
  * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */
@@ -26,21 +26,35 @@
  THE SOFTWARE.
  */
 
-#include "DataShapingFactory.h"
+#ifndef SRC_MODULES_CONTROL_UNSTACKARRAYFACTORY_H_
+#define SRC_MODULES_CONTROL_UNSTACKARRAYFACTORY_H_
 
-#include "UnstackArrayFactory.h"
+#include "core/ModuleFactoryBranch.h"
 
-std::vector<std::string> DataShapingFactory::selectValueList()
+/**
+ * UnstackArrayFactory
+ *
+ * Select the data type of the array elements to be unstacked
+ */
+class UnstackArrayFactory: public ModuleFactoryBranch
 {
-	std::vector<std::string> list;
-	list.push_back("unstack");
-	return list;
-}
+public:
+	UnstackArrayFactory(ModuleFactory* parent, std::string selector):
+	        ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
 
-ModuleFactoryBranch* DataShapingFactory::newChildFactory(std::string selector)
-{
-    if (selector.compare("unstack") == 0)
-        return new UnstackArrayFactory(this, selector);
-    else
-        return NULL;
-}
+    std::string name() { return "UnstackArrayFactory"; }
+    std::string description()
+        { return "Module factory to transform an array "
+                "into a data sequence"; }
+
+    std::string selectDescription()
+        { return "Set the type of the array elements"; }
+
+    std::vector<std::string> selectValueList();
+
+private:
+    ModuleFactoryBranch* newChildFactory(std::string selector);
+
+};
+
+#endif /* SRC_MODULES_CONTROL_UNSTACKARRAYFACTORY_H_ */
