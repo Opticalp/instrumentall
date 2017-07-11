@@ -70,6 +70,7 @@ void UnstackArray::process(int startCond)
     }
 
     DataAttributeIn attr;
+    readLockInPort(arrayInPort);
     readInPortDataAttribute(arrayInPort, &attr);
 
     switch (DataItem::noContainerDataType(mDataType))
