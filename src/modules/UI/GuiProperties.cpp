@@ -44,7 +44,7 @@ GuiProperties::GuiProperties(ModuleFactory* parent, std::string customName):
     // parameters
     setParameterCount(paramCnt);
     addParameter(paramStatusBar0, "statusBar0", "statusBar, field #0", ParamItem::typeString);
-    addParameter(paramStatusBar1, "statusBar1", "statusBar, field #1", ParamItem::typeString);
+//    addParameter(paramStatusBar1, "statusBar1", "statusBar, field #1", ParamItem::typeString);
     addParameter(paramTextCtrl, "textCtrl", "main text control", ParamItem::typeString);
 
     // init wxWidgets share
@@ -57,17 +57,22 @@ std::string GuiProperties::getStrParameterValue(size_t paramIndex)
 {
     if (guiProc == NULL)
     {
-        poco_warning(logger(), "trying to get a GUI value, "
-                "but the GUI is not loaded");
-        return "GUI not loaded";
+		guiProc = Poco::Util::Application::instance().getSubsystem<GuiManager>().getGuiProcUnit();
+
+        if (guiProc == NULL)
+        {
+            poco_warning(logger(), "trying to get a GUI value, "
+                    "but the GUI is not loaded");
+            return "GUI not loaded";
+        }
     }
 
     switch (paramIndex)
     {
     case paramStatusBar0:
         return guiProc->getStatusBarTxt(0);
-    case paramStatusBar1:
-        return guiProc->getStatusBarTxt(1);
+    //case paramStatusBar1:
+    //    return guiProc->getStatusBarTxt(1);
     case paramTextCtrl:
         return guiProc->getTextCtrlTxt();
     default:
@@ -80,9 +85,14 @@ void GuiProperties::setStrParameterValue(size_t paramIndex, std::string value)
 {
     if (guiProc == NULL)
     {
-        poco_warning(logger(), "trying to set a GUI value, "
-                "but the GUI is not loaded");
-        return;
+		guiProc = Poco::Util::Application::instance().getSubsystem<GuiManager>().getGuiProcUnit();
+
+        if (guiProc == NULL)
+        {
+            poco_warning(logger(), "trying to get a GUI value, "
+                    "but the GUI is not loaded");
+            return;
+        }
     }
 
     switch (paramIndex)
@@ -90,9 +100,9 @@ void GuiProperties::setStrParameterValue(size_t paramIndex, std::string value)
     case paramStatusBar0:
         guiProc->setStatusBarTxt(value, 0);
         break;
-    case paramStatusBar1:
-        guiProc->setStatusBarTxt(value, 1);
-        break;
+    //case paramStatusBar1:
+    //    guiProc->setStatusBarTxt(value, 1);
+    //    break;
     case paramTextCtrl:
         guiProc->setTextCtrlTxt(value);
         break;

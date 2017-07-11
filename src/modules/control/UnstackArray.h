@@ -1,6 +1,6 @@
 /**
- * @file	src/modules/UI/GuiProperties.h
- * @date	Feb. 2017
+ * @file	src/modules/control/UnstackArray.h
+ * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,54 +26,57 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_UI_GUIPROPERTIES_H_
-#define SRC_MODULES_UI_GUIPROPERTIES_H_
-
-#ifdef HAVE_WXWIDGETS
+#ifndef SRC_MODULES_CONTROL_UNSTACKARRAY_H_
+#define SRC_MODULES_CONTROL_UNSTACKARRAY_H_
 
 #include "core/Module.h"
 
-class GuiProcessingUnit;
-
 /**
- * GuiProperties
- * 
- * Module to change data of the GUI via the workflow.
+ * UnstackArray
  *
- * @note Possible improvement: implement applyParameters to update
- * the GUI only once, even when multiple values changed.
+ * Transform an array into a data sequence. This module is a sequence source.
  */
-class GuiProperties: public Module
+class UnstackArray: public Module
 {
 public:
-    GuiProperties(ModuleFactory* parent, std::string customName);
+	UnstackArray(ModuleFactory* parent, std::string customName, int dataType);
 
-    std::string description()
-    {
-        return "Interfaces GUI data fields. ";
-    }
+    std::string description();
 
 private:
-    enum params
+    static size_t refCount; ///< reference counter to generate a unique internal name
+
+    /**
+     * Main logic
+     */
+    void process(int startCond);
+
+    /// Indexes of the input ports
+    enum inPorts
     {
-        paramStatusBar0,
-//        paramStatusBar1,
-        paramTextCtrl,
-        paramCnt
+        arrayInPort,
+        inPortCnt
     };
 
-//    Poco::Int64 getIntParameterValue(size_t paramIndex);
-//    double getFloatParameterValue(size_t paramIndex);
+    /// Indexes of the output ports
+    enum outPorts
+    {
+        dataOutPort,
+        outPortCnt
+    };
 
-    std::string getStrParameterValue(size_t paramIndex);
+    /**
+     * Send the input array, unstacked.
+     *
+     * Reserve the outport as much times as necessary,
+     * set the data, and notify the outport.
+     */
+    template <typename T>
+    void sendData(std::vector<T>& input, DataAttributeIn attr);
 
-//    void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
-//    void setFloatParameterValue(size_t paramIndex, double value);
-
-    void setStrParameterValue(size_t paramIndex, std::string value);
-
-    GuiProcessingUnit* guiProc;
+    int mDataType;
 };
 
-#endif /* HAVE_WXWIDGETS */
-#endif /* SRC_MODULES_UI_GUIPROPERTIES_H_ */
+#include "UnstackArray.ipp"
+
+#endif /* SRC_MODULES_CONTROL_UNSTACKARRAY_H_ */

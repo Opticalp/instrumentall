@@ -1,6 +1,6 @@
 /**
- * @file	src/modules/UI/GuiProperties.h
- * @date	Feb. 2017
+ * @file	src/modules/control/UnstackArrayFactory.h
+ * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,54 +26,35 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_UI_GUIPROPERTIES_H_
-#define SRC_MODULES_UI_GUIPROPERTIES_H_
+#ifndef SRC_MODULES_CONTROL_UNSTACKARRAYFACTORY_H_
+#define SRC_MODULES_CONTROL_UNSTACKARRAYFACTORY_H_
 
-#ifdef HAVE_WXWIDGETS
-
-#include "core/Module.h"
-
-class GuiProcessingUnit;
+#include "core/ModuleFactoryBranch.h"
 
 /**
- * GuiProperties
- * 
- * Module to change data of the GUI via the workflow.
+ * UnstackArrayFactory
  *
- * @note Possible improvement: implement applyParameters to update
- * the GUI only once, even when multiple values changed.
+ * Select the data type of the array elements to be unstacked
  */
-class GuiProperties: public Module
+class UnstackArrayFactory: public ModuleFactoryBranch
 {
 public:
-    GuiProperties(ModuleFactory* parent, std::string customName);
+	UnstackArrayFactory(ModuleFactory* parent, std::string selector):
+	        ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
 
+    std::string name() { return "UnstackArrayFactory"; }
     std::string description()
-    {
-        return "Interfaces GUI data fields. ";
-    }
+        { return "Module factory to transform an array "
+                "into a data sequence"; }
+
+    std::string selectDescription()
+        { return "Set the type of the array elements"; }
+
+    std::vector<std::string> selectValueList();
 
 private:
-    enum params
-    {
-        paramStatusBar0,
-//        paramStatusBar1,
-        paramTextCtrl,
-        paramCnt
-    };
+    ModuleFactoryBranch* newChildFactory(std::string selector);
 
-//    Poco::Int64 getIntParameterValue(size_t paramIndex);
-//    double getFloatParameterValue(size_t paramIndex);
-
-    std::string getStrParameterValue(size_t paramIndex);
-
-//    void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
-//    void setFloatParameterValue(size_t paramIndex, double value);
-
-    void setStrParameterValue(size_t paramIndex, std::string value);
-
-    GuiProcessingUnit* guiProc;
 };
 
-#endif /* HAVE_WXWIDGETS */
-#endif /* SRC_MODULES_UI_GUIPROPERTIES_H_ */
+#endif /* SRC_MODULES_CONTROL_UNSTACKARRAYFACTORY_H_ */

@@ -18,6 +18,8 @@ option (no-opencv
     "if specified, don't try to use the OpenCV libraries"    )
 option (no-wxwidgets
     "if specified, don't try to import the wxWidgets libraries to build the graphical interface"   )
+option (loop-gui-script
+    "if specified, the GUI script is executed over and over again (until failure or cancellation)" )
 
 # main sources
 # custom parameters
@@ -47,6 +49,10 @@ add_executable (
   )
   
 add_definitions ( -DCMAKE_VERSION="${CMAKE_VERSION}" -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER_ID}" )
+
+if (loop-gui-script)
+  add_definitions ( -DGUI_SCRIPT_LOOP ) 
+endif (loop-gui-script)
 
 if (MSVC)
   add_definitions ( -DNOMINMAX )

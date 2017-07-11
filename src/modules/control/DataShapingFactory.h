@@ -1,6 +1,6 @@
 /**
- * @file	src/modules/UI/GuiProperties.h
- * @date	Feb. 2017
+ * @file	src/modules/control/DataShapingFactory.h
+ * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */
 
@@ -26,54 +26,33 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_UI_GUIPROPERTIES_H_
-#define SRC_MODULES_UI_GUIPROPERTIES_H_
+#ifndef SRC_MODULES_CONTROL_DATASHAPINGFACTORY_H_
+#define SRC_MODULES_CONTROL_DATASHAPINGFACTORY_H_
 
-#ifdef HAVE_WXWIDGETS
-
-#include "core/Module.h"
-
-class GuiProcessingUnit;
+#include "core/ModuleFactoryBranch.h"
 
 /**
- * GuiProperties
- * 
- * Module to change data of the GUI via the workflow.
+ * DataShapingFactory
  *
- * @note Possible improvement: implement applyParameters to update
- * the GUI only once, even when multiple values changed.
+ * Module factory for the modules that manipulate the data
  */
-class GuiProperties: public Module
+class DataShapingFactory: public ModuleFactoryBranch
 {
 public:
-    GuiProperties(ModuleFactory* parent, std::string customName);
+	DataShapingFactory(ModuleFactory* parent, std::string selector):
+        ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
 
+    std::string name() { return "DataShapingFactory"; }
     std::string description()
-    {
-        return "Interfaces GUI data fields. ";
-    }
+        { return "Factory to create modules that manipulate the data"; }
+
+    std::string selectDescription()
+        { return "Select the operation to be applied to the data"; }
+
+    std::vector<std::string> selectValueList();
 
 private:
-    enum params
-    {
-        paramStatusBar0,
-//        paramStatusBar1,
-        paramTextCtrl,
-        paramCnt
-    };
-
-//    Poco::Int64 getIntParameterValue(size_t paramIndex);
-//    double getFloatParameterValue(size_t paramIndex);
-
-    std::string getStrParameterValue(size_t paramIndex);
-
-//    void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
-//    void setFloatParameterValue(size_t paramIndex, double value);
-
-    void setStrParameterValue(size_t paramIndex, std::string value);
-
-    GuiProcessingUnit* guiProc;
+    ModuleFactoryBranch* newChildFactory(std::string selector);
 };
 
-#endif /* HAVE_WXWIDGETS */
-#endif /* SRC_MODULES_UI_GUIPROPERTIES_H_ */
+#endif /* SRC_MODULES_CONTROL_DATASHAPINGFACTORY_H_ */
