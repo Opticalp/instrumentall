@@ -37,6 +37,8 @@
 #include "modules/fieldBus/FieldBusFactory.h"
 #include "modules/extern/ExternFactory.h"
 #include "modules/UI/UiFactory.h"
+#include "modules/control/ControlFactory.h"
+
 
 ModuleManager::ModuleManager():
 	VerboseEntity(name())
@@ -50,6 +52,7 @@ ModuleManager::ModuleManager():
     addFactory(new FieldBusFactory);
     addFactory(new ExternFactory);
     addFactory(new UiFactory);
+    addFactory(new ControlFactory);
 }
 
 ModuleManager::~ModuleManager()
