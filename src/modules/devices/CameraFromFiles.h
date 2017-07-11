@@ -48,7 +48,7 @@ public:
 
     std::string description()
     {
-        return "Fake camera providing images issued from the file system. ";
+        return "Fake camera providing images \nissued from the file system. ";
     }
 
 private:

@@ -81,9 +81,9 @@ PythonModule::PythonModule(ModuleFactory* parent, std::string customName):
 
 std::string PythonModule::description()
 {
-    return "Execute the given python script when all the input ports "
-            "are trigged. You should consider using a dataGen module "
-            "if you need to ouput data. The input ports are locked  "
+    return "Execute the given python script when all the input ports \n"
+            "are trigged. You should consider using a dataGen module \n"
+            "if you need to ouput data. The input ports are locked \n"
             "as long as the python script is executing. ";
 }
 
