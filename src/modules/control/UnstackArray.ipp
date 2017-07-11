@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/control/UnstackArray.h
+ * @file	src/modules/control/UnstackArray.ipp
  * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */
@@ -26,57 +26,46 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_CONTROL_UNSTACKARRAY_H_
-#define SRC_MODULES_CONTROL_UNSTACKARRAY_H_
+#include "UnstackArray.h"
 
-#include "core/Module.h"
-
-/**
- * UnstackArray
- *
- * Transform an array into a data sequence. This module is a sequence source.
- */
-class UnstackArray: public Module
+template <typename T>
+void UnstackArray::sendData(std::vector<T>& input, DataAttributeIn attr)
 {
-public:
-	UnstackArray(ModuleFactory* parent, std::string customName, int dataType);
+	DataAttributeOut attrOut(attr);
 
-    std::string description();
+	size_t inSize = input.size();
 
-private:
-    static size_t refCount; ///< reference counter to generate a unique internal name
+	if (inSize == 0)
+	{
+		poco_warning(logger(), "The input array is empty. "
+				"Can not send empty data");
+		return;
+	}
 
-    /**
-     * Main logic
-     */
-    void process(int startCond);
+    reserveOutPort(dataOutPort);
+    poco_information(logger(),"out port reserved");
 
-    /// Indexes of the input ports
-    enum inPorts
+    T* pData;
+    getDataToWrite<T>(dataOutPort, pData);
+	*pData = input[0];
+
+    if (inSize == 1)
     {
-        arrayInPort,
-        inPortCnt
-    };
+    	poco_information(logger(), "only one element to be sent. No sequence then. ");
+    	notifyOutPortReady(dataOutPort, attrOut);
+    	return;
+    }
 
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        dataOutPort,
-        outPortCnt
-    };
+	attrOut.startSequence();
+	for (size_t ind = 1; ind < inSize; ind++)
+	{
+    	notifyOutPortReady(dataOutPort, attrOut);
+    	attrOut++;
+        reserveOutPort(dataOutPort);
+        getDataToWrite<T>(dataOutPort, pData);
+    	*pData = input[ind];
+	}
 
-    /**
-     * Send the input array, unstacked.
-     *
-     * Reserve the outport as much times as necessary,
-     * set the data, and notify the outport.
-     */
-    template <typename T>
-    void sendData(std::vector<T>& input, DataAttributeIn attr);
-
-    int mDataType;
-};
-
-#include "UnstackArray.ipp"
-
-#endif /* SRC_MODULES_CONTROL_UNSTACKARRAY_H_ */
+	attrOut.endSequence();
+	notifyOutPortReady(dataOutPort, attrOut);
+}

@@ -33,11 +33,18 @@
 size_t UnstackArray::refCount = 0;
 
 UnstackArray::UnstackArray(ModuleFactory* parent, std::string customName, int dataType):
-	Module(parent, customName)
+	Module(parent, customName),
+	mDataType(dataType)
 {
     setInternalName("UnstackArray" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
     setLogger("module." + name());
+
+    setInPortCount(inPortCnt);
+    addInPort("array", "Array to be unstacked", mDataType | DataItem::contVector, arrayInPort);
+
+    setOutPortCount(outPortCnt);
+    addOutPort("elements", "Output the array elements in a sequence", mDataType, dataOutPort);
 
     notifyCreation();
 
@@ -45,6 +52,89 @@ UnstackArray::UnstackArray(ModuleFactory* parent, std::string customName, int da
     refCount++;
 }
 
+std::string UnstackArray::description()
+{
+	std::string descr = DataItem::dataTypeStr(mDataType);
+	descr += " array unstacking Module. \n"
+			"The lements of the input array are unstacked \n"
+			"and sent as a sequence to the output. ";
+	return descr;
+}
+
 void UnstackArray::process(int startCond)
 {
+    if (startCond == noDataStartState)
+    {
+        poco_information(logger(), name() + ": no input data. Exiting. ");
+        return;
+    }
+
+    DataAttributeIn attr;
+    readInPortDataAttribute(arrayInPort, &attr);
+
+    switch (DataItem::noContainerDataType(mDataType))
+    {
+    case DataItem::typeInt32:
+    {
+    	std::vector<Poco::Int32>* pData;
+    	readInPortData< std::vector<Poco::Int32> >(arrayInPort, pData);
+    	sendData<Poco::Int32>(*pData, attr);
+    	break;
+    }
+    case DataItem::typeUInt32:
+    {
+    	std::vector<Poco::UInt32>* pData;
+    	readInPortData< std::vector<Poco::UInt32> >(arrayInPort, pData);
+    	sendData<Poco::UInt32>(*pData, attr);
+    	break;
+    }
+    case DataItem::typeInt64:
+    {
+    	std::vector<Poco::Int64>* pData;
+    	readInPortData< std::vector<Poco::Int64> >(arrayInPort, pData);
+    	sendData<Poco::Int64>(*pData, attr);
+    	break;
+    }
+    case DataItem::typeUInt64:
+    {
+    	std::vector<Poco::UInt64>* pData;
+    	readInPortData< std::vector<Poco::UInt64> >(arrayInPort, pData);
+    	sendData<Poco::UInt64>(*pData, attr);
+    	break;
+    }
+
+#ifdef HAVE_OPENCV
+    case DataItem::typeCvMat:
+    {
+    	std::vector<cv::Mat>* pData;
+    	readInPortData< std::vector<cv::Mat> >(arrayInPort, pData);
+    	sendData<cv::Mat>(*pData, attr);
+    	break;
+    }
+#endif
+    case DataItem::typeFloat:
+    {
+    	std::vector<float>* pData;
+    	readInPortData< std::vector<float> >(arrayInPort, pData);
+    	sendData<float>(*pData, attr);
+    	break;
+    }
+    case DataItem::typeDblFloat:
+    {
+    	std::vector<double>* pData;
+    	readInPortData< std::vector<double> >(arrayInPort, pData);
+    	sendData<double>(*pData, attr);
+    	break;
+    }
+    case DataItem::typeString:
+    {
+    	std::vector<std::string>* pData;
+    	readInPortData< std::vector<std::string> >(arrayInPort, pData);
+    	sendData<std::string>(*pData, attr);
+    	break;
+    }
+    default:
+    	throw Poco::NotImplementedException("UnstackArray",
+    			"data type not supported");
+    }
 }
