@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/control/DataShapingFactory.cpp
+ * @file	src/modules/control/SeqAccumulator.ipp
  * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */
@@ -26,25 +26,46 @@
  THE SOFTWARE.
  */
 
-#include "DataShapingFactory.h"
+#include "SeqAccumulator.h"
 
-#include "UnstackArrayFactory.h"
-#include "SeqAccumulatorFactory.h"
-
-std::vector<std::string> DataShapingFactory::selectValueList()
+template <typename T>
+void SeqAccumulator::sendData(std::vector<T>& input, DataAttributeIn attr)
 {
-	std::vector<std::string> list;
-	list.push_back("unstack");
-	list.push_back("accu");
-	return list;
-}
+	DataAttributeOut attrOut(attr);
 
-ModuleFactoryBranch* DataShapingFactory::newChildFactory(std::string selector)
-{
-    if (selector.compare("unstack") == 0)
-        return new UnstackArrayFactory(this, selector);
-    if (selector.compare("accu") == 0)
-        return new SeqAccumulatorFactory(this, selector);
-    else
-        return NULL;
+	size_t inSize = input.size();
+
+	if (inSize == 0)
+	{
+		poco_warning(logger(), "The input array is empty. "
+				"Can not send empty data");
+		return;
+	}
+
+    reserveOutPort(dataOutPort);
+    poco_information(logger(),"out port reserved");
+
+    T* pData;
+    getDataToWrite<T>(dataOutPort, pData);
+	*pData = input[0];
+
+    if (inSize == 1)
+    {
+    	poco_information(logger(), "only one element to be sent. No sequence then. ");
+    	notifyOutPortReady(dataOutPort, attrOut);
+    	return;
+    }
+
+	attrOut.startSequence();
+	for (size_t ind = 1; ind < inSize; ind++)
+	{
+    	notifyOutPortReady(dataOutPort, attrOut);
+    	attrOut++;
+        reserveOutPort(dataOutPort);
+        getDataToWrite<T>(dataOutPort, pData);
+    	*pData = input[ind];
+	}
+
+	attrOut.endSequence();
+	notifyOutPortReady(dataOutPort, attrOut);
 }
