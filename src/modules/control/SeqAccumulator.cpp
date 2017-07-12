@@ -121,7 +121,7 @@ void SeqAccumulator::appendDataToStore()
     {
     	Poco::Int32* pData;
     	readInPortData<Poco::Int32>(dataInPort, pData);
-    	dataStore.getData< std::vector<Poco::UInt32> >()->push_back(*pData);
+    	dataStore.getData< std::vector<Poco::Int32> >()->push_back(*pData);
     	break;
     }
     case DataItem::typeUInt32:
@@ -187,7 +187,7 @@ void SeqAccumulator::clearStore()
     switch (DataItem::noContainerDataType(mDataType))
     {
     case DataItem::typeInt32:
-    	dataStore.getData< std::vector<Poco::UInt32> >()->clear();
+    	dataStore.getData< std::vector<Poco::Int32> >()->clear();
     	break;
     case DataItem::typeUInt32:
     	dataStore.getData< std::vector<Poco::UInt32> >()->clear();

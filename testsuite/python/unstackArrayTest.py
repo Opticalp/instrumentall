@@ -43,7 +43,7 @@ def myMain():
         vectGen.setParameterValue("value", value)
         
     fac = Factory("ControlFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
     print("Create the unstack module")
     spliter = fac.select("dataShaping").select("unstack").select("int32").create("spliter")
@@ -51,10 +51,10 @@ def myMain():
     print("bind")
     bind(vectGen.outPort("data"), spliter.inPort("array"))
 
-    print "Test the data sequence management, using the seqAccu module"
+    print("Test the data sequence management, using the seqAccu module")
     seqAccu = Factory("DemoRootFactory").select("branch").select("leafSeqAccu").create("seqAccu")
-    print "module " + seqAccu.name + " created. "
-    print "Binding the ports: data + data seq"
+    print("module " + seqAccu.name + " created. ")
+    print("Binding the ports: data + data seq")
     bind(spliter.outPort("elements"), seqAccu.inPorts()[0])
     seqBind(spliter.outPort("elements"), seqAccu.inPorts()[0])
 
@@ -63,8 +63,33 @@ def myMain():
     
     waitAll()
 
-    print "Return value is: " + str(seqAccu.outPorts()[0].getDataValue())
+    print("Return value is: " + str(seqAccu.outPorts()[0].getDataValue()))
     if ( seqAccu.outPorts()[0].getDataValue() != range(10) ):
+        raise RuntimeError("Wrong return value")
+
+    print("Replace the demo seqAccu module by the generic seqAccumulator")
+    print("Create the seqAccumulator module")
+    accuGen = fac.select("dataShaping").select("accu").select("int32").create("seqAccuGen")
+
+    print("unbind the previous connexions")
+    unbind(seqAccu.inPorts()[0])
+    seqUnbind(seqAccu.inPorts()[0])
+
+    print("bind the new module")
+    bind(spliter.outPort("elements"), accuGen.inPort("elements"))
+    seqBind(spliter.outPort("elements"), accuGen.inPort("elements"))
+
+    print("prepare the data buffer with range(10)")
+    for value in range(10):
+        vectGen.setParameterValue("value", value)
+        
+    print("Run")
+    runModule(vectGen)
+    
+    waitAll()
+
+    print("Return value is: " + str(accuGen.outPort("array").getDataValue()))
+    if ( accuGen.outPort("array").getDataValue() != range(10) ):
         raise RuntimeError("Wrong return value")
 
     print "End of script unstackArrayTest.py"
