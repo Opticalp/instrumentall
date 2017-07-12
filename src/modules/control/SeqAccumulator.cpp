@@ -34,17 +34,19 @@ size_t SeqAccumulator::refCount = 0;
 
 SeqAccumulator::SeqAccumulator(ModuleFactory* parent, std::string customName, int dataType):
 	Module(parent, customName),
-	mDataType(dataType)
+	mDataType(dataType),
+	dataStore(dataType | DataItem::contVector),
+	seqIndex(0)
 {
     setInternalName("SeqAccumulator" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
     setLogger("module." + name());
 
     setInPortCount(inPortCnt);
-    addInPort("array", "Array to be unstacked", mDataType | DataItem::contVector, arrayInPort);
+    addInPort("elements", "seq data to be accumulated", mDataType, dataInPort);
 
     setOutPortCount(outPortCnt);
-    addOutPort("elements", "Output the array elements in a sequence", mDataType, dataOutPort);
+    addOutPort("array", "Output the array of elements of one sequence", mDataType | DataItem::contVector, arrayOutPort);
 
     notifyCreation();
 
@@ -55,9 +57,9 @@ SeqAccumulator::SeqAccumulator(ModuleFactory* parent, std::string customName, in
 std::string SeqAccumulator::description()
 {
 	std::string descr = DataItem::dataTypeStr(mDataType);
-	descr += " array unstacking Module. \n"
-			"The lements of the input array are unstacked \n"
-			"and sent as a sequence to the output. ";
+	descr += " data sequence accumulator Module. \n"
+			"The elements of the input sequence are stacked \n"
+			"and sent as an array to the output. ";
 	return descr;
 }
 
@@ -70,37 +72,183 @@ void SeqAccumulator::process(int startCond)
     }
 
     DataAttributeIn attr;
-    readLockInPort(arrayInPort);
-    readInPortDataAttribute(arrayInPort, &attr);
+    readLockInPort(dataInPort);
+    readInPortDataAttribute(dataInPort, &attr);
 
+    bool end = false;
+
+    if (attr.isStartSequence(seqIndex))
+    {
+        poco_information(logger(), name() + ": sequence starting");
+        clearStore();
+    }
+
+    if (attr.isInSequence(seqIndex))
+    {
+        if (attr.isEndSequence(seqIndex))
+        {
+        	poco_information(logger(), name() + ": sequence ending");
+        	end = true;
+        }
+//        else
+//        {
+//            keepParamLocked(); // not requested here since there is no parameter
+//        }
+    }
+    else
+        end = true; // send a 1-element array
+
+    appendDataToStore();
+
+    releaseInPort(dataInPort);
+
+    if (end)
+    {
+        DataAttributeOut outAttr = attr;
+
+        reserveOutPort(arrayOutPort);
+        writeOutData();
+
+        notifyOutPortReady(arrayOutPort, outAttr);
+    }
+}
+
+void SeqAccumulator::appendDataToStore()
+{
+    switch (DataItem::noContainerDataType(mDataType))
+    {
+    case DataItem::typeInt32:
+    {
+    	Poco::Int32* pData;
+    	readInPortData<Poco::Int32>(dataInPort, pData);
+    	dataStore.getData< std::vector<Poco::UInt32> >()->push_back(*pData);
+    	break;
+    }
+    case DataItem::typeUInt32:
+    {
+    	Poco::UInt32* pData;
+    	readInPortData<Poco::UInt32>(dataInPort, pData);
+    	dataStore.getData< std::vector<Poco::UInt32> >()->push_back(*pData);
+    	break;
+    }
+    case DataItem::typeInt64:
+    {
+    	Poco::Int64* pData;
+    	readInPortData<Poco::Int64>(dataInPort, pData);
+    	dataStore.getData< std::vector<Poco::Int64> >()->push_back(*pData);
+    	break;
+    }
+    case DataItem::typeUInt64:
+    {
+    	Poco::UInt64* pData;
+    	readInPortData<Poco::UInt64>(dataInPort, pData);
+    	dataStore.getData< std::vector<Poco::UInt64> >()->push_back(*pData);
+    	break;
+    }
+
+#ifdef HAVE_OPENCV
+    case DataItem::typeCvMat:
+    {
+    	cv::Mat* pData;
+    	readInPortData<cv::Mat>(dataInPort, pData);
+    	dataStore.getData< std::vector<cv::Mat> >()->push_back(*pData);
+    	break;
+    }
+#endif
+    case DataItem::typeFloat:
+    {
+    	float* pData;
+    	readInPortData<float>(dataInPort, pData);
+    	dataStore.getData< std::vector<float> >()->push_back(*pData);
+    	break;
+    }
+    case DataItem::typeDblFloat:
+    {
+    	double* pData;
+    	readInPortData<double>(dataInPort, pData);
+    	dataStore.getData< std::vector<double> >()->push_back(*pData);
+    	break;
+    }
+    case DataItem::typeString:
+    {
+    	std::string* pData;
+    	readInPortData<std::string>(dataInPort, pData);
+    	dataStore.getData< std::vector<std::string> >()->push_back(*pData);
+    	break;
+    }
+    default:
+    	throw Poco::NotImplementedException("SeqAccumulator",
+    			"data type not supported");
+    }
+}
+
+void SeqAccumulator::clearStore()
+{
+    switch (DataItem::noContainerDataType(mDataType))
+    {
+    case DataItem::typeInt32:
+    	dataStore.getData< std::vector<Poco::UInt32> >()->clear();
+    	break;
+    case DataItem::typeUInt32:
+    	dataStore.getData< std::vector<Poco::UInt32> >()->clear();
+    	break;
+    case DataItem::typeInt64:
+    	dataStore.getData< std::vector<Poco::Int64> >()->clear();
+    	break;
+    case DataItem::typeUInt64:
+    	dataStore.getData< std::vector<Poco::UInt64> >()->clear();
+    	break;
+
+#ifdef HAVE_OPENCV
+    case DataItem::typeCvMat:
+    	dataStore.getData< std::vector<cv::Mat> >()->clear();
+    	break;
+#endif
+    case DataItem::typeFloat:
+    	dataStore.getData< std::vector<float> >()->clear();
+    	break;
+    case DataItem::typeDblFloat:
+    	dataStore.getData< std::vector<double> >()->clear();
+    	break;
+    case DataItem::typeString:
+    	dataStore.getData< std::vector<std::string> >()->clear();
+    	break;
+    default:
+    	throw Poco::NotImplementedException("SeqAccumulator",
+    			"data type not supported");
+    }
+}
+
+void SeqAccumulator::writeOutData()
+{
     switch (DataItem::noContainerDataType(mDataType))
     {
     case DataItem::typeInt32:
     {
     	std::vector<Poco::Int32>* pData;
-    	readInPortData< std::vector<Poco::Int32> >(arrayInPort, pData);
-    	sendData<Poco::Int32>(*pData, attr);
+    	getDataToWrite< std::vector<Poco::Int32> >(arrayOutPort, pData);
+    	*pData = std::vector<Poco::Int32>(*dataStore.getData< std::vector<Poco::Int32> >());
     	break;
     }
     case DataItem::typeUInt32:
     {
     	std::vector<Poco::UInt32>* pData;
-    	readInPortData< std::vector<Poco::UInt32> >(arrayInPort, pData);
-    	sendData<Poco::UInt32>(*pData, attr);
+    	getDataToWrite< std::vector<Poco::UInt32> >(arrayOutPort, pData);
+    	*pData = std::vector<Poco::UInt32>(*dataStore.getData< std::vector<Poco::UInt32> >());
     	break;
     }
     case DataItem::typeInt64:
     {
     	std::vector<Poco::Int64>* pData;
-    	readInPortData< std::vector<Poco::Int64> >(arrayInPort, pData);
-    	sendData<Poco::Int64>(*pData, attr);
+    	getDataToWrite< std::vector<Poco::Int64> >(arrayOutPort, pData);
+    	*pData = std::vector<Poco::Int64>(*dataStore.getData< std::vector<Poco::Int64> >());
     	break;
     }
     case DataItem::typeUInt64:
     {
     	std::vector<Poco::UInt64>* pData;
-    	readInPortData< std::vector<Poco::UInt64> >(arrayInPort, pData);
-    	sendData<Poco::UInt64>(*pData, attr);
+    	getDataToWrite< std::vector<Poco::UInt64> >(arrayOutPort, pData);
+    	*pData = std::vector<Poco::UInt64>(*dataStore.getData< std::vector<Poco::UInt64> >());
     	break;
     }
 
@@ -108,34 +256,40 @@ void SeqAccumulator::process(int startCond)
     case DataItem::typeCvMat:
     {
     	std::vector<cv::Mat>* pData;
-    	readInPortData< std::vector<cv::Mat> >(arrayInPort, pData);
-    	sendData<cv::Mat>(*pData, attr);
+    	getDataToWrite< std::vector<cv::Mat> >(arrayOutPort, pData);
+    	*pData = std::vector<cv::Mat>(*dataStore.getData< std::vector<cv::Mat> >());
     	break;
     }
 #endif
     case DataItem::typeFloat:
     {
     	std::vector<float>* pData;
-    	readInPortData< std::vector<float> >(arrayInPort, pData);
-    	sendData<float>(*pData, attr);
+    	getDataToWrite< std::vector<float> >(arrayOutPort, pData);
+    	*pData = std::vector<float>(*dataStore.getData< std::vector<float> >());
     	break;
     }
     case DataItem::typeDblFloat:
     {
     	std::vector<double>* pData;
-    	readInPortData< std::vector<double> >(arrayInPort, pData);
-    	sendData<double>(*pData, attr);
+    	getDataToWrite< std::vector<double> >(arrayOutPort, pData);
+    	*pData = std::vector<double>(*dataStore.getData< std::vector<double> >());
     	break;
     }
     case DataItem::typeString:
     {
     	std::vector<std::string>* pData;
-    	readInPortData< std::vector<std::string> >(arrayInPort, pData);
-    	sendData<std::string>(*pData, attr);
+    	getDataToWrite< std::vector<std::string> >(arrayOutPort, pData);
+    	*pData = std::vector<std::string>(*dataStore.getData< std::vector<std::string> >());
     	break;
     }
     default:
     	throw Poco::NotImplementedException("SeqAccumulator",
     			"data type not supported");
     }
+}
+
+void SeqAccumulator::reset()
+{
+	clearStore();
+	seqIndex = 0;
 }

@@ -31,6 +31,8 @@
 
 #include "core/Module.h"
 
+#include "core/TypeNeutralData.h"
+
 /**
  * SeqAccumulator
  *
@@ -51,19 +53,44 @@ private:
      */
     void process(int startCond);
 
+    /**
+     * Add an element to the store
+     *
+     * use the reserved input port
+     */
+    void appendDataToStore();
+
+    /**
+     * Clear the vector contained in dataStore
+     */
+    void clearStore();
+
+    void writeOutData();
+
+    bool seqRunning()
+    {
+    	poco_information(logger(), name() + " seqRunning request");
+    	return seqIndex != 0;
+    }
+
+    void reset();
+
     /// Indexes of the input ports
     enum inPorts
     {
-        arrayInPort,
+        dataInPort,
         inPortCnt
     };
 
     /// Indexes of the output ports
     enum outPorts
     {
-        dataOutPort,
+        arrayOutPort,
         outPortCnt
     };
+
+    size_t seqIndex;
+    TypeNeutralData dataStore; ///< array to accumulate the seq data
 
     /**
      * Send the input array, unstacked.
@@ -76,7 +103,5 @@ private:
 
     int mDataType;
 };
-
-#include "SeqAccumulator.ipp"
 
 #endif /* SRC_MODULES_CONTROL_SEQACCUMULATOR_H_ */
