@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/control/DataShapingFactory.cpp
+ * @file	src/modules/control/SeqAccumulatorFactory.cpp
  * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */
@@ -26,25 +26,23 @@
  THE SOFTWARE.
  */
 
-#include "DataShapingFactory.h"
-
-#include "UnstackArrayFactory.h"
 #include "SeqAccumulatorFactory.h"
 
-std::vector<std::string> DataShapingFactory::selectValueList()
+#include "TypedSeqAccumulatorFactory.h"
+
+std::vector<std::string> SeqAccumulatorFactory::selectValueList()
 {
-	std::vector<std::string> list;
-	list.push_back("unstack");
-	list.push_back("accu");
-	return list;
+    std::vector<std::string> list;
+
+    for (int outType = DataItem::typeUndefined + 1; outType < DataItem::typeCnt; outType++)
+    {
+        list.push_back(DataItem::dataTypeShortStr(outType));
+    }
+
+    return list;
 }
 
-ModuleFactoryBranch* DataShapingFactory::newChildFactory(std::string selector)
+ModuleFactoryBranch* SeqAccumulatorFactory::newChildFactory(std::string selector)
 {
-    if (selector.compare("unstack") == 0)
-        return new UnstackArrayFactory(this, selector);
-    if (selector.compare("accu") == 0)
-        return new SeqAccumulatorFactory(this, selector);
-    else
-        return NULL;
+    return new TypedSeqAccumulatorFactory(this, selector);
 }

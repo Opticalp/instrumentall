@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/control/DataShapingFactory.cpp
+ * @file	src/modules/control/SeqAccumulatorFactory.h
  * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */
@@ -26,25 +26,35 @@
  THE SOFTWARE.
  */
 
-#include "DataShapingFactory.h"
+#ifndef SRC_MODULES_CONTROL_SEQACCUMULATORFACTORY_H_
+#define SRC_MODULES_CONTROL_SEQACCUMULATORFACTORY_H_
 
-#include "UnstackArrayFactory.h"
-#include "SeqAccumulatorFactory.h"
+#include "core/ModuleFactoryBranch.h"
 
-std::vector<std::string> DataShapingFactory::selectValueList()
+/**
+ * SeqAccumulatorFactory
+ *
+ * Select the data type of the array elements to be accumulated/stacked
+ */
+class SeqAccumulatorFactory: public ModuleFactoryBranch
 {
-	std::vector<std::string> list;
-	list.push_back("unstack");
-	list.push_back("accu");
-	return list;
-}
+public:
+	SeqAccumulatorFactory(ModuleFactory* parent, std::string selector):
+	        ModuleFactoryBranch(parent, selector, false) { setLogger(name()); }
 
-ModuleFactoryBranch* DataShapingFactory::newChildFactory(std::string selector)
-{
-    if (selector.compare("unstack") == 0)
-        return new UnstackArrayFactory(this, selector);
-    if (selector.compare("accu") == 0)
-        return new SeqAccumulatorFactory(this, selector);
-    else
-        return NULL;
-}
+    std::string name() { return "SeqAccumulatorFactory"; }
+    std::string description()
+        { return "Module factory to transform a data sequence "
+                "into an array"; }
+
+    std::string selectDescription()
+        { return "Set the input elements type"; }
+
+    std::vector<std::string> selectValueList();
+
+private:
+    ModuleFactoryBranch* newChildFactory(std::string selector);
+
+};
+
+#endif /* SRC_MODULES_CONTROL_SEQACCUMULATORFACTORY_H_ */
