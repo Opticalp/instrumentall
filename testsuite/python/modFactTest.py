@@ -52,6 +52,12 @@ def myMain():
     print "Create module from leaf factory"
     fac.select("branch").select("leaf").create()
     
+    print "Create module 'myMod' from leaf factory"
+    fac.select("branch").select("leaf").create("myMod")
+
+    print "Create module 'myMod' from leaf factory (once again)"
+    fac.select("branch").select("leaf").create("myMod")
+
     if (fac.countRemain()>0):
         print "Creating module from " + fac.name + " without arg" 
         mod = fac.create()
@@ -63,10 +69,11 @@ def myMain():
         mod = fac.create("mojo")
         print "  module " + mod.name + " created. "
     
-    if (fac.countRemain()>0):
-        print "Trying to create a module from " + fac.name + ' with arg: "mojo"'
+    fac2 = fac.select("branch").select("leafParam")
+    if (fac2.countRemain()>0):
+        print "Trying to create a module from " + fac2.name + ' with arg: "mojo"'
         try:  
-            fac.create("mojo")
+            fac2.create("mojo")
         except RuntimeError:
             print "Error caught. OK. Duplicate name. "
         else:
