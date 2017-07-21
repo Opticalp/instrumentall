@@ -49,7 +49,7 @@ bool CustomWxApp::OnInit()
     Poco::Path rcDir(
             Poco::Util::Application::instance()
                 .config()
-                .getString("system.currentDir")  );
+                .getString("application.dir")  );
 
     // with poco >= 1.4.6, the 2 following lines can be merged
     rcDir.pushDirectory("conf");
