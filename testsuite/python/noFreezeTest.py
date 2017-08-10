@@ -33,6 +33,9 @@ def myMain():
     
     print("Test the watchdog disabling. ")
     
+    print("stopping the watch dog")
+    stopWatchDog()
+    
     fac = Factory("DemoRootFactory")
     print("Using DemoRootFactory. ")
     

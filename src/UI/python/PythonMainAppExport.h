@@ -327,6 +327,24 @@ static PyMethodDef pyMethodThreadManCancelAll =
     "Cancel all the tasks, running or pending. "
 };
 
+
+/**
+ * @brief Python wrapper to stop the watch dog
+ *
+ * Call ThreadManager::stopWatchDog() method
+ *
+ */
+extern "C" PyObject*
+pythonThreadManStopWatchDog(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodThreadManStopWatchDog =
+{
+    "stopWatchDog",
+    pythonThreadManStopWatchDog,
+    METH_NOARGS,
+    "Disable the watch dog that checks if a module is frozen. "
+};
+
 // ----------------------------------------------------------------
 //     Data Manager
 // ----------------------------------------------------------------

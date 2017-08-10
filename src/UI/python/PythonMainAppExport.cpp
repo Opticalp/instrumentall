@@ -591,6 +591,16 @@ pythonThreadManCancelAll(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+PyObject* pythonThreadManStopWatchDog(PyObject* self, PyObject* args)
+{
+    Poco::Util::Application::instance()
+            .getSubsystem<ThreadManager>()
+            .stopWatchDog();
+
+    Py_RETURN_NONE;
+}
+
+
 #include "core/DataManager.h"
 
 extern "C" PyObject*
