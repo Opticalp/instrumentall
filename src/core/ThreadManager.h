@@ -183,6 +183,8 @@ public:
      */
     void startWatchDog();
 
+    void stopWatchDog() { watchDog.stop(); }
+
     /**
      * @param init true does not run the check. just init the function.
      * @return true if the task list remains the same and its size is non-null

@@ -85,6 +85,8 @@ static PyMethodDef EmbMethods[] =
     pyMethodThreadManWaitAll,
     pyMethodThreadManCancelAll,
 
+    pyMethodThreadManStopWatchDog,
+
     // data manager
     pyMethodDataManDataLoggerClasses,
     pyMethodDataManRemoveDataLogger,

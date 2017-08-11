@@ -118,7 +118,7 @@ void ThreadManager::initialize(Poco::Util::Application& app)
 void ThreadManager::uninitialize()
 {
     poco_information(logger(), "ThreadManager::uninitializing...");
-    watchDog.stop();
+    stopWatchDog();
     poco_information(logger(), "ThreadManager::uninitialized.");
 }
 
