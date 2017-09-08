@@ -34,6 +34,12 @@ else ( NOT PYTHONLIBS_FOUND )
     file (MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python)
     file (MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/embed)
     file (MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/scripts)
+
+	# copy the embedded tools
+	file (
+	  COPY "${PROJECT_SOURCE_DIR}/runtimeEnv/python/embed/instruTools.py"
+	  DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/embed/
+	  )
     
     # python tests
     file (

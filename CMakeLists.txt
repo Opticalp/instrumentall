@@ -186,3 +186,15 @@ else (UNIX)
 #        COMMAND $<TARGET_FILE:instrumentall> /config-file=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test.properties
 #        )
 endif (UNIX)
+
+# install directives
+install ( TARGETS instrumentall DESTINATION . )
+install ( DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/conf/
+          DESTINATION conf
+          FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+          DIRECTORY_PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+#install ( FILES testsuite/resources/uEye.ini DESTINATION conf ) 
+
+#install ( DIRECTORY runtimeEnv/guiscripts/ DESTINATION python/scripts )
+#install ( DIRECTORY runtimeEnv/initscripts/ DESTINATION python/scripts )
+install ( DIRECTORY runtimeEnv/python/embed/ DESTINATION python/embed )

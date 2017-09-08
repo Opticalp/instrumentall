@@ -27,6 +27,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import instruTools
 
 def myMain():
     """Main function. Run the tests. """
@@ -39,6 +40,8 @@ def myMain():
     print "Create module from floatDataGen factory"
     mod1 = fac.select("float").create("floatGenerator")
     print "module " + mod1.name + " created (" + mod1.internalName + ") "
+
+    instruTools.printModuleDetails(mod1)
     
     print "Set output value to 3.14"
     mod1.setParameterValue("value", 3.14)

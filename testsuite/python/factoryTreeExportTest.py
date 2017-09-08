@@ -28,6 +28,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import instruTools
 
 def myMain():
     """Main function. Create the factories, and export the corresponding graph. """
@@ -38,27 +39,12 @@ def myMain():
     factories = getRootFactories()
     for fac in factories:
         print " - " + fac.name
-        discoverUntilLeaves(fac)
+        instruTools.discoverUntilLeaves(fac,"   ")
     
     print "Export factories tree to fullFacTree.gv"
     exportFactoriesTree("fullFacTree.gv")
             
     print "End of script factoryTreeExportTest.py"
-
-
-
-def discoverUntilLeaves(factory):
-    """Descend into the child factories of the given factory until the leaves are reached. """
-
-    if factory.isLeaf():
-        return
-    
-    selectors = factory.selectValueList()
-    for sel in selectors:
-        if sel: # sel is not an empty string: empty string means free selector
-            discoverUntilLeaves(factory.select(sel))
-
-
     
 # main body    
 import sys
