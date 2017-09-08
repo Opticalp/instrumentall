@@ -8,20 +8,19 @@
 #   
 # @file   python/embed/instruTools.py
 # @brief  General python tools for InstrumentAll
-# @date   14/06/2017
-# @author PhRG - kevin GARDETTE
+# @date   07/01/2015
+# @author PhRG - Kevin GARDETTE
 #
 
 """
-Created on june 14 2017
-
 General python tools for InstrumentAll
 
+@date: Jan 2015
 @author: PhRG - KG
 """
 
 #
-# Copyright (c) 2017 kevin GARDETTE / HEF
+# Copyright (c) 2015 Ph. Renaud-Goud / Opticalp and contributors
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -54,9 +53,9 @@ from instru import *
 # general information 
 def generalInfo():
     """Display the general information of instrumentall"""
-    
-    print about()
-    print "instrumentall version: " + version()
+    print("\nInstrumentAll is: " + sys.argv[0] + "\n")
+    print("Version: " + version() + "\n")
+    print("About InstrumentAll: \n" + about())
 
 # call to createFactories()
 def discoverUntilLeaves(factory):
