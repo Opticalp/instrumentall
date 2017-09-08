@@ -32,11 +32,8 @@ def myMain():
     """Main function. Run the tests. """
     
     print "Basic Python scripting test. "
-    
-    print about()
-    print "instrumentall version: " + version()
-    
-    
+    import instruTools
+    instruTools.generalInfo()
     
 # main body    
 import sys

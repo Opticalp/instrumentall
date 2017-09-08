@@ -27,17 +27,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import instruTools
 
 def myMain():
     """Main function. Run the tests. """
     
     print "Test the basic features of the module factories. "
-    
-    facList = getRootFactories()
-    
-    print "Available factories: "
-    for fac in facList:
-        print " - " + fac.name + ": " + fac.description
+
+    instruTools.printRootFactories()
     
     fac = Factory("DemoRootFactory")
     print "Using DemoRootFactory. "
