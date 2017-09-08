@@ -50,87 +50,71 @@ import sys
 import os
 from instru import *
 
-# general information 
 def generalInfo():
     """Display the general information of instrumentall"""
+    
     print("\nInstrumentAll is: " + sys.argv[0] + "\n")
-    print("Version: " + version() + "\n")
-    print("About InstrumentAll: \n" + about())
+    # print("Version: " + version() + "\n")
+    print(about())
 
-# call to createFactories()
-def discoverUntilLeaves(factory):
+def printRootFactories():
+    """Display the root factories with their description"""
+    
+    roots = getRootFactories()
+    print("The root factories are: ")
+    for fact in roots:
+        print(" - " + fact.name + ": " + fact.description)
+
+def discoverUntilLeaves(factory, prefix=""):
     """Descend into the child factories of the given factory until the leaves are reached. """
+    
+    print(prefix + "Descending into " + factory.name)
 
     if factory.isLeaf():
+        print(prefix + factory.name + " is a leaf.")
         return
     
     selectors = factory.selectValueList()
     for sel in selectors:
         if sel: # sel is not an empty string: empty string means free selector
-            print "discovering with selector: " + sel
-            discoverUntilLeaves(factory.select(sel))
+            print(prefix + "discovering with selector: " + sel)
+            discoverUntilLeaves(factory.select(sel), prefix + "  ")
+        else:
+            print(prefix + "free selector: " + factory.selectDescription())    
 
-## Create all the possible factories, then export.
-def createFactories():
-    """Main function. Create the factories, and export the corresponding graph. """
-   
-    print "Test the factory tree export graph feature"
-
-    print "Retrieve and explore each root factories: "
-    factories = getRootFactories()
-    for fac in factories:
-        print " - " + fac.name
-        discoverUntilLeaves(fac)
+def printModuleDetails(module):
+    """Display all the details of the given module: input ports, output ports and parameters"""
     
-    print "Export factories tree to fullFacTree.gv"
-    exportFactoriesTree("fullFacTree.gv")
-            
-    print "End of script factoryTreeExportTest.py"
+    print("name(internal name): " + module.name + "(" + module.internalName + ")")
+    print(module.description)
+    printOutPorts(module)
+    printInPorts(module)
+    printParameters(module)
 
-## Print the root factories with the description
-def printRootFactories():
-    """Display the root factories with the description"""
-    roots = getRootFactories()
-    for fact in roots:
-        print fact.name + ": " + fact.description
-
-## print information you have after create
 def printInPorts(module):
-    """Display the InPort of the module"""
+    """Display the input ports information of the given module"""
     
-    print " \n Print in port"
+    print(module.name + " input ports information: \n")
     inPorts = module.inPorts()
     for port in inPorts:
         print port.name + ": " + port.description
 
 def printOutPorts(module):
-    """Display the OutPort of the module"""
-    
-    print " \n Print out port"
+    """Display the output ports information of the given module"""
+          
+    print(module.name + " output ports information: \n")
     outPorts = module.outPorts()
     for port in outPorts:
         print port.name + ": " + port.description
 
 def printParameters(module):
-    """Display the module parameter and its value"""
-    
-    print " \n Print parameters "
+    """Display the module parameters and their value"""
+          
+    print(module.name + " parameters information: \n")
     params = module.getParameterSet()
-    #for param in params:
-    #    print "param index: " + str(param['index']) + " > " + param['name'] + "(" + param['descr'] + ")"
     for param in params:
         value = module.getParameterValue(param["name"])
         if not isinstance(value, basestring):
             value = str(value)
         print ( " - " + param["name"] + ": " + param["descr"] +
                 " ; value = " + value )
-
-def printModuleDetails(module):
-    """Display all details of module: InPort; OutPort and Parameter"""
-    
-    print " Module name: " + module.name
-    print " Module internal name: " + module.internalName
-    print " Module description: " + module.description
-    printOutPorts(module)
-    printInPorts(module)
-    printParameters(module)
