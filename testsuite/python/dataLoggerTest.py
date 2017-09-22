@@ -27,12 +27,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from os.path import *
-
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
     
+    from os.path import join
+
     print "Test the basic features of the data logging system. "
+
+    from instru import *
     
     fac = Factory("DemoRootFactory")
     print "Retrieved factory: " + fac.name
@@ -151,7 +153,7 @@ def myMain():
     if logger.getParameterValue("strParam")!="mojo":
         raise RuntimeError("strParam error. Should have got \"mojo\"")
 
-    cfgFile = join(join(dirname(dirname(realpath(__file__))),"resources"),"modParamTest.properties")
+    cfgFile = join(join(baseDir,"resources"),"modParamTest.properties")
     print "Load test config file: modParamTest.properties from " + cfgFile
     loadConfiguration(cfgFile)
 
@@ -175,6 +177,7 @@ def myMain():
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
@@ -182,9 +185,9 @@ if len(sys.argv) >= 1:
     if checker == "instrumentall" or checker == "instrumentall.exe":
         print "current script: ",os.path.realpath(__file__)
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
 print "Presumably not called from InstrumentAll >> Exiting..."

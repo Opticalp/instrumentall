@@ -28,12 +28,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import instruTools
-
-def myMain():
+def myMain(baseDir):
     """Main function. Create the factories, and export the corresponding graph. """
     
     print "Test the factory tree export graph feature"
+
+    from instru import *
+    import instruTools
 
     print "Retrieve and explore each root factories: "
     factories = getRootFactories()
@@ -49,6 +50,7 @@ def myMain():
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
@@ -56,9 +58,9 @@ if len(sys.argv) >= 1:
     if checker == "instrumentall" or checker == "instrumentall.exe":
         print "current script: ",os.path.realpath(__file__)
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
 print "Presumably not called from InstrumentAll >> Exiting..."

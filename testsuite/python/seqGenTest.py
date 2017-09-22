@@ -27,7 +27,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
     
     import time
@@ -149,6 +149,7 @@ def myMain():
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
@@ -156,7 +157,9 @@ if len(sys.argv) >= 1:
     if checker == "instrumentall" or checker == "instrumentall.exe":
         print "current script: ",os.path.realpath(__file__)
         
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
 print "Presumably not called from InstrumentAll >> Exiting..."

@@ -34,6 +34,7 @@ def myMain(baseDir):
     import time
 
     print "Test the basic features of the cameraFromFiles module. "
+    
     from instru import *
     
     fac = Factory("DeviceFactory")
