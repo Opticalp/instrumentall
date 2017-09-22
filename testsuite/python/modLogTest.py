@@ -31,43 +31,43 @@
 def myMain(baseDir):
     """Main function. Run the tests. """
     
-    print "Test the basic features of the module factories. "
+    print("Test the basic features of the module factories. ")
 
     from instru import *
     
     facList = getRootFactories()
     
-    print "Available factories: "
+    print("Available factories: ")
     for fac in facList:
-        print " - " + fac.name + ": " + fac.description
+        print(" - " + fac.name + ": " + fac.description)
     
     fac = Factory("DemoRootFactory")
-    print "Using DemoRootFactory. "
+    print("Using DemoRootFactory. ")
     
     ## select
-    print fac.selectDescription()
-    print "Possible selectors: "
+    print(fac.selectDescription())
+    print("Possible selectors: ")
     for val in fac.selectValueList():
-        print " - " + val + " >> " + fac.select(val).name
-        print "   " + fac.select(val).description
+        print(" - " + val + " >> " + fac.select(val).name)
+        print("   " + fac.select(val).description)
 
     fac = fac.select("branch").select("leaf")
     
-    print "Create module from leaf factory"
+    print("Create module from leaf factory")
     demoMod = fac.create()
 
-    print fac.name + " verbosity is: " + str(fac.getVerbosity())
-    print demoMod.name + " verbosity is: " + str(demoMod.getVerbosity())
+    print(fac.name + " verbosity is: " + str(fac.getVerbosity()))
+    print(demoMod.name + " verbosity is: " + str(demoMod.getVerbosity()))
 
-    print "Setting " + fac.name + " verbosity to 3"
+    print("Setting " + fac.name + " verbosity to 3")
     fac.setVerbosity(3)
     fac.create()
         
-    print "Setting " + fac.name + " verbosity to 8"
+    print("Setting " + fac.name + " verbosity to 8")
     fac.setVerbosity(8)
     fac.create()
 
-    print "End of script modLogTest.py"
+    print("End of script modLogTest.py")
     
 # main body    
 import sys
@@ -78,13 +78,13 @@ if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
         baseDir = dirname(dirname(__file__))
         
         myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

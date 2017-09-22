@@ -32,18 +32,18 @@ def myMain(baseDir):
 
     from os.path import join
     
-    print "Test the basic features of the module parameters. "
+    print("Test the basic features of the module parameters. ")
 
     from instru import *
     
     fac = Factory("DemoRootFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from leafParam factory"
+    print("Create module from leafParam factory")
     mod1 = fac.select("branch").select("leafParam").create("mod1")
-    print "module " + mod1.name + " created. "
+    print("module " + mod1.name + " created. ")
     
-    print "Retrieve the module parameters: "
+    print("Retrieve the module parameters: ")
     params = mod1.getParameterSet()
 
     for param in params:
@@ -53,20 +53,20 @@ def myMain(baseDir):
         print ( " - " + param["name"] + ": " + param["descr"] +
                 " ; value = " + value )
         
-    print "Trying to set some parameter values: "
-    print " - set intParam to 666"
+    print("Trying to set some parameter values: ")
+    print(" - set intParam to 666")
     mod1.setParameterValue("intParam", 666)
-    print " - set floatParam to 0"
+    print(" - set floatParam to 0")
     mod1.setParameterValue("floatParam", 0)
-    print " - set strParam to mojo"
+    print(" - set strParam to mojo")
     mod1.setParameterValue("strParam", "mojo")
 
-    print "Get the new values: "    
+    print("Get the new values: ")
     for param in params:
         value = mod1.getParameterValue(param["name"])
         if not isinstance(value, basestring):
             value = str(value)
-        print " - " + param["name"] + ": " +  value 
+        print(" - " + param["name"] + ": " +  value )
 
     if mod1.getParameterValue("intParam") != 666:
         raise RuntimeError("intParam error. Should have got 666")
@@ -76,18 +76,18 @@ def myMain(baseDir):
         raise RuntimeError("strParam error. Should have got \"mojo\"")
     
     cfgFile = join(join(baseDir,"resources"),"modParamTest.properties")
-    print "Load test config file: modParamTest.properties from " + cfgFile
+    print("Load test config file: modParamTest.properties from " + cfgFile)
 
     loadConfiguration(cfgFile)
-    print 'Config file loaded. Creating module "testParamMod" with default value for param' 
+    print('Config file loaded. Creating module "testParamMod" with default value for param')
     
     val = fac.select("branch").select("leafParam").create("testParamMod").getParameterValue("intParam")
-    print "intParam value is: " + str(val)
+    print("intParam value is: " + str(val))
 
     if val != 808:
         raise RuntimeError("intParam error. Should have got 808 (from config file)")
         
-    print "End of script modParamTest.py"
+    print("End of script modParamTest.py")
     
 # main body    
 import sys
@@ -98,13 +98,13 @@ if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
         baseDir = dirname(dirname(__file__))
         
         myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

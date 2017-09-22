@@ -31,53 +31,53 @@
 def myMain(baseDir):
     """Main function. Run the tests. """
     
-    print "Test the DataProxy class. "
+    print("Test the DataProxy class. ")
 
     from instru import *
 
     fac = Factory("DataGenFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from intDataGen factory"
+    print("Create module from intDataGen factory")
     mod1 = fac.select("int32").create("intGenerator")
-    print "module " + mod1.name + " created (" + mod1.internalName + ") "
+    print("module " + mod1.name + " created (" + mod1.internalName + ") ")
     
-    print "Set output value to 314"
+    print("Set output value to 314")
     mod1.setParameterValue("value", 314)
     
-    print "Run module"
+    print("Run module")
     task = runModule(mod1)
     task.wait()
     
-    print "Return value is: " + str(mod1.outPort("data").getDataValue())
+    print("Return value is: " + str(mod1.outPort("data").getDataValue()))
     if mod1.outPort("data").getDataValue() != 314 :
         raise RuntimeError("Wrong return value: 314 expected. ")
 
     fac = Factory("DemoRootFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
 
-    print "Create module from leafForwarder factory"
+    print("Create module from leafForwarder factory")
     mod2 = fac.select("branch").select("leafForwarder").create("mod2")
-    print "module " + mod2.name + " created. "
+    print("module " + mod2.name + " created. ")
 
-    print "Bind the output of mod1 (data gen) to the forwarder"
+    print("Bind the output of mod1 (data gen) to the forwarder")
     bind(mod1.outPorts()[0], mod2.inPorts()[0])
 
-    print '2 loggers creation using the constructor: DataLogger("DataPocoLogger")'
+    print('2 loggers creation using the constructor: DataLogger("DataPocoLogger")')
     logger = DataLogger("DataPocoLogger")
     logger1 = DataLogger("DataPocoLogger")
 
-    print "Register the loggers to mod1 and mod2 output"
+    print("Register the loggers to mod1 and mod2 output")
     mod1.outPorts()[0].register(logger)
     mod2.outPorts()[0].register(logger1)
 
-    print "mod1 port#0 targets (outports): "
+    print("mod1 port#0 targets (outports): ")
     targets = mod1.outPorts()[0].getTargetPorts()
     for target in targets:    
         print ( "  " + target.name + ", from module: " +
             target.parent().name )
 
-    print "mod1 port#0 data loggers: "
+    print("mod1 port#0 data loggers: ")
     loggers = mod1.outPorts()[0].loggers()
     for logger in loggers:
         print ("  Logger: " + logger.name +
@@ -85,28 +85,28 @@ def myMain(baseDir):
                " on port: " + logger.portSource().name + 
                " of module: " + logger.portSource().parent().name )  
 
-    print "Run module mod1"
+    print("Run module mod1")
     runModule(mod1)
     waitAll()
     
     # query the possible DataProxy class names for DataProxy creation
     proxyClasses = dataProxyClasses() # DataManager::dataProxyClasses()
-    print "Available data proxy classes: "
+    print("Available data proxy classes: ")
     for proxyClass in proxyClasses:
-        print " - " + proxyClass + ": " + proxyClasses[proxyClass]
+        print(" - " + proxyClass + ": " + proxyClasses[proxyClass])
     
-    print 'Proxy creation using the constructor: DataProxy("DataBufferint32")'
+    print('Proxy creation using the constructor: DataProxy("DataBufferint32")')
     proxy = DataProxy("DataBufferint32") 
-    print " - Name: " + proxy.name
-    print " - Description: " + proxy.description
+    print(" - Name: " + proxy.name)
+    print(" - Description: " + proxy.description)
 
-    print "Bind the output of mod1 (data gen) to the forwarder via the proxy"
+    print("Bind the output of mod1 (data gen) to the forwarder via the proxy")
     bind(mod1.outPorts()[0], mod2.inPorts()[0], proxy)
 
-    print "Run module mod1"
+    print("Run module mod1")
     runModule(mod1)
     
-    print "End of script dataBufferTest.py"
+    print("End of script dataBufferTest.py")
     
 # main body    
 import sys
@@ -117,13 +117,13 @@ if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
         baseDir = dirname(dirname(__file__))
         
         myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

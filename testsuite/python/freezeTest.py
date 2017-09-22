@@ -31,14 +31,14 @@
 def myMain(baseDir):
     """Main function. Run the tests. """
     
-    print "Test the watchdog. "
+    print("Test the watchdog. ")
 
     from instru import * 
     
     fac = Factory("DemoRootFactory")
-    print "Using DemoRootFactory. "
+    print("Using DemoRootFactory. ")
     
-    print "Create module from freezer factory"
+    print("Create module from freezer factory")
     freezer = fac.select("branch").select("freezer").create("freezer")
 
     runModule(freezer)
@@ -51,7 +51,7 @@ def myMain(baseDir):
     
     raise RuntimeError("watchdog timeout should have happen during waitAll")
     
-    print "End of script freezeTest.py"
+    print("End of script freezeTest.py")
     
 # main body    
 import sys
@@ -62,13 +62,13 @@ if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
         baseDir = dirname(dirname(__file__))
         
         myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

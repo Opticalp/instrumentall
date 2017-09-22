@@ -32,59 +32,59 @@ def myMain(baseDir):
     
     from os.path import join
 
-    print "Test the basic features of the data logging system. "
+    print("Test the basic features of the data logging system. ")
 
     from instru import *
     
     fac = Factory("DemoRootFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from leafDataSeq factory"
+    print("Create module from leafDataSeq factory")
     mod1 = fac.select("branch").select("leafDataSeq").create("mod1")
-    print "module " + mod1.name + " created. "
+    print("module " + mod1.name + " created. ")
     
-    print "Create module from leafForwarder factory"
+    print("Create module from leafForwarder factory")
     mod2 = fac.select("branch").select("leafForwarder").create("mod2")
-    print "module " + mod2.name + " created. "
+    print("module " + mod2.name + " created. ")
     
-    print "Create module from leafSeqAccu factory"
+    print("Create module from leafSeqAccu factory")
     mod3 = fac.select("branch").select("leafSeqAccu").create("mod3")
-    print "module " + mod3.name + " created. "
+    print("module " + mod3.name + " created. ")
     
-    print "Bind the ports: "
-    print " - mod1 output to mod2 input"
+    print("Bind the ports: ")
+    print(" - mod1 output to mod2 input")
     bind(mod1.outPorts()[0], mod2.inPorts()[0])
-    print " - mod2 output to mod3 input"
+    print(" - mod2 output to mod3 input")
     bind(mod2.outPorts()[0], mod3.inPorts()[0])
     
-    print "Bind the sequence generator (mod1) to the sequence combiners (mod3)"
+    print("Bind the sequence generator (mod1) to the sequence combiners (mod3)")
     seqBind(mod1.outPorts()[0], mod3.inPorts()[0])
     
     # query the possible DataLogger class names for DataLogger creation
     loggerClasses = dataLoggerClasses() # DataManager::dataLoggerClasses()
-    print "Available data logger classes: "
+    print("Available data logger classes: ")
     for loggerClass in loggerClasses:
-        print " - " + loggerClass + ": " + loggerClasses[loggerClass]
+        print(" - " + loggerClass + ": " + loggerClasses[loggerClass])
     
-    print 'Logger creation using the constructor: DataLogger("DataPocoLogger")'
+    print('Logger creation using the constructor: DataLogger("DataPocoLogger")')
     logger = DataLogger("DataPocoLogger") 
-    print " - Name: " + logger.name
-    print " - Description: " + logger.description
+    print(" - Name: " + logger.name)
+    print(" - Description: " + logger.description)
 
-    print 'Changing logger name to "myLogger"'
+    print('Changing logger name to "myLogger"')
     logger.setName("myLogger")
     if logger.name != "myLogger":
         raise RuntimeError("the returned name is not the assigned one. got: " + logger.name)
-    print " - Name: " + logger.name
-    print " - Description: " + logger.description    
+    print(" - Name: " + logger.name)
+    print(" - Description: " + logger.description)
     
-    print 'And once again: DataLogger("DataPocoLogger")'
+    print('And once again: DataLogger("DataPocoLogger")')
     logger1 = DataLogger("DataPocoLogger") 
     
-    print "Register the first logger to mod2 output"
+    print("Register the first logger to mod2 output")
     mod2.outPorts()[0].register(logger)
     
-    print "Check the registered loggers at the mod2 output port" 
+    print("Check the registered loggers at the mod2 output port" )
     loggers = mod2.outPorts()[0].loggers()
 
     for lolo in loggers:
@@ -92,36 +92,36 @@ def myMain(baseDir):
                " on port: " + lolo.portSource().name + 
                " of module: " + lolo.portSource().parent().name )  
     
-    print "Register the second logger to mod3 output"
+    print("Register the second logger to mod3 output")
     mod3.outPorts()[0].register(logger1)
     
-    print "launch action: run mod1"
+    print("launch action: run mod1")
     runModule(mod1)
     waitAll()
 
-    print "Detach the 1st logger and re-run"
+    print("Detach the 1st logger and re-run")
     logger.detach()
 
     runModule(mod1)
     waitAll()
     
-    print "Re-register the 1st logger to mod2 output"
+    print("Re-register the 1st logger to mod2 output")
     mod2.outPorts()[0].register(logger)
 
-    print "Remove the logger" 
+    print("Remove the logger")
     removeDataLogger(logger)
    
-    print "Check the registered loggers at the mod2 output port" 
+    print("Check the registered loggers at the mod2 output port" )
     if mod2.outPorts()[0].loggers() == list():
-        print "Ok, no more logger is registered"
+        print("Ok, no more logger is registered")
     else:
         raise RuntimeError("a logger is still registered")
 
-    print "And re-run..."
+    print("And re-run...")
     runModule(mod1)
     waitAll()
 
-    print "Retrieve the data logger parameters: "
+    print("Retrieve the data logger parameters: ")
     params = logger.getParameterSet()
 
     for param in params:
@@ -131,20 +131,20 @@ def myMain(baseDir):
         print ( " - " + param["name"] + ": " + param["descr"] +
                 " ; value = " + value )
         
-    print "Trying to set some parameter values: "
-    print " - set intParam to 666"
+    print("Trying to set some parameter values: ")
+    print(" - set intParam to 666")
     logger.setParameterValue("intParam", 666)
-    print " - set floatParam to 0"
+    print(" - set floatParam to 0")
     logger.setParameterValue("floatParam", 0)
-    print " - set strParam to mojo"
+    print(" - set strParam to mojo")
     logger.setParameterValue("strParam", "mojo")
 
-    print "Get the new values: "    
+    print("Get the new values: ")
     for param in params:
         value = logger.getParameterValue(param["name"])
         if not isinstance(value, basestring):
             value = str(value)
-        print " - " + param["name"] + ": " +  value
+        print(" - " + param["name"] + ": " +  value)
 
     if logger.getParameterValue("intParam") != 666:
         raise RuntimeError("intParam error. Should have got 666")
@@ -154,25 +154,25 @@ def myMain(baseDir):
         raise RuntimeError("strParam error. Should have got \"mojo\"")
 
     cfgFile = join(join(baseDir,"resources"),"modParamTest.properties")
-    print "Load test config file: modParamTest.properties from " + cfgFile
+    print("Load test config file: modParamTest.properties from " + cfgFile)
     loadConfiguration(cfgFile)
 
-    print "change data logger name"
+    print("change data logger name")
     logger.setName("tester")
 
-    print "Get the new values: "    
+    print("Get the new values: ")
     for param in params:
         value = logger.getParameterValue(param["name"])
         if not isinstance(value, basestring):
             value = str(value)
-        print " - " + param["name"] + ": " +  value
+        print(" - " + param["name"] + ": " +  value)
 
     if logger.getParameterValue("strParam")!="instrumentall":
         raise RuntimeError("strParam error. Should have got \"instrumentall\"")
 
     loadConfiguration(cfgFile)
 
-    print "End of script dataLoggerTest.py"
+    print("End of script dataLoggerTest.py")
     
 # main body    
 import sys
@@ -183,13 +183,13 @@ if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
         baseDir = dirname(dirname(__file__))
         
         myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")
