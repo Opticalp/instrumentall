@@ -246,17 +246,18 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
 
     ScopedGIL GIL;
 
-    PyObject *py_main, *py_dict;
+    PyObject *py_main, *py_global, *py_local;
     py_main = PyImport_AddModule("__main__");
-    py_dict = PyModule_GetDict(py_main);
+    py_global = PyModule_GetDict(py_main);
+    py_local = PyDict_New();
 
     PyObject* exitFct = PySys_GetObject(const_cast<char*>("exit"));
-    PyDict_SetItemString(py_dict, "exit", exitFct);
+    PyDict_SetItemString(py_global, "exit", exitFct);
     PyObject* pyScript = PyString_FromString(scriptFile.toString().c_str());
-    PyDict_SetItemString(py_dict, "__file__", pyScript);
+    PyDict_SetItemString(py_local, "__file__", pyScript);
 
     // launch script using python command
-    if (PyRun_String("execfile(__file__)", Py_single_input, py_dict, py_dict)==NULL)
+    if (PyRun_String("execfile(__file__)", Py_single_input, py_global, py_local)==NULL)
     {
         // check for system exit exception
         if (PyErr_Occurred())

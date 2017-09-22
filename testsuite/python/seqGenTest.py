@@ -27,10 +27,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import time
-
 def myMain():
     """Main function. Run the tests. """
+    
+    import time
+    from instru import *
     
     print "Test the basic features of seq gen module. "
 
@@ -155,8 +156,6 @@ if len(sys.argv) >= 1:
     if checker == "instrumentall" or checker == "instrumentall.exe":
         print "current script: ",os.path.realpath(__file__)
         
-        from instru import *
-
         myMain()
         exit(0)
 
