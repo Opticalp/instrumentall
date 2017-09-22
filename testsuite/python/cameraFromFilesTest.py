@@ -27,13 +27,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from os.path import dirname
-from os.path import join
-
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
-    
+
+    from os.path import join
+    import time
+
     print "Test the basic features of the cameraFromFiles module. "
+    from instru import *
     
     fac = Factory("DeviceFactory")
     print "Retrieved factory: " + fac.name
@@ -48,7 +49,7 @@ def myMain():
         
     print "module " + cam.name + " created (" + cam.internalName + ") "
 
-    imgDir = join(dirname(dirname(__file__)),"resources")
+    imgDir = join(baseDir,"resources")
     print "Set image file directory to " + imgDir
     cam.setParameterValue("directory", imgDir)
     print "Set files to be read: 001.png, 002.png"
@@ -87,7 +88,7 @@ def myMain():
 # main body    
 import sys
 import os
-import time
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
@@ -95,9 +96,9 @@ if len(sys.argv) >= 1:
     if checker == "instrumentall" or checker == "instrumentall.exe":
         print "current script: ",os.path.realpath(__file__)
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
 print "Presumably not called from InstrumentAll >> Exiting..."
