@@ -41,6 +41,8 @@
 
 #include "PythonManager.h"
 
+#include <stdio.h>
+
 /// @name Custom config keys
 ///@{
 #define CONF_KEY_PY_SCRIPT         "python.script"
@@ -57,7 +59,8 @@ using Poco::Util::Application;
 
 PythonManager::PythonManager():
 	VerboseEntity(name()),
-	iconsoleFlag(false)
+	iconsoleFlag(false),
+	pyMultiThread()
 {
 	// nothing to do yet
 }
@@ -251,13 +254,13 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
     py_global = PyModule_GetDict(py_main);
     py_local = PyDict_New();
 
-    PyObject* exitFct = PySys_GetObject(const_cast<char*>("exit"));
-    PyDict_SetItemString(py_global, "exit", exitFct);
+//    PyObject* exitFct = PySys_GetObject(const_cast<char*>("exit"));
+//    PyDict_SetItemString(py_global, "exit", exitFct);
     PyObject* pyScript = PyString_FromString(scriptFile.toString().c_str());
     PyDict_SetItemString(py_local, "__file__", pyScript);
 
     // launch script using python command
-    if (PyRun_String("execfile(__file__)", Py_single_input, py_global, py_local)==NULL)
+    if (PyRun_FileExFlags(fopen(scriptFile.toString().c_str(),"r"), scriptFile.getFileName().c_str(), Py_file_input, py_global, py_local, true, NULL)==NULL)
     {
         // check for system exit exception
         if (PyErr_Occurred())
