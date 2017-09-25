@@ -201,6 +201,10 @@ void PythonManager::errorMessage(std::string errorMsg)
     poco_error(logger(), errorMsg);
 }
 
+
+#include <fstream>
+#include <streambuf>
+
 void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFile)
 {
     checkInit();
@@ -259,8 +263,23 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
     PyObject* pyScript = PyString_FromString(scriptFile.toString().c_str());
     PyDict_SetItemString(py_local, "__file__", pyScript);
 
-    // launch script using python command
-    if (PyRun_FileExFlags(fopen(scriptFile.toString().c_str(),"r"), scriptFile.getFileName().c_str(), Py_file_input, py_global, py_local, true, NULL)==NULL)
+    // transfer the script content into a string
+    std::ifstream ifs(scriptFile.toString().c_str());
+
+    ifs.seekg(0, std::ios::end);
+    std::vector<char> scriptBuf(ifs.tellg());
+    ifs.seekg(0, std::ios::beg);
+
+    scriptBuf.assign((std::istreambuf_iterator<char>(ifs)),
+                std::istreambuf_iterator<char>());
+
+    scriptBuf.push_back('\0');
+
+    PyCodeObject* compiledStr = reinterpret_cast<PyCodeObject*>(
+            Py_CompileString(&(scriptBuf[0]), scriptFile.getFileName().c_str(), Py_file_input) );
+
+    // launch the string using a python command
+    if ((compiledStr==NULL) || (PyEval_EvalCode(compiledStr, py_global, py_local)==NULL))
     {
         // check for system exit exception
         if (PyErr_Occurred())
