@@ -26,8 +26,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import code
-
 class Quitter(object):
     def __init__(self, name):
         self.name = name
@@ -36,27 +34,24 @@ class Quitter(object):
     def __call__(self, code=None):
         raise SystemExit(code)
 
-def func():
-    """main function"""
-    
-    # dictionary definition to transmit local variables
-    dico = {} 
-    dico['quit']=Quitter('quit')
-    dico['exit']=Quitter('exit')
-    
-    try:
-        import instru
-    except ImportError:
-        print 'WARNING: "instru" module is not available...'
-    else:
-        print '"instru" module loaded...'
-        dico['instru']=instru
-    
-    # interactive console launch
-    try:    
-        code.interact(local=dico)
-    except SystemExit:
-        print "console.py: We just left the interactive console on SystemExit exception..."            
+import code
 
-# Main logic: launch it all
-func()
+# dictionary definition to transmit local variables
+dico = {} 
+dico['quit']=Quitter('quit')
+dico['exit']=Quitter('exit')
+
+try:
+    import instru
+except ImportError:
+    print 'WARNING: "instru" module is not available...'
+else:
+    print '"instru" module loaded...'
+    dico['instru']=instru
+
+# interactive console launch
+try:    
+    code.interact(local=dico)
+except SystemExit:
+    print "console.py: We just left the interactive console on SystemExit exception..."            
+
