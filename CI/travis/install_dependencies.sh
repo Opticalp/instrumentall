@@ -28,10 +28,10 @@ then
     then 
         echo "current cmake version is:"
         cmake --version
-        echo "updating cmake to 3.1.0 (3.0.0 required for poco build) "
-        CMAKE_VERSION_MAJOR_MINOR="3.1"
-        CMAKE_VERSION_PATCH="0"
+        CMAKE_VERSION_MAJOR_MINOR="3.9"
+        CMAKE_VERSION_PATCH="3"
         CMAKE_VERSION="${CMAKE_VERSION_MAJOR_MINOR}.${CMAKE_VERSION_PATCH}"
+        echo "updating cmake to ${CMAKE_VERSION} (3.2.0 required for poco build) "
         echo "Linux: getting directly recent CMake binaries..."
         cd
         wget --no-check-certificate "https://www.cmake.org/files/v${CMAKE_VERSION_MAJOR_MINOR}/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
