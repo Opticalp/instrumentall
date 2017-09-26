@@ -61,7 +61,7 @@ then
     cd dependencies
     git clone https://github.com/pocoproject/poco.git
     cd poco
-    POCO_TAG_NAME=$(git describe --tags)
+    POCO_TAG_NAME=$(git describe --match "*release" --abbrev=0)
     echo "checking out poco at tag: $POCO_TAG_NAME"
     git checkout $POCO_TAG_NAME
 
