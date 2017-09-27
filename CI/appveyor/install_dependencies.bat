@@ -53,7 +53,7 @@ if "%ARCH%"=="Win64" (
   set PYTHONHOME=C:\Python27
 )
 
-echo Install OpenCV using curl and 7zip
+echo Install OpenCV %OPENCV_VERSION% using curl and 7zip
 curl -fSL -o opencv.exe -m 600 http://downloads.sourceforge.net/project/opencvlibrary/opencv-win/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%.exe
 echo Downloading from sourceforge done. 
 REM opencv.exe -y -o"%OPENCV_BASE_DIR"
