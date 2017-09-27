@@ -21,11 +21,7 @@ echo "Poco is now cloned. "
 cd poco
 git tag
 git describe --match *release --abbrev=0
-%SH_COMMAND% -c "pwd"
-%SH_COMMAND% -c "git --version"
-%SH_COMMAND% -c "git describe"
-%SH_COMMAND% -c "git describe --match ""*release"" --abbrev=0 HEAD"
-%SH_COMMAND% -c "POCO_TAG_NAME=$(git describe --match *release --abbrev=0) ; git checkout $POCO_TAG_NAME"
+%SH_COMMAND% -c "POCO_TAG_NAME=$(git describe --match ""*release"" --abbrev=0) ; git checkout $POCO_TAG_NAME"
 
 REM build using cmake
 echo "building poco with cmake, configuration: %CONFIGURATION%" 
