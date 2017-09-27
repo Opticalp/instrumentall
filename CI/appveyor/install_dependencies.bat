@@ -54,8 +54,12 @@ if "%ARCH%"=="Win64" (
 )
 
 echo Install OpenCV %OPENCV_VERSION% using curl and 7zip
-curl -fSL -o opencv.exe -m 600 http://downloads.sourceforge.net/project/opencvlibrary/opencv-win/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%.exe
-echo Downloading from sourceforge done. 
+if "%GENERATOR%"=="Visual Studio 14 2015" (
+    curl -fSL -o opencv.exe -m 600 https://github.com/opencv/opencv/releases/download/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%-vc14.exe
+    ) else (
+    curl -fSL -o opencv.exe -m 600 https://github.com/opencv/opencv/releases/download/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%.exe
+)
+echo Downloading from github done. 
 REM opencv.exe -y -o"%OPENCV_BASE_DIR"
 call 7z x opencv.exe -o"%OPENCV_BASE_DIR%"
 dir "%OPENCV_DIR%"
