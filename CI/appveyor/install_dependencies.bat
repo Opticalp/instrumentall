@@ -19,9 +19,9 @@ cd dependencies
 git clone https://github.com/pocoproject/poco.git
 echo "Poco is now cloned. "
 cd poco
-dir poco
+dir
 git tag
-
+git describe --match *release --abbrev=0
 %SH_COMMAND% -c "POCO_TAG_NAME=$(git describe --match *release --abbrev=0) ; git checkout $POCO_TAG_NAME"
 
 REM build using cmake
