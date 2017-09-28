@@ -16,6 +16,9 @@ matrix:
     exclude:
     - compiler: gcc
       os: osx
+    - env: BUILD_POCO=false
+      dist: "trusty"
+      # due to regex bug in poco 1.3.6 used in trusty > failure...
 
 before_install:
 #    - echo $LANG
