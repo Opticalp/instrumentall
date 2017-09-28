@@ -28,19 +28,21 @@
 # THE SOFTWARE.
 
 
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
     
-    print "Test the basic features of the data generator modules. "
+    print("Test the basic features of the data generator modules. ")
+
+    from instru import *
     
     fac = Factory("DataGenFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from StringDataGen factory"
+    print("Create module from StringDataGen factory")
     mojo = fac.select("str").create("strGenerator")
-    print "module " + mojo.name + " created (" + mojo.internalName + ") "
+    print("module " + mojo.name + " created (" + mojo.internalName + ") ")
     
-    print 'Set output value to "mojo"'
+    print('Set output value to "mojo"')
     mojo.setParameterValue("value", "mojo")
     
 #    print "Run module"
@@ -49,20 +51,20 @@ def myMain():
 #    waitAll()
 #    print "Return value is: " + mojo.outPort("data").getDataValue()
     
-    print "Create module from Int32DataGen factory"
+    print("Create module from Int32DataGen factory")
     mod1 = fac.select("int32").create("intGenerator")
-    print "module " + mod1.name + " created (" + mod1.internalName + ") "
+    print("module " + mod1.name + " created (" + mod1.internalName + ") ")
     
-    print "Set output value to 1"
+    print("Set output value to 1")
     mod1.setParameterValue("value", 1)
     
-    print "Plug the output of strGenerator to the trig of intGenerator"
+    print("Plug the output of strGenerator to the trig of intGenerator")
     bind(mojo.outPort("data"), mod1.inPort("trig"))
 
-    print "Test the data sequence management, using the seqAccu module"
+    print("Test the data sequence management, using the seqAccu module")
     seqAccu = Factory("DemoRootFactory").select("branch").select("leafSeqAccu").create("seqAccu")
-    print "module " + seqAccu.name + " created. "
-    print "Binding the ports: data + data seq"
+    print("module " + seqAccu.name + " created. ")
+    print("Binding the ports: data + data seq")
     bind(mod1.outPort("data"), seqAccu.inPorts()[0])
     seqBind(mojo.outPort("data"), seqAccu.inPorts()[0])
 
@@ -78,25 +80,26 @@ def myMain():
     mojo.setParameterValue("seqEnd", 1)
     runModule(mojo)
     waitAll()
-    print "Return value is: " + str(seqAccu.outPorts()[0].getDataValue())
+    print("Return value is: " + str(seqAccu.outPorts()[0].getDataValue()))
 
-    print "End of script dataGenTrigTest.py"
+    print("End of script dataGenTrigTest.py")
     
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

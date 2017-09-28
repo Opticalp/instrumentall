@@ -27,12 +27,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from os.path import *
-
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
+
+    from os.path import join
     
     print("Test the basic features of the python module. ")
+
+    from instru import *
     
     fac = Factory("ExternFactory")
     print("Retrieved factory: " + fac.name)
@@ -51,7 +53,7 @@ def myMain():
     if len(pyMod.inPorts()) is not 1:
         raise RuntimeError("Bad trig port count")
     
-    scriptFile = join(join(dirname(dirname(realpath(__file__))),"resources"),"pyModScript.py")
+    scriptFile = join(join(baseDir,"resources"),"pyModScript.py")
     print("Load script file: " + scriptFile)
     pyMod.setParameterValue("scriptFilePath",scriptFile)
 
@@ -72,18 +74,19 @@ def myMain():
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

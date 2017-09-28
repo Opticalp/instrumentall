@@ -27,19 +27,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
     
-    print "Test the basic features of the parameter getters. "
+    print("Test the basic features of the parameter getters. ")
+
+    from instru import *
     
     fac = Factory("DemoRootFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from leafParam factory"
+    print("Create module from leafParam factory")
     modParam = fac.select("branch").select("leafParam").create("modParam")
-    print "module " + modParam.name + " created. "
+    print("module " + modParam.name + " created. ")
     
-    print "Retrieve the module parameters: "
+    print("Retrieve the module parameters: ")
     params = modParam.getParameterSet()
 
     for param in params:
@@ -49,59 +51,59 @@ def myMain():
         print ( " - " + param["name"] + ": " + param["descr"] +
                 " ; value = " + value )
         
-    print "Trying to set some parameter values: "
-    print " - set intParam to 666"
+    print("Trying to set some parameter values: ")
+    print(" - set intParam to 666")
     modParam.setParameterValue("intParam", 666)
-    print " - set floatParam to 0"
+    print(" - set floatParam to 0")
     modParam.setParameterValue("floatParam", 0)
-    print " - set strParam to mojo"
+    print(" - set strParam to mojo")
     modParam.setParameterValue("strParam", "mojo")
 
-    print "Build param getters using those parameters..."
+    print("Build param getters using those parameters...")
     getInt = modParam.buildParameterGetter("intParam")
     getFloat = modParam.buildParameterGetter("floatParam")
     getStr = modParam.buildParameterGetter("strParam")
 
-    print "Parameter names: "
-    print " - " + getInt.parameterName()
-    print " - " + getFloat.parameterName()
-    print " - " + getStr.parameterName()
+    print("Parameter names: ")
+    print(" - " + getInt.parameterName())
+    print(" - " + getFloat.parameterName())
+    print(" - " + getStr.parameterName())
 
-    print "Create a module to trig the parameter getters"
+    print("Create a module to trig the parameter getters")
     trigger = Factory("DataGenFactory").select("float").create("trigger")
     trigPort = trigger.outPorts()[0]
 
-    print "Test DataTarget cast (ParameterGetter)"
+    print("Test DataTarget cast (ParameterGetter)")
     targetInt = DataTarget(getInt)
-    print "target: " + targetInt.name + " (" + targetInt.description + ")"
+    print("target: " + targetInt.name + " (" + targetInt.description + ")")
 
-    print "Bind the trigger to the param getters"
+    print("Bind the trigger to the param getters")
     bind(trigPort, DataTarget(getInt))
     bind(trigPort, DataTarget(getFloat))
     bind(trigPort, DataTarget(getStr))
 
-    print "Test param int getter connexion"
-    print "Source is: " + targetInt.getDataSource().name
+    print("Test param int getter connexion")
+    print("Source is: " + targetInt.getDataSource().name)
 
-    print "Create Data loggers to print the output of the param getters"
+    print("Create Data loggers to print the output of the param getters")
     loggerInt = DataLogger("DataPocoLogger")
     loggerFloat = DataLogger("DataPocoLogger")
     loggerStr = DataLogger("DataPocoLogger")
 
-    print "Test DataTarget cast (DataLogger)"
+    print("Test DataTarget cast (DataLogger)")
     targetLogger = DataTarget(loggerInt)
-    print "target: " + targetLogger.name + " (" + targetLogger.description + ")"
+    print("target: " + targetLogger.name + " (" + targetLogger.description + ")")
 
-    print "Test DataSource cast (ParameterGetter)"
+    print("Test DataSource cast (ParameterGetter)")
     sourceInt = DataSource(getInt)
-    print "source: " + sourceInt.name + " (" + sourceInt.description + ")"
+    print("source: " + sourceInt.name + " (" + sourceInt.description + ")")
 
-    print "Bind the loggers to the param getters"
+    print("Bind the loggers to the param getters")
     bind(DataSource(getInt), DataTarget(loggerInt))
     bind(DataSource(getFloat), DataTarget(loggerFloat))
     bind(DataSource(getStr), DataTarget(loggerStr))
 
-    print "Trig the getters"
+    print("Trig the getters")
     runModule(trigger)
     waitAll()
 
@@ -114,27 +116,28 @@ def myMain():
     if (DataSource(getStr).getDataValue() != "mojo"):
         raise RuntimeError("wrong param getter str forwarded value")
 
-    print "Returned values OK"
+    print("Returned values OK")
 
-    print "The data attribute forwarding is not tested here..."
+    print("The data attribute forwarding is not tested here...")
 
-    print "End of script parameterGetterTest.py"
+    print("End of script parameterGetterTest.py")
     
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

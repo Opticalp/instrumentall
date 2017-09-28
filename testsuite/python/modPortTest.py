@@ -28,33 +28,35 @@
 # THE SOFTWARE.
 
 
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
     
-    print "Test the basic features of the module ports. "
+    print("Test the basic features of the module ports. ")
+
+    from instru import *
     
     fac = Factory("DemoRootFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from leafA factory"
+    print("Create module from leafA factory")
     mod1 = fac.select("branch").select("leafA").create("mod1")
-    print "module " + mod1.name + " created. "
+    print("module " + mod1.name + " created. ")
     
     mod2 = fac.select("branch").select("leafB").create("mod2")
-    print "module " + mod2.name + " created. "
+    print("module " + mod2.name + " created. ")
     
-    print "Query mod1 input ports"
+    print("Query mod1 input ports")
     inPorts = mod1.inPorts()
     
     inPortA = inPorts[0]
     outPortA = mod2.outPorts()[0]
     
-    print "mod1.inPorts()[0] is: " + inPortA.name
-    print "Querying mod1.inPort(\"" + inPortA.name + "\")... "
-    print "got: " + mod1.inPort(inPortA.name).name + ". "
-    print "mod2.outPorts()[0] is: " + outPortA.name
-    print "Querying mod2.outPort(\"" + outPortA.name + "\")... "
-    print "got: " + mod2.outPort(outPortA.name).name + ". "
+    print("mod1.inPorts()[0] is: " + inPortA.name)
+    print("Querying mod1.inPort(\"" + inPortA.name + "\")... ")
+    print("got: " + mod1.inPort(inPortA.name).name + ". ")
+    print("mod2.outPorts()[0] is: " + outPortA.name)
+    print("Querying mod2.outPort(\"" + outPortA.name + "\")... ")
+    print("got: " + mod2.outPort(outPortA.name).name + ". ")
     
     bind(outPortA, inPortA)
     unbind(inPortA)
@@ -71,15 +73,15 @@ def myMain():
                 source.name + " from module: " +
                 source.parent().name )
         else:
-            print "This port has no source or its source is not an output Port"
+            print("This port has no source or its source is not an output Port")
     
-    print "Query mod2 output ports"
+    print("Query mod2 output ports")
     for port in mod2.outPorts():
         print ( " - module " + port.parent().name +  
             ", port " + port.name + 
             ": " + port.description )
         targets = port.getTargetPorts()
-        print "targets: " 
+        print("targets: ")
         for target in targets:    
             print ( target.name + ", from module: " +
                 target.parent().name )
@@ -97,9 +99,9 @@ def myMain():
                 source.name + " from module: " +
                 source.parent().name )
         else:
-            print "This port has no source or its source is not an output Port"
+            print("This port has no source or its source is not an output Port")
     
-    print "Query mod2 output ports"
+    print("Query mod2 output ports")
     for port in mod2.outPorts():
         print ( " - module " + port.parent().name +  
             ", port " + port.name + 
@@ -110,23 +112,24 @@ def myMain():
             print ( target.name + ", from module: " +
                 target.parent().name )
             
-    print "End of script modPortTest.py"
+    print("End of script modPortTest.py")
     
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

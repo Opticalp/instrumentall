@@ -19,9 +19,9 @@ cd dependencies
 git clone https://github.com/pocoproject/poco.git
 echo "Poco is now cloned. "
 cd poco
-
-REM now using msys to make things easier (getting last release)
-%SH_COMMAND% -c "POCO_TAG_NAME=$(git describe --tags) ; git checkout $POCO_TAG_NAME"
+git tag
+git describe --match *release --abbrev=0
+%SH_COMMAND% -c "POCO_TAG_NAME=$(git describe --match ""*release"" --abbrev=0) ; git checkout $POCO_TAG_NAME"
 
 REM build using cmake
 echo "building poco with cmake, configuration: %CONFIGURATION%" 
@@ -53,9 +53,13 @@ if "%ARCH%"=="Win64" (
   set PYTHONHOME=C:\Python27
 )
 
-echo Install OpenCV using curl and 7zip
-curl -fSL -o opencv.exe -m 600 http://downloads.sourceforge.net/project/opencvlibrary/opencv-win/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%.exe
-echo Downloading from sourceforge done. 
+echo Install OpenCV %OPENCV_VERSION% using curl and 7zip
+if "%GENERATOR%"=="Visual Studio 14 2015" (
+    curl -fSL -o opencv.exe -m 600 https://github.com/opencv/opencv/releases/download/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%-vc14.exe
+    ) else (
+    curl -fSL -o opencv.exe -m 600 https://github.com/opencv/opencv/releases/download/%OPENCV_VERSION%/opencv-%OPENCV_VERSION%.exe
+)
+echo Downloading from github done. 
 REM opencv.exe -y -o"%OPENCV_BASE_DIR"
 call 7z x opencv.exe -o"%OPENCV_BASE_DIR%"
 dir "%OPENCV_DIR%"

@@ -27,56 +27,58 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
-import os
-
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
+
+    import os
+    import time
     
-    print "Test the basic features of the cvMat data generator modules. "
+    print("Test the basic features of the cvMat data generator modules. ")
+
+    from instru import * 
     
     fac = Factory("DataGenFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from cvMatDataGen factory"
+    print("Create module from cvMatDataGen factory")
     try:
         imgGen = fac.select("cvMat").create("imgGenerator")
     except RuntimeError as e:
-        print "Runtime error: {0}".format(e.message)
-        print "OpenCV is probably not present. Exiting. "
+        print("Runtime error: {0}".format(e.message))
+        print("OpenCV is probably not present. Exiting. ")
         exit(0)
         
-    print "module " + imgGen.name + " created (" + imgGen.internalName + ") "
+    print("module " + imgGen.name + " created (" + imgGen.internalName + ") ")
     
-    print "Set output value to 127"
+    print("Set output value to 127")
     imgGen.setParameterValue("value", 127)
     
-    print "Run module"
+    print("Run module")
     task = runModule(imgGen)
 
-    print task.name + " state is " + task.state()
+    print(task.name + " state is " + task.state())
     task.wait()
-    print task.name + " state is " + task.state()
+    print(task.name + " state is " + task.state())
 
-    print "Attaching a data logger to show the image..."
+    print("Attaching a data logger to show the image...")
     loggerClasses = dataLoggerClasses() # DataManager::dataLoggerClasses()
-    print "Available data logger classes: "
+    print("Available data logger classes: ")
     for loggerClass in loggerClasses:
-        print " - " + loggerClass + ": " + loggerClasses[loggerClass]
+        print(" - " + loggerClass + ": " + loggerClasses[loggerClass])
     
-    print 'Logger creation using the constructor: DataLogger("ShowImageLogger")'
+    print('Logger creation using the constructor: DataLogger("ShowImageLogger")')
     logger = DataLogger("ShowImageLogger") 
-    print "Logger description: " + logger.description
+    print("Logger description: " + logger.description)
 
     imgGen.outPort("data").register(logger)
 
     runModule(imgGen)
     time.sleep(1) # wait 1s in order to show the image
 
-    print "Set output value to 255"
+    print("Set output value to 255")
     imgGen.setParameterValue("value", 255)
 
-    print "Add a save image logger"
+    print("Add a save image logger")
     saver = DataLogger("SaveImageLogger")
     imgGen.outPort("data").register(saver)
 
@@ -87,7 +89,7 @@ def myMain():
     runModule(imgGen)
     time.sleep(1) # wait 1s in order to show the image
 
-    print "check if the image is present in the current directory"
+    print("check if the image is present in the current directory")
     files = os.listdir(".")
     if files.count("img_01.png")!=1:
         raise RuntimeError("image img_01.png not created")
@@ -170,24 +172,24 @@ def myMain():
 ##    waitAll() # mandatory!! If not done, there is no way to know where multiple calls are splited 
 ##    print "Return value is: " + str(mod1.outPort("data").getDataValue())
     
-    print "End of script cvMatTest.py"
+    print("End of script cvMatTest.py")
     
 # main body    
 import sys
 import os
-import time
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

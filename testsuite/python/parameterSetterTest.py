@@ -27,109 +27,112 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import time
-
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
+
+    import time
     
-    print "Test the basic features of parameterSetter. "
+    print("Test the basic features of parameterSetter. ")
+
+    from instru import *
     
     fac = Factory("DataGenFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from Int32DataGen factory"
+    print("Create module from Int32DataGen factory")
     mod1 = fac.select("int32").create("mod1")
-    print "module " + mod1.name + " created (" + mod1.internalName + ") "
+    print("module " + mod1.name + " created (" + mod1.internalName + ") ")
     
-    print "Set output value to 1"
+    print("Set output value to 1")
     mod1.setParameterValue("value", 1)
     
-    print "Run module"
+    print("Run module")
     task = runModule(mod1)
 
-    print task.name + " state is " + task.state()
+    print(task.name + " state is " + task.state())
     task.wait()
-    print task.name + " state is " + task.state()
+    print(task.name + " state is " + task.state())
     
-    print "Return value is: " + str(mod1.outPort("data").getDataValue())
+    print("Return value is: " + str(mod1.outPort("data").getDataValue()))
     if (mod1.outPort("data").getDataValue() != 1):
         raise RuntimeError('Wrong return value: 1 expected. ')
 
-    print "Prepare a second module from Int32DataGen factory"
+    print("Prepare a second module from Int32DataGen factory")
     mod2 = fac.select("int32").create("mod2")
-    print "module " + mod2.name + " created (" + mod2.internalName + ") "
+    print("module " + mod2.name + " created (" + mod2.internalName + ") ")
     
-    print "Set mod2 output value to -1"
+    print("Set mod2 output value to -1")
     mod2.setParameterValue("value", -1)
     
-    print "Run module"
+    print("Run module")
     task = runModule(mod2)
 
-    print task.name + " state is " + task.state()
+    print(task.name + " state is " + task.state())
     task.wait()
-    print task.name + " state is " + task.state()
+    print(task.name + " state is " + task.state())
     
-    print "Return value is: " + str(mod2.outPort("data").getDataValue())
+    print("Return value is: " + str(mod2.outPort("data").getDataValue()))
     if (mod2.outPort("data").getDataValue() != -1):
         raise RuntimeError('Wrong return value: -1 expected. ')
 
-    print "Will plug mod1 output to mod2 value parameter..."
-    print "1. create parameter setter"
+    print("Will plug mod1 output to mod2 value parameter...")
+    print("1. create parameter setter")
     setter = mod2.buildParameterSetter("value")
-    print "parameter name: " + setter.parameterName()
+    print("parameter name: " + setter.parameterName())
     
-    print "2. create a data proxy to convert int32 to int64"
+    print("2. create a data proxy to convert int32 to int64")
     proxy = DataProxy("SimpleNumConverterint64") 
-    print " - Name: " + proxy.name
-    print " - Description: " + proxy.description
+    print(" - Name: " + proxy.name)
+    print(" - Description: " + proxy.description)
     
-    print "3. bind the setter to the mod1 output via the previous proxy"
+    print("3. bind the setter to the mod1 output via the previous proxy")
     bind(mod1.outPort("data"), DataTarget(setter), proxy)
     
-    print "Set mod1 output value to 10"
+    print("Set mod1 output value to 10")
     mod1.setParameterValue("value", 10)
     
-    print "Run module mod2"
+    print("Run module mod2")
     task = runModule(mod2)
 
-    print task.name + " state is " + task.state()
+    print(task.name + " state is " + task.state())
     
-    print "wait some... (1 sec)"
+    print("wait some... (1 sec)")
     time.sleep(1)
-    print task.name + " state is " + task.state()
+    print(task.name + " state is " + task.state())
 
-    print "Run module mod1"
+    print("Run module mod1")
     task1 = runModule(mod1)
-    print "wait mod1 end of execution"
+    print("wait mod1 end of execution")
     task1.wait()
-    print "ok."
+    print("ok.")
     
-    print task.name + " state is " + task.state()
-    print "and wait"
+    print(task.name + " state is " + task.state())
+    print("and wait")
     task.wait()
-    print task.name + " state is " + task.state()
+    print(task.name + " state is " + task.state())
 
-    print "Return value is: " + str(mod2.outPort("data").getDataValue())
+    print("Return value is: " + str(mod2.outPort("data").getDataValue()))
     if (mod2.outPort("data").getDataValue() != 10):
         raise RuntimeError('Wrong return value: 10 expected. ')    
       
-    print "End of script parameterSetterTest.py"
+    print("End of script parameterSetterTest.py")
     
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

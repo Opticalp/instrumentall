@@ -28,10 +28,14 @@
 # THE SOFTWARE.
 
 
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
+
+    import time
     
     print("Test the watchdog disabling. ")
+
+    from instru import *
     
     print("stopping the watch dog")
     stopWatchDog()
@@ -59,17 +63,17 @@ def myMain():
 # main body    
 import sys
 import os
-import time
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print("current script: " + os.path.realpath(__file__))
+        print("current script: ",os.path.realpath(__file__))
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
 print("Presumably not called from InstrumentAll >> Exiting...")

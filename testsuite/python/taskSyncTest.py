@@ -30,24 +30,30 @@
 
 import time
 
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
+
+    import time
+
+    print("run the task sync test script")
+
+    from instru import *
     
     fac = Factory("DataGenFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from floatDataGen factory"
+    print("Create module from floatDataGen factory")
     X = fac.select("dblFloat").create("X")
-    print "module " + X.name + " created (" + X.internalName + ") "
+    print("module " + X.name + " created (" + X.internalName + ") ")
     
-    print "Set output value to 314"
+    print("Set output value to 314")
     X.setParameterValue("value", 314)
     
-    print "Create a second module from floatDataGen factory"
+    print("Create a second module from floatDataGen factory")
     Y = fac.select("dblFloat").create("Y")
-    print "module " + Y.name + " created (" + Y.internalName + ") "
+    print("module " + Y.name + " created (" + Y.internalName + ") ")
     
-    print "Set output value to 62.2"
+    print("Set output value to 62.2")
     Y.setParameterValue("value", 62.2)
 
     task = runModule(Y)
@@ -55,32 +61,32 @@ def myMain():
     
     del task
     
-    print "Look for the two inputs demo module factory"
+    print("Look for the two inputs demo module factory")
     
     facDemo = Factory("DemoRootFactory").select("branch").select("leafTwoInputs")
 
-    print "Creating demo module. "
+    print("Creating demo module. ")
     demo2 = facDemo.create("demo2")
 
-    print "Bind the ports"    
+    print("Bind the ports")
     bind(X.outPorts()[0], demo2.inPort("portA"))
     bind(Y.outPorts()[0], demo2.inPort("portB"))
     
-    print 'Logger creation using the constructor: DataLogger("DataPocoLogger")'
+    print('Logger creation using the constructor: DataLogger("DataPocoLogger")')
     logger = DataLogger("DataPocoLogger") 
     
-    print "Register the data logger"
+    print("Register the data logger")
     demo2.outPort("portA").register(logger)
 
-    print "run X, run Y"
+    print("run X, run Y")
     runModule(X)
     runModule(Y)
 
-    print "Wait for them to finish"
+    print("Wait for them to finish")
     waitAll()
-    print "OK"
+    print("OK")
     
-    print "run X, wait 0.5 sec, run Y"
+    print("run X, wait 0.5 sec, run Y")
     runModule(X)
     time.sleep(0.5)
     runModule(Y)
@@ -135,18 +141,19 @@ def myMain():
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

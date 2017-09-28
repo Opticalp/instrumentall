@@ -28,83 +28,86 @@
 # THE SOFTWARE.
 
 
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
     
-    print "Test the basic features of the data push system. "
+    print("Test the basic features of the data push system. ")
+
+    from instru import *
     
     fac = Factory("DemoRootFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from leafDataSeq factory"
+    print("Create module from leafDataSeq factory")
     mod1 = fac.select("branch").select("leafDataSeq").create("mod1")
-    print "module " + mod1.name + " created. "
+    print("module " + mod1.name + " created. ")
     
-    print "Create module from leafForwarder factory"
+    print("Create module from leafForwarder factory")
     mod2 = fac.select("branch").select("leafForwarder").create("mod2")
-    print "module " + mod2.name + " created. "
+    print("module " + mod2.name + " created. ")
     
-    print "Create module from leafSeqAccu factory"
+    print("Create module from leafSeqAccu factory")
     mod3a = fac.select("branch").select("leafSeqAccu").create("mod3a")
-    print "module " + mod3a.name + " created. "
+    print("module " + mod3a.name + " created. ")
     
-    print "Create module from leafSeqMax factory"
+    print("Create module from leafSeqMax factory")
     mod3b = fac.select("branch").select("leafSeqMax").create("mod3b")
-    print "module " + mod3b.name + " created. "
+    print("module " + mod3b.name + " created. ")
     
-    print "Bind the ports: "
-    print " - mod1 output to mod2 input"
+    print("Bind the ports: ")
+    print(" - mod1 output to mod2 input")
     bind(mod1.outPorts()[0], mod2.inPorts()[0])
-    print " - mod2 output to mod3a input"
+    print(" - mod2 output to mod3a input")
     bind(mod2.outPorts()[0], mod3a.inPorts()[0])
-    print " - mod1 output to mod3b input"
+    print(" - mod1 output to mod3b input")
     bind(mod1.outPorts()[0], mod3b.inPorts()[0])
     
-    print "Query mod1 output targets: "
+    print("Query mod1 output targets: ")
     for target in mod1.outPorts()[0].getTargetPorts():    
         print ( target.name + ", from module: " +
             target.parent().name )
             
-    print "Bind the sequence generator (mod1) to the sequence combiners (mod3a/b)"
+    print("Bind the sequence generator (mod1) to the sequence combiners (mod3a/b)")
     seqBind(mod1.outPorts()[0], mod3a.inPorts()[0])
     seqBind(mod1.outPorts()[0], mod3b.inPorts()[0])
-    print "Sequence binding done. "
+    print("Sequence binding done. ")
     
-    print "Query mod1 data sequence output targets: "
+    print("Query mod1 data sequence output targets: ")
     for target in mod1.outPorts()[0].getSeqTargetPorts():    
         print ( target.name + ", from module: " +
             target.parent().name )
             
-    print "launch action: run mod1"
+    print("launch action: run mod1")
     runModule(mod1)
     
     waitAll()
     
-    print "mod3a return value is: " + str(mod3a.outPorts()[0].getDataValue())
-    print "mod3b return value is: " + str(mod3b.outPorts()[0].getDataValue())
+    print("mod3a return value is: " + str(mod3a.outPorts()[0].getDataValue()))
+    print("mod3b return value is: " + str(mod3b.outPorts()[0].getDataValue()))
     
-    print "Run twice to check the sync of the threads"
+    print("Run twice to check the sync of the threads")
 
     runModule(mod1)
     runModule(mod1)
 
-    print "End of script modDataSeqTest.py"
+    print("End of script modDataSeqTest.py")
     
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")

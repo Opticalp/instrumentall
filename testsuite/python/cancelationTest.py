@@ -27,83 +27,85 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
-import time
-
-def myMain():
+def myMain(baseDir):
     """Main function. Run the tests. """
+
+    import time
     
-    print "Test the task cancelation management. "
+    print("Test the task cancelation management. ")
+
+    from instru import *
     
     fac = Factory("DemoRootFactory")
-    print "Retrieved factory: " + fac.name
+    print("Retrieved factory: " + fac.name)
     
-    print "Create module from leafDataSeq factory"
+    print("Create module from leafDataSeq factory")
     mod1 = fac.select("branch").select("leafDataSeq").create("mod1")
-    print "module " + mod1.name + " created. "
+    print("module " + mod1.name + " created. ")
     
-    print "Create module from leafForwarder factory"
+    print("Create module from leafForwarder factory")
     mod2 = fac.select("branch").select("leafForwarder").create("mod2")
-    print "module " + mod2.name + " created. "
+    print("module " + mod2.name + " created. ")
     
-    print "Create module from leafSeqAccu factory"
+    print("Create module from leafSeqAccu factory")
     mod3 = fac.select("branch").select("leafSeqAccu").create("mod3")
-    print "module " + mod3.name + " created. "
+    print("module " + mod3.name + " created. ")
     
-    print "Bind the ports: "
-    print " - mod1 output to mod2 input"
+    print("Bind the ports: ")
+    print(" - mod1 output to mod2 input")
     bind(mod1.outPorts()[0], mod2.inPorts()[0])
-    print " - mod2 output to mod3 input"
+    print(" - mod2 output to mod3 input")
     bind(mod2.outPorts()[0], mod3.inPorts()[0])
     
-    print "Bind the sequence generator (mod1) to the sequence combiner (mod3)"
+    print("Bind the sequence generator (mod1) to the sequence combiner (mod3)")
     seqBind(mod1.outPorts()[0], mod3.inPorts()[0])
-    print "Sequence binding done. "
+    print("Sequence binding done. ")
     
-    print "launch action: run mod1"
+    print("launch action: run mod1")
     runModule(mod1)
 
-    print "wait 0.5 sec and cancel all. "
+    print("wait 0.5 sec and cancel all. ")
     time.sleep(0.5)
     cancelAll()
     
     waitAll()
     
-    print "Run 3 times to check the sync of the threads and the cleaning after cancelation"
+    print("Run 3 times to check the sync of the threads and the cleaning after cancelation")
 
     runModule(mod1)
     runModule(mod1)
     runModule(mod1)
 
-    print "wait 0.5 sec and cancel all (2) "
+    print("wait 0.5 sec and cancel all (2) ")
     time.sleep(0.5)
     cancelAll()
     waitAll()
 
-    print "launch action: run mod1"
+    print("launch action: run mod1")
     runModule(mod1)
 
     time.sleep(0.5)
     waitAll()
-    print "mod3 return value is: " + str(mod3.outPorts()[0].getDataValue())
+    print("mod3 return value is: " + str(mod3.outPorts()[0].getDataValue()))
 
-    print "End of script modDataSeqTest.py"
+    print("End of script modDataSeqTest.py")
     
 # main body    
 import sys
 import os
+from os.path import dirname
     
 if len(sys.argv) >= 1:
     # probably called from InstrumentAll
     checker = os.path.basename(sys.argv[0])
     if checker == "instrumentall" or checker == "instrumentall.exe":
-        print "current script: ",os.path.realpath(__file__)
+        print("current script: ",os.path.realpath(__file__))
         
-        from instru import *
-
-        myMain()
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
         exit(0)
 
-print "Presumably not called from InstrumentAll >> Exiting..."
+print("Presumably not called from InstrumentAll >> Exiting...")
 
 exit("This script has to be launched from inside InstrumentAll")
