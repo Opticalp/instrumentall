@@ -12,9 +12,9 @@ The dataflow is not sequencial: a data input trigs an action.
 
 # Work in progress
 
-The current effort consists in remastering the actual Instrumentall development version (private SVN) while bringing it to GitHub. 
-This work includes deep cleaning of the code and Continuous Integration management. 
+The remastering of InstrumentAll v1.0 (private SVN) is almost fully achieved with the released [v2.0](0814da7). 
+Some work has still to be done to automatize the development process (changelog, version incrementation, static code check). 
 
-*Development status: release candidate for 2.0*
+*Development status: 2.0*
 
 [More informations](doc/README.md)
