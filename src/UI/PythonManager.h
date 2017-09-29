@@ -140,8 +140,10 @@ private:
      */
     void runScript(Poco::Util::Application& app, Poco::Path scriptFile);
 
-    /// run the python console
-    void runConsole(Poco::Util::Application& app);
+    /*
+     * Run the python console
+     */
+    void runConsole();
 
     /**
      * Expose python API
