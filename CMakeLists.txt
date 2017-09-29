@@ -118,9 +118,9 @@ if ( NOT no-wxwidgets )
     file (
       GLOB_RECURSE
       resource_files
-      "${PROJECT_SOURCE_DIR}/conf/rc/*.xrc"
-      "${PROJECT_SOURCE_DIR}/conf/rc/*.png"
-      "${PROJECT_SOURCE_DIR}/conf/rc/*.jpg"
+      "${PROJECT_SOURCE_DIR}/runtimeEnv/conf/rc/*.xrc"
+      "${PROJECT_SOURCE_DIR}/runtimeEnv/conf/rc/*.png"
+      "${PROJECT_SOURCE_DIR}/runtimeEnv/conf/rc/*.jpg"
       )
       
     file (
