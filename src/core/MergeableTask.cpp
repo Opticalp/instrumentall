@@ -77,7 +77,7 @@ void MergeableTask::cancel()
 	}
 	else
 	{
-	    state = TASK_CANCELLING;
+	    setState(TASK_CANCELLING);
 	    cancelEvent.set();
 	    if (pOwner)
 	        pOwner->taskCancelled(this);
@@ -141,7 +141,7 @@ void MergeableTask::run()
 
 void MergeableTask::taskFinishedBroadcast(TaskManager* pTm)
 {
-	state = TASK_FINISHED;
+	setState(TASK_FINISHED);
 	if (pTm)
 		pTm->taskFinished(this);
 
