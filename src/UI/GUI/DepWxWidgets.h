@@ -1,0 +1,61 @@
+/**
+ * @file	src/UI/GUI/DepWxWidgets.h
+ * @date	Apr. 2016
+ * @author	PhRG - opticalp.fr
+ */
+
+/*
+ Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ */
+
+#ifndef SRC_DEPWXWIDGETS_H_
+#define SRC_DEPWXWIDGETS_H_
+
+#ifdef HAVE_WXWIDGETS
+
+#include "core/Dependency.h"
+
+class CustomWxApp;
+
+/**
+ * DepWxWidgets
+ *
+ * Description of WxWidgets external dependency
+ */
+class DepWxWidgets: public Dependency
+{
+public:
+    DepWxWidgets() { }
+
+    std::string name();
+    std::string description();
+    std::string URL();
+    std::string license();
+    std::string buildTimeVersion();
+    std::string runTimeVersion();
+
+private:
+    static std::string runtimeVer;
+    friend class CustomWxApp;
+};
+
+#endif /* HAVE_WX_WIDGETS */
+#endif /* SRC_DEPWXWIDGETS_H_ */

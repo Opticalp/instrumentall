@@ -1,0 +1,5 @@
+CI/ 
+This directory contains the files relative to Continuous Integration. 
+
+At that time: using Travis CI (Linux, Mac OSX) and AppVeyor (Windows). 
+
