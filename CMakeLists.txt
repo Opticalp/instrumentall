@@ -118,9 +118,9 @@ if ( NOT no-wxwidgets )
     file (
       GLOB_RECURSE
       resource_files
-      "${PROJECT_SOURCE_DIR}/conf/rc/*.xrc"
-      "${PROJECT_SOURCE_DIR}/conf/rc/*.png"
-      "${PROJECT_SOURCE_DIR}/conf/rc/*.jpg"
+      "${PROJECT_SOURCE_DIR}/runtimeEnv/conf/rc/*.xrc"
+      "${PROJECT_SOURCE_DIR}/runtimeEnv/conf/rc/*.png"
+      "${PROJECT_SOURCE_DIR}/runtimeEnv/conf/rc/*.jpg"
       )
       
     file (
@@ -189,12 +189,8 @@ endif (UNIX)
 
 # install directives
 install ( TARGETS instrumentall DESTINATION . )
-install ( DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/conf/
-          DESTINATION conf
-          FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-          DIRECTORY_PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-#install ( FILES testsuite/resources/uEye.ini DESTINATION conf ) 
+install ( DIRECTORY runtimeEnv/
+          DESTINATION .
+          PATTERN "*.wxg" EXCLUDE
+          PATTERN "*/README.txt" EXCLUDE)
 
-#install ( DIRECTORY runtimeEnv/guiscripts/ DESTINATION python/scripts )
-#install ( DIRECTORY runtimeEnv/initscripts/ DESTINATION python/scripts )
-install ( DIRECTORY runtimeEnv/python/embed/ DESTINATION python/embed )

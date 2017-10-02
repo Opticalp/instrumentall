@@ -47,12 +47,6 @@
 ///@{
 #define CONF_KEY_PY_SCRIPT         "python.script"
 #define CONF_KEY_PY_INITSCRIPT     "python.initScript"
-#define CONF_KEY_PY_CONSOLESCRIPT  "python.consoleScript"
-///@}
-
-/// @name Factory default: name of std scripts
-///@{
-#define PY_CONSOLESCRIPT "console.py"
 ///@}
 
 using Poco::Util::Application;
@@ -172,7 +166,7 @@ int PythonManager::main(Application& app)
 
     if (iconsoleFlag)
     {
-        runConsole(app);
+        runConsole();
     }
     else if (app.config().hasProperty(CONF_KEY_PY_SCRIPT))
     {
@@ -318,55 +312,81 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
     poco_information(logger(), "python script gracefully executed");
 }
 
-void PythonManager::runConsole(Application& app)
+void PythonManager::runConsole()
 {
-    poco_information(logger(), "launch the console script");
+    poco_information(logger(), "Launching the console... ");
 
-    // -- launch the console script ---
-    Poco::Path consoleFile;
+    ScopedGIL GIL;
 
-    // check the conf
-    try
+    PyObject *py_main, *py_global, *py_local;
+    py_main = PyImport_AddModule("__main__");
+    py_global = PyModule_GetDict(py_main);
+    py_local = PyDict_New();
+
+    char consoleScript[] =
+        "class Quitter(object): \n"
+        "    def __init__(self, name): \n"
+        "        self.name = name \n"
+        "    def __repr__(self): \n"
+        "        return 'Use %s() to exit' % (self.name) \n"
+        "    def __call__(self, code=None): \n"
+        "        raise SystemExit(code) \n"
+
+        "import code \n"
+
+        "# dictionary definition to transmit local variables \n"
+        "dico = {} \n"
+        "dico['quit']=Quitter('quit') \n"
+        "dico['exit']=Quitter('exit') \n"
+
+        "import instru \n"
+        "print('\"instru\" module loaded...') \n"
+        "dico['instru']=instru \n"
+
+        "# interactive console launch \n"
+        "try: \n"
+        "    code.interact(local=dico) \n"
+        "except SystemExit: \n"
+        "    print('Interactive console left on SystemExit.') \n";
+
+    PyCodeObject* compiledStr = reinterpret_cast<PyCodeObject*>(
+            Py_CompileString(consoleScript, "console", Py_file_input) );
+
+    // launch the string using a python command
+    if ((compiledStr==NULL) || (PyEval_EvalCode(compiledStr, py_global, py_local)==NULL))
     {
-        Poco::Exception* pExc = 0;
-
-        try
+        // check for system exit exception
+        if (PyErr_Occurred())
         {
-            std::string consolefileName = app.config().getString(CONF_KEY_PY_CONSOLESCRIPT);
-            consoleFile = Poco::Path(consolefileName);
+            if (PyErr_ExceptionMatches(PyExc_SystemExit))
+            {
+                poco_information(logger(),
+                        "Console script leaved on a SystemExit exception");
+            }
+            else if (PyErr_ExceptionMatches(PyExc_RuntimeError))
+            {
+                Poco::RuntimeException e("runConsole","The console exited on RuntimeError");
+                poco_error(logger(),e.displayText());
+                PyErr_Print();
+                throw  e;
+            }
+            else
+            {
+                Poco::UnhandledException e("runConsole",
+                        "The console exited on unhandled error. ");
+                poco_error(logger(), e.displayText());
+                PyErr_Print();
+                throw  e;
+            }
         }
-        catch (Poco::PathSyntaxException& e1)
+        else
         {
-            poco_error(logger(),e1.displayText());
-            pExc = e1.clone();
-            pExc->rethrow();
-        }
-        catch (Poco::NotFoundException& e2)
-        {
-            poco_warning(logger(),
-                    std::string("conf files have no ")
-                    + CONF_KEY_PY_CONSOLESCRIPT
-                    + " key" );
-            pExc = e2.clone();
-            pExc->rethrow();
+            Poco::Exception e("runConsole","unable to run the console script");
+            poco_error(logger(),e.displayText());
+            PyErr_Print();
+            throw e;
         }
     }
-    catch (Poco::Exception&) // if there was any error, we take the default script path
-    {
-        poco_information(logger(),
-                std::string("generating default ")
-                + CONF_KEY_PY_CONSOLESCRIPT
-                + " path" );
-
-        // default is:
-        // system.currentDir + conf/console.py
-        consoleFile = Poco::Path(app.config().getString("application.dir"));
-        // with poco >= 1.4.6, the 2 following lines can be merged
-        consoleFile.pushDirectory("conf");
-        consoleFile.setFileName(std::string(PY_CONSOLESCRIPT));
-    }
-
-    runScript(app,consoleFile);
 }
 
 void PythonManager::checkInit()
