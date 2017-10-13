@@ -129,9 +129,9 @@ public:
     /**
      * Cancel all the tasks
      *
-     * @return false if already cancelling
+     * do not wait from them to reset
      */
-    bool cancelAllNoWait();
+    void cancelAllNoWait();
 
     /**
      * Start a runnable in a thread of the thread pool

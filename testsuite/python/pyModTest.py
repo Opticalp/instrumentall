@@ -68,7 +68,23 @@ def myMain(baseDir):
     Na = 6.022e23
     
     runModule(floatGen)
+    waitAll()
+
+    print("Cancellation inside pyMod")
+
+    scriptFile = join(join(baseDir,"resources"),"pyModCancelScript.py")
+    print("Load script file: " + scriptFile)
+    pyMod.setParameterValue("scriptFilePath",scriptFile)
         
+    runModule(floatGen)
+    
+    print("wait for all modules to terminate")
+    
+    try:
+        waitAll()
+    except RuntimeError as e:
+        print(e)
+
     print("End of script pyModTest.py")
     
 # main body    
