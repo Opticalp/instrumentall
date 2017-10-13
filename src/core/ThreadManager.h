@@ -127,6 +127,13 @@ public:
     void cancelAllFromWatchDog();
 
     /**
+     * Cancel all the tasks
+     *
+     * @return false if already cancelling
+     */
+    bool cancelAllNoWait();
+
+    /**
      * Start a runnable in a thread of the thread pool
      */
     void startDataLogger(DataLogger* dataLogger);

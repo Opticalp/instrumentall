@@ -394,10 +394,10 @@ void ThreadManager::unregisterModuleTask(ModuleTaskPtr& pTask)
 	poco_information(logger(), pTask->name() + " erased from ThreadManager::pendingModTasks. ");
 }
 
-void ThreadManager::cancelAll()
+bool ThreadManager::cancelAllNoWait()
 {
     if (cancellingAll)
-        return;
+        return false;
 
 	cancellingAll = true;
 	cancelEvent.set();
@@ -415,6 +415,14 @@ void ThreadManager::cancelAll()
 		poco_information(logger(), "CancelAll: cancelling " + tsk->name());
 		tsk->cancel();
 	}
+
+	return true;
+}
+
+void ThreadManager::cancelAll()
+{
+    if (!cancelAllNoWait())
+        return;
 
 	poco_information(logger(), "CancelAll: All active tasks cancelled. Wait for them to delete. ");
 
