@@ -591,6 +591,16 @@ pythonThreadManCancelAll(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+extern "C" PyObject*
+pythonThreadManCancelAllNoWait(PyObject *self, PyObject *args)
+{
+    Poco::Util::Application::instance()
+            .getSubsystem<ThreadManager>()
+            .cancelAllNoWait();
+
+    Py_RETURN_NONE;
+}
+
 PyObject* pythonThreadManStopWatchDog(PyObject* self, PyObject* args)
 {
     Poco::Util::Application::instance()
