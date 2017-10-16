@@ -327,6 +327,25 @@ static PyMethodDef pyMethodThreadManCancelAll =
     "Cancel all the tasks, running or pending. "
 };
 
+/**
+ * @brief Python wrapper to cancel all the tasks
+ *
+ * Call ThreadManager::cancelAllNoWait() method
+ *
+ */
+extern "C" PyObject*
+pythonThreadManCancelAllNoWait(PyObject *self, PyObject *args);
+
+static PyMethodDef pyMethodThreadManCancelAllNoWait =
+{
+    "cancelAllNoWait",
+    pythonThreadManCancelAllNoWait,
+    METH_NOARGS,
+    "Cancel all the tasks, running or pending. "
+    "Do not wait for the tasks being terminated. "
+    "Can be used inside a python module. "
+};
+
 
 /**
  * @brief Python wrapper to stop the watch dog
