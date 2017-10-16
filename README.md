@@ -1,4 +1,4 @@
-![InstrumentAll_logo]( conf/rc/logoInstrumentAll.png )
+![InstrumentAll_logo]( runtimeEnv/conf/rc/logoInstrumentAll.png )
 
 # InstrumentAll
 
