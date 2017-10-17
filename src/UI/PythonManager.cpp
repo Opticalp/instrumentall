@@ -252,8 +252,8 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
     py_global = PyModule_GetDict(py_main);
     py_local = PyDict_New();
 
-//    PyObject* exitFct = PySys_GetObject(const_cast<char*>("exit"));
-//    PyDict_SetItemString(py_global, "exit", exitFct);
+    PyObject* exitFct = PySys_GetObject(const_cast<char*>("exit"));
+    PyDict_SetItemString(py_global, "exit", exitFct);
     PyObject* pyScript = PyString_FromString(scriptFile.toString().c_str());
     PyDict_SetItemString(py_local, "__file__", pyScript);
 
@@ -282,6 +282,7 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
             {
                 poco_information(logger(),
                         "Script leaved on a SystemExit exception");
+                PyErr_Clear();
             }
             else if (PyErr_ExceptionMatches(PyExc_RuntimeError))
             {
@@ -323,6 +324,9 @@ void PythonManager::runConsole()
     py_global = PyModule_GetDict(py_main);
     py_local = PyDict_New();
 
+    PyObject* exitFct = PySys_GetObject(const_cast<char*>("exit"));
+    PyDict_SetItemString(py_global, "exit", exitFct);
+
     char consoleScript[] =
         "class Quitter(object): \n"
         "    def __init__(self, name): \n"
@@ -362,6 +366,7 @@ void PythonManager::runConsole()
             {
                 poco_information(logger(),
                         "Console script leaved on a SystemExit exception");
+                PyErr_Clear();
             }
             else if (PyErr_ExceptionMatches(PyExc_RuntimeError))
             {

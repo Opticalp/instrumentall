@@ -1,3 +1,7 @@
+2.1.0-dev.2
+-----------
+ * Fix iconsole issue while using initscript
+
 2.1.0-dev.1
 -----------
  * Add cancelAllNoWait()
