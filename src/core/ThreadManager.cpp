@@ -357,6 +357,9 @@ void ThreadManager::waitAll()
     {
         ModuleManager& modMan = Poco::Util::Application::instance().getSubsystem<ModuleManager>();
 
+        poco_notice(logger(),"waitAll: execution stopped on cancellation or failure. "
+                "Waiting till all the module are ready. ");
+
         while (!modMan.allModuleReady())
             Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
 
