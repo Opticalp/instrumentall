@@ -31,6 +31,7 @@
 #include "python/PythonAPI.h"
 
 #include "Poco/String.h" // trim
+#include "Poco/NumberFormatter.h"
 #include "Poco/File.h"
 
 #include "core/ThreadManager.h"
@@ -242,6 +243,16 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
             }
         }
     }
+	else if (!scriptFile.isFile()
+                || !Poco::File(scriptFile).exists()
+                || !Poco::File(scriptFile).canRead() )
+
+	{
+                Poco::Exception e("runScript","unable to read the script: "
+                    + scriptFile.toString());
+                poco_error(logger(),e.displayText());
+                throw e;
+	}
 
     scriptFile.makeAbsolute();
 
