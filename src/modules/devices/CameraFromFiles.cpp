@@ -117,6 +117,9 @@ void CameraFromFiles::process(int startCond)
     Poco::Path fullImagePath = imgDir;
     fullImagePath.append(*currentImgPath++);
 
+    poco_information(logger(), name() + " tries to open: "
+            + fullImagePath.toString());
+
     dataLock.unlock();
 
     DataAttributeOut attr;

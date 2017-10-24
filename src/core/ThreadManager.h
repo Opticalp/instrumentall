@@ -222,6 +222,14 @@ private:
     bool moduleFailure; ///< to be used by waitAll to check if a single module failed
     Poco::Event cancelEvent; ///< to be used by waitAll in case of cancellation (single module or cancelAll)
 
+    /**
+     * Cancel all active tasks
+     *
+     * Do not manage cancellingAll!
+     * cancellingAll has to be set by the caller.
+     */
+    void cancelAllActiveTasks();
+
     size_t lastThreadCount;
     std::set<MergeableTask*> lastTaskList;
 };

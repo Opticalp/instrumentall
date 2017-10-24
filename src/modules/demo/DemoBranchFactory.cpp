@@ -34,6 +34,7 @@ THE SOFTWARE.
 
 #include "DemoModuleA.h"
 #include "DemoModuleFreeze.h"
+#include "DemoModuleFail.h"
 
 std::vector<std::string> DemoBranchFactory::selectValueList()
 {
@@ -48,6 +49,7 @@ std::vector<std::string> DemoBranchFactory::selectValueList()
 	list.push_back("leafParam");
 	list.push_back("leafTwoInputs");
 	list.push_back("freezer");
+	list.push_back("failer");
 	return list;
 }
 
@@ -60,6 +62,10 @@ ModuleFactoryBranch* DemoBranchFactory::newChildFactory(std::string selector)
     if (selector.compare("freezer") == 0)
         return new GenericLeafFactory<DemoModuleFreeze>("DemoFreezerFactory",
                 "Create a freezing module to test the watchdog",
+                this, selector);
+    if (selector.compare("failer") == 0)
+        return new GenericLeafFactory<DemoModuleFail>("DemoFailerFactory",
+                "Create a failing module to test the error propagation",
                 this, selector);
     else
         return new DemoLeafFactory(this, selector);
