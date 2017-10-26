@@ -107,7 +107,10 @@ TopFrame::TopFrame(wxWindow* parent):
     // go maximized
 //    Maximize(true);
 
+#ifdef HAVE_OPENCV
     imgPanel = XRCCTRL(*this, "imagePanel", ImagePanel);
+    imgPanel2 = XRCCTRL(*this, "imagePanel2", ImagePanel);
+#endif
 
     stBar = XRCCTRL(*this,"topFrameStatusbar", wxStatusBar);
 
@@ -295,9 +298,15 @@ void TopFrame::setImage(cv::Mat img)
 //     XRCCTRL(*this,"imageContinueButton",wxButton)->Enable(false);
 }
 
+void TopFrame::setImage2(cv::Mat img)
+{
+     imgPanel2->setImage(img);
+}
+
 void TopFrame::onZoomIn(wxCommandEvent& event)
 {
     imgPanel->incZoom();
+    imgPanel2->incZoom();
 
     // do not call refresh directly! since we can be in a worker thread...
     wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
@@ -308,6 +317,7 @@ void TopFrame::onZoomIn(wxCommandEvent& event)
 void TopFrame::onZoomOut(wxCommandEvent& event)
 {
     imgPanel->decZoom();
+    imgPanel2->decZoom();
 
     // do not call refresh directly! since we can be in a worker thread...
     wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
@@ -318,6 +328,7 @@ void TopFrame::onZoomOut(wxCommandEvent& event)
 void TopFrame::onZoomFit(wxCommandEvent& event)
 {
     imgPanel->zoomReset();
+    imgPanel2->zoomReset();
 
     // do not call refresh directly! since we can be in a worker thread...
     wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());

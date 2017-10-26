@@ -85,7 +85,7 @@ public:
     bool isScriptRunning();
 
 #ifdef HAVE_OPENCV
-    void showImage(cv::Mat img);
+    void showImage(cv::Mat img, int panelIndex = 0);
 #endif
 
     std::string getStatusBarTxt(int field);

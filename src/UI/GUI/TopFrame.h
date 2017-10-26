@@ -64,6 +64,7 @@ public:
      * @param img opencv image to display
      */
     void setImage(cv::Mat img);
+    void setImage2(cv::Mat img);
 #endif
 
     /**
@@ -119,6 +120,7 @@ private:
     void onZoomFit(wxCommandEvent& event);
 
     ImagePanel* imgPanel;
+    ImagePanel* imgPanel2;
 #endif
 
     /**

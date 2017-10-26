@@ -143,9 +143,19 @@ void GuiProcessingUnit::setTextCtrlTxt(std::string txt)
 }
 
 #ifdef HAVE_OPENCV
-void GuiProcessingUnit::showImage(cv::Mat img)
+void GuiProcessingUnit::showImage(cv::Mat img, int panelIndex)
 {
-    topFrame->setImage(img);
+	switch (panelIndex)
+	{
+	case 0:
+		topFrame->setImage(img);
+		break;
+	case 1:
+		topFrame->setImage2(img);
+		break;
+	default:
+		poco_bugcheck_msg("unknown image panel index");
+	}
 }
 
 #endif
