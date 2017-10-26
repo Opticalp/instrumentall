@@ -56,7 +56,9 @@ ShowImageLogger::ShowImageLogger():
     setParameterCount(paramCnt);
     addParameter(paramImagePanel, "imagePanel",
     		"Index of the image panel (GUI) on which "
-    		"to display the image", ParamItem::typeInteger);
+    		"to display the image", ParamItem::typeInteger, "0");
+
+    setIntParameterValue(paramImagePanel, getIntParameterDefaultValue(paramImagePanel));
 
     refCount++;
 }

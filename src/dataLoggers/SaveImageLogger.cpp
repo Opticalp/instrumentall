@@ -56,6 +56,12 @@ SaveImageLogger::SaveImageLogger():
     addParameter(paramNextIndex, "nextIndex", "Next index to be used to generate the image file name",
             ParamItem::typeInteger, "1");
 
+    setStrParameterValue(paramDirectory, getStrParameterDefaultValue(paramDirectory));
+    setStrParameterValue(paramPrefix, getStrParameterDefaultValue(paramPrefix));
+    setIntParameterValue(paramDigits, getIntParameterDefaultValue(paramDigits));
+    setStrParameterValue(paramExtension, getStrParameterDefaultValue(paramExtension));
+    setIntParameterValue(paramNextIndex, getIntParameterDefaultValue(paramNextIndex));
+
     refCount++;
 }
 
