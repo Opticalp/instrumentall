@@ -48,9 +48,15 @@ size_t ShowImageLogger::refCount = 0;
 size_t ShowImageLogger::winCount = 0;
 
 ShowImageLogger::ShowImageLogger():
-        DataLogger("ShowImageLogger")
+        DataLogger("ShowImageLogger"),
+		imagePanelIndex(0)
 {
     setName(refCount);
+
+    setParameterCount(paramCnt);
+    addParameter(paramImagePanel, "imagePanel",
+    		"Index of the image panel (GUI) on which "
+    		"to display the image", ParamItem::typeInteger);
 
     refCount++;
 }
@@ -69,7 +75,7 @@ void ShowImageLogger::log()
                     .getGuiProcUnit();
         if (guiProc != NULL)
         {
-            guiProc->showImage(img);
+            guiProc->showImage(img, imagePanelIndex);
         }
         else
 #endif /* HAVE_WXWIDGETS */
@@ -101,5 +107,34 @@ std::set<int> ShowImageLogger::supportedInputDataType()
     ret.insert(DataItem::typeCvMat);
     return ret;
 }
+
+Poco::Int64 ShowImageLogger::getIntParameterValue(size_t paramIndex)
+{
+    switch (paramIndex)
+    {
+    case paramImagePanel:
+        return imagePanelIndex;
+    default:
+        poco_bugcheck_msg("wrong parameter index");
+        throw Poco::BugcheckException();
+    }
+}
+
+void ShowImageLogger::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
+{
+    switch (paramIndex)
+    {
+    case paramImagePanel:
+        if (value < 0)
+            throw Poco::RangeException("setParameterValue",
+                    "parameter imagePanel has to be positive");
+        imagePanelIndex = static_cast<int>(value);
+        break;
+    default:
+        poco_bugcheck_msg("wrong parameter index");
+        throw Poco::BugcheckException();
+    }
+}
+
 
 #endif /* HAVE_OPENCV */
