@@ -29,6 +29,7 @@
 #include "ParameterGetter.h"
 #include "ParameterizedEntityWithWorkers.h"
 #include "ExecutionAbortedException.h"
+#include "DataAttributeOut.h"
 
 #include "Poco/NumberFormatter.h"
 

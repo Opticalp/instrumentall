@@ -54,15 +54,15 @@ public:
 	std::string name() { return mName; }
 	std::string description();
 
+    /**
+     * getParameterValue and send it as dataSource
+     */
+    void emitParamValue();
+
 private:
 	ParameterGetter();
 
 	static size_t refCount;
-
-	/**
-	 * getParameterValue and send it as dataSource
-	 */
-	void emitParamValue();
 
 	std::string mName;
 

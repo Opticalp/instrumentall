@@ -307,6 +307,9 @@ void Module::run(ModuleTask* pTask)
                         "in order to run a new task, "
                         "the module is cancelling");
 
+        // emit data from the parameter getters (if any)
+        runGetters();
+
 		setRunningState(ModuleTask::retrievingInDataLocks);
 
 		startCond = startCondition();

@@ -77,6 +77,12 @@ public:
 	std::set< Poco::AutoPtr<ParameterGetter> > getParameterGetters()
 		{ return getters; }
 
+protected:
+    /**
+     * Emit parameter values
+     */
+    void runGetters();
+
 private:
 	ParameterizedEntityWithWorkers* self;
 	std::set< Poco::AutoPtr<ParameterGetter> > getters;
