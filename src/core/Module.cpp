@@ -298,7 +298,10 @@ void Module::run(ModuleTask* pTask)
 		waitParameters();
 
 	    if (!isParamKeptLocked())
+	    {
 	        parametersTreated();
+	        runGetters();
+	    }
 
         while (!tryReadLockParameters())
             if (yield())
@@ -306,9 +309,6 @@ void Module::run(ModuleTask* pTask)
                         ": can not read lock the parameters "
                         "in order to run a new task, "
                         "the module is cancelling");
-
-        // emit data from the parameter getters (if any)
-        runGetters();
 
 		setRunningState(ModuleTask::retrievingInDataLocks);
 
