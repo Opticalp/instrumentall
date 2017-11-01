@@ -87,15 +87,16 @@ void ParameterizedWithSetters::trigSetParameter(size_t paramIndex)
 
     if (paramAlreadySet.insert(paramIndex).second)
     {
-        if (paramAlreadySet.size() == setters.size())
+        bool done = (paramAlreadySet.size() == setters.size());
+
+        alreadySetLock.unlock();
+        if (done)
         {
             if (preApply)
                 self->tryApplyParameters(true);
 
             allSet.set();
         }
-
-        alreadySetLock.unlock();
     }
     else
     {
