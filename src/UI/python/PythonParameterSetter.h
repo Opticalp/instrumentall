@@ -79,10 +79,21 @@ static PyMethodDef pyMethodParameterSetterParameterName =
     "Retrieve the name of the parent parameter as: moduleName.paramName"
 };
 
+/// ParameterSetter::parent python wrapper
+extern "C" PyObject* pyParameterSetterParent(ParameterSetterMembers *self);
+
+static PyMethodDef pyMethodParameterSetterParent =
+{
+    "parent",
+    (PyCFunction)pyParameterSetterParent,
+    METH_NOARGS,
+    "Retrieve the parent module"
+};
 
 /// exported methods
 static PyMethodDef pyParameterSetterMethods[] = {
         pyMethodParameterSetterParameterName,
+        pyMethodParameterSetterParent,
 
         {NULL} // sentinel
 };

@@ -245,18 +245,17 @@ static PyMethodDef pyMethodModBuildParamSetter =
     "build a parameter setter for the given parameter"
 };
 
-/// Module::buildParameterSetter python wrapper
-//extern "C"
-//PyObject* pyModBuildParamSetter(ModMembers *self, PyObject *args);
-//
-//static PyMethodDef pyMethodModBuildParamSetter =
-//{
-//    "buildParameterSetter",
-//    (PyCFunction)pyModBuildParamSetter,
-//    METH_VARARGS,
-//    "buildParameterSetter(paramName): "
-//    "build a parameter setter for the given parameter"
-//};
+/// Module::getParameterSetters python wrapper
+extern "C"
+PyObject* pyModGetParamSetters(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModGetParamSetters =
+{
+    "getParameterSetters",
+    (PyCFunction)pyModGetParamSetters,
+    METH_NOARGS,
+    "Retrieve the parameterSetters of the module"
+};
 
 /// exported methods
 static PyMethodDef pyModMethods[] = {
@@ -278,6 +277,7 @@ static PyMethodDef pyModMethods[] = {
 
 	pyMethodModBuildParamGetter,
 	pyMethodModBuildParamSetter,
+	pyMethodModGetParamSetters,
 
 	{NULL} // sentinel
 };
