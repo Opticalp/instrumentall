@@ -59,12 +59,15 @@ public:
 
 #ifdef HAVE_OPENCV
     /**
-     * set an image into the image panel
+     * Display an image on an image panel
+     *
+     * Do not emit a warning if the requested image panel (see `pos` parameter)
+     * is not available.
      *
      * @param img opencv image to display
+     * @param index image panel index in case of multiple image panels
      */
-    void setImage(cv::Mat img);
-    void setImage2(cv::Mat img);
+    void setImage(cv::Mat img, int pos = 0);
 #endif
 
     /**
@@ -119,8 +122,7 @@ private:
     /// zoom fit button handler
     void onZoomFit(wxCommandEvent& event);
 
-    ImagePanel* imgPanel;
-    ImagePanel* imgPanel2;
+    std::vector<ImagePanel*> imgPanels;
 #endif
 
     /**
