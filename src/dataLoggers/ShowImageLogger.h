@@ -58,6 +58,17 @@ private:
     bool isSupportedInputDataType(int datatype);
 
     std::set<int> supportedInputDataType();
+
+    enum params
+    {
+        paramImagePanel,
+        paramCnt
+    };
+
+    Poco::Int64 imagePanelIndex; ///< storage for the next index
+
+    Poco::Int64 getIntParameterValue(size_t paramIndex);
+    void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
 };
 
 #endif /* HAVE_OPENCV */

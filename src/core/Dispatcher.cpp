@@ -157,7 +157,6 @@ void Dispatcher::resetWorkflow()
                 gite = paramGetters.end(); git != gite; git++)
         {
             unbind(static_cast<DataSource*>(const_cast<ParameterGetter*>(git->get())));
-            unbind(static_cast<DataTarget*>(const_cast<ParameterGetter*>(git->get())));
         }
 
         std::set< Poco::AutoPtr<ParameterSetter> > paramSetters = (**it)->getParameterSetters();

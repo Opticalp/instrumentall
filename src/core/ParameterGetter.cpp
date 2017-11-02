@@ -29,6 +29,7 @@
 #include "ParameterGetter.h"
 #include "ParameterizedEntityWithWorkers.h"
 #include "ExecutionAbortedException.h"
+#include "DataAttributeOut.h"
 
 #include "Poco/NumberFormatter.h"
 
@@ -37,7 +38,6 @@ size_t ParameterGetter::refCount = 0;
 ParameterGetter::ParameterGetter(ParameterizedEntityWithWorkers* parameterized,
 		size_t paramIndex):
 				ParameterWorker(parameterized, paramIndex),
-//				DataSource(paramDataType(parameterized, paramIndex)),
 				DataSource(getParameterDataType()),
 				mName(getParent()->name() + "ParameterGetter")
 {
@@ -56,23 +56,13 @@ std::string ParameterGetter::description()
 		return "Expired parameter getter. You should consider deleting it. ";
 }
 
-void ParameterGetter::runTarget()
+void ParameterGetter::emitParamValue()
 {
-	if (!tryCatchSource())
-		poco_bugcheck_msg("ParameterGetter::runTarget, "
-				"not able to catch the source");
-
 	if (getParent() == NULL)
-	{
-		releaseInputData();
 		throw Poco::InvalidAccessException("ParameterGetter",
 				"The parent is no more valid");
-	}
 
-	lockSource();
-	DataAttribute attr;
-	readInputDataAttribute(&attr);
-	releaseInputData();
+	DataAttributeOut attr;
 
 	while (!tryWriteDataLock())
 	{
@@ -108,14 +98,20 @@ void ParameterGetter::runTarget()
 	notifyReady(attr);
 }
 
-void ParameterGetter::targetWaitCancelled()
+void ParameterGetter::sourceCancel()
 {
-    getParent()->waitCancelled();
-    waitTargetsCancelled();
+    if (getParent())
+        getParent()->cancel();
 }
 
 void ParameterGetter::sourceWaitCancelled()
 {
-    waitSourceCancelled();
-    getParent()->waitCancelled();
+    if (getParent())
+        getParent()->waitCancelled();
+}
+
+void ParameterGetter::sourceReset()
+{
+    if (getParent())
+        getParent()->reset();
 }

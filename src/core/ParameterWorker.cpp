@@ -34,7 +34,7 @@ int ParameterWorker::paramDataType(ParameterizedEntityWithWorkers* parameterized
 		size_t paramIndex)
 {
 	if (parameterized == NULL)
-		throw Poco::NullPointerException("ParameterGetter::paramDataType");
+		throw Poco::NullPointerException("ParameterWorker::paramDataType");
 
 	ParameterSet params;
 	parameterized->getParameterSet(&params);
@@ -50,14 +50,14 @@ int ParameterWorker::paramDataType(ParameterizedEntityWithWorkers* parameterized
 		case (ParamItem::typeString):
 			return TypeNeutralData::typeString;
 		default:
-			poco_bugcheck_msg("ParameterGetter::paramDataType, "
+			poco_bugcheck_msg("ParameterWorker::paramDataType, "
 					"unknown parameter type");
 			throw Poco::BugcheckException();
 		}
 	}
 	catch (std::out_of_range&)
 	{
-		throw Poco::RangeException("ParameterGetter::paramDataType",
+		throw Poco::RangeException("ParameterWorker::paramDataType",
 				"out of range parameter index");
 	}
 }
@@ -80,6 +80,6 @@ std::string ParameterWorker::getParameterName() const
 	}
 	else
 		throw Poco::InvalidAccessException("getParameterName",
-				"Invalidated parameter getter");
+				"Invalidated parameter worker");
 }
 

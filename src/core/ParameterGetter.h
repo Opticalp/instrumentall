@@ -30,7 +30,6 @@
 #define SRC_PARAMETERGETTER_H_
 
 #include "DataSource.h"
-#include "DataTarget.h"
 #include "ParameterWorker.h"
 
 #include "Poco/RefCountedObject.h"
@@ -40,13 +39,12 @@ class ParameterizedEntityWithWorkers;
 /**
  * ParameterGetter
  *
- * Emit data retrieved via getParameterValue when trigged by the
- * input.
+ * @par since 2.1.0-dev.4
+ * Emit data retrieved via getParameterValue when the source module executes
  */
 class ParameterGetter:
 		public ParameterWorker,
 		public DataSource,
-		public DataTarget,
 		public Poco::RefCountedObject
 {
 public:
@@ -56,21 +54,15 @@ public:
 	std::string name() { return mName; }
 	std::string description();
 
+    /**
+     * getParameterValue and send it as dataSource
+     */
+    void emitParamValue();
+
 private:
 	ParameterGetter();
 
 	static size_t refCount;
-
-	/**
-	 * getParameterValue and send it as dataSource
-	 */
-	void runTarget();
-
-	bool isSupportedInputDataType(int datatype)
-		{ return true; }
-
-    std::set<int> supportedInputDataType()
-		{ return std::set<int>(); }
 
 	std::string mName;
 
@@ -78,13 +70,9 @@ private:
 	void decUser() { release();   }
 	size_t userCnt() { return referenceCount(); }
 
-	void targetCancel() { cancelWithTargets(); }
-	void targetWaitCancelled();
-	void targetReset() { resetWithTargets(); }
-
-	void sourceCancel() { cancelWithSource(); }
+	void sourceCancel();
 	void sourceWaitCancelled();
-	void sourceReset() { resetWithSource(); }
+	void sourceReset();
 };
 
 #endif /* SRC_PARAMETERGETTER_H_ */

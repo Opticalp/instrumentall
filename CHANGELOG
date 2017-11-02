@@ -1,3 +1,11 @@
+2.1.0-dev.5
+-----------
+Change ParameterGetter to be triggged when the parent module runs
+
+2.1.0-dev.4
+-----------
+Add a second image panel in GUI
+
 2.1.0-dev.3
 -----------
 Some minor changes:

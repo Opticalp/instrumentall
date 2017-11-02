@@ -338,11 +338,6 @@ std::string GraphvizExportTool::getPortName(DataTarget* target)
     if (inPort)
         return inPort->parent()->name() + ":inPort_" + inPort->name() + ":n";
 
-    // target is: parameter getter
-    ParameterGetter* paramGet = dynamic_cast<ParameterGetter*>(target);
-    if (paramGet)
-        return paramGet->getParent()->name() + ":param_" + paramGet->getParameterName() + ":w";
-
     // target is: parameter setter
     ParameterSetter* paramSet = dynamic_cast<ParameterSetter*>(target);
     if (paramSet)
