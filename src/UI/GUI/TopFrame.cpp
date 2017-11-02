@@ -107,7 +107,10 @@ TopFrame::TopFrame(wxWindow* parent):
     // go maximized
 //    Maximize(true);
 
-    imgPanel = XRCCTRL(*this, "imagePanel", ImagePanel);
+#ifdef HAVE_OPENCV
+    imgPanels.push_back(XRCCTRL(*this, "imagePanel", ImagePanel));
+    imgPanels.push_back(XRCCTRL(*this, "imagePanel2", ImagePanel));
+#endif
 
     stBar = XRCCTRL(*this,"topFrameStatusbar", wxStatusBar);
 
@@ -268,12 +271,13 @@ std::string TopFrame::getTextCtrlTxt()
 }
 
 #ifdef HAVE_OPENCV
-void TopFrame::setImage(cv::Mat img)
+void TopFrame::setImage(cv::Mat img, int pos)
 {
 //    _waitImageOk = true;
 //     XRCCTRL(*this,"imageContinueButton",wxButton)->Enable(true);
 
-     imgPanel->setImage(img);
+    if (pos < imgPanels.size())
+        imgPanels[pos]->setImage(img);
 
 //     if (milliseconds)
 //         for (int i=0 ; i< milliseconds/100 ; i++)
@@ -297,7 +301,9 @@ void TopFrame::setImage(cv::Mat img)
 
 void TopFrame::onZoomIn(wxCommandEvent& event)
 {
-    imgPanel->incZoom();
+    for (std::vector<ImagePanel*>::iterator it = imgPanels.begin(),
+        ite = imgPanels.end(); it != ite; it++)
+            (*it)->incZoom();
 
     // do not call refresh directly! since we can be in a worker thread...
     wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
@@ -307,7 +313,9 @@ void TopFrame::onZoomIn(wxCommandEvent& event)
 
 void TopFrame::onZoomOut(wxCommandEvent& event)
 {
-    imgPanel->decZoom();
+    for (std::vector<ImagePanel*>::iterator it = imgPanels.begin(),
+        ite = imgPanels.end(); it != ite; it++)
+            (*it)->decZoom();
 
     // do not call refresh directly! since we can be in a worker thread...
     wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
@@ -317,7 +325,9 @@ void TopFrame::onZoomOut(wxCommandEvent& event)
 
 void TopFrame::onZoomFit(wxCommandEvent& event)
 {
-    imgPanel->zoomReset();
+    for (std::vector<ImagePanel*>::iterator it = imgPanels.begin(),
+        ite = imgPanels.end(); it != ite; it++)
+            (*it)->zoomReset();
 
     // do not call refresh directly! since we can be in a worker thread...
     wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
