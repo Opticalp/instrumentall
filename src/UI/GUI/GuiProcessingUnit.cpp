@@ -143,9 +143,9 @@ void GuiProcessingUnit::setTextCtrlTxt(std::string txt)
 }
 
 #ifdef HAVE_OPENCV
-void GuiProcessingUnit::showImage(cv::Mat img)
+void GuiProcessingUnit::showImage(cv::Mat img, int panelIndex)
 {
-    topFrame->setImage(img);
+    topFrame->setImage(img, panelIndex);
 }
 
 #endif

@@ -42,7 +42,8 @@ def myMain(baseDir):
     
     print("Create module from cvMatDataGen factory")
     try:
-        imgGen = fac.select("cvMat").create("imgGenerator")
+        imgGen = fac.select("cvMat").create("imgGen")
+        imgGen2 = fac.select("cvMat").create("imgGen2")
     except RuntimeError as e:
         print("Runtime error: {0}".format(e.message))
         print("OpenCV is probably not present. Exiting. ")
@@ -50,8 +51,10 @@ def myMain(baseDir):
         
     print("module " + imgGen.name + " created (" + imgGen.internalName + ") ")
     
-    print("Set output value to 127")
+    print("Set imgGen output value to 127")
     imgGen.setParameterValue("value", 127)
+    print("Set imgGen2 output value to 63")
+    imgGen2.setParameterValue("value", 63)
     
     print("Run module")
     task = runModule(imgGen)
@@ -66,14 +69,23 @@ def myMain(baseDir):
     for loggerClass in loggerClasses:
         print(" - " + loggerClass + ": " + loggerClasses[loggerClass])
     
-    print('Logger creation using the constructor: DataLogger("ShowImageLogger")')
-    logger = DataLogger("ShowImageLogger") 
+    print('Loggers creation using the constructor: DataLogger("ShowImageLogger")')
+    logger = DataLogger("ShowImageLogger")
+    logger2 = DataLogger("ShowImageLogger")
     print("Logger description: " + logger.description)
 
-    imgGen.outPort("data").register(logger)
+    print("set logger2 imagePanel to 1")
+    logger2.setParameterValue("imagePanel",1)
 
+    print("bind the loggers")
+    imgGen.outPort("data").register(logger)
+    imgGen2.outPort("data").register(logger2)
+
+    print("run imgGen and imgGen2")
     runModule(imgGen)
-    time.sleep(1) # wait 1s in order to show the image
+    waitAll() # to avoid the linux xcb error while not initializing XInitThreads
+    runModule(imgGen2)
+    time.sleep(1) # wait 1s in order to show the images
 
     print("Set output value to 255")
     imgGen.setParameterValue("value", 255)
