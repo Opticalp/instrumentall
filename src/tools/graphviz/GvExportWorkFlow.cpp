@@ -126,7 +126,6 @@ void GvExportWorkFlow::exportNodes(std::ostream& out)
         for (std::set< Poco::AutoPtr<ParameterGetter> >::iterator git = paramGetters.begin(),
                 gite = paramGetters.end(); git != gite; git++)
         {
-            propagateBottomUp(out, const_cast<ParameterGetter*>(git->get()));
             propagateTopDown(out, const_cast<ParameterGetter*>(git->get()));
         }
 
@@ -152,7 +151,6 @@ void GvExportWorkFlow::propagateTopDown(std::ostream& out, DataSource* source)
 
         // target is: a module
         if ( dynamic_cast<InPort*>(*it)
-                || dynamic_cast<ParameterGetter*>(*it)
                 || dynamic_cast<ParameterSetter*>(*it) )
             continue;
 
@@ -242,8 +240,6 @@ void GvExportWorkFlow::exportEdges(std::ostream& out)
         DataSource* source = (*it)->getDataSource();
         out << "    " << getPortName(source) << " -> ";
         out << getPortName(*it) ;
-        if (dynamic_cast<ParameterGetter*>(*it))
-            out << " [arrowhead=none]";
         out << " ;" << std::endl;
     }
 

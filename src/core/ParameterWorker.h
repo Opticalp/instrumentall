@@ -38,7 +38,7 @@ class ParameterizedEntityWithWorkers;
 /**
  * ParameterWorker
  *
- * Base calss for ParameterGetter and ParameterSetter
+ * Base class for ParameterGetter and ParameterSetter
  */
 class ParameterWorker
 {
@@ -48,7 +48,7 @@ public:
 
 	/**
 	 * Called by the owner (parameterized entity)
-	 * to release the parameter getter.
+	 * to release the parameter worker.
 	 */
 	void invalidate()
 		{ parent = NULL; }

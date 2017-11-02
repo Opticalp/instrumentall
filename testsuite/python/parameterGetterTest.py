@@ -69,22 +69,6 @@ def myMain(baseDir):
     print(" - " + getFloat.parameterName())
     print(" - " + getStr.parameterName())
 
-    print("Create a module to trig the parameter getters")
-    trigger = Factory("DataGenFactory").select("float").create("trigger")
-    trigPort = trigger.outPorts()[0]
-
-    print("Test DataTarget cast (ParameterGetter)")
-    targetInt = DataTarget(getInt)
-    print("target: " + targetInt.name + " (" + targetInt.description + ")")
-
-    print("Bind the trigger to the param getters")
-    bind(trigPort, DataTarget(getInt))
-    bind(trigPort, DataTarget(getFloat))
-    bind(trigPort, DataTarget(getStr))
-
-    print("Test param int getter connexion")
-    print("Source is: " + targetInt.getDataSource().name)
-
     print("Create Data loggers to print the output of the param getters")
     loggerInt = DataLogger("DataPocoLogger")
     loggerFloat = DataLogger("DataPocoLogger")
@@ -103,8 +87,8 @@ def myMain(baseDir):
     bind(DataSource(getFloat), DataTarget(loggerFloat))
     bind(DataSource(getStr), DataTarget(loggerStr))
 
-    print("Trig the getters")
-    runModule(trigger)
+    print("Run the parent module of the getters")
+    runModule(modParam)
     waitAll()
 
     if (DataSource(getInt).getDataValue() != 666):

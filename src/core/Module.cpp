@@ -298,7 +298,10 @@ void Module::run(ModuleTask* pTask)
 		waitParameters();
 
 	    if (!isParamKeptLocked())
+	    {
 	        parametersTreated();
+	        runGetters();
+	    }
 
         while (!tryReadLockParameters())
             if (yield())
