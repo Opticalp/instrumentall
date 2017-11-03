@@ -60,6 +60,7 @@ extern "C" int pyBreakerInit(BreakerMembers* self, PyObject* args, PyObject *kwd
 }
 
 #include "PythonOutPort.h"
+#include "PythonDataSource.h"
 
 extern "C" PyObject* pyBreakerBreakAllTargets(BreakerMembers* self, PyObject* args)
 {
@@ -75,15 +76,20 @@ extern "C" PyObject* pyBreakerBreakAllTargets(BreakerMembers* self, PyObject* ar
 
     DataSource* source;
 
-    if (typeName.compare("instru.OutPort")) // only data source yet
+    if (typeName.compare("instru.OutPort") == 0)
     {
-        PyErr_SetString(PyExc_TypeError,
-                "The argument must be a data source (output port)");
-        return NULL;
+        source = **reinterpret_cast<OutPortMembers*>(pyObj)->outPort;
+    }
+    else if (typeName.compare("instru.DataSource") == 0)
+    {
+        DataSourceMembers* pyDataSource = reinterpret_cast<DataSourceMembers*>(pyObj);
+        source = pyDataSource->source;
     }
     else
     {
-    	source = **reinterpret_cast<OutPortMembers*>(pyObj)->outPort;
+        PyErr_SetString(PyExc_TypeError,
+                "The argument must be a data source (output port or DataSource cast)");
+        return NULL;
     }
 
     try
@@ -102,6 +108,7 @@ extern "C" PyObject* pyBreakerBreakAllTargets(BreakerMembers* self, PyObject* ar
 
 #include "PythonInPort.h"
 #include "PythonDataLogger.h"
+#include "PythonDataTarget.h"
 
 extern "C" PyObject* pyBreakerBreakSource(BreakerMembers* self, PyObject* args)
 {
@@ -125,10 +132,15 @@ extern "C" PyObject* pyBreakerBreakSource(BreakerMembers* self, PyObject* args)
     {
     	target = *reinterpret_cast<DataLoggerMembers*>(pyObj)->logger;
     }
+    else if (typeName.compare("instru.DataTarget") == 0)
+    {
+        DataTargetMembers* pyDataTarget = reinterpret_cast<DataTargetMembers*>(pyObj);
+        target = pyDataTarget->target;
+    }
     else
     {
         PyErr_SetString(PyExc_TypeError,
-                "The argument must be a data target (input port or data logger)");
+                "The argument must be a data target (input port, data logger or DataTarget cast)");
         return NULL;
     }
 

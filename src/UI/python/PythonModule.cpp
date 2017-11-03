@@ -476,7 +476,7 @@ PyObject* pyModBuildParamGetter(ModMembers* self, PyObject* args)
     Poco::AutoPtr<ParameterGetter> getter =
     		(**self->module)->buildParameterGetter(paramName);
 
-    // prepare OutPort python type
+    // prepare ParameterGetter python type
     if (PyType_Ready(&PythonParameterGetter) < 0)
     {
         PyErr_SetString(PyExc_ImportError,
@@ -488,7 +488,7 @@ PyObject* pyModBuildParamGetter(ModMembers* self, PyObject* args)
     ParameterGetterMembers* pyGetter =
         (ParameterGetterMembers*)(pyParameterGetterNew((PyTypeObject*)&PythonParameterGetter, NULL, NULL) );
 
-    // set InPort reference
+    // set getter reference
     *(pyGetter->getter) = getter;
 
     return reinterpret_cast<PyObject*>(pyGetter);
@@ -508,7 +508,7 @@ PyObject* pyModBuildParamSetter(ModMembers* self, PyObject* args)
     Poco::AutoPtr<ParameterSetter> setter =
     		(**self->module)->buildParameterSetter(paramName);
 
-    // prepare OutPort python type
+    // prepare ParameterGetter python type
     if (PyType_Ready(&PythonParameterSetter) < 0)
     {
         PyErr_SetString(PyExc_ImportError,
@@ -520,10 +520,61 @@ PyObject* pyModBuildParamSetter(ModMembers* self, PyObject* args)
     ParameterSetterMembers* pySetter =
         (ParameterSetterMembers*)(pyParameterSetterNew((PyTypeObject*)&PythonParameterSetter, NULL, NULL) );
 
-    // set InPort reference
+    // set setter reference
     *(pySetter->setter) = setter;
 
     return reinterpret_cast<PyObject*>(pySetter);
+}
+
+PyObject* pyModGetParamSetters(ModMembers* self, PyObject* args)
+{
+    std::set< Poco::AutoPtr<ParameterSetter> > setters;
+
+    setters = (**self->module)->getParameterSetters();
+
+    // prepare python list
+    PyObject* pySetters = PyList_New(0);
+
+    // prepare ParameterGetter python type
+    if (PyType_Ready(&PythonParameterSetter) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the ParameterSetter Type");
+        return NULL;
+    }
+
+    try
+    {
+        for (std::set< Poco::AutoPtr<ParameterSetter> >::iterator it = setters.begin(),
+                ite = setters.end(); it != ite; it++ )
+        {
+            // create the python object
+            ParameterSetterMembers* pySetter =
+                (ParameterSetterMembers*)(pyParameterSetterNew((PyTypeObject*)&PythonParameterSetter, NULL, NULL) );
+
+            // set setter reference
+            *(pySetter->setter) = *it;
+
+            // create the dict entry
+            if (0 > PyList_Append(
+                    pySetters,
+                    (PyObject*) pySetter))
+            {
+                // appending the item failed
+                PyErr_SetString(PyExc_RuntimeError,
+                        "Not able to build the return list");
+                return NULL;
+            }
+        }
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    return pySetters;
 }
 
 #endif /* HAVE_PYTHON27 */

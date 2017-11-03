@@ -223,6 +223,8 @@ bool ParameterizedEntity::getInternalFloatParameterValue(size_t paramIndex, doub
 
 bool ParameterizedEntity::getInternalStrParameterValue(size_t paramIndex, std::string& value)
 {
+    Poco::Mutex::ScopedLock lock(internalParamMutex);
+
 	try
 	{
 		switch (paramSet.at(paramIndex).datatype)

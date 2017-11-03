@@ -84,15 +84,25 @@ CameraFromFiles::CameraFromFiles(ModuleFactory* parent, std::string customName):
 
 void CameraFromFiles::process(int startCond)
 {
-    // first tests: do not make the difference between direct run or trigged run.
+    DataAttributeOut attr;
+
     switch (startCond)
     {
     case noDataStartState:
         poco_information(logger(), name() + " processing direct launch.");
         break;
     case allDataStartState:
-        poco_information(logger(), name() + " processing trigged launch.");
-        break;
+        {
+            DataAttributeIn inAttr;
+            readLockInPort(trigPort);
+            readInPortDataAttribute(trigPort, &inAttr);
+            releaseInPort(trigPort);
+
+            attr = inAttr;
+
+            poco_information(logger(), name() + " processing trigged launch.");
+            break;
+        }
     default:
         poco_bugcheck_msg("impossible start condition");
         throw Poco::BugcheckException();
@@ -121,8 +131,6 @@ void CameraFromFiles::process(int startCond)
             + fullImagePath.toString());
 
     dataLock.unlock();
-
-    DataAttributeOut attr;
 
     processingTerminated();
 
