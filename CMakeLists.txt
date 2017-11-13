@@ -20,6 +20,8 @@ option (no-wxwidgets
     "if specified, don't try to import the wxWidgets libraries to build the graphical interface"   )
 option (loop-gui-script
     "if specified, the GUI script is executed over and over again (until failure or cancellation)" )
+option (manage-users
+    "if specified, the user permissions are managed")    
 
 # main sources
 # custom parameters
@@ -53,6 +55,10 @@ add_definitions ( -DCMAKE_VERSION="${CMAKE_VERSION}" -DCMAKE_CXX_COMPILER="${CMA
 if (loop-gui-script)
   add_definitions ( -DGUI_SCRIPT_LOOP ) 
 endif (loop-gui-script)
+
+if (manage-users)
+  include ( ${PROJECT_SOURCE_DIR}/cmake/users.cmake )
+endif (manage-users)
 
 if (MSVC)
   add_definitions ( -DNOMINMAX )
