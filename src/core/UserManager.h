@@ -32,15 +32,41 @@
 #ifdef MANAGE_USERS
 
 #include "VerboseEntity.h"
+#include "User.h"
 
 #include "Poco/Util/Subsystem.h"
 
 #include <set>
+#include <map>
+
+///// File where to find the signatures of the other files
+//#define NX_STYLE_SIGN_FILE "access/.signs"
+
+/// File where to store the user credentials in the form `[username]:[description]:[uid]:[digest]\n`
+#define NX_STYLE_PWD_FILE "access/.passwd"
+
+///// File where to store group membership `[groupname]:[gid]:[allowAll|denyAll]:[uid1,uid2,...]\n`
+//#define NX_STYLE_GRP_FILE "access/.groups"
+//
+///**
+// * Folder where to store the fine grained permissions
+// *
+// * file name : [GID]-[allow|deny]
+// * `[itemname]:[value]\n`
+// */
+//#define NX_STYLE_TRUSTED_ITEMS_FOLDER "access/"
+
+
 
 /**
  * UserManager
  *
  * Manage the users and the user permissions.
+ *
+ * The safety of this user manager is based on SHA1 robustness
+ *
+ * To improve the safety, it would be good to write protect the files defined by
+ * NX_STYLE_PWD_FILE and NX_STYLE_TRUSTED_ITEMS_FILE
  */
 class UserManager: public Poco::Util::Subsystem, public VerboseEntity
 {
@@ -72,9 +98,44 @@ public:
 //     */
 //    void defineOptions(Poco::Util::OptionSet & options);
 
+    /**
+     * Retrieve a user pointer (shared pointer)
+     *
+     * @param userName user name
+     * @param password associated password
+     * @param[out] userPtr anonymous user (bad passwd or not-existing user) or given user
+     *
+     * @return true if user name and password fit.
+     */
+    bool authenticate(std::string userName, std::string password, UserPtr& userPtr);
+
+    /**
+     * @return true if the password fits
+     *
+     *
+     */
+    bool verifyPasswd(UserPtr userPtr, std::string password);
+
+    /**
+     * @return anonymous user
+     *
+     * To be used for example after successive failing attempts to
+     * verifyPasswd
+     */
+    UserPtr getAnonymous();
+    void getAnonymous(UserPtr);
 
 private:
-    // std::set<UserPtr> connectedUsers; ///< set of shared ptr users
+    /**
+     * Parse NX_STYLE_PWD_FILE and load users
+     */
+    void loadAvailableUsers();
+
+    std::set<UserPtr> connectedUsers; ///< set of shared ptr users
+    std::set<User> availableUsers;
+    std::map<std::string,std::string> userDigests;
+
+    User anonymous;
 };
 
 //
@@ -84,6 +145,5 @@ inline const char * UserManager::name() const
 {
     return "UserManager";
 }
-
 #endif /* MANAGE_USERS */
 #endif /* SRC_USERMANAGER_H_ */

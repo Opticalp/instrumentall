@@ -64,7 +64,7 @@ MainApplication::MainApplication(): _helpRequested(false)
 #endif
 
 #ifdef MANAGE_USERS
-    Application::instance().addSubsystem(new ModuleManager);
+    Application::instance().addSubsystem(new UserManager);
 #endif
     Application::instance().addSubsystem(new ModuleManager);
     Application::instance().addSubsystem(new Dispatcher);
