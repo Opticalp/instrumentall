@@ -107,7 +107,7 @@ public:
      *
      * @return true if user name and password fit.
      */
-    bool authenticate(std::string userName, std::string password, UserPtr& userPtr);
+    bool authenticate(std::string userName, std::string password, UserPtr userPtr);
 
     /**
      * @return true if the password fits
@@ -115,21 +115,28 @@ public:
      *
      */
     bool verifyPasswd(UserPtr userPtr, std::string password);
+    bool verifyPasswd(std::string userName, std::string password);
 
     /**
-     * @return anonymous user
+     * Get the anonymous user
      *
      * To be used for example after successive failing attempts to
      * verifyPasswd
      */
-    UserPtr getAnonymous();
-    void getAnonymous(UserPtr);
+    void disconnectUser(UserPtr hUser);
 
 private:
     /**
      * Parse NX_STYLE_PWD_FILE and load users
      */
     void loadAvailableUsers();
+
+    /**
+     * Set userPtr given the user name
+     *
+     * userPtr is assumed to be disconnected (anonymous)
+     */
+    void connectUser(std::string userName, UserPtr userPtr);
 
     std::set<UserPtr> connectedUsers; ///< set of shared ptr users
     std::set<User> availableUsers;

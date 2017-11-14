@@ -46,6 +46,7 @@ struct User
         name("anonymous"), uid(0), description("") {   }
 
     friend bool operator < (const User& l, const User& r) { return (l.uid < r.uid); }
+    friend bool operator == (const User& l, const User& r) { return (l.uid == r.uid); }
 };
 
 #include "Poco/SharedPtr.h"

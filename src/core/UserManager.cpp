@@ -33,6 +33,7 @@
 #include "Poco/Util/Application.h"
 
 #include "Poco/SHA1Engine.h"
+#include "Poco/String.h"
 #include "Poco/StringTokenizer.h"
 #include "Poco/File.h"
 #include "Poco/Path.h"
@@ -65,8 +66,13 @@ void UserManager::initialize(Poco::Util::Application& app)
 void UserManager::uninitialize()
 {
     poco_information(logger(),"User manager uninitializing");
-}
 
+    for (std::set<UserPtr>::iterator it = connectedUsers.begin(),
+            ite = connectedUsers.end(); it != ite; it++)
+        disconnectUser(*it);
+
+    poco_information(logger(),"User manager uninitialized");
+}
 
 void UserManager::loadAvailableUsers()
 {
@@ -120,7 +126,66 @@ void UserManager::loadAvailableUsers()
          poco_information(logger(), anonymous.name + " is: " + anonymous.description);
      }
      else
-         throw Poco::RuntimeException("loadAvailableUsers", "no user defined");
+         throw Poco::RuntimeException("loadAvailableUsers",
+                 "no user is defined in the passwd file. ");
+}
+
+void UserManager::disconnectUser(UserPtr hUser)
+{
+    connectedUsers.erase(hUser);
+    **hUser = anonymous;
+}
+
+bool UserManager::authenticate(std::string userName, std::string password,
+        UserPtr userPtr)
+{
+    disconnectUser(userPtr);
+    if (!verifyPasswd(userName, password))
+        return false;
+
+    connectUser(userName, userPtr);
+}
+
+bool UserManager::verifyPasswd(UserPtr userPtr, std::string password)
+{
+    if (!userPtr.isNull() && (*userPtr))
+        return verifyPasswd((*userPtr)->name, password);
+    else
+        return false;
+}
+
+bool UserManager::verifyPasswd(std::string userName, std::string password)
+{
+    std::map<std::string, std::string>::iterator it = userDigests.find(userName);
+    if (it == userDigests.end())
+        return false;
+
+    Poco::SHA1Engine sha1;
+    sha1.update(password);
+    const Poco::DigestEngine::Digest& digest = sha1.digest();
+    std::string digestString(Poco::DigestEngine::digestToHex(digest));
+
+    return (Poco::icompare(digestString, it->second) == 0);
+}
+
+void UserManager::connectUser(std::string userName, UserPtr userPtr)
+{
+    for (std::set<User>::iterator it = availableUsers.begin(),
+            ite = availableUsers.end(); it != ite; it++)
+    {
+        if (it->name.compare(userName) == 0)
+        {
+            **userPtr = *it;
+
+            if (*it == anonymous)
+                return;
+
+            connectedUsers.insert(userPtr);
+                return;
+        }
+    }
+
+    poco_bugcheck_msg("The user to be connected was not found...");
 }
 
 #endif /* MANAGE_USERS */
