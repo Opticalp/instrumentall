@@ -39,25 +39,6 @@
 #include <set>
 #include <map>
 
-///// File where to find the signatures of the other files
-//#define NX_STYLE_SIGN_FILE "access/.signs"
-
-/// File where to store the user credentials in the form `[username]:[description]:[uid]:[digest]\n`
-#define NX_STYLE_PWD_FILE "access/.passwd"
-
-///// File where to store group membership `[groupname]:[gid]:[allowAll|denyAll]:[uid1,uid2,...]\n`
-//#define NX_STYLE_GRP_FILE "access/.groups"
-//
-///**
-// * Folder where to store the fine grained permissions
-// *
-// * file name : [GID]-[allow|deny]
-// * `[itemname]:[value]\n`
-// */
-//#define NX_STYLE_TRUSTED_ITEMS_FOLDER "access/"
-
-
-
 /**
  * UserManager
  *
@@ -130,6 +111,7 @@ private:
      * Parse NX_STYLE_PWD_FILE and load users
      */
     void loadAvailableUsers();
+    void loadUserPermissions(User user);
 
     /**
      * Set userPtr given the user name
@@ -138,9 +120,14 @@ private:
      */
     void connectUser(std::string userName, UserPtr userPtr);
 
+    bool isAdmin(UserPtr userPtr);
+    bool isAdmin(User user);
+
     std::set<UserPtr> connectedUsers; ///< set of shared ptr users
     std::set<User> availableUsers;
     std::map<std::string,std::string> userDigests;
+
+    std::map<User,std::string> userPermissions;
 
     User anonymous;
 };

@@ -43,6 +43,24 @@
 
 #include <fstream>
 
+///// File where to find the signatures of the other files
+//#define NX_STYLE_SIGN_FILE "access/.signs"
+
+/// File where to store the user credentials in the form `[username]:[description]:[uid]:[digest]\n`
+#define NX_STYLE_PWD_FILE "access/.passwd"
+
+///// File where to store group membership `[groupname]:[gid]:[allowAll|denyAll]:[uid1,uid2,...]\n`
+//#define NX_STYLE_GRP_FILE "access/.groups"
+
+/**
+ * Folder where to store the fine grained permissions
+ *
+ * file name : .UID-<UID>
+ */
+#define NX_STYLE_TRUSTED_ITEMS_FOLDER "access/"
+
+#define USER_ADMIN_UID 1
+
 UserManager::UserManager():
     VerboseEntity(name())
 {
@@ -95,7 +113,7 @@ void UserManager::loadAvailableUsers()
          throw e;
      }
 
-     // transfer the file content into a string
+     // parse the file content
      std::ifstream ifs(pwdPath.toString().c_str());
 
      std::string line;
@@ -114,6 +132,9 @@ void UserManager::loadAvailableUsers()
          userDigests.insert(std::pair<std::string,std::string>(tok[0],tok[3]));
          User newUser(tok[0], Poco::NumberParser::parse64(tok[1]), tok[2]);
          availableUsers.insert(newUser);
+
+         if (!isAdmin(newUser)) // admin has all permissions
+             loadUserPermissions(newUser);
      }
 
      poco_information(logger(),
@@ -130,6 +151,44 @@ void UserManager::loadAvailableUsers()
                  "no user is defined in the passwd file. ");
 }
 
+void UserManager::loadUserPermissions(User user)
+{
+    Poco::Util::Application& app = Poco::Util::Application::instance();
+
+
+    Poco::Path tmpPath(NX_STYLE_TRUSTED_ITEMS_FOLDER
+            + Poco::format(".UID-%z", user.uid), Poco::Path::PATH_UNIX);
+    Poco::Path permPath(app.config().getString("application.dir"));
+    permPath.append(tmpPath);
+
+    permPath.makeAbsolute();
+
+    if (!permPath.isFile()
+                 || !Poco::File(permPath).exists()
+                 || !Poco::File(permPath).canRead() )
+     {
+         poco_error(logger(), "loadUserPermissions: "
+                 "unable to read the permissions file: "
+                 + permPath.toString() );
+         userPermissions.insert(std::pair<User, std::string>(user, ""));
+         return;
+     }
+
+     // transfer the file content into a string
+     std::ifstream ifs(permPath.toString().c_str());
+
+     ifs.seekg(0, std::ios::end);
+     std::string buf;
+     buf.reserve(ifs.tellg());
+     ifs.seekg(0, std::ios::beg);
+
+     buf.assign((std::istreambuf_iterator<char>(ifs)),
+                 std::istreambuf_iterator<char>());
+
+     userPermissions.insert(std::pair<User, std::string>(user, buf));
+     poco_information(logger(), user.name + " permissions: \n" + buf);
+}
+
 void UserManager::disconnectUser(UserPtr hUser)
 {
     connectedUsers.erase(hUser);
@@ -144,6 +203,7 @@ bool UserManager::authenticate(std::string userName, std::string password,
         return false;
 
     connectUser(userName, userPtr);
+    return true;
 }
 
 bool UserManager::verifyPasswd(UserPtr userPtr, std::string password)
@@ -186,6 +246,19 @@ void UserManager::connectUser(std::string userName, UserPtr userPtr)
     }
 
     poco_bugcheck_msg("The user to be connected was not found...");
+}
+
+bool UserManager::isAdmin(UserPtr userPtr)
+{
+    if (!userPtr.isNull() && !((*userPtr) == NULL))
+        return isAdmin(**userPtr);
+    else
+        return false;
+}
+
+bool UserManager::isAdmin(User user)
+{
+    return (user.uid == USER_ADMIN_UID);
 }
 
 #endif /* MANAGE_USERS */

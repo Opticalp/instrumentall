@@ -5,9 +5,9 @@
 
 ## this config file is loaded if the user permissions are managed
 
-message (STATUS "Configuring users")
-
 add_definitions ( -DMANAGE_USERS )
+
+message (STATUS "Configuring users")
 
 set (USER_ADMIN_NAME "admin")
 set (USER_ADMIN_PWD  "1234abcdABCD" CACHE STRING "admin user account password")
@@ -32,5 +32,25 @@ file (WRITE ${USER_PWD_FILE} "${USER_ANONYMOUS_NAME}:${USER_ANONYMOUS_UID}:${USE
 file (APPEND ${USER_PWD_FILE} "${USER_ADMIN_NAME}:${USER_ADMIN_UID}:${USER_ADMIN_DESCR}:${USER_ADMIN_DIGEST}\n")
 file (APPEND ${USER_PWD_FILE} "${USER_NAME}:${USER_UID}:${USER_DESCR}:${USER_DIGEST}\n")
 
+message (STATUS "Configuring user permissions") 
+
+set (USER_ANONYMOUS_PERM_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/access/.UID-${USER_ANONYMOUS_UID}")
+
+# permissions without digest
+file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/scripts:\n") 
+file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/embed:\n")
+file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/modScripts:\n")
+## could have used
+#file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python:\n")
+
+## permissions with digest
+#file (APPEND ${USER_ANONYMOUS_PERM_FILE} "script:dataflow.py:563e69712cdd95e12749c30434bb8b7755a16523\n")
+#file (APPEND ${USER_ANONYMOUS_PERM_FILE} "script:prod.py:563e69712cdd95e12749c30434bb8b7755a16523\n")
+
+# test:
+file (APPEND ${USER_ANONYMOUS_PERM_FILE} "script:generalInfo.py:d3d54374bc3cb0ffeb617a853c59173173fae49a\n")
+
 # install directives
 install ( FILES ${USER_PWD_FILE} DESTINATION ./access )
+install ( FILES ${USER_ANONYMOUS_PERM_FILE} DESTINATION ./access )
+install ( CODE "message(\"User permissions. For enough safety, you should consider write-protecting the folders: access/ and python/embed/\")")
