@@ -42,6 +42,11 @@
 
 #include "PythonManager.h"
 
+#ifdef MANAGE_USERS
+#   include "core/UserManager.h"
+#   include "Poco/Util/Application.h"
+#endif
+
 #include <stdio.h>
 
 /// @name Custom config keys
@@ -53,6 +58,9 @@
 using Poco::Util::Application;
 
 PythonManager::PythonManager():
+#ifdef MANAGE_USERS
+    pythonUser(NULL),
+#endif
 	VerboseEntity(name()),
 	iconsoleFlag(false),
 	pyMultiThread()
@@ -105,6 +113,11 @@ void PythonManager::initialize(Application& app)
 
     pyMultiThread = new PyThreadKeeper();
 
+#ifdef MANAGE_USERS
+    app.getSubsystem<UserManager>()
+        .initUser(pythonUser);
+#endif
+
     if (app.config().hasProperty(CONF_KEY_PY_INITSCRIPT))
     {
         runScript(app, app.config().getString(CONF_KEY_PY_INITSCRIPT));
@@ -149,6 +162,12 @@ void PythonManager::uninitialize()
     _addedVarStore.clear();
 
     Py_Finalize();
+
+#ifdef MANAGE_USERS
+    Poco::Util::Application::instance()
+        .getSubsystem<UserManager>()
+        .disconnectUser(pythonUser);
+#endif
 
     poco_information(logger(), "Python manager uninitialized. ");
 }

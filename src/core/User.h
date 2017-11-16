@@ -51,7 +51,7 @@ struct User
 
 #include "Poco/SharedPtr.h"
 
-typedef Poco::SharedPtr<User*> UserPtr;
+typedef Poco::SharedPtr<User const *> UserPtr;
 
 #endif /* MANAGE_USERS */
 #endif /* SRC_CORE_USER_H_ */

@@ -103,8 +103,39 @@ public:
      *
      * To be used for example after successive failing attempts to
      * verifyPasswd
+     *
+     * The hUser has to be initialized:
+     *  - neither hUser.isNull()
+     *  - nor (*hUser) == NULL
      */
     void disconnectUser(UserPtr hUser);
+
+    /**
+     * Check if the given user is allowed to execute the given script
+     *
+     * @param path script path
+     * @param content script content. Will permit to compute the digest
+     * to verify file access permission
+     * @param userPtr user for which the permission is to be checked
+     */
+    bool isScriptAuthorized(std::string path, std::string& content, UserPtr userPtr);
+
+    /**
+     * Check if the given user is allowed to access the given folder
+     *
+     * check if the parent folders are allowed.
+     *
+     * @param folderPath folder path
+     * @param userPtr user for which the permission is to be checked
+     */
+    bool isFolderAuthorized(std::string folderPath, UserPtr userPtr);
+
+    /**
+     * First instantiate a new user
+     *
+     * assert hUser.isNull();
+     */
+    void initUser(UserPtr hUser);
 
 private:
     /**
@@ -118,7 +149,7 @@ private:
      *
      * userPtr is assumed to be disconnected (anonymous)
      */
-    void connectUser(std::string userName, UserPtr userPtr);
+    void connectUser(std::string userName, UserPtr hUser);
 
     bool isAdmin(UserPtr userPtr);
     bool isAdmin(User user);
@@ -129,7 +160,7 @@ private:
 
     std::map<User,std::string> userPermissions;
 
-    User anonymous;
+    const User anonymous;
 };
 
 //
@@ -139,5 +170,6 @@ inline const char * UserManager::name() const
 {
     return "UserManager";
 }
+
 #endif /* MANAGE_USERS */
 #endif /* SRC_USERMANAGER_H_ */

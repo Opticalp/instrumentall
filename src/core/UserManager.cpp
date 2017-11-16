@@ -62,7 +62,8 @@
 #define USER_ADMIN_UID 1
 
 UserManager::UserManager():
-    VerboseEntity(name())
+    VerboseEntity(name()),
+    anonymous()
 {
 
 }
@@ -79,6 +80,8 @@ void UserManager::initialize(Poco::Util::Application& app)
     // TODO: check that the user permission files exist and are readable
     // TODO: evtl: parse and load into memory
     loadAvailableUsers();
+
+    // TODO: should not be able to init if users remain in connectedUsers?
 }
 
 void UserManager::uninitialize()
@@ -88,6 +91,9 @@ void UserManager::uninitialize()
     for (std::set<UserPtr>::iterator it = connectedUsers.begin(),
             ite = connectedUsers.end(); it != ite; it++)
         disconnectUser(*it);
+
+    // TODO: clear available users, userDigests and userPermissions
+    // TODO: should thread-protect this using mutexes.
 
     poco_information(logger(),"User manager uninitialized");
 }
@@ -141,14 +147,9 @@ void UserManager::loadAvailableUsers()
              Poco::NumberFormatter::format(availableUsers.size())
          + " users available. ");
 
-     if (availableUsers.size())
-     {
-         anonymous = *(availableUsers.begin());
-         poco_information(logger(), anonymous.name + " is: " + anonymous.description);
-     }
-     else
-         throw Poco::RuntimeException("loadAvailableUsers",
-                 "no user is defined in the passwd file. ");
+     if (!availableUsers.size())
+         poco_warning(logger(),"loadAvailableUsers: "
+                 "no user is defined in the passwd file. No Admin. ");
 }
 
 void UserManager::loadUserPermissions(User user)
@@ -189,10 +190,44 @@ void UserManager::loadUserPermissions(User user)
      poco_information(logger(), user.name + " permissions: \n" + buf);
 }
 
+void UserManager::initUser(UserPtr hUser)
+{
+    poco_assert(hUser.isNull());
+
+    hUser = new (User const *)(&anonymous); // new pointer on anonymous
+}
+
 void UserManager::disconnectUser(UserPtr hUser)
 {
+    if (hUser.isNull() || (*hUser) == NULL)
+        poco_bugcheck_msg("The hUser should be instanciated before disconnection");
+
     connectedUsers.erase(hUser);
-    **hUser = anonymous;
+    *hUser = &anonymous;
+}
+
+void UserManager::connectUser(std::string userName, UserPtr hUser)
+{
+    if (hUser.isNull() || (*hUser) == NULL)
+        poco_bugcheck_msg("The hUser should be instanciated before connection");
+
+    for (std::set<User>::iterator it = availableUsers.begin(),
+            ite = availableUsers.end(); it != ite; it++)
+    {
+        if (it->name.compare(userName) == 0)
+        {
+            //*hUser = const_cast<User*>(&(*it));
+            *hUser = &(*it);
+
+            if (*it == anonymous)
+                return;
+
+            connectedUsers.insert(hUser);
+                return;
+        }
+    }
+
+    poco_bugcheck_msg("The user to be connected was not found...");
 }
 
 bool UserManager::authenticate(std::string userName, std::string password,
@@ -228,26 +263,6 @@ bool UserManager::verifyPasswd(std::string userName, std::string password)
     return (Poco::icompare(digestString, it->second) == 0);
 }
 
-void UserManager::connectUser(std::string userName, UserPtr userPtr)
-{
-    for (std::set<User>::iterator it = availableUsers.begin(),
-            ite = availableUsers.end(); it != ite; it++)
-    {
-        if (it->name.compare(userName) == 0)
-        {
-            **userPtr = *it;
-
-            if (*it == anonymous)
-                return;
-
-            connectedUsers.insert(userPtr);
-                return;
-        }
-    }
-
-    poco_bugcheck_msg("The user to be connected was not found...");
-}
-
 bool UserManager::isAdmin(UserPtr userPtr)
 {
     if (!userPtr.isNull() && !((*userPtr) == NULL))
@@ -259,6 +274,27 @@ bool UserManager::isAdmin(UserPtr userPtr)
 bool UserManager::isAdmin(User user)
 {
     return (user.uid == USER_ADMIN_UID);
+}
+
+bool UserManager::isScriptAuthorized(std::string path, std::string& content,
+        UserPtr userPtr)
+{
+    if (isAdmin(userPtr))
+        return true;
+
+    // to be implemented
+
+    return true;
+}
+
+bool UserManager::isFolderAuthorized(std::string folderPath, UserPtr userPtr)
+{
+    if (isAdmin(userPtr))
+        return true;
+
+    // to be implemented
+
+    return true;
 }
 
 #endif /* MANAGE_USERS */

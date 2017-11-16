@@ -38,6 +38,9 @@
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
 
+#ifdef MANAGE_USERS
+#   include "core/User.h"
+#endif
 
 class PyThreadKeeper;
 
@@ -221,6 +224,10 @@ private:
     bool iconsoleFlag;
 
     PyThreadKeeper* pyMultiThread; ///< allow to launch python executions in multiple C++ threads
+
+#ifdef MANAGE_USERS
+    UserPtr pythonUser;
+#endif
 };
 
 //
