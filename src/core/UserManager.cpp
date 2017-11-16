@@ -145,7 +145,7 @@ void UserManager::loadAvailableUsers()
 
      poco_information(logger(),
              Poco::NumberFormatter::format(availableUsers.size())
-         + " users available. ");
+         + " users available. (+ anonymous)");
 
      if (!availableUsers.size())
          poco_warning(logger(),"loadAvailableUsers: "
@@ -190,8 +190,9 @@ void UserManager::loadUserPermissions(User user)
      poco_information(logger(), user.name + " permissions: \n" + buf);
 }
 
-void UserManager::initUser(UserPtr hUser)
+void UserManager::initUser(UserPtr& hUser)
 {
+    poco_information(logger(), "initializing user");
     poco_assert(hUser.isNull());
 
     hUser = new (User const *)(&anonymous); // new pointer on anonymous
@@ -265,10 +266,10 @@ bool UserManager::verifyPasswd(std::string userName, std::string password)
 
 bool UserManager::isAdmin(UserPtr userPtr)
 {
-    if (!userPtr.isNull() && !((*userPtr) == NULL))
-        return isAdmin(**userPtr);
-    else
-        return false;
+    if (userPtr.isNull() || ((*userPtr) == NULL))
+        poco_bugcheck_msg("The hUser should be instanciated before call to isAdmin(hUser)");
+
+    return isAdmin(**userPtr);
 }
 
 bool UserManager::isAdmin(User user)
@@ -287,7 +288,7 @@ bool UserManager::isScriptAuthorized(std::string path, std::string& content,
     return true;
 }
 
-bool UserManager::isFolderAuthorized(std::string folderPath, UserPtr userPtr)
+bool UserManager::isFolderAuthorized(Poco::Path folderPath, UserPtr userPtr)
 {
     if (isAdmin(userPtr))
         return true;

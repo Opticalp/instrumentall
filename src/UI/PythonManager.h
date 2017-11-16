@@ -55,6 +55,11 @@ class PyThreadKeeper;
  * handle command line options (initscript, iconsole, execute).
  *
  * Since 2.0.0-dev.31: multithreading (almost) ready. TODO: setVar/getVar lock
+ *
+ * @par 2.1.0-dev.5
+ * Add users management. Control console launch and script launch (pyMod also).
+ *
+ * There is a known safety leak with python/embed that should be write protected.
  */
 class PythonManager: public Poco::Util::Subsystem, VerboseEntity
 {
@@ -119,6 +124,17 @@ public:
      * Used to redirect Python interpreter error messages
      */
     void errorMessage(std::string errorMsg);
+
+#ifdef MANAGE_USERS
+    /**
+     * Change the python user to the given one.
+     *
+     * e.g. to be called by the GuiManager with its own user.
+     *
+     * @param hUser user on which to point pythonUser
+     */
+    void setUser(UserPtr hUser);
+#endif
 
 private:
     /**

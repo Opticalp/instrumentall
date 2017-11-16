@@ -35,6 +35,7 @@
 #include "User.h"
 
 #include "Poco/Util/Subsystem.h"
+#include "Poco/Path.h"
 
 #include <set>
 #include <map>
@@ -128,14 +129,16 @@ public:
      * @param folderPath folder path
      * @param userPtr user for which the permission is to be checked
      */
-    bool isFolderAuthorized(std::string folderPath, UserPtr userPtr);
+    bool isFolderAuthorized(Poco::Path folderPath, UserPtr userPtr);
 
     /**
      * First instantiate a new user
      *
      * assert hUser.isNull();
      */
-    void initUser(UserPtr hUser);
+    void initUser(UserPtr& hUser);
+
+    bool isAdmin(UserPtr userPtr);
 
 private:
     /**
@@ -151,7 +154,6 @@ private:
      */
     void connectUser(std::string userName, UserPtr hUser);
 
-    bool isAdmin(UserPtr userPtr);
     bool isAdmin(User user);
 
     std::set<UserPtr> connectedUsers; ///< set of shared ptr users

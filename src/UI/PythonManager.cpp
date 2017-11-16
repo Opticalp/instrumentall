@@ -275,6 +275,12 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
 
     scriptFile.makeAbsolute();
 
+#ifdef MANAGE_USERS
+    bool withRights = Poco::Util::Application::instance()
+            .getSubsystem<UserManager>()
+            .isFolderAuthorized(Poco::Path(scriptFile).makeParent(), pythonUser);
+#endif
+
     ScopedGIL GIL;
 
     PyObject *py_main, *py_global, *py_local;
@@ -291,16 +297,27 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
     std::ifstream ifs(scriptFile.toString().c_str());
 
     ifs.seekg(0, std::ios::end);
-    std::vector<char> scriptBuf(ifs.tellg());
+    std::string scriptBuf;
+    scriptBuf.reserve(ifs.tellg());
     ifs.seekg(0, std::ios::beg);
 
     scriptBuf.assign((std::istreambuf_iterator<char>(ifs)),
                 std::istreambuf_iterator<char>());
 
-    scriptBuf.push_back('\0');
+#ifdef MANAGE_USERS
+    if (!withRights &&
+        !Poco::Util::Application::instance()
+        .getSubsystem<UserManager>()
+        .isScriptAuthorized(scriptFile.getFileName(), scriptBuf, pythonUser))
+    {
+        // the caller deals with the exception (e.g. login prompt, then retry)
+        // see PythonManager::setUser
+        throw Poco::NoPermissionException("PythonManager::runScript");
+    }
+#endif
 
     PyCodeObject* compiledStr = reinterpret_cast<PyCodeObject*>(
-            Py_CompileString(&(scriptBuf[0]), scriptFile.getFileName().c_str(), Py_file_input) );
+            Py_CompileString(scriptBuf.c_str(), scriptFile.getFileName().c_str(), Py_file_input) );
 
     // launch the string using a python command
     if ((compiledStr==NULL) || (PyEval_EvalCode(compiledStr, py_global, py_local)==NULL))
@@ -345,6 +362,19 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
 
 void PythonManager::runConsole()
 {
+#ifdef MANAGE_USERS
+    if (!Poco::Util::Application::instance()
+            .getSubsystem<UserManager>()
+            .isAdmin(pythonUser))
+    {
+        // TODO: open login prompt (x3) to get the admin rights
+
+        // if still not admin:
+        throw Poco::NoPermissionException("PythonManager::RunConsole",
+                "This operation is not allowed");
+    }
+#endif
+
     poco_information(logger(), "Launching the console... ");
 
     ScopedGIL GIL;
@@ -720,5 +750,12 @@ void PythonManager::defineOptions(OptionSet & options)
             .argument("INITSCRIPT")
             .binding(CONF_KEY_PY_INITSCRIPT));
 }
+
+#ifdef MANAGE_USERS
+void PythonManager::setUser(UserPtr hUser)
+{
+    *pythonUser = *hUser;
+}
+#endif
 
 #endif /* HAVE_PYTHON27 */
