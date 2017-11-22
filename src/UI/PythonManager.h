@@ -143,13 +143,6 @@ private:
     void handleIConsole(const std::string& name, const std::string& value)
         { iconsoleFlag = true; }
 
-#ifdef MANAGE_USERS
-    /**
-     * Ask for user/password
-     */
-    void credentialPrompt();
-#endif
-
     /**
      * Run the given scriptFile as a python script.
      *
@@ -249,6 +242,28 @@ private:
     PyThreadKeeper* pyMultiThread; ///< allow to launch python executions in multiple C++ threads
 
 #ifdef MANAGE_USERS
+    /**
+     * Callback function to handle the use of 'u' or 'userlogin' command line option
+     */
+    void handleUserlogin(const std::string& name, const std::string& value)
+        { userloginFlag = true; }
+
+    bool userloginFlag;
+
+    /**
+     * Ask for user/password
+     *
+     * @return true if login succeeded
+     */
+    bool loginPrompt();
+
+    /**
+     * Ask until login succeeds.
+     *
+     * 3 times max.
+     */
+    void loginLoop();
+
     UserPtr pythonUser;
 #endif
 };
