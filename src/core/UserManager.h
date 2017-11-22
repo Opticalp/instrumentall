@@ -162,6 +162,8 @@ private:
 
     std::map<User,std::string> userPermissions;
 
+    std::string parseSha1Script(const std::string& permissions, const std::string path);
+
     const User anonymous;
 };
 

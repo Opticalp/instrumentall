@@ -100,6 +100,8 @@ void UserManager::uninitialize()
 
 void UserManager::loadAvailableUsers()
 {
+	loadUserPermissions(anonymous);
+
     Poco::Util::Application& app = Poco::Util::Application::instance();
 
     Poco::Path tmpPath(NX_STYLE_PWD_FILE, Poco::Path::PATH_UNIX);
@@ -155,7 +157,6 @@ void UserManager::loadAvailableUsers()
 void UserManager::loadUserPermissions(User user)
 {
     Poco::Util::Application& app = Poco::Util::Application::instance();
-
 
     Poco::Path tmpPath(NX_STYLE_TRUSTED_ITEMS_FOLDER
             + Poco::format(".UID-%z", user.uid), Poco::Path::PATH_UNIX);
@@ -283,9 +284,27 @@ bool UserManager::isScriptAuthorized(std::string path, std::string& content,
     if (isAdmin(userPtr))
         return true;
 
-    // to be implemented
+    // check is there is a file entry for path for the given user
 
-    return true;
+    // retrieve user permissions
+    std::map<User, std::string>::iterator it = userPermissions.find(**userPtr);
+    if (it == userPermissions.end())
+        return false;
+
+    // parse the permission string
+    std::string allowedSHA1 =
+    		parseSha1Script(it->second, path);
+
+    poco_information(logger(), "SHA1 found: " + allowedSHA1);
+
+    Poco::SHA1Engine sha1;
+    sha1.update(content);
+    const Poco::DigestEngine::Digest& digest = sha1.digest();
+    std::string digestString(Poco::DigestEngine::digestToHex(digest));
+
+    poco_information(logger(),"computed SHA1: " + digestString);
+
+    return (Poco::icompare(digestString, allowedSHA1) == 0);
 }
 
 bool UserManager::isFolderAuthorized(Poco::Path folderPath, UserPtr userPtr)
@@ -295,7 +314,26 @@ bool UserManager::isFolderAuthorized(Poco::Path folderPath, UserPtr userPtr)
 
     // to be implemented
 
-    return true;
+    return false;
+}
+
+using Poco::StringTokenizer;
+
+std::string UserManager::parseSha1Script(const std::string& permissions,
+		const std::string path)
+{
+	StringTokenizer mainTok(permissions, "\n", StringTokenizer::TOK_TRIM);
+	for (StringTokenizer::Iterator it = mainTok.begin(),
+			ite = mainTok.end(); it != ite; it++)
+	{
+		StringTokenizer tok(*it, ":");
+		if (tok.count() == 3
+				&& Poco::icompare(tok[0],"script") == 0
+				&& path.compare(tok[1]) == 0)
+			return tok[2];
+	}
+
+	return ""; // will not fit a SHA1 digest
 }
 
 #endif /* MANAGE_USERS */
