@@ -368,6 +368,7 @@ void PythonManager::runConsole()
             .isAdmin(pythonUser))
     {
         // TODO: open login prompt (x3) to get the admin rights
+    	credentialPrompt();
 
         // if still not admin:
         throw Poco::NoPermissionException("PythonManager::RunConsole",
@@ -756,6 +757,64 @@ void PythonManager::setUser(UserPtr hUser)
 {
     *pythonUser = *hUser;
 }
-#endif
+
+
+#ifdef WIN32
+
+#include <iostream>
+#include <string>
+#include <windows.h>
+
+void PythonManager::credentialPrompt()
+{
+	std::string user, pwd;
+
+	std::cout << "user name: " << std::flush;
+	std::getline(std::cin, user);
+
+	std::cout << "password: " << std::flush;
+
+	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+	DWORD mode = 0;
+	GetConsoleMode(hStdin, &mode);
+	SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
+
+    getline(std::cin, pwd);
+
+    SetConsoleMode(hStdin, mode);
+    std::cout << "DEBUG PASSWORD: " << pwd << std::endl;
+}
+
+#else /* WIN32 */
+
+#include <iostream>
+#include <string>
+#include <termios.h>
+#include <unistd.h>
+
+void PythonManager::credentialPrompt()
+{
+	std::string user, pwd;
+
+	std::cout << "user name: " << std::flush;
+	std::getline(std::cin, user);
+
+	std::cout << "password: " << std::flush;
+
+    termios oldt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    termios newt = oldt;
+    newt.c_lflag &= ~ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+    getline(std::cin, pwd);
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    std::cout << std::endl;
+    std::cout << "DEBUG PASSWORD: " << pwd << std::endl;
+}
+
+#endif /* WIN32 */
+#endif /* MANAGE_USERS */
 
 #endif /* HAVE_PYTHON27 */

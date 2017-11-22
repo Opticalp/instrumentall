@@ -143,6 +143,13 @@ private:
     void handleIConsole(const std::string& name, const std::string& value)
         { iconsoleFlag = true; }
 
+#ifdef MANAGE_USERS
+    /**
+     * Ask for user/password
+     */
+    void credentialPrompt();
+#endif
+
     /**
      * Run the given scriptFile as a python script.
      *
