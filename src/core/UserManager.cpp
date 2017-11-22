@@ -312,7 +312,26 @@ bool UserManager::isFolderAuthorized(Poco::Path folderPath, UserPtr userPtr)
     if (isAdmin(userPtr))
         return true;
 
-    // to be implemented
+    poco_assert(folderPath.isAbsolute());
+
+    // retrieve user permissions
+    std::map<User, std::string>::iterator it = userPermissions.find(**userPtr);
+    if (it == userPermissions.end())
+        return false;
+
+    Poco::Path parent(folderPath);
+    while ( parent.depth() )
+    {
+    	// find parent in permissions
+    	std::string findMe("folder:" + parent.makeFile().toString() + ":");
+    	if (it->second.find(findMe) != std::string::npos)
+    	{
+    		poco_information(logger(), parent.toString() + " folder is allowed. ");
+    		return true;
+    	}
+
+    	parent.makeParent();
+    }
 
     return false;
 }

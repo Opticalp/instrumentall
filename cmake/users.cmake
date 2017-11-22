@@ -34,9 +34,10 @@ message (STATUS "Configuring user permissions")
 set (USER_ANONYMOUS_PERM_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/access/.UID-${USER_ANONYMOUS_UID}")
 
 # permissions without digest
-file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/scripts:\n") 
+file (WRITE ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/scripts:\n") 
 file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/embed:\n")
 file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/modScripts:\n")
+file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${PROJECT_SOURCE_DIR}/testsuite/python:\n")
 ## could have used
 #file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python:\n")
 

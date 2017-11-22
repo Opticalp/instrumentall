@@ -126,7 +126,7 @@ public:
      *
      * check if the parent folders are allowed.
      *
-     * @param folderPath folder path
+     * @param folderPath absolute folder path
      * @param userPtr user for which the permission is to be checked
      */
     bool isFolderAuthorized(Poco::Path folderPath, UserPtr userPtr);
