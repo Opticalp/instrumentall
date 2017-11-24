@@ -47,7 +47,6 @@
 
 wxBEGIN_EVENT_TABLE(LoginDialog, wxDialog)
   EVT_BUTTON(wxID_OK, LoginDialog::onOk)
-  EVT_BUTTON(wxID_CANCEL, LoginDialog::onCancel)
 
 wxEND_EVENT_TABLE()
 
@@ -91,12 +90,6 @@ void LoginDialog::onOk(wxCommandEvent& event)
 	else
 		wxMessageBox(wxT("Login failed, please retry. "),
 				wxT("User login"), wxICON_ERROR);
-}
-
-void LoginDialog::onCancel(wxCommandEvent& event)
-{
-	wxMessageBox("cancel pressed");
-	event.Skip();
 }
 
 #endif /* MANAGE_USERS */

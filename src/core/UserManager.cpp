@@ -240,6 +240,7 @@ bool UserManager::authenticate(std::string userName, std::string password,
         return false;
 
     connectUser(userName, userPtr);
+    poco_information(logger(), userName + " logged in. ");
     return true;
 }
 

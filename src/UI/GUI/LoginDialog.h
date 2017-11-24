@@ -54,7 +54,6 @@ private:
     wxTextCtrl* passwordTxtCtrl;
 
     void onOk(wxCommandEvent& event);
-    void onCancel(wxCommandEvent& event);
 
     DECLARE_EVENT_TABLE();
 };
