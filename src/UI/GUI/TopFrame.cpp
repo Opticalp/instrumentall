@@ -370,6 +370,8 @@ void TopFrame::reportStatus(std::string statusMsg)
 
 #ifdef MANAGE_USERS
 
+#include "LoginDialog.h"
+
 void TopFrame::addUserManagementMenuEntry()
 {
 	wxMenuBar* menuBar = GetMenuBar();
@@ -384,12 +386,14 @@ void TopFrame::addUserManagementMenuEntry()
 
 void TopFrame::onLogin(wxCommandEvent& event)
 {
-	wxMessageBox("loging in...");
+	LoginDialog dlg(this, core);
+	dlg.ShowModal();
 }
 
 void TopFrame::onLogout(wxCommandEvent& event)
 {
-	wxMessageBox("loging out...");
+	core.logout();
+	wxMessageBox("User logged out.");
 }
 
 #endif /* MANAGE_USERS */

@@ -795,7 +795,7 @@ void PythonManager::defineOptions(OptionSet & options)
 }
 
 #ifdef MANAGE_USERS
-void PythonManager::setUser(UserPtr hUser)
+void PythonManager::setUser(const UserPtr hUser)
 {
     *pythonUser = *hUser;
 }

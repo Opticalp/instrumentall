@@ -133,7 +133,7 @@ public:
      *
      * @param hUser user on which to point pythonUser
      */
-    void setUser(UserPtr hUser);
+    void setUser(const UserPtr hUser);
 #endif
 
 private:

@@ -150,4 +150,45 @@ void GuiProcessingUnit::showImage(cv::Mat img, int panelIndex)
 
 #endif
 
+#ifdef MANAGE_USERS
+
+#include "core/UserManager.h"
+
+void GuiProcessingUnit::forwardGuiUserToPython()
+{
+	Poco::Util::Application::instance()
+			.getSubsystem<PythonManager>().setUser(
+					Poco::Util::Application::instance()
+						.getSubsystem<GuiManager>().getUser());
+}
+
+bool GuiProcessingUnit::tryLogin(std::string userName, std::string passwd)
+{
+	if ( Poco::Util::Application::instance()
+		                    .getSubsystem<UserManager>()
+							.authenticate(userName, passwd,
+									Poco::Util::Application::instance()
+	                    				.getSubsystem<GuiManager>()
+										.getUser()) )
+	{
+		forwardGuiUserToPython();
+		return true;
+	}
+	else
+		return false;
+}
+
+void GuiProcessingUnit::logout()
+{
+	Poco::Util::Application::instance()
+			                    .getSubsystem<UserManager>()
+								.disconnectUser(
+										Poco::Util::Application::instance()
+		                    				.getSubsystem<GuiManager>()
+											.getUser());
+	forwardGuiUserToPython();
+}
+
+#endif /* MANAGE_USERS */
+
 #endif /* HAVE_WXWIDGETS */
