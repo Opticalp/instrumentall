@@ -33,7 +33,7 @@
 #ifdef MANAGE_USERS
 
 #include <wx/wx.h>
-#include <wx/gtk/dialog.h>
+#include <wx/dialog.h>
 
 class GuiProcessingUnit;
 

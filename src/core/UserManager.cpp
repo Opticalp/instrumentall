@@ -269,7 +269,7 @@ bool UserManager::verifyPasswd(std::string userName, std::string password)
 bool UserManager::isAdmin(UserPtr userPtr)
 {
     if (userPtr.isNull() || ((*userPtr) == NULL))
-        poco_bugcheck_msg("The hUser should be instanciated before call to isAdmin(hUser)");
+        poco_bugcheck_msg("The hUser should be instantiated before call to isAdmin(hUser)");
 
     return isAdmin(**userPtr);
 }
@@ -308,6 +308,10 @@ bool UserManager::isScriptAuthorized(std::string path, std::string& content,
     return (Poco::icompare(digestString, allowedSHA1) == 0);
 }
 
+
+#include <sstream>
+#include "Poco/RegularExpression.h"
+
 bool UserManager::isFolderAuthorized(Poco::Path folderPath, UserPtr userPtr)
 {
     if (isAdmin(userPtr))
@@ -320,16 +324,31 @@ bool UserManager::isFolderAuthorized(Poco::Path folderPath, UserPtr userPtr)
     if (it == userPermissions.end())
         return false;
 
+    std::istringstream f(it->second);
+    std::string line;
+    std::vector<std::string> folder;
+
+    std::set<std::string> allowedFolders;
+
+    Poco::RegularExpression regex("[Ff]older:(.*):$");
+
+    while (std::getline(f, line))
+    {
+        regex.split(line, folder);
+        if (folder.size() > 1)
+        {
+        	Poco::Path folderPath(folder[1]);
+        	folderPath.makeAbsolute();
+        	allowedFolders.insert(folderPath.toString());
+        	// poco_information(logger(), folderPath.toString() + " is allowed");
+        }
+    }
+
     Poco::Path parent(folderPath);
     while ( parent.depth() )
     {
-    	// find parent in permissions
-    	std::string findMe("folder:" + parent.makeFile().toString() + ":");
-    	if (it->second.find(findMe) != std::string::npos)
-    	{
-    		poco_information(logger(), parent.toString() + " folder is allowed. ");
+    	if (allowedFolders.count(parent.makeFile().toString()))
     		return true;
-    	}
 
     	parent.makeParent();
     }

@@ -863,6 +863,8 @@ bool PythonManager::loginPrompt()
 		.authenticate(user, pwd, pythonUser);
 }
 
+#endif /* WIN32 */
+
 void PythonManager::loginLoop()
 {
 	for (int i=0; i<3; i++)
@@ -872,7 +874,6 @@ void PythonManager::loginLoop()
 			std::cout << "login failed. " << std::endl;
 }
 
-#endif /* WIN32 */
 #endif /* MANAGE_USERS */
 
 #endif /* HAVE_PYTHON27 */

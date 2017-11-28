@@ -38,6 +38,7 @@ file (WRITE ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY
 file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/embed:\n")
 file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/modScripts:\n")
 file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${PROJECT_SOURCE_DIR}/testsuite/python:\n")
+file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${PROJECT_SOURCE_DIR}/testsuite/resources:\n")
 ## could have used
 #file (APPEND ${USER_ANONYMOUS_PERM_FILE} "folder:${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python:\n")
 
