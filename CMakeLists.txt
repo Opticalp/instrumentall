@@ -21,7 +21,7 @@ option (no-wxwidgets
 option (loop-gui-script
     "if specified, the GUI script is executed over and over again (until failure or cancellation)" )
 option (manage-users
-    "if specified, the user permissions are managed")    
+    "if specified, the user permissions are managed" ON) # default to ON for CI tests
 
 # main sources
 # custom parameters
