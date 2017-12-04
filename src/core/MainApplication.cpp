@@ -35,15 +35,16 @@
 #include "Poco/NumberFormatter.h"
 
 #include "DepPoco.h"
-#include "UI/python/DepPython.h"
 #include "DepOpenCv.h"
+#include "UI/python/DepPython.h"
 #include "UI/GUI/DepWxWidgets.h"
 
-#include "UI/PythonManager.h"
-#include "Dispatcher.h"
+#include "UserManager.h"
 #include "ModuleManager.h"
+#include "Dispatcher.h"
 #include "DataManager.h"
 #include "ThreadManager.h"
+#include "UI/PythonManager.h"
 #include "UI/GuiManager.h"
 
 #include "version.h"
@@ -62,6 +63,9 @@ MainApplication::MainApplication(): _helpRequested(false)
     deps.push_back(new DepOpenCv);
 #endif
 
+#ifdef MANAGE_USERS
+    Application::instance().addSubsystem(new UserManager);
+#endif
     Application::instance().addSubsystem(new ModuleManager);
     Application::instance().addSubsystem(new Dispatcher);
     Application::instance().addSubsystem(new DataManager);
@@ -183,6 +187,10 @@ std::string MainApplication::about()
     std::string gitBranch(GIT_BRANCH);
     if (!gitBranch.empty())
         strAbout += "Git branch: " + gitBranch + "\n";
+
+#ifdef MANAGE_USERS
+    strAbout += "The user management is active. \n";
+#endif
 
     // dependencies
     if (deps.size())

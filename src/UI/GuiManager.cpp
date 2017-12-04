@@ -41,6 +41,11 @@ THE SOFTWARE.
 #include "GUI/CustomWxApp.h"
 #include "GUI/TopFrame.h"
 
+#ifdef MANAGE_USERS
+#   include "core/UserManager.h"
+#   include "Poco/Util/Application.h"
+#endif
+
 /// @name Custom config keys
 ///@{
 #define CONF_KEY_GUI_SCRIPT         "python.guiScript"
@@ -49,6 +54,9 @@ THE SOFTWARE.
 using Poco::Util::Application;
 
 GuiManager::GuiManager() :
+#ifdef MANAGE_USERS
+    guiUser(NULL),
+#endif
     VerboseEntity(name()),
     guiRun(false),
 	autostartFlag(false)
@@ -64,10 +72,21 @@ GuiManager::~GuiManager()
 void GuiManager::initialize(Application& app)
 {
     setLogger(name());
+
+#ifdef MANAGE_USERS
+    app.getSubsystem<UserManager>()
+        .initUser(guiUser);
+#endif
 }
 
 void GuiManager::uninitialize()
 {
+#ifdef MANAGE_USERS
+    Poco::Util::Application::instance()
+        .getSubsystem<UserManager>()
+        .disconnectUser(guiUser);
+#endif
+
     poco_information(logger(), "GuiManager::uninitialized");
 }
 

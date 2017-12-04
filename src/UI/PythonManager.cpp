@@ -42,6 +42,12 @@
 
 #include "PythonManager.h"
 
+#ifdef MANAGE_USERS
+#   include "core/UserManager.h"
+#   include "Poco/Util/Application.h"
+#	include <iostream>
+#endif
+
 #include <stdio.h>
 
 /// @name Custom config keys
@@ -53,6 +59,10 @@
 using Poco::Util::Application;
 
 PythonManager::PythonManager():
+#ifdef MANAGE_USERS
+    pythonUser(NULL),
+	userloginFlag(false),
+#endif
 	VerboseEntity(name()),
 	iconsoleFlag(false),
 	pyMultiThread()
@@ -105,10 +115,24 @@ void PythonManager::initialize(Application& app)
 
     pyMultiThread = new PyThreadKeeper();
 
+#ifdef MANAGE_USERS
+    app.getSubsystem<UserManager>()
+        .initUser(pythonUser);
+
+    if (userloginFlag)
+    	loginLoop();
+#endif
+
     if (app.config().hasProperty(CONF_KEY_PY_INITSCRIPT))
-    {
-        runScript(app, app.config().getString(CONF_KEY_PY_INITSCRIPT));
-    }
+    	try
+    	{
+    		runScript(app, app.config().getString(CONF_KEY_PY_INITSCRIPT));
+    	}
+    	catch (Poco::Exception& e)
+    	{
+    		poco_error(logger(), "The init script had errors: "
+    				+ e.displayText());
+    	}
 }
 
 void PythonManager::uninitialize()
@@ -150,6 +174,12 @@ void PythonManager::uninitialize()
 
     Py_Finalize();
 
+#ifdef MANAGE_USERS
+    Poco::Util::Application::instance()
+        .getSubsystem<UserManager>()
+        .disconnectUser(pythonUser);
+#endif
+
     poco_information(logger(), "Python manager uninitialized. ");
 }
 
@@ -167,13 +197,29 @@ int PythonManager::main(Application& app)
 
     if (iconsoleFlag)
     {
-        runConsole();
+    	try
+    	{
+    		runConsole();
+    	}
+    	catch (Poco::Exception& e)
+    	{
+    		poco_error(logger(), "Can not run the console: "
+    				+ e.displayText());
+    	}
     }
     else if (app.config().hasProperty(CONF_KEY_PY_SCRIPT))
     {
         Poco::Util::Application::instance().getSubsystem<ThreadManager>().startWatchDog();
-        runScript(app, Poco::Path(app.config().getString(CONF_KEY_PY_SCRIPT)));
-        Poco::Util::Application::instance().getSubsystem<ThreadManager>().waitAll();
+        try
+        {
+        	runScript(app, Poco::Path(app.config().getString(CONF_KEY_PY_SCRIPT)));
+        	Poco::Util::Application::instance().getSubsystem<ThreadManager>().waitAll();
+    	}
+    	catch (Poco::Exception& e)
+    	{
+    		poco_error(logger(), "The main script had errors: "
+    				+ e.displayText());
+    	}
     }
 
     return Application::EXIT_OK;
@@ -256,6 +302,12 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
 
     scriptFile.makeAbsolute();
 
+#ifdef MANAGE_USERS
+    bool withRights = Poco::Util::Application::instance()
+            .getSubsystem<UserManager>()
+            .isFolderAuthorized(Poco::Path(scriptFile).makeParent(), pythonUser);
+#endif
+
     ScopedGIL GIL;
 
     PyObject *py_main, *py_global, *py_local;
@@ -272,16 +324,27 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
     std::ifstream ifs(scriptFile.toString().c_str());
 
     ifs.seekg(0, std::ios::end);
-    std::vector<char> scriptBuf(ifs.tellg());
+    std::string scriptBuf;
+    scriptBuf.reserve(ifs.tellg());
     ifs.seekg(0, std::ios::beg);
 
     scriptBuf.assign((std::istreambuf_iterator<char>(ifs)),
                 std::istreambuf_iterator<char>());
 
-    scriptBuf.push_back('\0');
+#ifdef MANAGE_USERS
+    if (!withRights &&
+        !Poco::Util::Application::instance()
+        .getSubsystem<UserManager>()
+        .isScriptAuthorized(scriptFile.getFileName(), scriptBuf, pythonUser))
+    {
+        // the caller deals with the exception (e.g. login prompt, then retry)
+        // see PythonManager::setUser
+        throw Poco::NoPermissionException("PythonManager::runScript");
+    }
+#endif
 
     PyCodeObject* compiledStr = reinterpret_cast<PyCodeObject*>(
-            Py_CompileString(&(scriptBuf[0]), scriptFile.getFileName().c_str(), Py_file_input) );
+            Py_CompileString(scriptBuf.c_str(), scriptFile.getFileName().c_str(), Py_file_input) );
 
     // launch the string using a python command
     if ((compiledStr==NULL) || (PyEval_EvalCode(compiledStr, py_global, py_local)==NULL))
@@ -326,6 +389,24 @@ void PythonManager::runScript(Poco::Util::Application& app, Poco::Path scriptFil
 
 void PythonManager::runConsole()
 {
+#ifdef MANAGE_USERS
+    if (!Poco::Util::Application::instance()
+            .getSubsystem<UserManager>()
+            .isAdmin(pythonUser))
+    {
+    	std::cout << "You do not have the rights to run the console. "
+    			"Please log in as administrator. " << std::endl;
+
+    	loginLoop();
+
+        if (!Poco::Util::Application::instance()
+                .getSubsystem<UserManager>()
+                .isAdmin(pythonUser))
+			throw Poco::NoPermissionException("PythonManager::RunConsole",
+					"This operation is not allowed");
+    }
+#endif
+
     poco_information(logger(), "Launching the console... ");
 
     ScopedGIL GIL;
@@ -681,6 +762,17 @@ void PythonManager::defineOptions(OptionSet & options)
                                 this, &PythonManager::handleIConsole) )
             .group("interface"));
 
+#ifdef MANAGE_USERS
+    options.addOption(
+        Option(
+                "userlogin", "u",
+                "ask for user login at python manager initialization" )
+            .required(false)
+            .repeatable(false)
+            .callback(OptionCallback<PythonManager>(
+                                this, &PythonManager::handleUserlogin) ));
+#endif
+
     options.addOption(
         Option(
                 "execute", "x",
@@ -701,5 +793,87 @@ void PythonManager::defineOptions(OptionSet & options)
             .argument("INITSCRIPT")
             .binding(CONF_KEY_PY_INITSCRIPT));
 }
+
+#ifdef MANAGE_USERS
+void PythonManager::setUser(const UserPtr hUser)
+{
+    *pythonUser = *hUser;
+}
+
+
+#ifdef WIN32
+
+#include <windows.h>
+
+bool PythonManager::loginPrompt()
+{
+	std::string user, pwd;
+
+	std::cout << "user name: " << std::flush;
+	std::getline(std::cin, user);
+
+	std::cout << "password: " << std::flush;
+
+	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+	DWORD mode = 0;
+	GetConsoleMode(hStdin, &mode);
+	SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
+
+    getline(std::cin, pwd);
+
+    SetConsoleMode(hStdin, mode);
+    std::cout << std::endl;
+
+    //std::cout << "DEBUG PASSWORD: " << pwd << std::endl;
+
+    return Poco::Util::Application::instance()
+    	.getSubsystem<UserManager>()
+		.authenticate(user, pwd, pythonUser);
+}
+
+#else /* WIN32 */
+
+#include <termios.h>
+#include <unistd.h>
+
+bool PythonManager::loginPrompt()
+{
+	std::string user, pwd;
+
+	std::cout << "user name: " << std::flush;
+	std::getline(std::cin, user);
+
+	std::cout << "password: " << std::flush;
+
+    termios oldt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    termios newt = oldt;
+    newt.c_lflag &= ~ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+    getline(std::cin, pwd);
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    std::cout << std::endl;
+
+    //std::cout << "DEBUG PASSWORD: " << pwd << std::endl;
+
+    return Poco::Util::Application::instance()
+    	.getSubsystem<UserManager>()
+		.authenticate(user, pwd, pythonUser);
+}
+
+#endif /* WIN32 */
+
+void PythonManager::loginLoop()
+{
+	for (int i=0; i<3; i++)
+		if (loginPrompt())
+			break;
+		else
+			std::cout << "login failed. " << std::endl;
+}
+
+#endif /* MANAGE_USERS */
 
 #endif /* HAVE_PYTHON27 */

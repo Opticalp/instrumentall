@@ -39,6 +39,9 @@ THE SOFTWARE.
 #include "Poco/Path.h"
 #include "Poco/File.h"
 
+#ifdef MANAGE_USERS
+#   include "core/User.h"
+#endif
 
 class GuiProcessingUnit;
 
@@ -90,6 +93,15 @@ public:
 
     bool autostart() { return autostartFlag; }
 
+#ifdef MANAGE_USERS
+    /**
+     * Give direct access to the GUI user
+     *
+     * The user can be modified by the caller after that
+     */
+    UserPtr getUser() { return guiUser; }
+#endif
+
 private:
     /// indicator to tell if the GUI is launched or not
     bool guiRun;
@@ -102,6 +114,11 @@ private:
     void handleAutostart(const std::string& name, const std::string& value);
 
     Poco::Path scriptPath;
+
+#ifdef MANAGE_USERS
+    UserPtr guiUser;
+#endif
+
 };
 
 #endif /* HAVE_WXWIDGETS */

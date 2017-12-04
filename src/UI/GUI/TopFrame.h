@@ -125,6 +125,15 @@ private:
     std::vector<ImagePanel*> imgPanels;
 #endif
 
+#ifdef MANAGE_USERS
+    void addUserManagementMenuEntry();
+
+    /// open login window
+    void onLogin(wxCommandEvent& event);
+    /// user logout
+    void onLogout(wxCommandEvent& event);
+#endif
+
     /**
      * Listener in the main thread
      *
