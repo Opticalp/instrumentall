@@ -53,6 +53,9 @@ class DataAttributeIn;
  * InPortUser::startCondition is a semi-automated method (virtual,
  * can be overloaded), that manages the possible module task starting
  * conditions.
+ *
+ * @par 2.1.0-dev.7
+ * Add allPluggedDataStartState
  */
 class InPortUser
 {
@@ -196,6 +199,7 @@ protected:
     	noDataStartState,
 //		unknownStartState,
 		allDataStartState,
+		allPluggedDataStartState, // if not all inPorts are plugged
 		firstUnusedBaseStartState // to be used to extend the start states with another enum
 	};
 

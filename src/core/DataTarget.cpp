@@ -51,6 +51,13 @@ DataSource* DataTarget::getDataSource()
 				"no data source");
 }
 
+bool DataTarget::hasDataSource()
+{
+	Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
+
+	return (dataSource != NULL);
+}
+
 void DataTarget::setDataSource(DataSource* source)
 {
     if (source && !isSupportedInputDataType(source->dataType()))
