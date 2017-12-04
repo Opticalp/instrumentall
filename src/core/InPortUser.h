@@ -193,6 +193,11 @@ protected:
 	std::set<size_t> inPortCoughts()
 		{ return caughts.get(); }
 
+	/**
+	 * Count how many input ports are plugged to a data source
+	 */
+	size_t inPortPluggedCount();
+
     /// Start states as to be returned by startCondition
     enum baseStartStates
 	{
