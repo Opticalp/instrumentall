@@ -62,6 +62,7 @@ endif (manage-users)
 
 if (MSVC)
   add_definitions ( -DNOMINMAX )
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif (MSVC)
 
 ## configure dependencies
