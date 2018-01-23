@@ -117,6 +117,10 @@ TopFrame::TopFrame(wxWindow* parent):
     stBar->SetStatusText("WxWidgets initialized...");
 //    stBar->SetStatusText("field #1 start text",1);
 
+#ifdef MANAGE_USERS
+    addUserManagementMenuEntry();
+#endif
+
     core.init();
 }
 
@@ -364,4 +368,33 @@ void TopFrame::reportStatus(std::string statusMsg)
 	updateDisplay();
 }
 
+#ifdef MANAGE_USERS
+
+#include "LoginDialog.h"
+
+void TopFrame::addUserManagementMenuEntry()
+{
+	wxMenuBar* menuBar = GetMenuBar();
+	wxMenu* userMenu = new wxMenu;
+	int loginID = userMenu->Append(wxID_ANY, wxT("Login..."))->GetId();
+	int logoutID = userMenu->Append(wxID_ANY, wxT("Logout"))->GetId();
+	menuBar->Append(userMenu, "User");
+
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &TopFrame::onLogin, this, loginID);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &TopFrame::onLogout, this, logoutID);
+}
+
+void TopFrame::onLogin(wxCommandEvent& event)
+{
+	LoginDialog dlg(this, core);
+	dlg.ShowModal();
+}
+
+void TopFrame::onLogout(wxCommandEvent& event)
+{
+	core.logout();
+	wxMessageBox("User logged out.");
+}
+
+#endif /* MANAGE_USERS */
 #endif /* HAVE_WXWIDGETS */

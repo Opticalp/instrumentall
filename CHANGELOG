@@ -2,6 +2,10 @@
 -----------
 Add InportUser::allPluggedDataStartState
 
+2.1.0-dev.6
+-----------
+Add optionnal user management (with permissions)
+
 2.1.0-dev.5
 -----------
 Change ParameterGetter to be triggged when the parent module runs
