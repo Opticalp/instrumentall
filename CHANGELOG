@@ -1,3 +1,7 @@
+2.1.0-dev.7
+-----------
+Add InportUser::allPluggedDataStartState
+
 2.1.0-dev.6
 -----------
 Add optionnal user management (with permissions)

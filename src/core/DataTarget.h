@@ -70,8 +70,17 @@ public:
 
 	/**
 	 * Retrieve the data source
+	 *
+	 * @throw Poco::NullPointerException if no source is plugged
 	 */
 	DataSource* getDataSource();
+
+	/**
+	 * Check if a data source is plugged
+	 *
+	 * Check if a data source is plugged to this data target
+	 */
+	bool hasDataSource();
 
     /**
      * Check if data is available at this source
