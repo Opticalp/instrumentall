@@ -113,7 +113,6 @@ if [ $TRAVIS_OS_NAME == osx ]
 then 
     echo "using homebrew"
     /usr/bin/yes | pip2 uninstall numpy # see: travis-ci/travis-ci#6688
-    brew tap homebrew/science
     brew install opencv
     # echo "opencv lib installed with homebrew" 
 fi
