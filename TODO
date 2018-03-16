@@ -1,0 +1,12 @@
+ - add parameters in C++ (child class from ParameterizedEntity)
+ - check the DataProxy creation process to compute a proxy name
+ - add interface in python
+ - check if modification is needed for graphviz
+ - check if modification is needed regarding config files
+ - sample proxies:
+   * delay
+   * offset/scale integer
+   * offset/scale float
+   * mask change value
+   * other... ?
+
