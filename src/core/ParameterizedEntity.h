@@ -307,6 +307,16 @@ protected:
      */
     bool hasParameterDefaultValue(size_t index);
 
+    /**
+     * Set parameters to default values, and apply.
+     *
+     * For each parameter:
+     *  - check if there is a default value
+     *  - set the default value
+     * and then, apply.
+     */
+    void setAllParametersFromDefault();
+
 private:
     ParameterizedEntity();
 
