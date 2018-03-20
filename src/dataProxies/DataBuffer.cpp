@@ -33,12 +33,9 @@
 size_t DataBuffer::refCount = 0;
 
 DataBuffer::DataBuffer(int datatype):
-		DataProxy(datatype), mDatatype(datatype)
+		DataProxy(datatype, "DataBuffer"), mDatatype(datatype)
 {
-	mName = "DataBuffer";
-	if (refCount)
-		mName += Poco::NumberFormatter::format(refCount);
-
+	setName(refCount);
     refCount++;
 }
 

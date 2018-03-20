@@ -31,6 +31,8 @@
 
 #include "DataSource.h"
 #include "DataTarget.h"
+#include "VerboseEntity.h"
+#include "ParameterizedEntity.h"
 
 #include "Poco/Thread.h"
 #include "Poco/RefCountedObject.h"
@@ -44,8 +46,14 @@
  * The derived classes shall implement a classDescription
  * static method. DataTarget::description can be implemented
  * as linking to this method.
+ *
+ * @par 2.1.0-dev.6
+ * Add parameters support
  */
-class DataProxy: public DataTarget, public DataSource, public Poco::RefCountedObject
+class DataProxy: public DataTarget, public DataSource,
+	public ParameterizedEntity,
+	public VerboseEntity,
+	public Poco::RefCountedObject
 {
 public:
 	/**
@@ -54,13 +62,33 @@ public:
 	 * In the implementations, the constructor could set
 	 * the unique name of the data proxy.
 	 */
-	DataProxy(int datatype):
+	DataProxy(int datatype, std::string className):
+		mClassName(className),
+		ParameterizedEntity("dataProxy." + className),
+		VerboseEntity("dataProxy." + className), // startup logger name
 		DataSource(datatype) { }
 
-	virtual ~DataProxy() { }
+	virtual ~DataProxy() { poco_information(logger(), "deleting " + name()); }
 
-	virtual std::string name() = 0;
-	virtual std::string description() = 0;
+    virtual std::string description() = 0;
+
+    /**
+     * Get the data logger implementation class name
+     *
+     * @see DataLogger::DataLogger(std::string implementationName)
+     */
+    const std::string& getClassName() const { return mClassName; }
+
+    std::string name() { return mName; }
+
+    /**
+     * Set a new name for the data proxy
+     *
+     *  - change logger()
+     *  - change ParameterizedEntity prefix key
+     *  - reload the default parameters if any
+     */
+    void setName(std::string newName);
 
 protected:
 	/**
@@ -75,6 +103,16 @@ protected:
 	virtual void convert() = 0;
 
 	bool yield() { Poco::Thread::yield(); return false; }
+
+    /**
+     * Set data proxy internal name
+     *
+     * This function shall be called in the constructor implementation,
+     * using a static ref counter.
+     */
+    void setName(size_t refCount);
+
+    Poco::Logger& logger() { return VerboseEntity::logger(); }
 
 private:
 	DataProxy();
@@ -100,6 +138,9 @@ private:
 	void sourceCancel() { cancelWithSource(); }
 	void sourceWaitCancelled() { waitSourceCancelled(); }
 	void sourceReset() { resetWithSource(); }
+
+	std::string mClassName; ///< data logger implementation class name
+	std::string mName;
 };
 
 #include "Poco/DynamicFactory.h"

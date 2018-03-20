@@ -33,7 +33,7 @@
 size_t SimpleNumConverter::refCount = 0;
 
 SimpleNumConverter::SimpleNumConverter(int datatype):
-		DataProxy(datatype), mDatatype(datatype)
+		DataProxy(datatype, "SimpleNumConverter"), mDatatype(datatype)
 {
 	switch (datatype)
 	{
@@ -58,10 +58,7 @@ SimpleNumConverter::SimpleNumConverter(int datatype):
 				+ dataTypeStr(datatype));
 	}
 
-	mName = "SimpleNumConverter";
-	if (refCount)
-		mName += Poco::NumberFormatter::format(refCount);
-
+	setName(refCount);
     refCount++;
 }
 

@@ -36,14 +36,16 @@
  *
  * This is a special proxy that does not convert the data type.
  * Its only role is to buffer the data.
+ *
+ * @par 2.1.0-dev.6
+ * Add parameters support
+ *
  */
 class DataBuffer: public DataProxy
 {
 public:
 	DataBuffer(int datatype);
 	virtual ~DataBuffer() { }
-
-	std::string name() { return mName; }
 
     std::string description() { return classDescription(); }
 
@@ -55,7 +57,6 @@ private:
 	DataBuffer();
 
 	static size_t refCount;
-	std::string mName;
 
     bool isSupportedInputDataType(int datatype)
     {

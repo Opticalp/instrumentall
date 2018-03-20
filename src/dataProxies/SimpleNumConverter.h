@@ -36,14 +36,15 @@
  *
  * DataProxy to convert between simple data types (int32, uint32, int64,
  * uint64, float, double).
+ *
+ * @par 2.1.0-dev.6
+ * Add parameters support
  */
 class SimpleNumConverter: public DataProxy
 {
 public:
 	SimpleNumConverter(int datatype);
 	virtual ~SimpleNumConverter() { }
-
-	std::string name() { return mName; }
 
     std::string description() { return classDescription(); }
 
@@ -57,7 +58,6 @@ private:
     SimpleNumConverter();
 
 	static size_t refCount;
-	std::string mName;
 
     bool isSupportedInputDataType(int datatype);
     std::set<int> supportedInputDataType();
