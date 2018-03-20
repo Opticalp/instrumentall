@@ -29,77 +29,13 @@
 #include "TypeNeutralData.h"
 
 TypeNeutralData::TypeNeutralData(int datatype):
-	mDataType(datatype)
+	mDataType(datatype), dataStore(NULL)
 {
-    switch (mDataType)
-    {
-    // scalar containers
-    case (typeInt32 | contScalar):
-        dataStore = reinterpret_cast<void*>(new Poco::Int32);
-        break;
-    case (typeUInt32 | contScalar):
-        dataStore = reinterpret_cast<void*>(new Poco::UInt32);
-        break;
-    case (typeInt64 | contScalar):
-        dataStore = reinterpret_cast<void*>(new Poco::Int64);
-        break;
-    case (typeUInt64 | contScalar):
-        dataStore = reinterpret_cast<void*>(new Poco::UInt64);
-        break;
-    case (typeFloat | contScalar):
-        dataStore = reinterpret_cast<void*>(new float);
-        break;
-    case (typeDblFloat | contScalar):
-        dataStore = reinterpret_cast<void*>(new double);
-        break;
-    case (typeString | contScalar):
-        dataStore = reinterpret_cast<void*>(new std::string);
-        break;
-#ifdef HAVE_OPENCV
-    case (typeCvMat | contScalar):
-        dataStore =  reinterpret_cast<void*>(new cv::Mat);
-        break;
-#endif
-
-    // vector containers
-    case (typeInt32 | contVector):
-        dataStore = reinterpret_cast<void*>(new std::vector<Poco::Int32>);
-        break;
-    case (typeUInt32 | contVector):
-        dataStore = reinterpret_cast<void*>(new std::vector<Poco::UInt32>);
-        break;
-    case (typeInt64 | contVector):
-        dataStore = reinterpret_cast<void*>(new std::vector<Poco::Int64>);
-        break;
-    case (typeUInt64 | contVector):
-        dataStore = reinterpret_cast<void*>(new std::vector<Poco::UInt64>);
-        break;
-    case (typeFloat | contVector):
-        dataStore = reinterpret_cast<void*>(new std::vector<float>);
-        break;
-    case (typeDblFloat | contVector):
-        dataStore = reinterpret_cast<void*>(new std::vector<double>);
-        break;
-    case (typeString | contVector):
-        dataStore = reinterpret_cast<void*>(new std::vector<std::string>);
-        break;
-#ifdef HAVE_OPENCV
-    case (typeCvMat | contVector):
-        dataStore =  reinterpret_cast<void*>(new std::vector<cv::Mat>);
-        break;
-#endif
-
-    // others
-    case typeUndefined:
-        break;
-    default:
-        poco_bugcheck_msg("DataItem::DataItem: unknown requested data type");
-        throw Poco::BugcheckException();
-    }
+	setNewData(datatype, true);
 }
 
 TypeNeutralData::TypeNeutralData(TypeNeutralData& other):
-		mDataType(other.mDataType)
+		mDataType(other.mDataType), dataStore(NULL)
 {
     switch (mDataType)
     {
@@ -202,6 +138,88 @@ TypeNeutralData::TypeNeutralData(TypeNeutralData& other):
 
 TypeNeutralData::~TypeNeutralData()
 {
+	removeData();
+}
+
+void TypeNeutralData::setNewData(int datatype, bool force)
+{
+	if ((datatype == mDataType) && !force)
+		return;
+
+	mDataType = datatype;
+
+	if (dataStore)
+		removeData();
+
+    switch (mDataType)
+    {
+    // scalar containers
+    case (typeInt32 | contScalar):
+        dataStore = reinterpret_cast<void*>(new Poco::Int32);
+        break;
+    case (typeUInt32 | contScalar):
+        dataStore = reinterpret_cast<void*>(new Poco::UInt32);
+        break;
+    case (typeInt64 | contScalar):
+        dataStore = reinterpret_cast<void*>(new Poco::Int64);
+        break;
+    case (typeUInt64 | contScalar):
+        dataStore = reinterpret_cast<void*>(new Poco::UInt64);
+        break;
+    case (typeFloat | contScalar):
+        dataStore = reinterpret_cast<void*>(new float);
+        break;
+    case (typeDblFloat | contScalar):
+        dataStore = reinterpret_cast<void*>(new double);
+        break;
+    case (typeString | contScalar):
+        dataStore = reinterpret_cast<void*>(new std::string);
+        break;
+#ifdef HAVE_OPENCV
+    case (typeCvMat | contScalar):
+        dataStore =  reinterpret_cast<void*>(new cv::Mat);
+        break;
+#endif
+
+    // vector containers
+    case (typeInt32 | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<Poco::Int32>);
+        break;
+    case (typeUInt32 | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<Poco::UInt32>);
+        break;
+    case (typeInt64 | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<Poco::Int64>);
+        break;
+    case (typeUInt64 | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<Poco::UInt64>);
+        break;
+    case (typeFloat | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<float>);
+        break;
+    case (typeDblFloat | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<double>);
+        break;
+    case (typeString | contVector):
+        dataStore = reinterpret_cast<void*>(new std::vector<std::string>);
+        break;
+#ifdef HAVE_OPENCV
+    case (typeCvMat | contVector):
+        dataStore =  reinterpret_cast<void*>(new std::vector<cv::Mat>);
+        break;
+#endif
+
+    // others
+    case typeUndefined:
+        break;
+    default:
+        poco_bugcheck_msg("DataItem::DataItem: unknown requested data type");
+        throw Poco::BugcheckException();
+    }
+}
+
+void TypeNeutralData::removeData()
+{
     switch (mDataType)
     {
     // scalar containers
@@ -265,6 +283,9 @@ TypeNeutralData::~TypeNeutralData()
     default:
         break;
     }
+
+    dataStore = NULL;
+    mDataType = typeUndefined;
 }
 
 std::string TypeNeutralData::dataTypeShortStr(int datatype)

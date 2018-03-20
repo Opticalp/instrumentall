@@ -57,6 +57,7 @@ public:
         /// Undefined data type.
         /// To be combined with contScalar container.
         /// To be used in empty ports
+    	/// To be used for unallocated data
         typeUndefined,
 
         // integer types
@@ -156,6 +157,17 @@ public:
 
 protected:
     /**
+     * Change the data type and allocate new memory for the data
+     *
+     * Remove previous data if the dataStore is not empty (NULL)
+     *
+     * @param datatype New datatype to set
+     * @param force If false and datatype is equal to the existing data type,
+     * nothing is done.
+     */
+    void setNewData(int datatype, bool force = false);
+
+    /**
      * Retrieve a pointer on the data without checking the type
      */
     template <typename T> T* getDataNoTypeCheck()
@@ -164,7 +176,7 @@ protected:
     }
 
 private:
-    void* dataStore; ///< pointer to the data
+    void* dataStore; ///< pointer to the data. NULL if not allocated.
 
     /**
      * Data type
@@ -173,6 +185,8 @@ private:
      * a DataTypeEnum value and a DataContainerEnum value
      */
     int mDataType;
+
+    void removeData();
 
     void checkContScalar()
     {

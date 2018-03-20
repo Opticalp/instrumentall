@@ -48,6 +48,12 @@ using Poco::RWLock;
  * The protected methods are the write methods to be accessed by the
  * inherited data generating classes.
  *
+ * @par 2.1.0-dev.8
+ * It is now possible to change the data type on-the-fly.
+ * It is not supposed to be done while running the data flow.
+ * then, there is no locking mechanism to prevent data access during data deletion
+ * while changing the data type.
+ *
  */
 class DataItem: public TypeNeutralData
 {
