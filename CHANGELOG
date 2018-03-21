@@ -1,3 +1,7 @@
+2.1.0-dev.9
+-----------
+Add parameters to the data proxies
+
 2.1.0-dev.7
 -----------
 Add InportUser::allPluggedDataStartState
