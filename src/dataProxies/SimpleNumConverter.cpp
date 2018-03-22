@@ -88,42 +88,6 @@ std::set<int> SimpleNumConverter::supportedInputDataType()
     return ret;
 }
 
-bool SimpleNumConverter::isSupportedInputDataType(int datatype)
-{
-	if (isVector(mDatatype))
-	{
-		switch (datatype)
-		{
-		case (typeInt32  | contVector):
-		case (typeUInt32 | contVector):
-		case (typeInt64  | contVector):
-		case (typeUInt64 | contVector):
-		case (typeFloat  | contVector):
-		case (typeDblFloat | contVector):
-			return true;
-
-		default:
-			return false;
-		}
-	}
-	else
-	{
-		switch (datatype)
-		{
-		case (typeInt32  | contScalar):
-		case (typeUInt32 | contScalar):
-		case (typeInt64  | contScalar):
-		case (typeUInt64 | contScalar):
-		case (typeFloat  | contScalar):
-		case (typeDblFloat | contScalar):
-			return true;
-
-		default:
-			return false;
-		}
-	}
-}
-
 void SimpleNumConverter::convert()
 {
 	if (isVector(mDatatype))

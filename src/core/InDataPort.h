@@ -92,9 +92,6 @@ public:
 private:
     int mType; ///< port data type
 
-    bool isSupportedInputDataType(int dataType)
-    	{ return (dataType == mType); }
-
     std::set<int> supportedInputDataType();
 };
 

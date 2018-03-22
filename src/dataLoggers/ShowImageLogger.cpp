@@ -98,11 +98,6 @@ void ShowImageLogger::log()
     }
 }
 
-bool ShowImageLogger::isSupportedInputDataType(int datatype)
-{
-    return (datatype == (DataItem::typeCvMat | DataItem::contScalar));
-}
-
 std::set<int> ShowImageLogger::supportedInputDataType()
 {
     std::set<int> ret;

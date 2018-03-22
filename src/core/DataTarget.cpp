@@ -235,3 +235,14 @@ void DataTarget::resetFromSource(DataSource* source)
 
     targetCancelling = false;
 }
+
+bool DataTarget::isSupportedInputDataType(int dataType)
+{
+	std::set<int> types = supportedInputDataType();
+
+	if (types.size() == 0)
+		return true;
+	else
+		return (types.count(dataType)>0);
+}
+
