@@ -290,3 +290,25 @@ void DataSource::resetFromTarget(DataTarget* target)
 	// self
 	sourceReset();
 }
+
+bool DataSource::isSupportedOutputDataType(int dataType)
+{
+	std::set<int> types = supportedOutputDataType();
+
+	if (types.size() == 0)
+		return true;
+	else
+		return (types.count(dataType)>0);
+}
+
+std::set<int> DataSource::supportedOutputDataType()
+{
+	std::set<int> types;
+	types.insert(dataType());
+	return types;
+}
+
+int DataSource::preferredOutputDataType()
+{
+	return *(supportedOutputDataType().begin());
+}

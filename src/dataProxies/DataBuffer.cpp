@@ -32,11 +32,41 @@
 
 size_t DataBuffer::refCount = 0;
 
-DataBuffer::DataBuffer(int datatype):
-		DataProxy(datatype, "DataBuffer"), mDatatype(datatype)
+DataBuffer::DataBuffer():
+		DataProxy("DataBuffer"), mDatatype(DataItem::typeUndefined)
 {
 	setName(refCount);
     refCount++;
+}
+
+std::set<int> DataBuffer::supportedDataType()
+{
+	std::set<int> ret;
+
+	if (mDatatype != DataItem::typeUndefined)
+		ret.insert(mDatatype);
+	else
+	{
+		// scalar containers
+		ret.insert(typeInt32 | contScalar);
+		ret.insert(typeUInt32 | contScalar);
+		ret.insert(typeInt64 | contScalar);
+		ret.insert(typeUInt64 | contScalar);
+		ret.insert(typeFloat | contScalar);
+		ret.insert(typeDblFloat | contScalar);
+		ret.insert(typeString | contScalar);
+
+		// vector containers
+		ret.insert(typeInt32 | contVector);
+		ret.insert(typeUInt32 | contVector);
+		ret.insert(typeInt64 | contVector);
+		ret.insert(typeUInt64 | contVector);
+		ret.insert(typeFloat | contVector);
+		ret.insert(typeDblFloat | contVector);
+		ret.insert(typeString | contVector);
+	}
+
+	return ret;
 }
 
 void DataBuffer::convert()

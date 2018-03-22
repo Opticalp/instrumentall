@@ -44,7 +44,7 @@
 class DataBuffer: public DataProxy
 {
 public:
-	DataBuffer(int datatype);
+	DataBuffer();
 	virtual ~DataBuffer() { }
 
     std::string description() { return classDescription(); }
@@ -54,18 +54,17 @@ public:
         		"To be used to release earlier data sources"; }
 
 private:
-	DataBuffer();
-
 	static size_t refCount;
 
-    std::set<int> supportedInputDataType()
-	{
-		std::set<int> ret;
-		ret.insert(mDatatype);
-		return ret;
-	}
+	std::set<int> supportedDataType();
 
-    /**
+    std::set<int> supportedInputDataType()
+		{ return supportedDataType(); }
+
+    std::set<int> supportedOutputDataType()
+		{ return supportedDataType(); }
+
+	/**
      * No conversion. Copy the input to the output.
      */
     void convert();

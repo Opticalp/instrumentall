@@ -46,8 +46,8 @@ def myMain(baseDir):
     mod2 = fac.select("branch").select("leafForwarder").create("mod2")
     print("module " + mod2.name + " created. ")
     
-    print('Proxy creation using the constructor: DataProxy("DataBufferint32")')
-    proxy = DataProxy("DataBufferint32") 
+    print('Proxy creation using the constructor: DataProxy("DataBuffer")')
+    proxy = DataProxy("DataBuffer") 
     print(" - Name: " + proxy.name)
     print(" - Description: " + proxy.description)
 

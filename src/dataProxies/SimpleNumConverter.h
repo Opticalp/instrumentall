@@ -43,7 +43,7 @@
 class SimpleNumConverter: public DataProxy
 {
 public:
-	SimpleNumConverter(int datatype);
+	SimpleNumConverter();
 	virtual ~SimpleNumConverter() { }
 
     std::string description() { return classDescription(); }
@@ -55,11 +55,22 @@ public:
         		"The cast is truncating the out-of-range values"; }
 
 private:
-    SimpleNumConverter();
-
 	static size_t refCount;
 
     std::set<int> supportedInputDataType();
+    std::set<int> supportedOutputDataType();
+
+    /**
+     * Implement DataSource::preferredOutputDataType
+     *
+     * Do not really make sense since this proxy should operate a conversion
+     *
+     * @return input data type
+     *
+     * @throw Poco::NullPointerException if the input is not plugged
+     */
+    int preferredOutputDataType()
+    	{ return getDataSource()->dataType(); }
 
     /**
      * Main logic
@@ -79,8 +90,6 @@ private:
     template <typename T> void assignVectorUInt64(std::vector<Poco::UInt64>* destination);
     template <typename T> void assignVectorFloat(std::vector<float>* destination);
     template <typename T> void assignVectorDblFloat(std::vector<double>* destination);
-
-    int mDatatype;
 };
 
 #include "SimpleNumConverter.ipp"

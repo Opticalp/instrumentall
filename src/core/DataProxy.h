@@ -49,6 +49,12 @@
  *
  * @par 2.1.0-dev.6
  * Add parameters support
+ *
+ * The implementations overload:
+ *
+ *     virtual std::set<int> supportedOutputDataType();
+ *
+ *
  */
 class DataProxy: public DataTarget, public DataSource,
 	public ParameterizedEntity,
@@ -62,11 +68,11 @@ public:
 	 * In the implementations, the constructor could set
 	 * the unique name of the data proxy.
 	 */
-	DataProxy(int datatype, std::string className):
+	DataProxy(std::string className):
 		mClassName(className),
 		ParameterizedEntity("dataProxy." + className),
-		VerboseEntity("dataProxy." + className), // startup logger name
-		DataSource(datatype) { }
+		VerboseEntity("dataProxy." + className) // startup logger name
+		{   }
 
 	virtual ~DataProxy() { poco_information(logger(), "deleting " + name()); }
 
@@ -144,27 +150,5 @@ private:
 };
 
 #include "Poco/DynamicFactory.h"
-
-/**
- * DataProxy instantiator
- *
- * Allow the data proxies to be constructed easily using the Poco::DynamicFactory
- *
- * Proxy is a class derived from DataProxy
- */
-template <class Proxy> class DataProxyInstantiator:
-		public Poco::AbstractInstantiator<DataProxy>
-{
-public:
-	DataProxyInstantiator(int datatype): mDatatype(datatype) { }
-
-	DataProxy* createInstance() const
-	{
-		return new Proxy(mDatatype);
-	}
-
-private:
-	int mDatatype;
-};
 
 #endif /* SRC_DATAPROXY_H_ */

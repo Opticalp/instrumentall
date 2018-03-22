@@ -32,32 +32,9 @@
 
 size_t SimpleNumConverter::refCount = 0;
 
-SimpleNumConverter::SimpleNumConverter(int datatype):
-		DataProxy(datatype, "SimpleNumConverter"), mDatatype(datatype)
+SimpleNumConverter::SimpleNumConverter():
+		DataProxy("SimpleNumConverter")
 {
-	switch (datatype)
-	{
-	case (typeInt32 | contVector):
-	case (typeUInt32 | contVector):
-	case (typeInt64 | contVector):
-	case (typeUInt64 | contVector):
-	case (typeFloat | contVector):
-	case (typeDblFloat | contVector):
-
-	case (typeInt32  | contScalar):
-	case (typeUInt32 | contScalar):
-	case (typeInt64  | contScalar):
-	case (typeUInt64 | contScalar):
-	case (typeFloat  | contScalar):
-	case (typeDblFloat | contScalar):
-		break;
-
-	default:
-		throw Poco::DataFormatException("SimpleNumConverter",
-				"not able to output the data format: "
-				+ dataTypeStr(datatype));
-	}
-
 	setName(refCount);
     refCount++;
 }
@@ -66,7 +43,10 @@ std::set<int> SimpleNumConverter::supportedInputDataType()
 {
 	std::set<int> ret;
 
-	if (isVector(mDatatype))
+	bool isVect = isVector(dataType());
+	bool undef = (dataType() == DataItem::typeUndefined);
+
+	if (isVect || undef)
 	{
 		ret.insert(typeInt32  | contVector);
 		ret.insert(typeUInt32 | contVector);
@@ -75,7 +55,50 @@ std::set<int> SimpleNumConverter::supportedInputDataType()
 		ret.insert(typeFloat  | contVector);
 		ret.insert(typeDblFloat | contVector);
 	}
-	else
+
+	if (!isVect || undef)
+	{
+		ret.insert(typeInt32  | contScalar);
+		ret.insert(typeUInt32 | contScalar);
+		ret.insert(typeInt64  | contScalar);
+		ret.insert(typeUInt64 | contScalar);
+		ret.insert(typeFloat  | contScalar);
+		ret.insert(typeDblFloat | contScalar);
+	}
+
+    return ret;
+}
+
+std::set<int> SimpleNumConverter::supportedOutputDataType()
+{
+	std::set<int> ret;
+
+	int inDataType = DataItem::typeUndefined;
+	bool undef = true;
+
+	try
+	{
+		inDataType = getDataSource()->dataType();
+		undef = false;
+	}
+	catch (Poco::NullPointerException& )
+	{
+		// do nothing
+	}
+
+	bool isVect = isVector(inDataType);
+
+	if (isVect || undef)
+	{
+		ret.insert(typeInt32  | contVector);
+		ret.insert(typeUInt32 | contVector);
+		ret.insert(typeInt64  | contVector);
+		ret.insert(typeUInt64 | contVector);
+		ret.insert(typeFloat  | contVector);
+		ret.insert(typeDblFloat | contVector);
+	}
+
+	if (!isVect || undef)
 	{
 		ret.insert(typeInt32  | contScalar);
 		ret.insert(typeUInt32 | contScalar);
@@ -90,9 +113,9 @@ std::set<int> SimpleNumConverter::supportedInputDataType()
 
 void SimpleNumConverter::convert()
 {
-	if (isVector(mDatatype))
+	if (isVector(dataType()))
 	{
-		switch (noContainerDataType(mDatatype))
+		switch (noContainerDataType(dataType()))
 		{
 	    case (typeInt32):
 			switch (noContainerDataType(getDataSource()->dataType())) // input ?
@@ -257,7 +280,7 @@ void SimpleNumConverter::convert()
 	}
 	else
 	{
-		switch (mDatatype)
+		switch (dataType())
 		{
 	    case (typeInt32): // output int32
 	    	switch (getDataSource()->dataType()) // input ?

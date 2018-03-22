@@ -95,8 +95,8 @@ def myMain(baseDir):
     for proxyClass in proxyClasses:
         print(" - " + proxyClass + ": " + proxyClasses[proxyClass])
     
-    print('Proxy creation using the constructor: DataProxy("DataBufferint32")')
-    proxy = DataProxy("DataBufferint32") 
+    print('Proxy creation using the constructor: DataProxy("DataBuffer")')
+    proxy = DataProxy("DataBuffer") 
     print(" - Name: " + proxy.name)
     print(" - Description: " + proxy.description)
 

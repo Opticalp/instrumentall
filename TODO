@@ -1,5 +1,6 @@
  - [DONE] add parameters in C++ (child class from ParameterizedEntity)
  - improve dataproxy registration and creation in DataManager (too heavy process yet)
+verify that the dataSource type is defined when bounding. 
  - check the DataProxy creation process to compute a proxy name
  - add interface in python
  - check if modification is needed for graphviz
