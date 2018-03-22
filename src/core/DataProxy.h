@@ -54,7 +54,6 @@
  *
  *     virtual std::set<int> supportedOutputDataType();
  *
- *
  */
 class DataProxy: public DataTarget, public DataSource,
 	public ParameterizedEntity,

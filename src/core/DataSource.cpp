@@ -59,11 +59,26 @@ std::set<DataTarget*> DataSource::getDataTargets()
     return dataTargets;
 }
 
-void DataSource::addDataTarget(DataTarget* target)
+void DataSource::addDataTarget(DataTarget* target, int datatype)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);
-    if (dataTargets.insert(target).second)
-    	incUser();
+
+	if (dataTargets.count(target))
+		return;
+
+	if (dataTargets.size())
+	{
+		if (dataType() != datatype)
+			throw Poco::DataFormatException("addDataTarget",
+					"A target is already plugged with a different data type");
+	}
+	else
+	{
+		setNewData(datatype);
+	}
+
+	poco_assert(dataTargets.insert(target).second);
+    incUser();
 }
 
 void DataSource::notifyReady(DataAttribute attribute)

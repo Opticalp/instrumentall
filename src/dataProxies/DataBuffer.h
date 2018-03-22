@@ -53,16 +53,16 @@ public:
         { return "Buffer data without any conversion. "
         		"To be used to release earlier data sources"; }
 
-private:
-	static size_t refCount;
-
-	std::set<int> supportedDataType();
-
     std::set<int> supportedInputDataType()
 		{ return supportedDataType(); }
 
     std::set<int> supportedOutputDataType()
 		{ return supportedDataType(); }
+
+private:
+	static size_t refCount;
+
+	std::set<int> supportedDataType();
 
 	/**
      * No conversion. Copy the input to the output.

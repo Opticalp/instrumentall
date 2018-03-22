@@ -165,7 +165,6 @@ public:
      */
     void resetWithTargets();
 
-protected:
     /**
      * Check if the given data type is supported
      *
@@ -192,6 +191,7 @@ protected:
      */
     virtual int preferredOutputDataType();
 
+protected:
     /**
      * Implement the cancellation in the concerned entity
      *
@@ -221,7 +221,7 @@ private:
      *
      * This function should only be called by the target.
      */
-    void addDataTarget(DataTarget* port);
+    void addDataTarget(DataTarget* target, int datatype);
 
     /**
      * Remove a data target

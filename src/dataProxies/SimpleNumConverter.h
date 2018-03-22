@@ -54,9 +54,6 @@ public:
         		"Vect version is supported too. "
         		"The cast is truncating the out-of-range values"; }
 
-private:
-	static size_t refCount;
-
     std::set<int> supportedInputDataType();
     std::set<int> supportedOutputDataType();
 
@@ -71,6 +68,9 @@ private:
      */
     int preferredOutputDataType()
     	{ return getDataSource()->dataType(); }
+
+private:
+	static size_t refCount;
 
     /**
      * Main logic
