@@ -213,6 +213,49 @@ PyObject* pyModFactSelectValueList(ModFactMembers* self)
     return pyValues;
 }
 
+#include "core/ModuleFactoryBranch.h"
+
+PyObject* pyModFactGetSelector(ModFactMembers* self)
+{
+    std::string strValue;
+
+    try
+    {
+    	ModuleFactoryBranch* fac = dynamic_cast<ModuleFactoryBranch*>(**self->moduleFactory);
+
+    	if (fac)
+    		strValue = fac->getSelector();
+    	else
+    		Py_RETURN_NONE;
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    return PyString_FromString(strValue.c_str());
+}
+
+PyObject* pyModFactParent(ModFactMembers* self)
+{
+//    std::string strValue;
+//
+//    try
+//    {
+//   		strValue = (**self->moduleFactory)->getSelector();
+//    }
+//    catch (Poco::Exception& e)
+//    {
+//        PyErr_SetString(PyExc_RuntimeError,
+//                e.displayText().c_str());
+//        return NULL;
+//    }
+
+    Py_RETURN_NONE;
+}
+
 PyObject* pyModFactCountRemain(ModFactMembers* self)
 {
     size_t cnt;
