@@ -240,20 +240,54 @@ PyObject* pyModFactGetSelector(ModFactMembers* self)
 
 PyObject* pyModFactParent(ModFactMembers* self)
 {
-//    std::string strValue;
-//
-//    try
-//    {
-//   		strValue = (**self->moduleFactory)->getSelector();
-//    }
-//    catch (Poco::Exception& e)
-//    {
-//        PyErr_SetString(PyExc_RuntimeError,
-//                e.displayText().c_str());
-//        return NULL;
-//    }
+    Poco::SharedPtr<ModuleFactory*> factory;
 
-    Py_RETURN_NONE;
+    try
+    {
+    	ModuleFactoryBranch* fac = dynamic_cast<ModuleFactoryBranch*>(**self->moduleFactory);
+
+    	if (fac)
+    		factory = Poco::Util::Application::instance()
+							.getSubsystem<ModuleManager>()
+							.getFactory( fac->parent() );
+    	else
+    		Py_RETURN_NONE;
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    // alloc
+    if (PyType_Ready(&PythonModuleFactory) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the ModuleFactory Type");
+        return NULL;
+    }
+
+    ModFactMembers* pyParent =
+            (ModFactMembers*)(
+                    pyModFactNew((PyTypeObject*)&PythonModuleFactory, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // retrieve name and description
+    tmp = pyParent->name;
+    pyParent->name = PyString_FromString((*factory)->name().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = pyParent->description;
+    pyParent->description = PyString_FromString((*factory)->description().c_str());
+    Py_XDECREF(tmp);
+
+    // set ModuleFactory reference
+    *(pyParent->moduleFactory) = factory;
+
+    return (PyObject*)(pyParent);
 }
 
 PyObject* pyModFactCountRemain(ModFactMembers* self)
