@@ -193,6 +193,7 @@ int PythonManager::main(Application& app)
                 "command line \"execute\" option, or by the "
                 + std::string(CONF_KEY_PY_SCRIPT)
                 + " key in the config file");
+	    return Application::EXIT_USAGE;
     }
 
     if (iconsoleFlag)
@@ -205,6 +206,7 @@ int PythonManager::main(Application& app)
     	{
     		poco_error(logger(), "Can not run the console: "
     				+ e.displayText());
+    	    return Application::EXIT_SOFTWARE;
     	}
     }
     else if (app.config().hasProperty(CONF_KEY_PY_SCRIPT))
@@ -219,6 +221,7 @@ int PythonManager::main(Application& app)
     	{
     		poco_error(logger(), "The main script had errors: "
     				+ e.displayText());
+    	    return Application::EXIT_SOFTWARE;
     	}
     }
 
