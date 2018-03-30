@@ -55,6 +55,13 @@ def myMain(baseDir):
 
     print("Create module 'myMod' from leaf factory (once again)")
     fac.select("branch").select("leaf").create("myMod")
+    
+    print("analyzing ancestors of myMod...")
+    print("myMod parent name is: " + Module("myMod").parent().name)
+    print("the selector used to come to this parent was: " + 
+          Module("myMod").parent().getSelector())
+    print("passed to the factory: " + 
+          Module("myMod").parent().parent().name)
 
     if (fac.countRemain()>0):
         print("Creating module from " + fac.name + " without arg" )
