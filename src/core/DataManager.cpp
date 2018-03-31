@@ -43,6 +43,7 @@
 // proxies
 #include "dataProxies/DataBuffer.h"
 #include "dataProxies/SimpleNumConverter.h"
+#include "dataProxies/Delayer.h"
 
 #include "Poco/Exception.h"
 #include "Poco/Util/Application.h"
@@ -80,6 +81,9 @@ DataManager::DataManager():
 
     proxyFactory.registerClass<SimpleNumConverter>("SimpleNumConverter");
     proxyClasses.insert(classPair("SimpleNumConverter", SimpleNumConverter::classDescription()));
+
+    proxyFactory.registerClass<Delayer>("Delayer");
+    proxyClasses.insert(classPair("Delayer", Delayer::classDescription()));
 }
 
 DataManager::~DataManager()
