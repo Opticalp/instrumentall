@@ -4,6 +4,11 @@
  * Improve DataProxy and DataLogger creation
  * isSupportedInputDataType(int datatype) does not need to be implemented in classes inherited from DataTarget any more
 
+2.1.0-dev.8
+-----------
+ - Fix python error forwarding
+ - add python wrappers for Factory::getSelector and Module::parent
+
 2.1.0-dev.7
 -----------
 Add InportUser::allPluggedDataStartState
