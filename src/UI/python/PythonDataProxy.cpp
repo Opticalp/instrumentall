@@ -32,6 +32,8 @@ THE SOFTWARE.
 #include "core/Dispatcher.h"
 #include "PythonDataProxy.h"
 #include "PythonOutPort.h"
+#include "PythonParameterizedEntity.h"
+#include "PythonVerboseEntity.h"
 
 #include "Poco/Util/Application.h"
 
@@ -196,6 +198,59 @@ PyObject* pyDataProxyDetach(DataProxyMembers* self)
 			  .unbind(static_cast<DataTarget*>((*self->proxy).get()));
 
 	Py_RETURN_NONE;
+}
+
+PyObject* pyDataProxySetName(DataProxyMembers* self, PyObject* args)
+{
+    char* charName;
+
+    if (!PyArg_ParseTuple(args, "s:setName", &charName))
+        return NULL;
+
+    std::string newName(charName);
+    try
+    {
+        (*self->proxy)->setName(newName);
+
+        // update name
+        PyObject* tmp = NULL;
+        tmp = self->name;
+        self->name = PyString_FromString((*self->proxy)->name().c_str());
+        Py_XDECREF(tmp);
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+PyObject* pyDataProxyGetParameterSet(DataProxyMembers* self)
+{
+    return pyGetParameterSet(*self->proxy);
+}
+
+PyObject* pyDataProxyGetParameterValue(DataProxyMembers* self, PyObject* args)
+{
+    return pyGetParameterValue(*self->proxy, args);
+}
+
+PyObject* pyDataProxySetParameterValue(DataProxyMembers* self, PyObject* args)
+{
+    return pySetParameterValue(*self->proxy, args);
+}
+
+PyObject* pyDataProxySetVerbosity(DataProxyMembers* self, PyObject* args)
+{
+    return pySetVerbosity(*self->proxy, args);
+}
+
+PyObject* pyDataProxyGetVerbosity(DataProxyMembers* self, PyObject* args)
+{
+    return pyGetVerbosity(*self->proxy, args);
 }
 
 #endif /* HAVE_PYTHON27 */
