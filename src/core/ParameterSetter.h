@@ -68,9 +68,6 @@ private:
 	 */
 	void runTarget();
 
-	bool isSupportedInputDataType(int datatype)
-		{ return (datatype == getParameterDataType()); }
-
     std::set<int> supportedInputDataType();
 
 	std::string mName;

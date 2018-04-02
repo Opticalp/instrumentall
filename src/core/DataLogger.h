@@ -59,7 +59,7 @@ public:
 	 * Constructor
 	 *
 	 * In the implementations, the constructor could set
-	 * the unique name of the logger.
+	 * the unique name of the data logger.
 	 */
     DataLogger(std::string implementationName):
         className(implementationName),

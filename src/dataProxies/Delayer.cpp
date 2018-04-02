@@ -1,11 +1,11 @@
 /**
- * @file	src/dataProxies/DataBuffer.cpp
- * @date	Jul. 2016
+ * @file	src/dataProxies/Delayer.cpp
+ * @date	Apr. 2018
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2018 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,20 +26,26 @@
  THE SOFTWARE.
  */
 
-#include "DataBuffer.h"
+#include "Delayer.h"
 
 #include "Poco/NumberFormatter.h"
 
-size_t DataBuffer::refCount = 0;
+size_t Delayer::refCount = 0;
 
-DataBuffer::DataBuffer():
-		DataProxy("DataBuffer"), mDatatype(DataItem::typeUndefined)
+Delayer::Delayer():
+		DataProxy("Delayer"),
+		mDatatype(DataItem::typeUndefined),
+		duration(1000)
 {
 	setName(refCount);
     refCount++;
+
+    setParameterCount(paramCnt);
+    addParameter(paramDuration, "duration", "delay duration in milliseconds",
+            ParamItem::typeInteger, "1000");
 }
 
-std::set<int> DataBuffer::supportedDataType()
+std::set<int> Delayer::supportedDataType()
 {
 	std::set<int> ret;
 
@@ -69,8 +75,10 @@ std::set<int> DataBuffer::supportedDataType()
 	return ret;
 }
 
-void DataBuffer::convert()
+void Delayer::convert()
 {
+    Poco::Thread::sleep(duration);
+
     switch (mDatatype)
     {
     // scalar containers

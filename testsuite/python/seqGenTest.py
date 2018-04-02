@@ -48,14 +48,14 @@ def myMain(baseDir):
     mod3 = fac.select("leafSeqMax").create("mod3")
     print("module " + mod3.name + " created. ")
     
-##    # query the possible DataProxy class names for DataProxy creation
-##    proxyClasses = dataProxyClasses() # DataManager::dataProxyClasses()
-##    print "Available data proxy classes: "
-##    for proxyClass in proxyClasses:
-##        print " - " + proxyClass + ": " + proxyClasses[proxyClass]
+    # query the possible DataProxy class names for DataProxy creation
+    proxyClasses = dataProxyClasses() # DataManager::dataProxyClasses()
+    print "Available data proxy classes: "
+    for proxyClass in proxyClasses:
+        print " - " + proxyClass + ": " + proxyClasses[proxyClass]
     
-    print('Proxy creation using the constructor: DataProxy("SimpleNumConverterint32")')
-    proxy = DataProxy("SimpleNumConverterint32") 
+    print('Proxy creation using the constructor: DataProxy("SimpleNumConverter")')
+    proxy = DataProxy("SimpleNumConverter") 
     print(" - Name: " + proxy.name)
     print(" - Description: " + proxy.description)
 

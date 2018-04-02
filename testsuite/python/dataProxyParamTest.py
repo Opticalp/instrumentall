@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-## @file   testsuite/python/dataBufferTest.py
-## @date   jul. 2016
+## @file   testsuite/python/dataProxyParamTest.py
+## @date   Apr. 2018
 ## @author PhRG - opticalp.fr
 ##
 ## Test the features of the DataProxy
 
 #
-# Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+# Copyright (c) 2018 Ph. Renaud-Goud / Opticalp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,9 +31,10 @@
 def myMain(baseDir):
     """Main function. Run the tests. """
     
-    print("Test the DataProxy class. ")
+    print("Test the DataProxy class with parameters. ")
 
     from instru import *
+    import time
 
     fac = Factory("DataGenFactory")
     print("Retrieved factory: " + fac.name)
@@ -60,43 +61,14 @@ def myMain(baseDir):
     mod2 = fac.select("branch").select("leafForwarder").create("mod2")
     print("module " + mod2.name + " created. ")
 
-    print("Bind the output of mod1 (data gen) to the forwarder")
-    bind(mod1.outPorts()[0], mod2.inPorts()[0])
-
-    print('2 loggers creation using the constructor: DataLogger("DataPocoLogger")')
-    logger = DataLogger("DataPocoLogger")
-    logger1 = DataLogger("DataPocoLogger")
-
-    print("Register the loggers to mod1 and mod2 output")
-    mod1.outPorts()[0].register(logger)
-    mod2.outPorts()[0].register(logger1)
-
-    print("mod1 port#0 targets (outports): ")
-    targets = mod1.outPorts()[0].getTargetPorts()
-    for target in targets:    
-        print ( "  " + target.name + ", from module: " +
-            target.parent().name )
-
-    print("mod1 port#0 data loggers: ")
-    loggers = mod1.outPorts()[0].loggers()
-    for logger in loggers:
-        print ("  Logger: " + logger.name +
-               " (" + logger.description + ")" +
-               " on port: " + logger.portSource().name + 
-               " of module: " + logger.portSource().parent().name )  
-
-    print("Run module mod1")
-    runModule(mod1)
-    waitAll()
-    
     # query the possible DataProxy class names for DataProxy creation
     proxyClasses = dataProxyClasses() # DataManager::dataProxyClasses()
     print("Available data proxy classes: ")
     for proxyClass in proxyClasses:
         print(" - " + proxyClass + ": " + proxyClasses[proxyClass])
     
-    print('Proxy creation using the constructor: DataProxy("DataBuffer")')
-    proxy = DataProxy("DataBuffer") 
+    print('Proxy creation using the constructor: DataProxy("Delayer")')
+    proxy = DataProxy("Delayer") 
     print(" - Name: " + proxy.name)
     print(" - Description: " + proxy.description)
 
@@ -104,9 +76,41 @@ def myMain(baseDir):
     bind(mod1.outPorts()[0], mod2.inPorts()[0], proxy)
 
     print("Run module mod1")
+    t0 = time.time()
     runModule(mod1)
+    waitAll()
     
-    print("End of script dataBufferTest.py")
+    elapsed = time.time()-t0
+    print("elapsed time (ms): " + str(elapsed*1000))
+    if elapsed < 1:
+        raise RuntimeError("the delay did not apply?")
+    
+    proxy.setParameterValue("duration",4000)
+    
+    print("Run module again, with delay duration set to 4s")
+    t0 = time.time()
+    runModule(mod1)
+    waitAll()
+
+    elapsed = time.time()-t0
+    print("elapsed time (ms): " + str(elapsed*1000))
+    if elapsed < 4:
+        raise RuntimeError("the delay duration modification did not apply?")
+    
+    from os.path import join
+    
+    cfgFile = join(join(baseDir,"resources"),"modParamTest.properties")
+    print("Load test config file: modParamTest.properties from " + cfgFile)
+    loadConfiguration(cfgFile)
+
+    print("change data proxy name")
+    proxy.setName("testIt")
+    
+    print("get the new delay duration: " + str(proxy.getParameterValue("duration")))
+    if proxy.getParameterValue("duration") != 3000:
+        raise RuntimeError("The duration should be now 3000ms, as defined in hte property file")
+
+    print("End of script dataProxyParamTest.py")
     
 # main body    
 import sys

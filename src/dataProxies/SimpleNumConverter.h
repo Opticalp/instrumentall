@@ -36,14 +36,15 @@
  *
  * DataProxy to convert between simple data types (int32, uint32, int64,
  * uint64, float, double).
+ *
+ * @par 2.1.0-dev.6
+ * Add parameters support
  */
 class SimpleNumConverter: public DataProxy
 {
 public:
-	SimpleNumConverter(int datatype);
+	SimpleNumConverter();
 	virtual ~SimpleNumConverter() { }
-
-	std::string name() { return mName; }
 
     std::string description() { return classDescription(); }
 
@@ -53,14 +54,23 @@ public:
         		"Vect version is supported too. "
         		"The cast is truncating the out-of-range values"; }
 
-private:
-    SimpleNumConverter();
-
-	static size_t refCount;
-	std::string mName;
-
-    bool isSupportedInputDataType(int datatype);
     std::set<int> supportedInputDataType();
+    std::set<int> supportedOutputDataType();
+
+    /**
+     * Implement DataSource::preferredOutputDataType
+     *
+     * Do not really make sense since this proxy should operate a conversion
+     *
+     * @return input data type
+     *
+     * @throw Poco::NullPointerException if the input is not plugged
+     */
+    int preferredOutputDataType()
+    	{ return getDataSource()->dataType(); }
+
+private:
+	static size_t refCount;
 
     /**
      * Main logic
@@ -80,8 +90,6 @@ private:
     template <typename T> void assignVectorUInt64(std::vector<Poco::UInt64>* destination);
     template <typename T> void assignVectorFloat(std::vector<float>* destination);
     template <typename T> void assignVectorDblFloat(std::vector<double>* destination);
-
-    int mDatatype;
 };
 
 #include "SimpleNumConverter.ipp"

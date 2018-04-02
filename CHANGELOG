@@ -1,3 +1,9 @@
+2.2.0-dev.0
+-----------
+ * Add parameters to the data proxies
+ * Improve DataProxy and DataLogger creation
+ * isSupportedInputDataType(int datatype) does not need to be implemented in classes inherited from DataTarget any more
+
 2.1.0-dev.8
 -----------
  - Fix python error forwarding

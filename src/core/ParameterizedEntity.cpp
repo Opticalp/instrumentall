@@ -381,3 +381,33 @@ void ParameterizedEntity::keepParamLocked()
 
     paramKeptLocked = true;
 }
+
+void ParameterizedEntity::setAllParametersFromDefault()
+{
+    ParameterSet paramSet;
+    getParameterSet(&paramSet);
+    for (size_t index = 0; index < paramSet.size(); index++)
+    {
+        if (hasParameterDefaultValue(index))
+        {
+            poco_information(logger(), "Setting " + name() + " parameter "
+                    + paramSet[index].name + " default value (from conf file)");
+            switch (paramSet[index].datatype)
+            {
+            case ParamItem::typeInteger:
+                setParameterValue<Poco::Int64>(index, getIntParameterDefaultValue(index));
+                break;
+            case ParamItem::typeFloat:
+                setParameterValue<double>(index, getFloatParameterDefaultValue(index));
+                break;
+            case ParamItem::typeString:
+                setParameterValue<std::string>(index, getStrParameterDefaultValue(index));
+                break;
+            default:
+                poco_bugcheck_msg("unknown parameter data type");
+            }
+        }
+    }
+
+    applyParameters();
+}

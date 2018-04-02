@@ -57,8 +57,6 @@ public:
 private:
     static size_t refCount;
 
-    bool isSupportedInputDataType(int datatype);
-
     std::set<int> supportedInputDataType();
 
     /**

@@ -78,23 +78,6 @@ void DataPocoLogger::log()
     }
 }
 
-bool DataPocoLogger::isSupportedInputDataType(int datatype)
-{
-    switch (DataItem::noContainerDataType(datatype))
-    {
-    case DataItem::typeInt32:
-    case DataItem::typeUInt32:
-    case DataItem::typeInt64:
-    case DataItem::typeUInt64:
-    case DataItem::typeFloat:
-    case DataItem::typeDblFloat:
-    case DataItem::typeString:
-        return true;
-    default:
-        return false;
-    }
-}
-
 std::set<int> DataPocoLogger::supportedInputDataType()
 {
 	std::set<int> ret;

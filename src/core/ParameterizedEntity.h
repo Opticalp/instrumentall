@@ -76,7 +76,7 @@ public:
 	virtual std::string name() = 0;
 
 	/**
-	 * Retrieve a copy of the parameter set of the module
+	 * Retrieve a copy of the parameter set of the entity
 	 *
 	 * @param pSet reference to a user allocated ParameterSet
 	 */
@@ -225,14 +225,14 @@ protected:
     /**
      * Add a parameter in the parameter set
      *
-     * Should be called in the module constructor
+     * Should be called in the entity constructor
      */
     void addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype);
 
     /**
      * Add a parameter in the parameter set
      *
-     * Should be called in the module constructor.
+     * Should be called in the entity constructor.
      * Specify a default value as a string,
      * as could be read in a config file
      */
@@ -245,7 +245,7 @@ protected:
      * Retrieve the default value for the given parameter
      *
      * - Check if the parameter has an entry in the configuration:
-     *      module.<name>.<paramName>
+     *      <entity>.<name>.<paramName>
      * - if not found, return the hard-coded value that was defined at creation,
      * - if not found...
      * @throw Poco::NotFoundException
@@ -256,19 +256,19 @@ protected:
 
     virtual Poco::Int64 getIntParameterValue(size_t paramIndex)
     {
-        poco_bugcheck_msg("getIntParameterValue not implemented for this module");
+        poco_bugcheck_msg("getIntParameterValue not implemented for this entity");
         throw Poco::BugcheckException();
     }
 
     virtual double getFloatParameterValue(size_t paramIndex)
     {
-        poco_bugcheck_msg("getFloatParameterValue not implemented for this module");
+        poco_bugcheck_msg("getFloatParameterValue not implemented for this entity");
         throw Poco::BugcheckException();
     }
 
     virtual std::string getStrParameterValue(size_t paramIndex)
     {
-        poco_bugcheck_msg("getStrParameterValue not implemented for this module");
+        poco_bugcheck_msg("getStrParameterValue not implemented for this entity");
         throw Poco::BugcheckException();
     }
 
@@ -306,6 +306,16 @@ protected:
      * Check if the given parameter has a default value defined in the conf file
      */
     bool hasParameterDefaultValue(size_t index);
+
+    /**
+     * Set parameters to default values, and apply.
+     *
+     * For each parameter:
+     *  - check if there is a default value
+     *  - set the default value
+     * and then, apply.
+     */
+    void setAllParametersFromDefault();
 
 private:
     ParameterizedEntity();

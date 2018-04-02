@@ -81,7 +81,7 @@ def myMain(baseDir):
     print("parameter name: " + setter.parameterName())
     
     print("2. create a data proxy to convert int32 to int64")
-    proxy = DataProxy("SimpleNumConverterint64") 
+    proxy = DataProxy("SimpleNumConverter") 
     print(" - Name: " + proxy.name)
     print(" - Description: " + proxy.description)
     

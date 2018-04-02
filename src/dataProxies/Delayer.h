@@ -1,11 +1,11 @@
 /**
- * @file	src/dataProxies/DataBuffer.h
- * @date	Jul. 2016
+ * @file	src/dataProxies/Delayer.h
+ * @date	Apr. 2018
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2018 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,32 +26,27 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_DATABUFFER_H_
-#define SRC_DATABUFFER_H_
+#ifndef SRC_DELAYER_H_
+#define SRC_DELAYER_H_
 
 #include "core/DataProxy.h"
 
 /**
- * DataBuffer
+ * Delayer
  *
- * This is a special proxy that does not convert the data type.
- * Its only role is to buffer the data.
- *
- * @par 2.1.0-dev.6
- * Add parameters support
- *
+ * This is a special proxy that delays the execution during the duration
+ * given as parameter
  */
-class DataBuffer: public DataProxy
+class Delayer: public DataProxy
 {
 public:
-	DataBuffer();
-	virtual ~DataBuffer() { }
+	Delayer();
+	virtual ~Delayer() { }
 
     std::string description() { return classDescription(); }
 
     static std::string classDescription()
-        { return "Buffer data without any conversion. "
-        		"To be used to release earlier data sources"; }
+        { return "Delay data without any conversion. "; }
 
     std::set<int> supportedInputDataType()
 		{ return supportedDataType(); }
@@ -63,13 +58,35 @@ private:
 	static size_t refCount;
 
 	std::set<int> supportedDataType();
+    int mDatatype;
 
 	/**
      * No conversion. Copy the input to the output.
      */
     void convert();
 
-	int mDatatype;
+    enum params
+    {
+        paramDuration,
+        paramCnt
+    };
+
+    unsigned long duration;
+
+    Poco::Int64 getIntParameterValue(size_t paramIndex)
+    {
+        poco_assert(paramIndex == paramDuration);
+        return static_cast<long>(duration);
+    }
+
+    void setIntParameterValue(size_t paramIndex, Poco::Int64 value)
+    {
+        poco_assert(paramIndex == paramDuration);
+        if (value < 0)
+            throw Poco::RangeException(name() + "::setParameterValue",
+                    "Duration has to be positive (ms)");
+        duration = static_cast<unsigned long>(value);
+    }
 };
 
-#endif /* SRC_DATABUFFER_H_ */
+#endif /* SRC_DELAYER_H_ */
