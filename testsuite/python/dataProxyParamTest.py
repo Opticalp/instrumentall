@@ -85,16 +85,16 @@ def myMain(baseDir):
     if elapsed < 1:
         raise RuntimeError("the delay did not apply?")
     
-    proxy.setParameterValue("duration",5000)
+    proxy.setParameterValue("duration",4000)
     
-    print("Run module again, with delay duration set to 5s")
+    print("Run module again, with delay duration set to 4s")
     t0 = time.time()
     runModule(mod1)
     waitAll()
 
     elapsed = time.time()-t0
     print("elapsed time (ms): " + str(elapsed*1000))
-    if elapsed < 5:
+    if elapsed < 4:
         raise RuntimeError("the delay duration modification did not apply?")
     
     from os.path import join
