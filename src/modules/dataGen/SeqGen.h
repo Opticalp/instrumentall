@@ -39,6 +39,9 @@
  * 
  * If the sequence is endless (seqSize param == 0), then the sequence has to
  * be ended with the module cancellation.
+ *
+ * @par v2.2.0-dev.1
+ * Add parameter to manage clocked output
  */
 class SeqGen: public Module
 {
@@ -74,12 +77,14 @@ private:
     enum params
     {
         paramSeqSize,
+        paramDelay,
         paramCnt
     };
 
     Poco::Int64 getIntParameterValue(size_t paramIndex);
     void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
     Poco::Int64 seqSize;
+    Poco::Int64 delay;
 };
 
 #endif /* SRC_MODULES_DATAGEN_SEQGEN_H_ */
