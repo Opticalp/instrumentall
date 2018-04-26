@@ -75,6 +75,27 @@ def myMain(baseDir):
     if mod1.getParameterValue("strParam")!="mojo":
         raise RuntimeError("strParam error. Should have got \"mojo\"")
     
+    print("test the simultaneous applying of many parameters")
+    paramArg = dict()
+    paramArg["intParam"] = 521
+    paramArg["floatParam"] = 3.14
+    paramArg["strParam"] = "hollywood"
+    mod1.setParameterValues(paramArg)
+    
+    print("Get the new values: ")
+    for param in params:
+        value = mod1.getParameterValue(param["name"])
+        if not isinstance(value, basestring):
+            value = str(value)
+        print(" - " + param["name"] + ": " +  value )
+
+    if mod1.getParameterValue("intParam") != 521:
+        raise RuntimeError("intParam error. Should have got 521")
+    if abs(mod1.getParameterValue("floatParam")-3.14) > 0.01:
+        raise RuntimeError("floatParam error. Should have got 3.14")
+    if mod1.getParameterValue("strParam")!="hollywood":
+        raise RuntimeError("strParam error. Should have got \"hollywood\"")
+    
     cfgFile = join(join(baseDir,"resources"),"modParamTest.properties")
     print("Load test config file: modParamTest.properties from " + cfgFile)
 
