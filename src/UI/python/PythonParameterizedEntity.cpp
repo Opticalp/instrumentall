@@ -176,4 +176,69 @@ PyObject* pySetParameterValue(ParameterizedEntity* pEntity, PyObject *args)
     Py_RETURN_NONE;
 }
 
+PyObject* pySetParameterValues(ParameterizedEntity* pEntity, PyObject* args)
+{
+    PyObject* pyArg;
+
+    if (!PyArg_ParseTuple(args, "O:setParameterValues", &pyArg))
+        return NULL;
+
+    // check that the input argument is a dict
+    if (!PyDict_Check(pyArg))
+    {
+        PyErr_SetString(PyExc_TypeError,
+                "A dict input is required (parameter name/value pairs)");
+        return NULL;
+    }
+
+    try
+    {
+        PyObject *key, *pyValue;
+        Py_ssize_t pos = 0;
+
+        while (PyDict_Next(pyArg, &pos, &key, &pyValue))
+        {
+            std::string paramName(PyString_AsString(key));
+
+            switch (pEntity->getParameterType(paramName))
+            {
+            case ParamItem::typeInteger:
+            {
+                long value = PyLong_AsLong(pyValue);
+                if (PyErr_Occurred()) { return NULL; }
+                pEntity->setParameterValue<Poco::Int64>(paramName, value, false);
+                break;
+            }
+            case ParamItem::typeFloat:
+            {
+                double value = PyFloat_AsDouble(pyValue);
+                if (PyErr_Occurred()) { return NULL; }
+                pEntity->setParameterValue<double>(paramName, value, false);
+                break;
+            }
+            case ParamItem::typeString:
+            {
+                std::string value(PyString_AsString(pyValue)) ;
+                if (PyErr_Occurred()) { return NULL; }
+                pEntity->setParameterValue<std::string>(paramName, value, false);
+                break;
+            }
+            default:
+                poco_bugcheck_msg("python setParameterValue, "
+                        "getParameterType returned unknown data type");
+                throw Poco::BugcheckException();
+            }
+        }
+
+        pEntity->tryApplyParameters(true);
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError, e.displayText().c_str());
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
 #endif /* HAVE_PYTHON27 */
