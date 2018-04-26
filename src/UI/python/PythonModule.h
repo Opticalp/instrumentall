@@ -195,6 +195,20 @@ static PyMethodDef pyMethodModSetParameterValue =
     "setParameterValue(paramName, value): set the value of the given parameter"
 };
 
+/// Bind to setParameterValue and applyParameters
+extern "C"
+PyObject* pyModSetParameterValues(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModSetParameterValues =
+{
+    "setParameterValues",
+    (PyCFunction)pyModSetParameterValues,
+    METH_VARARGS,
+    "setParameterValues(dict): set the values of the given parameters. "
+    "The dict keys are the parameter names, "
+    "the corresponding values are the parameter values. "
+};
+
 /// Module::setVerbosity python wrapper
 extern "C"
 PyObject* pyModSetVerbosity(ModMembers *self, PyObject *args);
@@ -271,6 +285,7 @@ static PyMethodDef pyModMethods[] = {
 	pyMethodModGetParameterSet,
 	pyMethodModGetParameterValue,
 	pyMethodModSetParameterValue,
+	pyMethodModSetParameterValues,
 
 	pyMethodModSetVerbosity,
 	pyMethodModGetVerbosity,

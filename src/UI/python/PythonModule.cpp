@@ -452,6 +452,11 @@ PyObject* pyModSetParameterValue(ModMembers *self, PyObject *args)
     return pySetParameterValue(**self->module, args);
 }
 
+PyObject* pyModSetParameterValues(ModMembers *self, PyObject *args)
+{
+    return pySetParameterValues(**self->module, args);
+}
+
 PyObject* pyModSetVerbosity(ModMembers* self, PyObject* args)
 {
     return pySetVerbosity(**self->module, args);
