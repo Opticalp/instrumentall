@@ -1,3 +1,7 @@
+2.2.0-dev.1
+-----------
+Add python setParameterValues which bind to applyParameters
+
 2.2.0-dev.0
 -----------
  * Add parameters to the data proxies

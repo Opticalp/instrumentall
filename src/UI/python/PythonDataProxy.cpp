@@ -243,6 +243,11 @@ PyObject* pyDataProxySetParameterValue(DataProxyMembers* self, PyObject* args)
     return pySetParameterValue(*self->proxy, args);
 }
 
+PyObject* pyDataProxySetParameterValues(DataProxyMembers* self, PyObject* args)
+{
+    return pySetParameterValues(*self->proxy, args);
+}
+
 PyObject* pyDataProxySetVerbosity(DataProxyMembers* self, PyObject* args)
 {
     return pySetVerbosity(*self->proxy, args);

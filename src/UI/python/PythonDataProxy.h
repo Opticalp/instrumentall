@@ -167,6 +167,20 @@ static PyMethodDef pyMethodDataProxySetParameterValue =
     "setParameterValue(paramName, value): set the value of the given parameter"
 };
 
+/// Bind to setParameterValue and applyParameters
+extern "C"
+PyObject* pyDataProxySetParameterValues(DataProxyMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataProxySetParameterValues =
+{
+    "setParameterValues",
+    (PyCFunction)pyDataProxySetParameterValues,
+    METH_VARARGS,
+    "setParameterValues(dict): set the values of the given parameters. "
+    "The dict keys are the parameter names, "
+    "the corresponding values are the parameter values. "
+};
+
 /// DataProxy::setVerbosity python wrapper
 extern "C"
 PyObject* pyDataProxySetVerbosity(DataProxyMembers *self, PyObject *args);
@@ -202,6 +216,7 @@ static PyMethodDef pyDataProxyMethods[] = {
         pyMethodDataProxyGetParameterSet,
         pyMethodDataProxyGetParameterValue,
         pyMethodDataProxySetParameterValue,
+        pyMethodDataProxySetParameterValues,
 
         pyMethodDataProxySetVerbosity,
         pyMethodDataProxyGetVerbosity,
