@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/devices/CameraFactory.cpp
- * @date	apr. 2016
+ * @file	src/modules/devices/genicam/GenicamConfDeviceFactory.cpp
+ * @date	May 2017
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,38 +26,37 @@
  THE SOFTWARE.
  */
 
-#include "CameraFactory.h"
+#ifdef HAVE_GENAPI
 
-#include "modules/devices/GenicamRootFactory.h"
-#include "modules/GenericLeafFactory.h"
-#include "modules/devices/CameraFromFiles.h"
+#include "GenicamConfDeviceFactory.h"
 
-std::vector<std::string> CameraFactory::selectValueList()
+#include "GenicamDevice.h"
+
+GenicamConfDeviceFactory::GenicamConfDeviceFactory(
+        GenTLLib* genTL,
+        GenTL::IF_HANDLE TLhInterface,
+        GenTL::DEV_HANDLE TLhDevice,
+        ModuleFactory* parent, std::string selector):
+        ModuleFactoryBranch(parent, selector),
+        mGenTL(genTL), _TLhInterface(TLhInterface),
+        _TLhDevice(TLhDevice)
 {
-    std::vector<std::string> list;
-
-#ifdef HAVE_OPENCV
-    list.push_back("fromFiles");
-#endif
-
-    list.push_back("genicam");
-
-    return list;
+    setLogger(name());
 }
 
-ModuleFactoryBranch* CameraFactory::newChildFactory(std::string selector)
+size_t GenicamConfDeviceFactory::countRemain()
 {
-#ifdef HAVE_OPENCV
-    if (selector.compare("fromFiles") == 0)
-        return new GenericLeafFactory<CameraFromFiles>(
-                "CameraFromFilesFactory",
-                "Module factory to construct a fake camera "
-                "generating images from files",
-                this, selector);
+    // TODO: should check the device availability instead
+
+    if (getChildModules().size())
+        return 0;
     else
-#endif
-    if  (selector.compare("genicam") == 0)
-        return new GenicamRootFactory(this, selector);
-    else
-        return NULL;
+        return 1;
 }
+
+Module* GenicamConfDeviceFactory::newChildModule(std::string customName)
+{
+    return new GenicamDevice(mGenTL, _TLhInterface, _TLhDevice, this, customName);
+}
+
+#endif /* HAVE_GENAPI */

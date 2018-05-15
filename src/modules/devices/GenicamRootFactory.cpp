@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/devices/CameraFactory.cpp
- * @date	apr. 2016
+ * @file	src/modules/devices/GenicamRootFactory.cpp
+ * @date	Janv. 2017
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,38 +26,37 @@
  THE SOFTWARE.
  */
 
-#include "CameraFactory.h"
+#include "GenicamRootFactory.h"
+#include "genicam/GenicamLibFactory.h"
 
-#include "modules/devices/GenicamRootFactory.h"
-#include "modules/GenericLeafFactory.h"
-#include "modules/devices/CameraFromFiles.h"
+#include "Poco/Path.h"
+#include "Poco/File.h"
 
-std::vector<std::string> CameraFactory::selectValueList()
+std::vector<std::string> GenicamRootFactory::selectValueList()
 {
     std::vector<std::string> list;
-
-#ifdef HAVE_OPENCV
-    list.push_back("fromFiles");
-#endif
-
-    list.push_back("genicam");
-
+    list.push_back(""); // empty string means: free choice.
     return list;
 }
 
-ModuleFactoryBranch* CameraFactory::newChildFactory(std::string selector)
+std::string GenicamRootFactory::validateSelector(std::string selector)
 {
-#ifdef HAVE_OPENCV
-    if (selector.compare("fromFiles") == 0)
-        return new GenericLeafFactory<CameraFromFiles>(
-                "CameraFromFilesFactory",
-                "Module factory to construct a fake camera "
-                "generating images from files",
-                this, selector);
-    else
-#endif
-    if  (selector.compare("genicam") == 0)
-        return new GenicamRootFactory(this, selector);
-    else
-        return NULL;
+    // various checks on .cti
+     Poco::Path libTlPath(selector);
+
+     if (!libTlPath.isFile())
+         throw Poco::InvalidArgumentException(libTlPath.toString()
+                 + " is not a file. ");
+
+     if (!Poco::File(libTlPath).exists()
+             || !Poco::File(libTlPath).canRead())
+         throw Poco::InvalidArgumentException("unable to read the TL lib: "
+                 + libTlPath.toString() );
+
+     return libTlPath.absolute().toString();
+}
+
+ModuleFactoryBranch* GenicamRootFactory::newChildFactory(std::string selector)
+{
+    return new GenicamLibFactory(this, selector);
 }
