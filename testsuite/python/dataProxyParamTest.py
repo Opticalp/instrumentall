@@ -41,6 +41,7 @@ def myMain(baseDir):
     
     print("Create module from intDataGen factory")
     mod1 = fac.select("int32").create("intGenerator")
+    modTrigged = fac.select("int32").create("trigged")
     print("module " + mod1.name + " created (" + mod1.internalName + ") ")
     
     print("Set output value to 314")
@@ -110,6 +111,36 @@ def myMain(baseDir):
     if proxy.getParameterValue("duration") != 3000:
         raise RuntimeError("The duration should be now 3000ms, as defined in hte property file")
 
+    print("Reseting workflow")
+    resetWorkflow()
+    
+    print("Test the delayer as bound to a trig port")
+    print("Create a new delayer")
+    delay2 = DataProxy("Delayer")
+    delay2.setName("delay2")
+    delay2.setParameterValue("duration",1000)
+
+    print("Bind using bind directive with proxy")
+    bind(mod1.outPort("data"), modTrigged.inPort("trig"), delay2)
+
+    print("Run")
+    runModule(mod1)
+    waitAll()
+
+    print("Reset worklfow once again")
+
+    delay3 = DataProxy("Delayer")
+    delay3.setName("delay3")
+    delay3.setParameterValue("duration",1000)
+
+    print("Bind delayer to trig using atomic bind directives")
+    bind(mod1.outPort("data"),DataTarget(delay3))
+    bind(DataSource(delay3), modTrigged.inPort("trig"))
+    
+    print("Run")
+    runModule(mod1)
+    waitAll()
+    
     print("End of script dataProxyParamTest.py")
     
 # main body    
