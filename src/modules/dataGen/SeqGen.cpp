@@ -1,6 +1,6 @@
 /**
- * @file	src/SeqGen.cpp
- * @date	9 mai 2017
+ * @file	src/modules/dataGen/SeqGen.cpp
+ * @date	May 2017
  * @author	PhRG - opticalp.fr
  */
 
