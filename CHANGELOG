@@ -1,3 +1,9 @@
+2.2.0-dev.2
+-----------
+Core improvements
+ * ParameterizedEntity internal parameter management
+ * minor fixes
+
 2.2.0-dev.1
 -----------
 Add python setParameterValues which bind to applyParameters
