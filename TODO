@@ -1,3 +1,0 @@
- * TODO generalize setParametersDefaultValue in ParameterizedEntity?
- * TODO allow setInternalParameterValue without influencing the needApplication flag
- * TODO allow to call getInternalParameterValue without changing needApplication flag
