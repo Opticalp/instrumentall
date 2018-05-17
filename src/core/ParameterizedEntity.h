@@ -214,13 +214,12 @@ protected:
      * Set parameter set size
      *
      * to be called before adding parameters
+     *
+     * @par 2.2.0-dev.2
+     * Allowed to be call multiple times, if the new count is bigger
+     * than the previous one
      */
-    void setParameterCount(size_t count)
-    {
-    	paramSet.resize(count);
-    	paramValues.resize(count);
-    	needApplication = std::vector<bool>(count, false);
-    }
+    void setParameterCount(size_t count);
 
     /**
      * Add a parameter in the parameter set

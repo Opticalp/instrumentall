@@ -105,7 +105,7 @@ std::string ParameterizedEntity::getParameterDefaultValue(size_t index)
         return it->second;
 
     throw Poco::NotFoundException("getParameterDefaultValue",
-                                        "no default value found");
+                                        "no default value found for " + keyStr);
 }
 
 Poco::Int64 ParameterizedEntity::getIntParameterDefaultValue(size_t index)
@@ -410,4 +410,15 @@ void ParameterizedEntity::setAllParametersFromDefault()
     }
 
     applyParameters();
+}
+
+void ParameterizedEntity::setParameterCount(size_t count)
+{
+    if (count < paramValues.size())
+        poco_bugcheck_msg((name() + "::setParameterCount, "
+                "new parameter count is smaller than the previous one. ").c_str());
+
+    paramSet.resize(count);
+    paramValues.resize(count);
+    needApplication = std::vector<bool>(count, false);
 }

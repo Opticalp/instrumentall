@@ -1,5 +1,3 @@
- * TODO improve setParameterCount: allow to be called twice. OK if second time, the cnt is bigger. (check before .resize() )
  * TODO generalize setParametersDefaultValue in ParameterizedEntity?
- * TODO improve ParameterizedEntity::getParameterDefaultValue exception message
  * TODO allow setInternalParameterValue without influencing the needApplication flag
  * TODO allow to call getInternalParameterValue without changing needApplication flag
