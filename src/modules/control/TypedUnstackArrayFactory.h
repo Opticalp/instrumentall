@@ -1,5 +1,5 @@
 /**
- * @file	src/TypedUnstackArrayFactory.h
+ * @file	src/modules/control/TypedUnstackArrayFactory.h
  * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */

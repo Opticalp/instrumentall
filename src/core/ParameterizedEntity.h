@@ -214,13 +214,12 @@ protected:
      * Set parameter set size
      *
      * to be called before adding parameters
+     *
+     * @par 2.2.0-dev.2
+     * Allowed to be call multiple times, if the new count is bigger
+     * than the previous one
      */
-    void setParameterCount(size_t count)
-    {
-    	paramSet.resize(count);
-    	paramValues.resize(count);
-    	needApplication = std::vector<bool>(count, false);
-    }
+    void setParameterCount(size_t count);
 
     /**
      * Add a parameter in the parameter set
@@ -281,15 +280,31 @@ protected:
      *
      * @param[in] paramIndex parameter index
      * @param[out] value parameter value from the internal storage
+     * @param [in] keepNeedAppFlag if true, do not reset the needApplication flag
      * @return needApplication flag
      */
-    bool getInternalIntParameterValue(size_t paramIndex, Poco::Int64& value);
+    bool getInternalIntParameterValue(size_t paramIndex, Poco::Int64& value, bool keepNeedAppFlag = false);
 
     /// @see getInternalIntParameterValue
-    bool getInternalFloatParameterValue(size_t paramIndex, double& value);
+    bool getInternalFloatParameterValue(size_t paramIndex, double& value, bool keepNeedAppFlag = false);
 
     /// @see getInternalIntParameterValue
-    bool getInternalStrParameterValue(size_t paramIndex, std::string& value);
+    bool getInternalStrParameterValue(size_t paramIndex, std::string& value, bool keepNeedAppFlag = false);
+
+    /**
+     * Set the internal storage value of the parameter
+     *
+     * @param paramIndex parameter index
+     * @param value new value
+     * @param alterNeedAppFlag set needApplication flag if alterNeedAppFlag is true
+     */
+    void setInternalIntParameterValue(size_t paramIndex, Poco::Int64 value, bool alterNeedAppFlag = true);
+
+    /// @see setInternalIntParameterValue
+    void setInternalFloatParameterValue(size_t paramIndex, double value, bool alterNeedAppFlag = true);
+
+    /// @see setInternalIntParameterValue
+    void setInternalStrParameterValue(size_t paramIndex, const std::string& value, bool alterNeedAppFlag = true);
 
     virtual void setIntParameterValue(size_t paramIndex, Poco::Int64 value)
         { poco_bugcheck_msg("setIntParameterValue not implemented"); }
