@@ -24,6 +24,3 @@ The installation can only be achieved via build (Jan., 2017).
  Some install examples can be found in the CI files:
   * [appveyor.yml](../appveyor.yml) and its [install script](../CI/appveyor/install_dependencies.bat)
   * [.travis.yml](../.travis.yml) and its [install script](../CI/travis/install_dependencies.sh)
-
-## Specific features
-Specific features documentation can be found [here](features/README.md)

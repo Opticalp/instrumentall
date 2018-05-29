@@ -18,7 +18,7 @@
 Yaml configuration files can be used to expose camera parameters (see above, parameters without corresponding value) or to preset some parameters (the value is given, the parameter is not exposed). 
 Here follows an example configuration. 
 
-`
+```yaml
 ExposureTime:
 Width:
 Height:
@@ -26,4 +26,4 @@ TriggerMode:
 TriggerMode: Off
 PixelFormat: Mono8
 TriggerActivation: RisingEdge
-`
+```

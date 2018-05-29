@@ -5,3 +5,6 @@
 <!-- * [Usage](usage.md) -->
  * [Contributing](contributing.md)
 <!-- * [Credits](credits.md) -->
+
+## Specific features
+Specific features documentation can be found [here](features/README.md)
