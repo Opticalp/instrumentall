@@ -18,6 +18,8 @@ option (no-opencv
     "if specified, don't try to use the OpenCV libraries"    )
 option (no-wxwidgets
     "if specified, don't try to import the wxWidgets libraries to build the graphical interface"   )
+option (no-genAPI
+    "if specified, don't try to use the GenICam API"  ON )
 option (loop-gui-script
     "if specified, the GUI script is executed over and over again (until failure or cancellation)" )
 option (manage-users
@@ -94,12 +96,12 @@ if ( NOT no-opencv )
     message ( STATUS "OpenCV ${OpenCV_VERSION} was found" )
     message ( STATUS "OpenCV installed components are: ${OpenCV_LIB_COMPONENTS}" )
     
-	if ( ${OpenCV_VERSION} VERSION_GREATER 2.3.3 )
-	    set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
-		set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL RELEASE)
-	else ( ${OpenCV_VERSION} VERSION_GREATER 2.3.3 )
-		message ( WARNING "OpenCV version less than 2.3.3. Undefined behaviour in relWithDebInfo and minSizeRel can occur. ")
-	endif ( )
+    if ( ${OpenCV_VERSION} VERSION_GREATER 2.3.3 )
+        set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+        set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL RELEASE)
+    else ( ${OpenCV_VERSION} VERSION_GREATER 2.3.3 )
+        message ( WARNING "OpenCV version less than 2.3.3. Undefined behaviour in relWithDebInfo and minSizeRel can occur. ")
+    endif ( )
 
     add_definitions ( -DHAVE_OPENCV )
     target_link_libraries( instrumentall ${OpenCV_LIBS} )
@@ -136,6 +138,16 @@ if ( NOT no-wxwidgets )
       FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
       )
 endif ( NOT no-wxwidgets )
+
+# find genAPI
+if ( NOT no-genAPI ) 
+    find_package( GenAPI REQUIRED )
+    message ( STATUS "GenAPI ${GenAPI_VERSION} was found" )
+    
+    add_definitions ( -DHAVE_GENAPI )
+    target_link_libraries( instrumentall GenAPI )
+endif ( NOT no-genAPI ) 
+
 
 ## generate build info
 
