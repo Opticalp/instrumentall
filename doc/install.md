@@ -14,6 +14,7 @@ The installation can only be achieved via build (Jan., 2017).
  * [Python 2.7](http://python.org) is the common CLI
  * [OpenCV](http://opencv.org) if you want to work with images
  * [wxWidgets 3.x](https://www.wxwidgets.org) for the GUI elements
+ * [EMVA GenAPI reference implementation](https://www.emva.org/standards-technology/genicam/genicam-downloads/) for the GenICam usage
  
 ## Other tools
  * To render the graphs exported by *InstrumentAll*, a [DOT](http://www.graphviz.org/Documentation.php)-language interpreter is needed
@@ -23,3 +24,6 @@ The installation can only be achieved via build (Jan., 2017).
  Some install examples can be found in the CI files:
   * [appveyor.yml](../appveyor.yml) and its [install script](../CI/appveyor/install_dependencies.bat)
   * [.travis.yml](../.travis.yml) and its [install script](../CI/travis/install_dependencies.sh)
+
+## Specific features
+Specific features documentation can be found [here](features/README.md)
