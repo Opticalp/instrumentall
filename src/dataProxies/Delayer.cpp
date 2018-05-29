@@ -129,9 +129,9 @@ void Delayer::convert()
 
     // others
     case typeUndefined:
-        poco_bugcheck_msg("convert: undefined data type");
-        throw Poco::BugcheckException();
+    	break;
     default:
+    	poco_error(logger(), "convert: unknown requested data type");
         poco_bugcheck_msg("convert: unknown requested data type");
         throw Poco::BugcheckException();
     }

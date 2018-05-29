@@ -55,23 +55,21 @@ ModuleFactory::~ModuleFactory()
 
 ModuleFactoryBranch& ModuleFactory::select(std::string selector)
 {
+    if (isLeaf())
+        throw Poco::RuntimeException(name() + "::select",
+                "No child factory: this factory is a leaf");
+
     std::string validated(validateSelector(selector));
 
-    childFactLock.writeLock();
+    Poco::RWLock::ScopedWriteLock wLock(childFactLock);
 
     for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end(); it != ite ; it++)
-    {
         if (validated.compare((*it)->getSelector())==0)
-        {
-            childFactLock.unlock();
             return **it;
-        }
-    }
 
     // child factory not found, create one.
     ModuleFactoryBranch* factory(newChildFactory(validated));
     childFactories.push_back(factory);
-    childFactLock.unlock();
     return *factory;
 }
 
@@ -98,7 +96,7 @@ void ModuleFactory::deleteChildFactory(std::string property)
 
     std::string validated(validateSelector(property));
 
-    childFactLock.writeLock();
+    Poco::RWLock::ScopedWriteLock wLock(childFactLock);
 
     for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(),ite=childFactories.end();
             it!=ite;
@@ -109,12 +107,10 @@ void ModuleFactory::deleteChildFactory(std::string property)
             deletingChildFact = *it;
             delete (*it);
             deletingChildFact = NULL;
-            childFactLock.unlock();
             return;
         }
     }
 
-    childFactLock.unlock();
     throw Poco::RuntimeException(name() + "deleteChildFactory",
             "Child factory not found");
 }
@@ -191,26 +187,21 @@ Module* ModuleFactory::create(std::string customName)
 {
     if (!isLeaf())
     {
-        childFactLock.readLock();
+        Poco::RWLock::ScopedReadLock rLock(childFactLock);
+
         for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end();
                 it != ite ;
                 it++)
-        {
             if ((*it)->countRemain())
-			{
-                childFactLock.unlock();
                 return (*it)->create(customName);
-			}
-        }
 
-        childFactLock.unlock();
         throw Poco::RuntimeException(name() + "::create()",
                 "ChildFact countRemain() is null! ");
     }
 
     {
     	// check if a module already exists with this custom name here
-    	Poco::ScopedReadRWLock lock(childModLock);
+        Poco::RWLock::ScopedReadLock rLock(childModLock);
 
     	for (std::vector<Module*>::iterator it = childModules.begin(), ite = childModules.end();
     			it != ite; it++)
