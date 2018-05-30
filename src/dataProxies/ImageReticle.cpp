@@ -107,15 +107,8 @@ void ImageReticle::convert()
     								cv::Size2f(reticleSize*2 + xWidth, reticleSize*2 + yWidth),
 									angle	);
 
-    cv::RotatedRect zoneRect(	cv::Point2f(xPos, yPos),
-    							cv::Size2f(xWidth, yWidth),
-								angle	);
-
     cv::Point2f overallPoints[4];
-    cv::Point2f zonePoints[4];
-
     overallRect.points(overallPoints);
-    zoneRect.points(zonePoints);
 
     cv::line(workingImg,
     		pt2fToPt(0.5*(overallPoints[0] + overallPoints[1])),
@@ -127,9 +120,47 @@ void ImageReticle::convert()
 			pt2fToPt(0.5*(overallPoints[3] + overallPoints[0])),
 			CV_RGB(greyLevel, greyLevel, greyLevel));
 
-    // TODO: draw zone rect
+    if (xWidth)
+    {
+        cv::RotatedRect zoneRectX(  cv::Point2f(xPos, yPos),
+                                    cv::Size2f(xWidth, reticleSize),
+                                    angle   );
 
-	*getData<cv::Mat>() = workingImg;
+        cv::Point2f zonePointsX[4];
+        zoneRectX.points(zonePointsX);
+
+        cv::line(workingImg,
+                pt2fToPt(zonePointsX[0]),
+                pt2fToPt(zonePointsX[1]),
+                CV_RGB(greyLevel, greyLevel, greyLevel));
+
+        cv::line(workingImg,
+                pt2fToPt(zonePointsX[2]),
+                pt2fToPt(zonePointsX[3]),
+                CV_RGB(greyLevel, greyLevel, greyLevel));
+    }
+
+    if (yWidth)
+    {
+        cv::RotatedRect zoneRectY(  cv::Point2f(xPos, yPos),
+                                    cv::Size2f(reticleSize, yWidth),
+                                    angle   );
+
+        cv::Point2f zonePointsY[4];
+        zoneRectY.points(zonePointsY);
+
+        cv::line(workingImg,
+                pt2fToPt(zonePointsY[1]),
+                pt2fToPt(zonePointsY[2]),
+                CV_RGB(greyLevel, greyLevel, greyLevel));
+
+        cv::line(workingImg,
+                pt2fToPt(zonePointsY[0]),
+                pt2fToPt(zonePointsY[3]),
+                CV_RGB(greyLevel, greyLevel, greyLevel));
+    }
+
+    *getData<cv::Mat>() = workingImg;
 }
 
 Poco::Int64 ImageReticle::getIntParameterValue(size_t paramIndex)

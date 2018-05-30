@@ -86,7 +86,7 @@ def myMain(baseDir):
     time.sleep(1) # wait 1s in order to show the image
 
     print("Changing some proxy parameters")
-    proxy.setParameterValue("angle", 45)
+    proxy.setParameterValue("angle", 15)
     proxy.setParameterValue("xWidth", 30)
     proxy.setParameterValue("yWidth", 15)
 
@@ -94,6 +94,15 @@ def myMain(baseDir):
     runModule(cam)
     time.sleep(1) 
 
+    print("Changing some proxy parameters")
+    proxy.setParameterValue("angle", -15)
+    proxy.setParameterValue("greyLevel", 63)
+    proxy.setParameterValue("yWidth", 0)
+
+    print("Show image with other tilted reticle")
+    runModule(cam)
+    time.sleep(1)
+    
     print("End of script imgReticleTest.py")
     
 # main body    
