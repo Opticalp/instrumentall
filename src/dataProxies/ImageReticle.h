@@ -64,6 +64,7 @@ private:
     {
         paramXpos,
         paramYpos,
+		paramReticleSize,
         paramXwidth,
         paramYwidth,
 		paramAngle,
@@ -72,7 +73,7 @@ private:
         paramCnt
     };
 
-    int xPos, yPos, xWidth, yWidth;
+    int xPos, yPos, xWidth, yWidth, reticleSize;
     unsigned char greyLevel;
     bool alter;
     double angle;
@@ -85,6 +86,11 @@ private:
 
     std::string getStrParameterValue(size_t paramIndex);
     void setStrParameterValue(size_t paramIndex, std::string value);
+
+    /**
+     * Utility function
+     */
+    cv::Point pt2fToPt(cv::Point2f srcPt);
 };
 #endif /* HAVE_OPENCV */
 #endif /* SRC_DATAPROXIES_IMAGERETICLE_H_ */

@@ -40,6 +40,7 @@ ImageReticle::ImageReticle(): DataProxy("ImageReticle")
     setParameterCount(paramCnt);
     addParameter(paramXpos, "xPos", "reticle x position (zero based)", ParamItem::typeInteger,"400");
     addParameter(paramYpos, "yPos", "reticle y position (zero based)", ParamItem::typeInteger,"300");
+    addParameter(paramReticleSize, "reticleSize", "reticle size", ParamItem::typeInteger,"20");
     addParameter(paramXwidth, "xWidth", "reticle x width", ParamItem::typeInteger, "0");
     addParameter(paramYwidth, "yWidth", "reticle y width", ParamItem::typeInteger, "0");
     addParameter(paramAngle, "angle", "reticle rotation (degrees)", ParamItem::typeFloat, "0.0");
@@ -49,6 +50,7 @@ ImageReticle::ImageReticle(): DataProxy("ImageReticle")
 
     setIntParameterValue(paramXpos, getIntParameterDefaultValue(paramXpos));
     setIntParameterValue(paramYpos, getIntParameterDefaultValue(paramYpos));
+    setIntParameterValue(paramReticleSize, getIntParameterDefaultValue(paramReticleSize));
     setIntParameterValue(paramXwidth, getIntParameterDefaultValue(paramXwidth));
     setIntParameterValue(paramYwidth, getIntParameterDefaultValue(paramYwidth));
     setFloatParameterValue(paramAngle, getFloatParameterDefaultValue(paramAngle));
@@ -100,7 +102,32 @@ void ImageReticle::convert()
         workingImg = tmpImg;
     }
 
-    // TODO: draw the reticle.
+    // draw the reticle.
+    cv::RotatedRect overallRect(	cv::Point2f(xPos, yPos),
+    								cv::Size2f(reticleSize*2 + xWidth, reticleSize*2 + yWidth),
+									angle	);
+
+    cv::RotatedRect zoneRect(	cv::Point2f(xPos, yPos),
+    							cv::Size2f(xWidth, yWidth),
+								angle	);
+
+    cv::Point2f overallPoints[4];
+    cv::Point2f zonePoints[4];
+
+    overallRect.points(overallPoints);
+    zoneRect.points(zonePoints);
+
+    cv::line(workingImg,
+    		pt2fToPt(0.5*(overallPoints[0] + overallPoints[1])),
+			pt2fToPt(0.5*(overallPoints[2] + overallPoints[3])),
+			CV_RGB(greyLevel, greyLevel, greyLevel));
+
+    cv::line(workingImg,
+    		pt2fToPt(0.5*(overallPoints[1] + overallPoints[2])),
+			pt2fToPt(0.5*(overallPoints[3] + overallPoints[0])),
+			CV_RGB(greyLevel, greyLevel, greyLevel));
+
+    // TODO: draw zone rect
 
 	*getData<cv::Mat>() = workingImg;
 }
@@ -113,6 +140,8 @@ Poco::Int64 ImageReticle::getIntParameterValue(size_t paramIndex)
 		return xPos;
 	case paramYpos:
 		return yPos;
+	case paramReticleSize:
+		return reticleSize;
 	case paramXwidth:
 		return xWidth;
 	case paramYwidth:
@@ -138,6 +167,11 @@ void ImageReticle::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
 		if (value < 0)
 			throw Poco::RangeException("yPos must be positive or null");
 		yPos = value;
+		break;
+	case paramReticleSize:
+		if (value <= 0)
+			throw Poco::RangeException("reticleSize must be strictly positive ");
+		reticleSize = value;
 		break;
 	case paramXwidth:
 		if (value < 0)
@@ -193,6 +227,11 @@ void ImageReticle::setStrParameterValue(size_t paramIndex, std::string value)
 		alter = false;
 	else
 		Poco::InvalidArgumentException("\"alter\" parameter value has to be: \"yes\" or \"no\"");
+}
+
+cv::Point ImageReticle::pt2fToPt(cv::Point2f srcPt)
+{
+	return cv::Point(cvRound(srcPt.x),cvRound(srcPt.y));
 }
 
 #endif /* HAVE_OPENCV */
