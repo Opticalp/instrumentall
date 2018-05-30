@@ -68,18 +68,21 @@ void DataProxy::runTarget()
 
 void DataProxy::setName(size_t refCount)
 {
-    if (mClassName.empty())
+    if (className.empty())
         poco_bugcheck_msg("trying to set the name of the data proxy "
                 "but its class name is empty");
 
-    mName = mClassName;
+    std::string tmpName(className);
     if (refCount)
-        mName += Poco::NumberFormatter::format(refCount);
+        tmpName += Poco::NumberFormatter::format(refCount);
+
+    UniqueNameEntity::setName(tmpName);
 }
 
 void DataProxy::setName(std::string newName)
 {
-    mName = newName;
+    UniqueNameEntity::setName(newName);
+
     std::string identifier = "dataProxy." + getClassName() + "." + newName;
     setLogger(identifier);
     setPrefixKey(identifier);

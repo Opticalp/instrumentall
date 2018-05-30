@@ -33,6 +33,7 @@
 #include "DataTarget.h"
 #include "VerboseEntity.h"
 #include "ParameterizedEntity.h"
+#include "UniqueNameEntity.h"
 
 #include "Poco/Thread.h"
 #include "Poco/RefCountedObject.h"
@@ -57,6 +58,7 @@
  */
 class DataProxy: public DataTarget, public DataSource,
 	public ParameterizedEntity,
+    public UniqueNameEntity,
 	public VerboseEntity,
 	public Poco::RefCountedObject
 {
@@ -67,24 +69,26 @@ public:
 	 * In the implementations, the constructor could set
 	 * the unique name of the data proxy.
 	 */
-	DataProxy(std::string className):
-		mClassName(className),
-		ParameterizedEntity("dataProxy." + className),
-		VerboseEntity("dataProxy." + className) // startup logger name
+	DataProxy(std::string newClassName):
+		className(newClassName),
+		ParameterizedEntity("dataProxy." + newClassName),
+		VerboseEntity("dataProxy." + newClassName) // startup logger name
 		{   }
 
 	virtual ~DataProxy() { poco_information(logger(), "deleting " + name()); }
-
-    virtual std::string description() = 0;
 
     /**
      * Get the data logger implementation class name
      *
      * @see DataLogger::DataLogger(std::string implementationName)
      */
-    const std::string& getClassName() const { return mClassName; }
+    const std::string& getClassName() const { return className; }
 
-    std::string name() { return mName; }
+    /**
+     * Implement ParameterizedEntity::name(),  DataTarget::name()
+     * and DataSource::name()
+     */
+    std::string name() { return UniqueNameEntity::name(); }
 
     /**
      * Set a new name for the data proxy
@@ -144,8 +148,7 @@ private:
 	void sourceWaitCancelled() { waitSourceCancelled(); }
 	void sourceReset() { resetWithSource(); }
 
-	std::string mClassName; ///< data logger implementation class name
-	std::string mName;
+	std::string className; ///< data logger implementation class name
 };
 
 #include "Poco/DynamicFactory.h"

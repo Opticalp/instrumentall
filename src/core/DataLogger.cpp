@@ -71,7 +71,6 @@ void DataLogger::setName(size_t refCount)
         tmpName += Poco::NumberFormatter::format(refCount);
 
     UniqueNameEntity::setName(tmpName);
-
 }
 
 void DataLogger::setName(std::string newName)
