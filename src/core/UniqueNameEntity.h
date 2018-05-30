@@ -43,7 +43,7 @@ class UniqueNameEntity
 {
 public:
     UniqueNameEntity() { }
-    virtual ~UniqueNameEntity() { }
+    virtual ~UniqueNameEntity();
 
     std::string name() { return mName; }
 

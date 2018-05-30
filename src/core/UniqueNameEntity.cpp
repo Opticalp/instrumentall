@@ -57,9 +57,12 @@ void UniqueNameEntity::setName(std::string newName, bool freeOld)
 
 void UniqueNameEntity::freeName(std::string oldName)
 {
-    Poco::Mutex::ScopedLock lock(namesLock); // recursive mutex, ok with checkName() call
+    if (!oldName.empty())
+    {
+        Poco::Mutex::ScopedLock lock(namesLock); // recursive mutex, ok with checkName() call
 
-    names.erase(oldName);
+        names.erase(oldName);
+    }
 }
 
 UniqueNameEntity::NameStatus UniqueNameEntity::reserveName(std::string newName)
@@ -90,4 +93,9 @@ UniqueNameEntity::NameStatus UniqueNameEntity::checkName(std::string newName)
         return nameExists;
 
     return nameOk;
+}
+
+UniqueNameEntity::~UniqueNameEntity()
+{
+    freeName(mName);
 }

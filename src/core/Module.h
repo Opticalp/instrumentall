@@ -31,6 +31,7 @@
 
 #include "VerboseEntity.h"
 #include "ParameterizedEntityWithWorkers.h"
+#include "UniqueNameEntity.h"
 #include "InPortUser.h"
 #include "OutPortUser.h"
 #include "ModuleTask.h"
@@ -66,6 +67,7 @@ class ModuleFactory;
  */
 class Module: public VerboseEntity,
 	public ParameterizedEntityWithWorkers,
+	public UniqueNameEntity,
 	public InPortUser, public OutPortUser
 {
 public:
@@ -148,7 +150,7 @@ public:
 	 * @return Name defined by the user at creation time
 	 * @see setCustomName()
 	 */
-	std::string name() { return mName; }
+	std::string name() { return UniqueNameEntity::name(); }
 
 	/**
 	 * Internal name of the module
@@ -454,30 +456,6 @@ protected:
     void processingTerminated();
 
 private:
-    /// enum to be returned by checkName
-    enum NameStatus
-    {
-        nameOk,
-        nameExists,
-        nameBadSyntax
-    };
-
-    /**
-     * Check if the given name is allowed
-     *
-     *  - verify that the syntax is ok
-     *  - verify that the name is not already in use
-     */
-    NameStatus checkName(std::string newName);
-
-    /**
-     * Remove the internal name of the names list
-     *
-     * To be called by setCustomName in case of failing module creation
-     * process due to malformed custom name, or name already in use.
-     */
-    void freeInternalName();
-
 	/**
 	 * Parent module factory
 	 *
@@ -487,10 +465,6 @@ private:
 	ModuleFactory* mParent;
 
 	std::string mInternalName; ///< internal name of the module
-	std::string mName; ///< custom name of the module
-
-	static std::set<std::string> names; ///< list of names of all modules
-	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
     /**
      * Launch the next task of the queue in the current thread
