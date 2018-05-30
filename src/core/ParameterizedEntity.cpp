@@ -497,13 +497,13 @@ void ParameterizedEntity::setAllParametersFromDefault()
             switch (paramSet[index].datatype)
             {
             case ParamItem::typeInteger:
-                setParameterValue<Poco::Int64>(index, getIntParameterDefaultValue(index));
+                setParameterValue<Poco::Int64>(index, getIntParameterDefaultValue(index), false);
                 break;
             case ParamItem::typeFloat:
-                setParameterValue<double>(index, getFloatParameterDefaultValue(index));
+                setParameterValue<double>(index, getFloatParameterDefaultValue(index), false);
                 break;
             case ParamItem::typeString:
-                setParameterValue<std::string>(index, getStrParameterDefaultValue(index));
+                setParameterValue<std::string>(index, getStrParameterDefaultValue(index), false);
                 break;
             default:
                 poco_bugcheck_msg("unknown parameter data type");

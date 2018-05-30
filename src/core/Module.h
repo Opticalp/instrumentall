@@ -79,6 +79,7 @@ public:
 	 *  - generate a name that will be returned by internalName()
 	 *  - set the logger
 	 *  - call @ref setCustomName after the internalName is set
+	 *  - ParameterizedEntity::setAllParametersFromDefault() should be called to set the parameters default values
 	 *  - call @ref notifyCreation to let the module being registered
 	 *  in the managers
 	 *
@@ -86,7 +87,7 @@ public:
 	 * @param name Name to be used as task name. E.g. use the custom name
 	 *
 	 * @throw Poco::Exception forwarded from setCustomName or setInternalName
-	 * if customName or internalName is already in use.
+	 * if customName or internalName is already in use (or had a bad syntax).
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
 	      mParent(parent),
