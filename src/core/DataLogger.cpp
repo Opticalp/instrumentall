@@ -66,14 +66,18 @@ void DataLogger::setName(size_t refCount)
         poco_bugcheck_msg("trying to set the name of the data logger "
                 "but its class name is empty");
 
-    mName = className;
+    std::string tmpName(className);
     if (refCount)
-        mName += Poco::NumberFormatter::format(refCount);
+        tmpName += Poco::NumberFormatter::format(refCount);
+
+    UniqueNameEntity::setName(tmpName);
+
 }
 
 void DataLogger::setName(std::string newName)
 {
-    mName = newName;
+    UniqueNameEntity::setName(newName);
+
     std::string identifier = "dataLogger." + getClassName() + "." + newName;
     setLogger(identifier);
     setPrefixKey(identifier);
