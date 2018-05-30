@@ -37,8 +37,12 @@ SeqGen::SeqGen(ModuleFactory* parent, std::string customName):
     Module(parent, customName),
     seqSize(0)
 {
-    setInternalName("SeqGen"
+    if (refCount)
+        setInternalName("SeqGen"
                         + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("SeqGen");
+
     setCustomName(customName);
     setLogger("module." + name());
 

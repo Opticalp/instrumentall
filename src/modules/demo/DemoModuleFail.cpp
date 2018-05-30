@@ -35,7 +35,11 @@ size_t DemoModuleFail::refCount = 0;
 DemoModuleFail::DemoModuleFail(ModuleFactory* parent, std::string customName):
     Module(parent, customName)
 {
-    setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("DemoModule");
+
     setCustomName(customName);
 
     setLogger("module." + name());
