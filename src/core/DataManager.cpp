@@ -44,6 +44,9 @@
 #include "dataProxies/DataBuffer.h"
 #include "dataProxies/SimpleNumConverter.h"
 #include "dataProxies/Delayer.h"
+#ifdef HAVE_OPENCV
+#    include "dataProxies/ImageReticle.h"
+#endif
 
 #include "Poco/Exception.h"
 #include "Poco/Util/Application.h"
@@ -84,6 +87,11 @@ DataManager::DataManager():
 
     proxyFactory.registerClass<Delayer>("Delayer");
     proxyClasses.insert(classPair("Delayer", Delayer::classDescription()));
+
+#ifdef HAVE_OPENCV
+    proxyFactory.registerClass<ImageReticle>("ImageReticle");
+    proxyClasses.insert(classPair("ImageReticle", ImageReticle::classDescription()));
+#endif
 }
 
 DataManager::~DataManager()
