@@ -79,7 +79,7 @@ public:
 	 *  - generate a name that will be returned by internalName()
 	 *  - set the logger
 	 *  - call @ref setCustomName after the internalName is set
-	 *  - ParameterizedEntity::setAllParametersFromDefault() should be called to set the parameters default values
+	 *  - ParameterizedEntity::setParametersDefaultValue() should be called to set the parameters default values
 	 *  - call @ref notifyCreation to let the module being registered
 	 *  in the managers
 	 *

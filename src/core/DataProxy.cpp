@@ -87,5 +87,5 @@ void DataProxy::setName(std::string newName)
     setLogger(identifier);
     setPrefixKey(identifier);
 
-    setAllParametersFromDefault();
+    setAllParametersFromConf();
 }

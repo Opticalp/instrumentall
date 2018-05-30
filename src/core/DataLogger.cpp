@@ -81,5 +81,5 @@ void DataLogger::setName(std::string newName)
     setLogger(identifier);
     setPrefixKey(identifier);
 
-    setAllParametersFromDefault();
+    setAllParametersFromConf();
 }
