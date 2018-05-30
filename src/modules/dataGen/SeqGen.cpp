@@ -63,19 +63,7 @@ SeqGen::SeqGen(ModuleFactory* parent, std::string customName):
             "Elsewhere: data generated every \"delay\" milliseconds",
             ParamItem::typeInteger, "0");
 
-    seqSize = getIntParameterDefaultValue(paramSeqSize);
-    if (seqSize < 0)
-    {
-        poco_warning(logger(), "Wrong default seqSize value. Reset to 0. ");
-        seqSize = 0;
-    }
-
-    delay = getIntParameterDefaultValue(paramDelay);
-    if (delay < 0)
-    {
-        poco_warning(logger(), "Wrong default delay value. Reset to 0. ");
-        delay = 0;
-    }
+    setParametersDefaultValue();
 
     notifyCreation();
 

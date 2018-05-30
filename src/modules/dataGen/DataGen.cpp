@@ -43,9 +43,14 @@ DataGen::DataGen(ModuleFactory* parent, std::string customName, int dataType):
 	iPar(-1), fPar(-1),
 	seqStart(false), seqEnd(false)
 {
-	setInternalName(DataItem::dataTypeShortStr(mDataType)
+    if (refCount)
+        setInternalName(DataItem::dataTypeShortStr(mDataType)
 						+ "DataGen"
 						+ Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName(DataItem::dataTypeShortStr(mDataType)
+                        + "DataGen");
+
     setCustomName(customName);
     setLogger("module." + name());
 

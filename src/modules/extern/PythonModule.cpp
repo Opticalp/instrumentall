@@ -71,7 +71,7 @@ PythonModule::PythonModule(ModuleFactory* parent, std::string customName):
             ParamItem::typeString, "");
 
     // set parameter defaults
-    setStrParameterValue(paramScriptFilePath, getStrParameterDefaultValue(paramScriptFilePath));
+    setParametersDefaultValue();
 
     notifyCreation();
 

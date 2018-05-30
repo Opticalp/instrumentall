@@ -2,6 +2,7 @@
 -----------
  * Add img reticle proxy
  * fix the logger naming issue
+ * Deep modifications in default parameters management (Modules)
 
 2.2.0-dev.3
 -----------

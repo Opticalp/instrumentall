@@ -48,6 +48,9 @@ DemoModuleParam::DemoModuleParam(ModuleFactory* parent, std::string customName):
     // test the default values
     setIntParameterValue(paramInt, getIntParameterDefaultValue(paramInt));
 
+    // another (global) way to use it
+    setParametersDefaultValue();
+
     try
     {
         getFloatParameterDefaultValue(paramFloat);
