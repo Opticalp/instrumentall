@@ -35,7 +35,11 @@ size_t DemoModuleFreeze::refCount = 0;
 DemoModuleFreeze::DemoModuleFreeze(ModuleFactory* parent, std::string customName):
     Module(parent, customName)
 {
-    setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("DemoModule" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("DemoModule");
+
     setCustomName(customName);
 
     setLogger("module." + name());

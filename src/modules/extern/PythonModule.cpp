@@ -42,8 +42,12 @@ size_t PythonModule::refCount = 0;
 PythonModule::PythonModule(ModuleFactory* parent, std::string customName):
     Module(parent, customName)
 {
-    setInternalName("PythonModule"
+    if (refCount)
+        setInternalName("PythonModule"
                         + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("PythonModule");
+
     setCustomName(customName);
     setLogger("module." + name());
 
@@ -71,7 +75,7 @@ PythonModule::PythonModule(ModuleFactory* parent, std::string customName):
             ParamItem::typeString, "");
 
     // set parameter defaults
-    setStrParameterValue(paramScriptFilePath, getStrParameterDefaultValue(paramScriptFilePath));
+    setParametersDefaultValue();
 
     notifyCreation();
 

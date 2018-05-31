@@ -38,7 +38,11 @@ SeqAccumulator::SeqAccumulator(ModuleFactory* parent, std::string customName, in
 	dataStore(dataType | DataItem::contVector),
 	seqIndex(0)
 {
-    setInternalName("SeqAccumulator" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("SeqAccumulator" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("SeqAccumulator");
+
     setCustomName(customName);
     setLogger("module." + name());
 

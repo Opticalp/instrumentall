@@ -34,7 +34,11 @@ size_t DemoModuleTwoInputs::refCount = 0;
 DemoModuleTwoInputs::DemoModuleTwoInputs(ModuleFactory* parent, std::string customName):
         Module(parent, customName)
 {
-    setInternalName("DemoModuleTwoInputs" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("DemoModuleTwoInputs" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("DemoModuleTwoInputs");
+
     setCustomName(customName);
     setLogger("module." + name());
 

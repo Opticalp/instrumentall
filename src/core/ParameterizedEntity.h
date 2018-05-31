@@ -319,18 +319,32 @@ protected:
 
     /**
      * Check if the given parameter has a default value defined in the conf file
+     *
+     * Hardcoded default values are not considered.
      */
-    bool hasParameterDefaultValue(size_t index);
+    bool hasParameterDefaultValueFromConf(size_t index);
 
     /**
-     * Set parameters to default values, and apply.
+     * Set parameters to default values from conf file if any, and apply.
      *
      * For each parameter:
-     *  - check if there is a default value
+     *  - check if there is a default value (not using hardcoded values)
      *  - set the default value
      * and then, apply.
+     *
+     * To be used to specificaly apply only the special values of the parameters
+     * e.g. after a conf has been newly loaded or after a parameterizedEntity
+     * changed its confPrefixKey (DataLogger or DataProxy name change)
      */
-    void setAllParametersFromDefault();
+    void setAllParametersFromConf();
+
+    /**
+     * Set parameters to default values whereever it comes from
+     * (conf file, hardcoded)
+     *
+     * To be called at entity initialization
+     */
+    void setParametersDefaultValue();
 
 private:
     ParameterizedEntity();

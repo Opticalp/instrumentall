@@ -67,7 +67,7 @@ void ParameterizedEntity::addParameter(size_t index, std::string name, std::stri
     hardCodedValues.insert(std::pair<size_t, std::string>(index, hardCodedValue));
 }
 
-bool ParameterizedEntity::hasParameterDefaultValue(size_t index)
+bool ParameterizedEntity::hasParameterDefaultValueFromConf(size_t index)
 {
     std::string keyStr = confPrefixKey + "." + paramSet.at(index).name;
     poco_information(logger(), "checking if key: " + keyStr + " is present for " + name());
@@ -484,32 +484,64 @@ void ParameterizedEntity::keepParamLocked()
     paramKeptLocked = true;
 }
 
-void ParameterizedEntity::setAllParametersFromDefault()
+void ParameterizedEntity::setAllParametersFromConf()
 {
     ParameterSet paramSet;
     getParameterSet(&paramSet);
+
     for (size_t index = 0; index < paramSet.size(); index++)
     {
-        if (hasParameterDefaultValue(index))
+        if (hasParameterDefaultValueFromConf(index))
         {
             poco_information(logger(), "Setting " + name() + " parameter "
                     + paramSet[index].name + " default value (from conf file)");
             switch (paramSet[index].datatype)
             {
             case ParamItem::typeInteger:
-                setParameterValue<Poco::Int64>(index, getIntParameterDefaultValue(index));
+                setParameterValue<Poco::Int64>(index, getIntParameterDefaultValue(index), false);
                 break;
             case ParamItem::typeFloat:
-                setParameterValue<double>(index, getFloatParameterDefaultValue(index));
+                setParameterValue<double>(index, getFloatParameterDefaultValue(index), false);
                 break;
             case ParamItem::typeString:
-                setParameterValue<std::string>(index, getStrParameterDefaultValue(index));
+                setParameterValue<std::string>(index, getStrParameterDefaultValue(index), false);
                 break;
             default:
                 poco_bugcheck_msg("unknown parameter data type");
             }
         }
     }
+
+    applyParameters();
+}
+
+void ParameterizedEntity::setParametersDefaultValue()
+{
+    ParameterSet paramSet;
+    getParameterSet(&paramSet);
+
+    for (int index=0; index < paramSet.size(); index++)
+        try
+        {
+            switch (paramSet.at(index).datatype)
+            {
+            case ParamItem::typeInteger:
+                setParameterValue<Poco::Int64>(index, getIntParameterDefaultValue(index), false);
+                break;
+            case ParamItem::typeFloat:
+                setParameterValue<double>(index, getFloatParameterDefaultValue(index), false);
+                break;
+            case ParamItem::typeString:
+                setParameterValue<std::string>(index, getStrParameterDefaultValue(index), false);
+                break;
+            default:
+                poco_bugcheck_msg("unknown parameter type");
+            }
+        }
+        catch (Poco::NotFoundException& e)
+        {
+            poco_notice(logger(), e.displayText());
+        }
 
     applyParameters();
 }

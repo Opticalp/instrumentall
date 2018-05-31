@@ -40,7 +40,11 @@ DemoModuleDataSeq::DemoModuleDataSeq(ModuleFactory* parent, std::string customNa
 {
     // poco_information(logger(),"Creating a new DemoModuleDataSeq");
 
-    setInternalName("DemoModuleDataSeq" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("DemoModuleDataSeq" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("DemoModuleDataSeq");
+
     setCustomName(customName);
     setLogger("module." + name());
 

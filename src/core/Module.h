@@ -31,6 +31,7 @@
 
 #include "VerboseEntity.h"
 #include "ParameterizedEntityWithWorkers.h"
+#include "UniqueNameEntity.h"
 #include "InPortUser.h"
 #include "OutPortUser.h"
 #include "ModuleTask.h"
@@ -66,6 +67,7 @@ class ModuleFactory;
  */
 class Module: public VerboseEntity,
 	public ParameterizedEntityWithWorkers,
+	public UniqueNameEntity,
 	public InPortUser, public OutPortUser
 {
 public:
@@ -77,6 +79,7 @@ public:
 	 *  - generate a name that will be returned by internalName()
 	 *  - set the logger
 	 *  - call @ref setCustomName after the internalName is set
+	 *  - ParameterizedEntity::setParametersDefaultValue() should be called to set the parameters default values
 	 *  - call @ref notifyCreation to let the module being registered
 	 *  in the managers
 	 *
@@ -84,7 +87,7 @@ public:
 	 * @param name Name to be used as task name. E.g. use the custom name
 	 *
 	 * @throw Poco::Exception forwarded from setCustomName or setInternalName
-	 * if customName or internalName is already in use.
+	 * if customName or internalName is already in use (or had a bad syntax).
 	 */
 	Module(ModuleFactory* parent, std::string name = ""):
 	      mParent(parent),
@@ -148,7 +151,7 @@ public:
 	 * @return Name defined by the user at creation time
 	 * @see setCustomName()
 	 */
-	std::string name() { return mName; }
+	std::string name() { return UniqueNameEntity::name(); }
 
 	/**
 	 * Internal name of the module
@@ -454,30 +457,6 @@ protected:
     void processingTerminated();
 
 private:
-    /// enum to be returned by checkName
-    enum NameStatus
-    {
-        nameOk,
-        nameExists,
-        nameBadSyntax
-    };
-
-    /**
-     * Check if the given name is allowed
-     *
-     *  - verify that the syntax is ok
-     *  - verify that the name is not already in use
-     */
-    NameStatus checkName(std::string newName);
-
-    /**
-     * Remove the internal name of the names list
-     *
-     * To be called by setCustomName in case of failing module creation
-     * process due to malformed custom name, or name already in use.
-     */
-    void freeInternalName();
-
 	/**
 	 * Parent module factory
 	 *
@@ -487,10 +466,6 @@ private:
 	ModuleFactory* mParent;
 
 	std::string mInternalName; ///< internal name of the module
-	std::string mName; ///< custom name of the module
-
-	static std::set<std::string> names; ///< list of names of all modules
-	static Poco::RWLock namesLock; ///< read write lock to access the list of names
 
     /**
      * Launch the next task of the queue in the current thread

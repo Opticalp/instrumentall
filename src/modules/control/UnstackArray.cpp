@@ -36,7 +36,11 @@ UnstackArray::UnstackArray(ModuleFactory* parent, std::string customName, int da
 	Module(parent, customName),
 	mDataType(dataType)
 {
-    setInternalName("UnstackArray" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("UnstackArray" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("UnstackArray");
+
     setCustomName(customName);
     setLogger("module." + name());
 

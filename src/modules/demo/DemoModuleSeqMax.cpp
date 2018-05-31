@@ -45,7 +45,11 @@ DemoModuleSeqMax::DemoModuleSeqMax(ModuleFactory* parent, std::string customName
 {
     // poco_information(logger(),"Creating a new DemoModuleSeqMax");
 
-    setInternalName("DemoModuleSeqMax" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("DemoModuleSeqMax" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("DemoModuleSeqMax");
+
     setCustomName(customName);
     setLogger("module." + name());
 
