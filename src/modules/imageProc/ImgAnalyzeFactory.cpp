@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/imageProc/ImageProcFactory.cpp
- * @date	Apr 2016
+ * @file	src/modules/imageProc/ImgAnalyzeFactory.cpp
+ * @date	Jun 2018
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2018 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,37 +26,33 @@
  THE SOFTWARE.
  */
 
-#include "ImageProcFactory.h"
-
 #include "ImgAnalyzeFactory.h"
-//#include "ImgModifyFactory.h"
-//#include "MaskGenFactory.h"
 
-std::vector<std::string> ImageProcFactory::selectValueList()
+#include "modules/GenericLeafFactory.h"
+//#include "HistogramMod.h"
+
+std::vector<std::string> ImgAnalyzeFactory::selectValueList()
 {
     std::vector<std::string> list;
 
-	list.push_back("maskGen"); // boxMask
-	list.push_back("analyze"); // simpleStats, histogram
-	list.push_back("modify"); // rotCrop
+	list.push_back("simpleStats"); 
+	list.push_back("histogram"); 
     return list;
 }
 
-ModuleFactoryBranch* ImageProcFactory::newChildFactory(std::string selector)
+ModuleFactoryBranch* ImgAnalyzeFactory::newChildFactory(std::string selector)
 {
-	if (selector.compare("analyze") == 0)
-	{
-		return new ImgAnalyzeFactory(this, selector);
-	}
-	//else if (selector.compare("modify") == 0)
+	//if (selector.compare("histogram") == 0)
+	//{
+	//	return new GenericLeafFactory<HistogramMod>("HistrogramFactory",
+	//		"Build image histogram module",
+	//		this, selector);
+	//}
+	//else if (selector.compare("simpleStats") == 0)
 	//{
 	//	return new ImgModifyFactory(this, selector);
 	//}
-	//else if (selector.compare("maskGen") == 0)
-	//{
-	//	return new MaskGenFactory(this, selector);
-	//}
-	else
+	//else
 	{
 		poco_bugcheck_msg("Create: unknown selector");
 		throw Poco::BugcheckException();
