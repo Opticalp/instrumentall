@@ -67,7 +67,7 @@ GenicamDeviceFactory::GenicamDeviceFactory(GenTLLib* genTL,
         mGenTL->genTLPortInfo(_TLhDevice, logger()); // device port info. driver dependant? 
 }
 
-void GenicamDeviceFactory::terminate()
+GenicamDeviceFactory::~GenicamDeviceFactory()
 {
     if (_TLhDevice != GENTL_INVALID_HANDLE)
     {

@@ -40,17 +40,20 @@ ModuleFactory::ModuleFactory(bool leaf, bool root):
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().addFactory(this);
 }
 
+void ModuleFactory::delThis()
+{
+	if (isLeaf())
+		deleteChildModules();
+
+	deleteChildFactories();
+	
+	delete this;
+}
+
 ModuleFactory::~ModuleFactory()
 {
-    if (isLeaf())
-        deleteChildModules();
-
-    deleteChildFactories();
-
-    terminate();
-
-    if (!isRoot())
-        Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeFactory(this);
+	if (!isRoot()) 
+		Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeFactory(this);
 }
 
 ModuleFactoryBranch& ModuleFactory::select(std::string selector)
@@ -105,7 +108,7 @@ void ModuleFactory::deleteChildFactory(std::string property)
         if (validated.compare((*it)->getSelector())==0)
         {
             deletingChildFact = *it;
-            delete (*it);
+			deletingChildFact->delThis();
             deletingChildFact = NULL;
             return;
         }
@@ -154,7 +157,7 @@ void ModuleFactory::deleteChildFactories()
         deletingChildFact = childFactories.back();
         poco_information(logger(),"deleting child factory: "
                                     + std::string(deletingChildFact->name()));
-        delete (deletingChildFact);
+        deletingChildFact->delThis();
         deletingChildFact = NULL;
     }
 

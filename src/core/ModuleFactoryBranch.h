@@ -44,16 +44,6 @@ public:
         mParent(parent), mSelector(selector) { }
 
     /**
-     * Destructor
-     *
-     * Notify the parent that it has to be removed from the list
-     */
-    virtual ~ModuleFactoryBranch()
-    {
-        mParent->removeChildFactory(this);
-    }
-
-    /**
      * Retrieve the select() value of the parent
      *
      * that drove to the present module factory
@@ -70,8 +60,21 @@ public:
      */
     ModuleFactory* parent() { return mParent; }
 
+protected:
+	/**
+	* Destructor
+	*
+	* Notify the parent that it has to be removed from the list
+	*
+	* Shall not be called directly. Call ModuleFactory::delThis instead.
+	*/
+	virtual ~ModuleFactoryBranch()
+	{
+		mParent->removeChildFactory(this);
+	}
+
 private:
-    std::string mSelector;
+	std::string mSelector;
     ModuleFactory* mParent;
 };
 

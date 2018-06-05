@@ -70,8 +70,7 @@ public:
 
 private:
     GenicamLibFactory();
-
-    void terminate();
+	~GenicamLibFactory();
 
     ModuleFactoryBranch* newChildFactory(std::string selector);
 

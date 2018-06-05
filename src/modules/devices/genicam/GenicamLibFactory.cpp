@@ -49,7 +49,7 @@ GenicamLibFactory::GenicamLibFactory(ModuleFactory* parent, std::string selector
     discover();
 }
 
-void GenicamLibFactory::terminate()
+GenicamLibFactory::~GenicamLibFactory()
 {
     if (mGenTL->TLhSystem != GENTL_INVALID_HANDLE)
     {

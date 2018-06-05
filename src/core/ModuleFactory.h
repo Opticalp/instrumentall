@@ -61,16 +61,13 @@ public:
 	 */
 	ModuleFactory(bool leaf = true, bool root = true);
 
-    /**
-     * Standard destructor
-     *
-     * The destructor of the derived classes should explicitly call deleteChildFactories()
-     * and deletechildModules() (when relevant).
-     * It is not called here to let the developer decide what order to respect.
-     *
-     * @note base class destructor is called (last) after derived class destructor
-     */
-	virtual ~ModuleFactory();
+	/**
+	* Delete this object (tweak)
+	*
+	* Do not call `delete object;` directly, since the deleting instructions
+	* need to be called in reversed order (general, then child).
+	*/
+	void delThis();
 
 	/**
 	 * Name of the module factory
@@ -244,7 +241,16 @@ public:
     std::vector< Poco::SharedPtr<Module*> > getChildModules();
 
 protected:
-    /**
+	/**
+	* Standard destructor
+	*
+	* If not EmptyModuleFactory, only called by ModuleFactory::delThis
+	*
+	* @note base class destructor is called (last) after derived class destructor
+	*/
+	virtual ~ModuleFactory();
+
+	/**
      * Create a new child factory from ModuleFactoryBranch
      *
      * This method is to be called by select(). It should not
@@ -284,15 +290,8 @@ protected:
                 "This factory is not able to create a new child module. ");
     }
 
-    /**
-     * Cleaning function called during self deletion
-     *
-     * called after the child modules and factories are deleted.
-     */
-    virtual void terminate() { }
-
 private:
-    /**
+	/**
      * Direct child factories
      *
      *  - Only newChildFactory() should create new factories. This function
@@ -327,7 +326,7 @@ private:
      */
     Module* deletingChildMod;
 
-    bool bRoot; ///< flag to check if this module factory is a root factory
+	bool bRoot; ///< flag to check if this module factory is a root factory
     bool bLeaf; ///< flag to check if this module factory is a leaf factory
 };
 

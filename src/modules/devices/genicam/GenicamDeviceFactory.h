@@ -76,10 +76,9 @@ public:
 
 private:
     GenicamDeviceFactory();
+	~GenicamDeviceFactory();
 
     std::string validateSelector(std::string selector);
-
-    void terminate();
 
     ModuleFactoryBranch* newChildFactory(std::string selector);
 
