@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/imageProc/ImgAnalyzeFactory.cpp
+ * @file	src/modules/imageProc/MaskGenFactory.cpp
  * @date	Jun 2018
  * @author	PhRG - opticalp.fr
  */
@@ -26,31 +26,26 @@
  THE SOFTWARE.
  */
 
-#include "ImgAnalyzeFactory.h"
+#include "MaskGenFactory.h"
 
 #include "modules/GenericLeafFactory.h"
-//#include "HistogramMod.h"
+//#include "BoxMask.h"
 
-std::vector<std::string> ImgAnalyzeFactory::selectValueList()
+std::vector<std::string> MaskGenFactory::selectValueList()
 {
     std::vector<std::string> list;
 
-//	list.push_back("simpleStats");
-//	list.push_back("histogram");
+//	list.push_back("boxMask");
     return list;
 }
 
-ModuleFactoryBranch* ImgAnalyzeFactory::newChildFactory(std::string selector)
+ModuleFactoryBranch* MaskGenFactory::newChildFactory(std::string selector)
 {
-	//if (selector.compare("histogram") == 0)
+	//if (selector.compare("boxMask") == 0)
 	//{
-	//	return new GenericLeafFactory<HistogramMod>("HistrogramFactory",
-	//		"Build image histogram module",
+	//	return new GenericLeafFactory<BoxMask>("BoxMaskFactory",
+	//		"Build a generator for box (rectangle, ellipse) masks",
 	//		this, selector);
-	//}
-	//else if (selector.compare("simpleStats") == 0)
-	//{
-	//	return new ImgModifyFactory(this, selector);
 	//}
 	//else
 	{

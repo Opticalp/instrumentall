@@ -29,8 +29,8 @@
 #include "ImageProcFactory.h"
 
 #include "ImgAnalyzeFactory.h"
-//#include "ImgModifyFactory.h"
-//#include "MaskGenFactory.h"
+#include "ImgModifyFactory.h"
+#include "MaskGenFactory.h"
 
 std::vector<std::string> ImageProcFactory::selectValueList()
 {
@@ -48,14 +48,14 @@ ModuleFactoryBranch* ImageProcFactory::newChildFactory(std::string selector)
 	{
 		return new ImgAnalyzeFactory(this, selector);
 	}
-	//else if (selector.compare("modify") == 0)
-	//{
-	//	return new ImgModifyFactory(this, selector);
-	//}
-	//else if (selector.compare("maskGen") == 0)
-	//{
-	//	return new MaskGenFactory(this, selector);
-	//}
+	else if (selector.compare("modify") == 0)
+	{
+		return new ImgModifyFactory(this, selector);
+	}
+	else if (selector.compare("maskGen") == 0)
+	{
+		return new MaskGenFactory(this, selector);
+	}
 	else
 	{
 		poco_bugcheck_msg("Create: unknown selector");

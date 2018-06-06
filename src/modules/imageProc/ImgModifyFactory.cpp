@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/imageProc/ImgAnalyzeFactory.cpp
+ * @file	src/modules/imageProc/ImgModifyFactory.cpp
  * @date	Jun 2018
  * @author	PhRG - opticalp.fr
  */
@@ -26,31 +26,26 @@
  THE SOFTWARE.
  */
 
-#include "ImgAnalyzeFactory.h"
+#include "ImgModifyFactory.h"
 
 #include "modules/GenericLeafFactory.h"
-//#include "HistogramMod.h"
+//#include "RotCrop.h"
 
-std::vector<std::string> ImgAnalyzeFactory::selectValueList()
+std::vector<std::string> ImgModifyFactory::selectValueList()
 {
     std::vector<std::string> list;
 
-//	list.push_back("simpleStats");
-//	list.push_back("histogram");
+//	list.push_back("rotCrop");
     return list;
 }
 
-ModuleFactoryBranch* ImgAnalyzeFactory::newChildFactory(std::string selector)
+ModuleFactoryBranch* ImgModifyFactory::newChildFactory(std::string selector)
 {
-	//if (selector.compare("histogram") == 0)
+	//if (selector.compare("rotCrop") == 0)
 	//{
-	//	return new GenericLeafFactory<HistogramMod>("HistrogramFactory",
-	//		"Build image histogram module",
+	//	return new GenericLeafFactory<RotCrop>("RotCropFactory",
+	//		"Build module that rotate and crop the input image",
 	//		this, selector);
-	//}
-	//else if (selector.compare("simpleStats") == 0)
-	//{
-	//	return new ImgModifyFactory(this, selector);
 	//}
 	//else
 	{
