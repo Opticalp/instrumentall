@@ -48,11 +48,17 @@ def myMain(baseDir):
 
     task = runModule(freezer)
 
-    print("wait 17 seconds. watchdog default value is 15 secs. ")
-    time.sleep(17)
+    print("The task state is: " + task.state())
     
-    if task.state()!="processing":
-        raise RuntimeError("watchdog timeout happened")
+    time.sleep(1)
+    print("After 1 sec, the task state is: " + task.state())
+
+    print("Wait 17 seconds. watchdog default value is 15 secs. ")
+    time.sleep(17)
+
+    state = task.state()
+    if state != "processing":
+        raise RuntimeError("watchdog timeout happened, the task state is: " + state)
     
     print("OK, no watchdog signaled. Cancelling the freezer. ")
     

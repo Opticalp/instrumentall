@@ -69,7 +69,7 @@ def myMain(baseDir):
     for proxyClass in proxyClasses:
         print(" - " + proxyClass + ": " + proxyClasses[proxyClass])
     
-    print('Proxy creation using the constructor: DataProxy("Delayer")')
+    print('Proxy creation using the constructor: DataProxy("ImageReticle")')
     proxy = DataProxy("ImageReticle") 
     print(" - Name: " + proxy.name)
     print(" - Description: " + proxy.description)

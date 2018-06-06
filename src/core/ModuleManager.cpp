@@ -62,7 +62,7 @@ ModuleManager::~ModuleManager()
     for (std::vector<ModuleFactory*>::reverse_iterator it=rootFactories.rbegin(), ite=rootFactories.rend();
             it != ite; it++)
     {
-        delete *it;
+        (*it)->delThis();
     }
 
     // allFactories should clean itself nicely

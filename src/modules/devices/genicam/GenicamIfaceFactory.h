@@ -69,8 +69,7 @@ public:
 
 private:
     GenicamIfaceFactory();
-
-    void terminate();
+	~GenicamIfaceFactory();
 
     ModuleFactoryBranch* newChildFactory(std::string selector);
 

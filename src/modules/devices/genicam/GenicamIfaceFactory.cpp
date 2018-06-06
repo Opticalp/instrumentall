@@ -59,7 +59,7 @@ GenicamIfaceFactory::GenicamIfaceFactory(GenTLLib* genTL,
     discover();
 }
 
-void GenicamIfaceFactory::terminate()
+GenicamIfaceFactory::~GenicamIfaceFactory()
 {
      if (_TLhInterface != GENTL_INVALID_HANDLE)
      {
