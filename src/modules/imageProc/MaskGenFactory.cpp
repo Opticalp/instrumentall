@@ -29,25 +29,25 @@
 #include "MaskGenFactory.h"
 
 #include "modules/GenericLeafFactory.h"
-//#include "BoxMask.h"
+#include "BoxMask.h"
 
 std::vector<std::string> MaskGenFactory::selectValueList()
 {
     std::vector<std::string> list;
 
-//	list.push_back("boxMask");
+	list.push_back("boxMask");
     return list;
 }
 
 ModuleFactoryBranch* MaskGenFactory::newChildFactory(std::string selector)
 {
-	//if (selector.compare("boxMask") == 0)
-	//{
-	//	return new GenericLeafFactory<BoxMask>("BoxMaskFactory",
-	//		"Build a generator for box (rectangle, ellipse) masks",
-	//		this, selector);
-	//}
-	//else
+	if (selector.compare("boxMask") == 0)
+	{
+		return new GenericLeafFactory<BoxMask>("BoxMaskFactory",
+			"Build a generator for box (rectangle, ellipse) masks",
+			this, selector);
+	}
+	else
 	{
 		poco_bugcheck_msg("Create: unknown selector");
 		throw Poco::BugcheckException();

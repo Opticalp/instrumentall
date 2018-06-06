@@ -30,29 +30,32 @@
 
 #include "modules/GenericLeafFactory.h"
 //#include "HistogramMod.h"
+#include "ImgStats.h"
 
 std::vector<std::string> ImgAnalyzeFactory::selectValueList()
 {
     std::vector<std::string> list;
 
-//	list.push_back("simpleStats");
+	list.push_back("simpleStats");
 //	list.push_back("histogram");
     return list;
 }
 
 ModuleFactoryBranch* ImgAnalyzeFactory::newChildFactory(std::string selector)
 {
-	//if (selector.compare("histogram") == 0)
-	//{
-	//	return new GenericLeafFactory<HistogramMod>("HistrogramFactory",
-	//		"Build image histogram module",
-	//		this, selector);
-	//}
-	//else if (selector.compare("simpleStats") == 0)
-	//{
-	//	return new ImgModifyFactory(this, selector);
-	//}
-	//else
+	if (selector.compare("simpleStats") == 0)
+	{
+        return new GenericLeafFactory<ImgStats>("SimpleStatsFactory",
+            "Build simple image stats (min, max, mean, sigma...) module",
+            this, selector);
+	}
+    //else if (selector.compare("histogram") == 0)
+    //{
+    //  return new GenericLeafFactory<HistogramMod>("HistrogramFactory",
+    //      "Build image histogram module",
+    //      this, selector);
+    //}
+	else
 	{
 		poco_bugcheck_msg("Create: unknown selector");
 		throw Poco::BugcheckException();

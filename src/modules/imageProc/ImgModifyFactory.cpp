@@ -29,25 +29,25 @@
 #include "ImgModifyFactory.h"
 
 #include "modules/GenericLeafFactory.h"
-//#include "RotCrop.h"
+#include "RotCrop.h"
 
 std::vector<std::string> ImgModifyFactory::selectValueList()
 {
     std::vector<std::string> list;
 
-//	list.push_back("rotCrop");
+	list.push_back("rotCrop");
     return list;
 }
 
 ModuleFactoryBranch* ImgModifyFactory::newChildFactory(std::string selector)
 {
-	//if (selector.compare("rotCrop") == 0)
-	//{
-	//	return new GenericLeafFactory<RotCrop>("RotCropFactory",
-	//		"Build module that rotate and crop the input image",
-	//		this, selector);
-	//}
-	//else
+	if (selector.compare("rotCrop") == 0)
+	{
+		return new GenericLeafFactory<RotCrop>("RotCropFactory",
+			"Build module that rotate and crop the input image",
+			this, selector);
+	}
+	else
 	{
 		poco_bugcheck_msg("Create: unknown selector");
 		throw Poco::BugcheckException();
