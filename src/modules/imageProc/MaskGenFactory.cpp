@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/imageProc/ImageProcFactory.cpp
- * @date	Apr 2016
+ * @file	src/modules/imageProc/MaskGenFactory.cpp
+ * @date	Jun 2018
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2018 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,35 +26,26 @@
  THE SOFTWARE.
  */
 
-#include "ImageProcFactory.h"
-
-#include "ImgAnalyzeFactory.h"
-#include "ImgModifyFactory.h"
 #include "MaskGenFactory.h"
 
-std::vector<std::string> ImageProcFactory::selectValueList()
+#include "modules/GenericLeafFactory.h"
+#include "BoxMask.h"
+
+std::vector<std::string> MaskGenFactory::selectValueList()
 {
     std::vector<std::string> list;
 
-	list.push_back("maskGen"); // boxMask
-	list.push_back("analyze"); // simpleStats, histogram
-	list.push_back("modify"); // rotCrop
+	list.push_back("boxMask");
     return list;
 }
 
-ModuleFactoryBranch* ImageProcFactory::newChildFactory(std::string selector)
+ModuleFactoryBranch* MaskGenFactory::newChildFactory(std::string selector)
 {
-	if (selector.compare("analyze") == 0)
+	if (selector.compare("boxMask") == 0)
 	{
-		return new ImgAnalyzeFactory(this, selector);
-	}
-	else if (selector.compare("modify") == 0)
-	{
-		return new ImgModifyFactory(this, selector);
-	}
-	else if (selector.compare("maskGen") == 0)
-	{
-		return new MaskGenFactory(this, selector);
+		return new GenericLeafFactory<BoxMask>("BoxMaskFactory",
+			"Build a generator for box (rectangle, ellipse) masks",
+			this, selector);
 	}
 	else
 	{
