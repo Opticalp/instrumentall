@@ -35,12 +35,16 @@ std::vector<std::string> ImgModifyFactory::selectValueList()
 {
     std::vector<std::string> list;
 
+#ifdef HAVE_OPENCV
 	list.push_back("rotCrop");
+#endif
+
     return list;
 }
 
 ModuleFactoryBranch* ImgModifyFactory::newChildFactory(std::string selector)
 {
+#ifdef HAVE_OPENCV
 	if (selector.compare("rotCrop") == 0)
 	{
 		return new GenericLeafFactory<RotCrop>("RotCropFactory",
@@ -48,6 +52,7 @@ ModuleFactoryBranch* ImgModifyFactory::newChildFactory(std::string selector)
 			this, selector);
 	}
 	else
+#endif /* HAVE_OPENCV */
 	{
 		poco_bugcheck_msg("Create: unknown selector");
 		throw Poco::BugcheckException();

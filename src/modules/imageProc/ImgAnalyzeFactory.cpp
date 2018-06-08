@@ -36,13 +36,16 @@ std::vector<std::string> ImgAnalyzeFactory::selectValueList()
 {
     std::vector<std::string> list;
 
+#ifdef HAVE_OPENCV
 	list.push_back("simpleStats");
 //	list.push_back("histogram");
+#endif /* HAVE_OPENCV*/
     return list;
 }
 
 ModuleFactoryBranch* ImgAnalyzeFactory::newChildFactory(std::string selector)
 {
+#ifdef HAVE_OPENCV
 	if (selector.compare("simpleStats") == 0)
 	{
         return new GenericLeafFactory<ImgStats>("SimpleStatsFactory",
@@ -56,6 +59,7 @@ ModuleFactoryBranch* ImgAnalyzeFactory::newChildFactory(std::string selector)
     //      this, selector);
     //}
 	else
+#endif /* HAVE_OPENCV */
 	{
 		poco_bugcheck_msg("Create: unknown selector");
 		throw Poco::BugcheckException();
