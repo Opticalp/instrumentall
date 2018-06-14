@@ -266,7 +266,7 @@ void ImgPrintInfo::process(int startCond)
     cv::putText(workingImg, msg, cv::Point(xPos, yPos),
             font, 1, // font, font size
             fillCol, // color
-            1, cv::LINE_AA); // thickness, line type
+            1, CV_AA); // thickness, line type
 
     processingTerminated();
 
