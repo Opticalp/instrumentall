@@ -34,8 +34,6 @@
 
 void WatchDog::run()
 {
-    stopMe.reset();
-
     if (active)
         return;
 
@@ -58,6 +56,7 @@ void WatchDog::run()
     }
 
     active = false;
+    stopMe.reset();
 }
 
 void WatchDog::stop()
