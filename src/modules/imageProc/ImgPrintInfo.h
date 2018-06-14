@@ -85,7 +85,7 @@ private:
     };
 
     colorMode color;
-    unsigned char colorLevel;
+    int colorLevel;
 
     /// Indexes of the input ports
     enum inPorts

@@ -55,7 +55,7 @@ ImgPrintInfo::ImgPrintInfo(ModuleFactory* parent, std::string customName):
              ParamItem::typeInteger, "10");
      addParameter(paramYpos, "yPos",
              "y-coord text position",
-             ParamItem::typeInteger, "10");
+             ParamItem::typeInteger, "40");
      addParameter(paramTitle, "title",
              "Title of the displayed value",
              ParamItem::typeString, "");
@@ -117,7 +117,7 @@ void ImgPrintInfo::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
         if (value < 0 || value > 255)
             throw Poco::RangeException("setParameterValue",
                     "colorLevel shall be in [0 255]");
-        colorLevel = static_cast<unsigned char>(value);
+        colorLevel = static_cast<int>(value);
         break;
     default:
         poco_bugcheck_msg("unknown parameter index");
@@ -201,9 +201,14 @@ void ImgPrintInfo::process(int startCond)
     bool hasInt = isInPortCaught(intValueInPort);
 
     if (!hasDble && !hasInt)
+    {
+        poco_notice(logger(), "no value plugged on the input ports");
         msg = title;
+    }
     else if (!title.empty())
-        msg = title + "\n"; // ... or + ": " to be considered
+    {
+        msg = title + ": ";
+    }
 
     if (hasDble)
     {
@@ -257,6 +262,7 @@ void ImgPrintInfo::process(int startCond)
     }
 
     int font = cv::FONT_HERSHEY_DUPLEX;
+    poco_information(logger(), "displaying: <" + msg + ">");
     cv::putText(workingImg, msg, cv::Point(xPos, yPos),
             font, 1, // font, font size
             fillCol, // color
