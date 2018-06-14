@@ -30,6 +30,7 @@
 
 #include "modules/GenericLeafFactory.h"
 #include "RotCrop.h"
+#include "ImgPrintInfo.h"
 
 std::vector<std::string> ImgModifyFactory::selectValueList()
 {
@@ -37,6 +38,7 @@ std::vector<std::string> ImgModifyFactory::selectValueList()
 
 #ifdef HAVE_OPENCV
 	list.push_back("rotCrop");
+	list.push_back("printInfo");
 #endif
 
     return list;
@@ -51,7 +53,13 @@ ModuleFactoryBranch* ImgModifyFactory::newChildFactory(std::string selector)
 			"Build module that rotate and crop the input image",
 			this, selector);
 	}
-	else
+	else if (selector.compare("printInfo") == 0)
+    {
+        return new GenericLeafFactory<ImgPrintInfo>("ImgPrintInfoFactory",
+            "Build module that displays infos on the input image",
+            this, selector);
+    }
+    else
 #endif /* HAVE_OPENCV */
 	{
 		poco_bugcheck_msg("Create: unknown selector");
