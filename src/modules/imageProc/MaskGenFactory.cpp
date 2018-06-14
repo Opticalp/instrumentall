@@ -35,12 +35,15 @@ std::vector<std::string> MaskGenFactory::selectValueList()
 {
     std::vector<std::string> list;
 
+#ifdef HAVE_OPENCV
 	list.push_back("boxMask");
+#endif
     return list;
 }
 
 ModuleFactoryBranch* MaskGenFactory::newChildFactory(std::string selector)
 {
+#ifdef HAVE_OPENCV
 	if (selector.compare("boxMask") == 0)
 	{
 		return new GenericLeafFactory<BoxMask>("BoxMaskFactory",
@@ -48,6 +51,7 @@ ModuleFactoryBranch* MaskGenFactory::newChildFactory(std::string selector)
 			this, selector);
 	}
 	else
+#endif /* HAVE_OPENCV */
 	{
 		poco_bugcheck_msg("Create: unknown selector");
 		throw Poco::BugcheckException();
