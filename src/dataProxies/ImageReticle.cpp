@@ -105,7 +105,7 @@ void ImageReticle::convert()
     // draw the reticle.
     cv::RotatedRect overallRect(	cv::Point2f(xPos, yPos),
     								cv::Size2f(reticleSize*2 + xWidth, reticleSize*2 + yWidth),
-									angle	);
+									-angle	);
 
     cv::Point2f overallPoints[4];
     overallRect.points(overallPoints);
@@ -124,7 +124,7 @@ void ImageReticle::convert()
     {
         cv::RotatedRect zoneRectX(  cv::Point2f(xPos, yPos),
                                     cv::Size2f(xWidth, reticleSize),
-                                    angle   );
+                                    -angle   );
 
         cv::Point2f zonePointsX[4];
         zoneRectX.points(zonePointsX);
@@ -144,7 +144,7 @@ void ImageReticle::convert()
     {
         cv::RotatedRect zoneRectY(  cv::Point2f(xPos, yPos),
                                     cv::Size2f(reticleSize, yWidth),
-                                    angle   );
+                                    -angle   );
 
         cv::Point2f zonePointsY[4];
         zoneRectY.points(zonePointsY);

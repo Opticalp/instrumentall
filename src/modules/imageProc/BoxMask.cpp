@@ -175,10 +175,6 @@ double BoxMask::getFloatParameterValue(size_t paramIndex)
 void BoxMask::setFloatParameterValue(size_t paramIndex, double value)
 {
     poco_assert(paramIndex == paramBoxAngle);
-
-	if (value < 0 || value >180)
-		throw Poco::RangeException("setParameterValue",
-                    "boxAngle has to be > 0 and < 180 degrees");
     boxAngle = value;
 }
 
