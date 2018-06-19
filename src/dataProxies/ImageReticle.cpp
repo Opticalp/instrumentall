@@ -45,7 +45,7 @@ ImageReticle::ImageReticle(): DataProxy("ImageReticle")
     addParameter(paramYwidth, "yWidth", "reticle y width", ParamItem::typeInteger, "0");
     addParameter(paramAngle, "angle", "reticle rotation (degrees)", ParamItem::typeFloat, "0.0");
     addParameter(paramAlter, "alter", "alter the input image (\"yes\") "
-    		"or duplicate the image before drawing (\"no\")", ParamItem::typeString, "yes");
+    		"or duplicate the image before drawing (\"no\")", ParamItem::typeString, "no");
     addParameter(paramGreyLevel, "greyLevel", "cross grey level", ParamItem::typeInteger, "127");
 
     setIntParameterValue(paramXpos, getIntParameterDefaultValue(paramXpos));
