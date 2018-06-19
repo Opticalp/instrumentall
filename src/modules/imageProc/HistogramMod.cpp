@@ -65,9 +65,11 @@ void HistogramMod::process(int startCond)
 	switch (startCond)
 	{
 	case allDataStartState:
+        poco_information(logger(), name() + " starting with mask");
 		withMask = true;
 		break;
 	case allPluggedDataStartState:
+        poco_information(logger(), name() + " starting without mask");
 		withMask = false;
 		break;
 	default:
@@ -165,6 +167,8 @@ void HistogramMod::computeHistogram(cv::Mat imgIn, cv::Mat mask)
                     count++;
                 }
     }
+    
+    poco_information(logger(), "counted pixels is: " + Poco::NumberFormatter::format(count));
     
     if (count)
         for (int i=0; i< 4096; i++)
