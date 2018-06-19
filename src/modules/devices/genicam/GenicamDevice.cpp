@@ -1344,10 +1344,9 @@ void GenicamDevice::simpleYamlParse(std::string filePath)
                 "Not able to open the config file: " + filePath);
 
     int count = 0;
-    std::getline(file, line);
     while (file.good())
     {
-//        std::cout << count++ << ": " << line << std::endl;
+        std::getline(file, line);
 
         // check if new parameter
         std::string name = newProperty(line);
@@ -1364,7 +1363,6 @@ void GenicamDevice::simpleYamlParse(std::string filePath)
 			{
 				poco_error(logger(), std::string("simpleYamlParse: ") 
 					+ e.GetDescription());
-				std::getline(file, line);
 				continue;
 			}
 
@@ -1372,7 +1370,6 @@ void GenicamDevice::simpleYamlParse(std::string filePath)
 			{
 				poco_warning(logger(), "The given property: "
 					+ name + " does not exist. >>> SKIP <<<");
-				std::getline(file, line);
 				continue;
 			}
 
@@ -1390,14 +1387,11 @@ void GenicamDevice::simpleYamlParse(std::string filePath)
 				{
 					poco_error(logger(), std::string("simpleYamlParse: ") 
 						+ e.GetDescription());
-					std::getline(file, line);
 					continue;
 				}
 			}
 
         }
-
-		std::getline(file, line);
     }
 
     file.close();
