@@ -45,7 +45,7 @@ ImageReticle::ImageReticle(): DataProxy("ImageReticle")
     addParameter(paramYwidth, "yWidth", "reticle y width", ParamItem::typeInteger, "0");
     addParameter(paramAngle, "angle", "reticle rotation (degrees)", ParamItem::typeFloat, "0.0");
     addParameter(paramAlter, "alter", "alter the input image (\"yes\") "
-    		"or duplicate the image before drawing (\"no\")", ParamItem::typeString, "yes");
+    		"or duplicate the image before drawing (\"no\")", ParamItem::typeString, "no");
     addParameter(paramGreyLevel, "greyLevel", "cross grey level", ParamItem::typeInteger, "127");
 
     setIntParameterValue(paramXpos, getIntParameterDefaultValue(paramXpos));
@@ -105,7 +105,7 @@ void ImageReticle::convert()
     // draw the reticle.
     cv::RotatedRect overallRect(	cv::Point2f(xPos, yPos),
     								cv::Size2f(reticleSize*2 + xWidth, reticleSize*2 + yWidth),
-									angle	);
+									-angle	);
 
     cv::Point2f overallPoints[4];
     overallRect.points(overallPoints);
@@ -124,7 +124,7 @@ void ImageReticle::convert()
     {
         cv::RotatedRect zoneRectX(  cv::Point2f(xPos, yPos),
                                     cv::Size2f(xWidth, reticleSize),
-                                    angle   );
+                                    -angle   );
 
         cv::Point2f zonePointsX[4];
         zoneRectX.points(zonePointsX);
@@ -144,7 +144,7 @@ void ImageReticle::convert()
     {
         cv::RotatedRect zoneRectY(  cv::Point2f(xPos, yPos),
                                     cv::Size2f(reticleSize, yWidth),
-                                    angle   );
+                                    -angle   );
 
         cv::Point2f zonePointsY[4];
         zoneRectY.points(zonePointsY);
