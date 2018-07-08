@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "core/Module.h"
 #include "core/ModuleManager.h"
 #include "PythonInPort.h"
+#include "PythonDataSource.h"
 #include "PythonModule.h"
 
 extern "C" void pyInPortDealloc(InPortMembers* self)
@@ -184,6 +185,52 @@ PyObject* pyInPortGetSourcePort(InPortMembers* self)
     *(pyPort->outPort) = sharedSource;
 
     return (PyObject*) pyPort;
+}
+
+PyObject* pyInPortGetDataSource(InPortMembers* self)
+{
+    DataSource* src;
+
+    try
+    {
+        src = (**self->inPort)->getDataSource();
+    }
+    catch (Poco::NullPointerException&)
+    {
+        src = NULL;
+    }
+
+    if (src == NULL)
+        Py_RETURN_NONE;
+
+    // prepare OutPort python type
+    if (PyType_Ready(&PythonDataSource) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the DataSource Type");
+        return NULL;
+    }
+
+    // create the python object
+    DataSourceMembers* pySrc =
+        (DataSourceMembers*)(pyDataSourceNew((PyTypeObject*)&PythonDataSource, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // retrieve name and description
+    tmp = pySrc->name;
+    pySrc->name = PyString_FromString(src->name().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = pySrc->description;
+    pySrc->description = PyString_FromString(src->description().c_str());
+    Py_XDECREF(tmp);
+
+    // set reference
+    pySrc->source = src;
+
+    return (PyObject*) pySrc;
 }
 
 PyObject* pyInPortGetSeqSourcePort(InPortMembers* self)
