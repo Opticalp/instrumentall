@@ -54,7 +54,7 @@ def myMain(baseDir):
     print("Set image file directory to " + imgDir)
     cam.setParameterValue("directory", imgDir)
     print("Set file to be read: cross.png")
-    cam.setParameterValue("files", "cross.png")
+    cam.setParameterValue("files", "noiseDot.png")
     
     print('Logger creation using the constructor: DataLogger("ShowImageLogger")')
     logger = DataLogger("ShowImageLogger") 
@@ -69,9 +69,13 @@ def myMain(baseDir):
     print("Bind the image source to the image shower via the proxy")
     bind(cam.outPort("image"), DataTarget(logger), proxy)
 
+    x = 32
+    y = 44
+    dim = 40
+
     print("Set some proxy parameters")
-    proxy.setParameterValue("xPos", 130)
-    proxy.setParameterValue("yPos", 250)
+    proxy.setParameterValue("xPos", x)
+    proxy.setParameterValue("yPos", y)
 
     print("Show the image with centered reticle")
     runModule(cam)
@@ -79,8 +83,8 @@ def myMain(baseDir):
 
     print("Changing some proxy parameters")
     proxy.setParameterValue("angle", 0)
-    proxy.setParameterValue("xWidth", 100)
-    proxy.setParameterValue("yWidth", 100)
+    proxy.setParameterValue("xWidth", dim)
+    proxy.setParameterValue("yWidth", dim)
 
     print("Create the center of mass module")
     cOfM = Factory("ImageProcFactory").select("analyze").select("centerOfMass").create("centerOfMass")
@@ -108,11 +112,11 @@ def myMain(baseDir):
     mask.setParameterValue("inValue",150)
     mask.setParameterValue("outValue",0)
     mask.setParameterValue("boxType","rect")# rect / ellipse 
-    mask.setParameterValue("boxWidth",100)
-    mask.setParameterValue("boxHeight",100)
+    mask.setParameterValue("boxWidth",dim)
+    mask.setParameterValue("boxHeight",dim)
     mask.setParameterValue("boxAngle",0)
-    mask.setParameterValue("boxXcenter",130)
-    mask.setParameterValue("boxYcenter",250)
+    mask.setParameterValue("boxXcenter",x)
+    mask.setParameterValue("boxYcenter",y)
 
     bind(mask.outPort("mask"), cOfM.inPort("mask"))
 
@@ -125,7 +129,35 @@ def myMain(baseDir):
     print("x position: " + str(cOfM.outPort("xPosition").getDataValue()))
     print("y position: " + str(cOfM.outPort("yPosition").getDataValue()))
 
+    print("Now with thresholding")
 
+    unbind(cOfM.inPort("mask"))
+
+    thres = Factory("ImageProcFactory").select("maskGen").select("threshold").select("population").create("thresPop")
+
+    bind(cam.outPort("image"), thres.inPort("image"))
+    bind(mask.outPort("mask"), thres.inPort("mask"))
+
+    imLogger = DataLogger("ShowImageLogger") 
+    imLogger.setName("imgShow2")
+    
+    print("Set threshold parameters")
+    thres.setParameterValue("thresholdValue", 0.95)
+    thres.setParameterValue("onValue",128)
+    thres.setParameterValue("lowHigh","high")
+
+    bind(thres.outPort("binImage"), DataTarget(imLogger))
+    bind(thres.outPort("binImage"), cOfM.inPort("mask"))
+    
+    exportWorkflow("imgCenterOfMass2.gv")
+    
+    print("Analyze (3)")
+    runModule(cam)
+    time.sleep(1) # wait 1s in order to show the image
+
+    print("x position: " + str(cOfM.outPort("xPosition").getDataValue()))
+    print("y position: " + str(cOfM.outPort("yPosition").getDataValue()))
+    
     print("End of script imgCenterOfMassTest.py")
     
 # main body    
