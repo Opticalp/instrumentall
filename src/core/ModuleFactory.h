@@ -301,6 +301,14 @@ private:
      */
     std::vector<ModuleFactoryBranch*> childFactories;
     Poco::RWLock childFactLock; ///< childFactories access lock
+	/**
+	 * New factory being created by select()
+	 *
+	 * this flag is used to avor deadlock if an exception occurs
+	 * during child factory creation. 
+	 * @see ModuleFactoryBranch::~ModuleFactoryBranch
+	 */
+	bool selectingNewFact;
     /**
      * Child factory being deleted
      *
@@ -309,6 +317,11 @@ private:
      * another way than removeChildFactory or removeChildFactories
      */
     ModuleFactoryBranch* deletingChildFact;
+
+	/**
+	 * check if the given factory is a child factory
+	 */
+	bool isChildFactory(ModuleFactoryBranch* factory);
 
     /**
      * Direct child modules
