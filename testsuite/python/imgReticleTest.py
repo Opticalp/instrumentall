@@ -78,7 +78,7 @@ def myMain(baseDir):
     bind(cam.outPort("image"), DataTarget(logger), proxy)
 
     print("Set some proxy parameters")
-    proxy.setParameterValue("xPos", 320)
+    proxy.setParameterValue("xPos", 150)
     proxy.setParameterValue("yPos", 200)
 
     print("Show the image with centered reticle")
