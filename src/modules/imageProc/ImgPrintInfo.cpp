@@ -235,7 +235,7 @@ void ImgPrintInfo::process(int startCond)
 
     cv::Mat workingImg;
 
-    if ((color != colorGray) && workingImg.channels() < 3)
+    if ((color != colorGray) && pData->channels() < 3)
         cv::cvtColor(*pData, workingImg, cv::COLOR_GRAY2BGR);
     else
         pData->copyTo(workingImg);

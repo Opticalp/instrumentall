@@ -33,7 +33,7 @@ def myMain(baseDir):
     from os.path import join
     import time
 
-    print("Test the basic features of the cameraFromFiles module. ")
+    print("Test the basic features of the imgPrintInfo module. ")
     
     from instru import *
     import instruTools
@@ -115,7 +115,7 @@ def myMain(baseDir):
     runModule(cam)
     runModule(floatGen)
 
-    time.sleep(4)
+    time.sleep(1)
 
     print("End of script imgPrintInfoTest.py")
     
