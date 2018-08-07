@@ -38,6 +38,7 @@ LinearConverter::LinearConverter():
 	setName(refCount);
     refCount++;
 
+	setParameterCount(paramCnt);
 	addParameter(paramScale, "scale", "scale factor (applied before offset)", ParamItem::typeFloat, "1.0");
 	addParameter(paramOffset, "offset", "offset applied after scaling. ", ParamItem::typeFloat, "0.0");
 	setFloatParameterValue(paramScale, getFloatParameterDefaultValue(paramScale));
