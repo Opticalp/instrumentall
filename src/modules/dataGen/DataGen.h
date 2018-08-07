@@ -59,6 +59,8 @@ private:
      */
     void reset();
 
+	void prepareSeq();
+
     void triggedRun();
 
     void freeRun();
