@@ -59,6 +59,8 @@ public:
      */
     void emitParamValue();
 
+	void detach();
+
 private:
 	ParameterGetter();
 

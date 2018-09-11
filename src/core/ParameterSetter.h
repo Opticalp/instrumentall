@@ -58,6 +58,8 @@ public:
 	std::string name() { return mName; }
 	std::string description();
 
+	void detach();
+
 private:
 	ParameterSetter();
 
