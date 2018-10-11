@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/devices/DeviceFactory.cpp
- * @date	Mar 2016
+ * @file	src/tools/comm/Decorated.h
+ * @date	Apr. 2018
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2018 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,38 +26,23 @@
  THE SOFTWARE.
  */
 
-#include "DeviceFactory.h"
+#ifndef SRC_TOOLS_DECORATED_H_
+#define SRC_TOOLS_DECORATED_H_
 
-#include "DaqDeviceFactory.h"
-#include "CameraFactory.h"
-#include "MotionFactory.h"
+#include <string>
 
-std::vector<std::string> DeviceFactory::selectValueList()
-{
-    std::vector<std::string> list;
-    list.push_back("DAQ");
-    list.push_back("camera");
-    list.push_back("motion");
-    return list;
-}
+/**
+ * Replace \r by explicit '\r'
+ * Replace \n by explicit '\n'
+ */
+std::string decoratedCommand(std::string command);
 
-ModuleFactoryBranch* DeviceFactory::newChildFactory(std::string selector)
-{
-	if (selector.compare("DAQ") == 0)
-	{
-		return new DaqDeviceFactory(this, selector);
-	}
-	else if (selector.compare("camera") == 0)
-	{
-		return new CameraFactory(this, selector);
-	}
-	else if (selector.compare("motion") == 0)
-	{
-		return new MotionFactory(this, selector);
-	}
-	else
-	{
-		poco_bugcheck_msg("Create: unknown selector");
-		throw Poco::BugcheckException();
-	}
-}
+/**
+ * Replace \r by explicit '\r'
+ * Replace \n by explicit '\n'
+ *
+ * Keep a cariage return
+ */
+std::string decoratedCommandKeep(std::string command);
+
+#endif /* SRC_TOOLS_DECORATED_H_ */
