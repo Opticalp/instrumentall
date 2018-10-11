@@ -77,7 +77,7 @@ target_link_libraries(
     )    
 
 # find POCO
-find_package( Poco 1.3.6 COMPONENTS Foundation Util REQUIRED )
+find_package( Poco 1.3.6 COMPONENTS Foundation Util Net REQUIRED )
 
 message ( STATUS "found Poco version: ${Poco_VERSION}" )
 if ( DEFINED Poco_LIBRARIES )
@@ -88,7 +88,7 @@ if ( Poco_VERSION VERSION_GREATER "1.4.0" )
 	add_definitions ( -DPOCO_VERSION_H )
 endif ( )
 
-target_link_libraries( instrumentall  Poco::Foundation Poco::Util )
+target_link_libraries( instrumentall  Poco::Foundation Poco::Util Poco::Net)
 
 # find OpenCV
 if ( NOT no-opencv ) 
