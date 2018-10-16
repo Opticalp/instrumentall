@@ -26,8 +26,8 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_DEVICES_LIGHTCONTROL_IPDEVICEFACTORY_H_
-#define SRC_MODULES_DEVICES_LIGHTCONTROL_IPDEVICEFACTORY_H_
+#ifndef SRC_MODULES_DEVICES_MOTION_IPDEVICEFACTORY_H_
+#define SRC_MODULES_DEVICES_MOTION_IPDEVICEFACTORY_H_
 
 #include "core/ModuleFactoryBranch.h"
 #include "tools/comm/net/UdpFromNic.h"
@@ -37,9 +37,9 @@
 /**
  * Branch factory used to select the right IP device
  *
- * to build a light controller module.
+ * to build a motion module.
  * 
- * Created from a LightController Factory in case of NIC interface selection
+ * Created from a Motion Factory in case of NIC interface selection
  */
 class IpDeviceFactory: public ModuleFactoryBranch
 {
@@ -52,17 +52,17 @@ public:
     IpDeviceFactory(ModuleFactory* parent, std::string selector);
     virtual ~IpDeviceFactory() { }
 
-    std::string name() { return "LightControllerIpDeviceFactory"; }
+    std::string name() { return "MotionIpDeviceFactory"; }
     std::string description()
-        { return "Factory to create a specific light controller factory. "
+        { return "Factory to create a specific motion device factory. "
                 "This factory works for IP devices. "; }
 
     std::string selectDescription()
-        { return "Select the IP address of the target light controller device. "
+        { return "Select the IP address of the target motion device. "
                 "To be used to create the leaf device factory"; }
 
     /**
-     * Find the available light controller IP devices and expose it
+     * Find the available motion IP devices and expose it
      */
     std::vector<std::string> selectValueList();
 
@@ -95,7 +95,7 @@ private:
     void findDevices(std::vector<std::string>& devList);
 
     /**
-     * Append the Gardasoft devices to the list
+     * Append the Mecademic Meca500 devices to the list
      */
     void findMeca500(std::vector<std::string>& devList);
 
@@ -127,4 +127,4 @@ private:
     UdpFromNic comm;
 };
 
-#endif /* SRC_MODULES_DEVICES_LIGHTCONTROL_IPDEVICEFACTORY_H_ */
+#endif /* SRC_MODULES_DEVICES_MOTION_IPDEVICEFACTORY_H_ */

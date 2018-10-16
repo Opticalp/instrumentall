@@ -136,21 +136,19 @@ void IpDeviceFactory::findMeca500(std::vector<std::string>& devList)
 		// ping all devices in subnet (but not the broadcast address). 
 		for (int ipMinor = 1; ipMinor < 256; ipMinor++)
 		{
-			std::string address = addrPrefix + "." + Poco::NumberFormatter::format(ipMinor);
+			IPAddress address = IPAddress(addrPrefix + "." + Poco::NumberFormatter::format(ipMinor));
 
-			if (IPAddress(address) == it->get<0>())
+			if (address == it->get<0>())
 				continue;
 
-			poco_information(logger(), "ping " + address);
+			poco_information(logger(), "ping " + address.toString());
 
 			try
 			{
-				if (ICMPClient::pingIPv4(address, 1, 48, 128, 10))
+				if (hasMeca500(address))
 				{
-					poco_information(logger(), "ping response on " + address);
-
-					//if (hasMeca500(IPAddress(address)))
-					//	devList.push_back(buildSelector(sender, meca500Dev));
+					poco_information(logger(), "meca500 found. ");
+					devList.push_back(buildSelector(address, meca500Dev));
 				}
 			}
 			catch (Poco::Exception& e)
@@ -209,7 +207,8 @@ bool IpDeviceFactory::hasMeca500(IPAddress IP)
 
 	try
 	{
-		tcpSocket.connect(sa);
+		tcpSocket.connect(sa, TIMEOUT * 1000);
+		//tcpSocket.connect(sa);
 	}
 	catch (Poco::Exception& e)
 	{
@@ -245,6 +244,7 @@ bool IpDeviceFactory::hasMeca500(IPAddress IP)
 				Poco::NumberFormatter::format(len) + " bytes received: \n" +
 				decoratedCommandKeep(response));
 
+			tcpSocket.shutdown();
 			tcpSocket.close();
 			return true;
 		}
@@ -255,6 +255,7 @@ bool IpDeviceFactory::hasMeca500(IPAddress IP)
 			"Please check if the homing routine was ran. ");
 	}
 
+	tcpSocket.shutdown();
 	tcpSocket.close();
 	return false;
 }
