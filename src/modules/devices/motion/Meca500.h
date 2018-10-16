@@ -30,12 +30,14 @@
 #define SRC_MODULES_DEVICES_MOTION_MECA500_H_
 
 #include "core/Module.h"
-//#include "TcpIpLightController.h"
+#include "MotionDevice.h"
+
+#include "Poco/Net/IPAddress.h"
 
 /**
- * Module interfacing a Gardasoft light controlling device
+ * Module interfacing a Meca500 Mecademic robot arm
  */
-class Meca500: public Module
+class Meca500: public MotionDevice
 {
 public:
     Meca500(ModuleFactory* parent, std::string customName);
@@ -43,13 +45,17 @@ public:
     std::string description();
 
 private:
-    //std::string retrieveMAC(Poco::Net::IPAddress deviceIP);
-    //int count();
-
 //    void process();
+
+	 void setIpAddressFromFactoryTree();
+
+	 Poco::Net::IPAddress ipAddress;
 
     //Poco::Int64 getIntParameterValue(size_t paramIndex);
     //double getFloatParameterValue(size_t paramIndex);
+
+	 //double getFloatParameterValue(size_t paramIndex);
+	 //void setFloatParameterValue(size_t paramIndex, double value);
 
     ///**
     // * Apply simultanously all the parameters.

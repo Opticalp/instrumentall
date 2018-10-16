@@ -30,23 +30,19 @@
 
 #include "core/ModuleFactoryBranch.h"
 
+#include "IpDeviceFactory.h"
+
 #include "Poco/String.h"
 #include "Poco/NumberFormatter.h"
 
-//using namespace Poco::Net;
-
-//Meca500::Meca500(ModuleFactory* parent, std::string customName) :
-//	TcpIpLightController(parent, customName,
-//		30313, "VR\r", "", 5000)
-//{
-//	construct(customName);
-//}
+using namespace Poco::Net;
 
 Meca500::Meca500(ModuleFactory* parent, std::string customName):
-		Module(parent, customName)
+		MotionDevice(parent, customName, 
+			xAxis | yAxis | zAxis | aAxis | bAxis | cAxis)
 {
-	setInternalName("meca500"); //TODO: add ID
-
+	setIpAddressFromFactoryTree();
+	construct("meca500_ip" + ipAddress.toString(), customName);
 }
 
 std::string Meca500::description()
@@ -55,49 +51,17 @@ std::string Meca500::description()
 	// TODO: add ID, version, etc
 }
 
-//std::string Meca500::retrieveMAC(Poco::Net::IPAddress deviceIP)
-//{
-//	UdpFromNic udpComm(udpCommFromFactoryTree());
-//
-//    udpComm.sendDatagram("Gardasoft Search", 30310, SocketAddress(deviceIP, 30311));
-//
-//    IPAddress remote;
-//    std::string response;
-//    if (udpComm.getDatagram(30310, deviceIP, response))
-//    {
-//        // parse response
-//    	size_t pos = 0;
-//
-//    	// find third coma
-//    	for (int ind=0; ind<3; ind++)
-//    		pos = response.find(",", pos+1);
-//
-//    	if (pos != std::string::npos)
-//    		return std::string(response, pos+1, 12);
-//    }
-//
-//	throw Poco::RuntimeException("Meca500",
-//			"An error issued while trying to retrieve the device MAC at IP: "
-//			+ deviceIP.toString());
-//}
-//
-//int Meca500::count()
-//{
-//    std::string statusResp = comm.sendQuery("ST\r");
-//
-//	int cnt;
-//
-//	for(cnt = 0; cnt < 8; cnt++)
-//	{
-//		std::string chStr = Poco::format("CH %d,", cnt+1);
-//		poco_information(logger(), "looking for: " + chStr);
-//		if (statusResp.find(chStr) == std::string::npos)
-//			break;
-//	}
-//
-//	return cnt;
-//}
-//
+void Meca500::setIpAddressFromFactoryTree()
+{
+	ModuleFactoryBranch* dad =
+		reinterpret_cast<ModuleFactoryBranch*>(parent());
+
+	IpDeviceFactory* grandPa =
+		reinterpret_cast<IpDeviceFactory*>(dad->parent());
+
+	ipAddress = grandPa->parseSelector(dad->getSelector());
+}
+
 //void Meca500::applyParameters()
 //{
 //	poco_information(logger(), "apply " + name() + " parameters");
