@@ -39,7 +39,10 @@
 #include "Poco/Net/SocketAddress.h"
 #include "Poco/Net/MulticastSocket.h"
 #include "Poco/Net/StreamSocket.h"
-#include "Poco/Net/ICMPClient.h" // ping
+#include "Poco/Net/WebSocket.h"
+#include "Poco/Net/HTTPClientSession.h"
+#include "Poco/Net/HTTPRequest.h"
+#include "Poco/Net/HTTPResponse.h"
 
  /// socket receive timeout (ms)
 #define TIMEOUT 500
@@ -159,105 +162,56 @@ void IpDeviceFactory::findMeca500(std::vector<std::string>& devList)
 	}
 }
 
-//void IpDeviceFactory::findSmartek(std::vector<std::string>& devList)
-//{
-//    comm.sendBroadcast("Smartek#D\r", 30310, 30311);
-//
-//    std::string response;
-//    IPAddress sender;
-//
-//    for(int index=0; comm.getDatagram(30310, sender, response); index++)
-//    {
-//        poco_information(logger(), "Get direct response #"
-//                + Poco::NumberFormatter::format(index));
-//
-//        // no response analysis needed
-//        devList.push_back(buildSelector(sender, smartekDev));
-//    }
-//
-//    // response should be:
-//    // VV#VI#VN#VA#VT#VL#VF#VF#VF#VF#
-////    VV : Version Vendor : #[Vendor]#[Model]#[HardwareVersion]#[FirmwareVersion]
-////    VI : Version IP : #[MAC Address]#[IsDHCPMode (D, F)]#[IP Address]#[IP Mask]
-////    VN : Status User Name : #[UserName]
-////    VA : ID Check mode : #[ID Check Mode]
-////    VT : Model Type, Channels Count : #[TypeName]#[ChannelsCount]#[VoltagesCount]#[TriggersCount]
-////    VL : Current, Voltage Limits : #[MaxChannelCont]#[MaxChannelStrobe]#[MinVoltage]#[MaxVoltage]
-////    VF : DAC Offset : #[ChannelIndex]#[DAC Offset]
-//
-//// response example with the IPSC4:
-////    VV#Smartek#IPSCX#2.0#1.3\r
-////    VI#6CD1460101AA#D#00000000#00000000\r
-////    VN#STROBE\r
-////            \r
-////    VA#0\r
-////    VT#IPSC4#4#1#4\r
-////    VL#1000#10000#5#200\r
-////    VF#0#7\r
-////    VF#1#2\r
-////    VF#2#3\r
-////    VF#3#8\r
-//}
-
 bool IpDeviceFactory::hasMeca500(IPAddress IP)
 {
 	// open communication with the device
-	StreamSocket tcpSocket; ///< TCP stream socket
 	SocketAddress sa(IP, 10001); // monitoring port
+	HTTPClientSession httpSession(sa);
+	HTTPRequest simpleReq;
+	HTTPResponse resp;
 
 	try
 	{
-		tcpSocket.connect(sa, TIMEOUT * 1000);
-		//tcpSocket.connect(sa);
+		WebSocket tcpSocket(httpSession, simpleReq, resp);
+		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
+
+		std::string response;
+
+		char buffer[4096];
+		int length = 4096;
+
+		try
+		{
+			int len = tcpSocket.receiveBytes(buffer, length);
+
+			if (len)
+			{
+				response.assign(buffer, len);
+
+				poco_information(logger(),
+					Poco::NumberFormatter::format(len) + " bytes received: \n" +
+					decoratedCommandKeep(response));
+
+				tcpSocket.shutdown();
+				tcpSocket.close();
+				return true;
+			}
+		}
+		catch (Poco::TimeoutException&)
+		{
+			poco_information(logger(), "Timeout on monitoring port. "
+				"Please check if the homing routine was ran. ");
+		}
+
+		tcpSocket.shutdown();
+		tcpSocket.close();
+		return false;
 	}
 	catch (Poco::Exception& e)
 	{
-		poco_warning(logger(), "Not able to open the monitoring port: " + e.displayText() + ".\n" +
-			"No device on this IP, or the robot was not homed yet. ");
+		poco_warning(logger(), "Not able to open the monitoring port: " + e.displayText());
 		return false;
 	}
-
-	tcpSocket.setReuseAddress(true);
-	tcpSocket.setReusePort(true);
-	tcpSocket.setKeepAlive(true);
-	// tcpSocket.setNoDelay(true);
-	tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
-	//tcpSocket.setSendTimeout(TIMEOUT * 1000); // to check if the connections is still active
-
-	//std::string query("");
-	//tcpSocket.sendBytes(query.c_str(), length);
-
-	std::string response;
-
-	char buffer[4096];
-	int length = 4096;
-
-	try
-	{
-		int len = tcpSocket.receiveBytes(buffer, length);
-
-		if (len)
-		{
-			response.assign(buffer, len);
-
-			poco_information(logger(),
-				Poco::NumberFormatter::format(len) + " bytes received: \n" +
-				decoratedCommandKeep(response));
-
-			tcpSocket.shutdown();
-			tcpSocket.close();
-			return true;
-		}
-	}
-	catch (Poco::TimeoutException&)
-	{
-		poco_information(logger(), "Timeout on monitoring port. "
-			"Please check if the homing routine was ran. ");
-	}
-
-	tcpSocket.shutdown();
-	tcpSocket.close();
-	return false;
 }
 
 std::string IpDeviceFactory::buildSelector(IPAddress IP,
