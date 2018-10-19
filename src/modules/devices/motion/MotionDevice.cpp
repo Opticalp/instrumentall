@@ -96,6 +96,7 @@ void MotionDevice::construct(std::string internalName, std::string customName)
 
     setInPortCount(axisIndexCnt);
     setParameterCount(axisIndexCnt);
+	setOutPortCount(axisIndexCnt);
 
 	for (int ind = 0; ind < axisIndexCnt; ind++)
 	{
@@ -146,4 +147,61 @@ void MotionDevice::setParametersDefaultValue()
 		}
 
 	applyParameters();
+}
+
+void MotionDevice::allMotionSync(std::vector<double> positions)
+{
+	if (positions.size() != axisIndexCnt)
+		poco_bugcheck_msg("incorrect number of axis in position command");
+
+	for (int ind = 0; ind < axisIndexCnt; ind++)
+		singleMotion(axisMasks[ind], positions[ind]);
+}
+
+void MotionDevice::allMotionSeq(std::vector< std::vector<double> > positionsSeq)
+{
+	for (int time = 0; time < positionsSeq.size(); time++)
+		allMotionSync(positionsSeq[time]);
+}
+
+double MotionDevice::getFloatParameterValue(size_t paramIndex)
+{
+	try
+	{
+		switch (axisMasks.at(paramIndex))
+		{
+		case xAxis:
+			return 0; //TODO: 
+		case yAxis:
+			return 0; //TODO: 
+		case zAxis:
+			return 0; //TODO: 
+		case aAxis:
+			return 0; //TODO: 
+		case bAxis:
+			return 0; //TODO: 
+		case cAxis:
+			return 0; //TODO: 
+		default:
+			poco_bugcheck_msg("impossible index. axis unkown");
+			throw Poco::BugcheckException();
+		}
+	}
+	catch (std::out_of_range&)
+	{
+		poco_bugcheck_msg("impossible index. axis unkown");
+		throw Poco::BugcheckException();
+	}
+}
+
+void MotionDevice::setFloatParameterValue(size_t paramIndex, double value)
+{
+	try
+	{
+		singleMotion(axisMasks.at(paramIndex), value);
+	}
+	catch (std::out_of_range&)
+	{
+		poco_bugcheck_msg("impossible index. axis unkown");
+	}
 }

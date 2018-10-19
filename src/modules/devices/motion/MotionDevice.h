@@ -88,6 +88,17 @@ protected:
     bool useExtendedParams; ///< flag used to know if the extended parameters are used... or just the compat param
 
 	std::string axisName(int index) { return axisNames[index]; }
+
+	/// The derivated class should call this function at the end of this overloaded method
+	virtual double getFloatParameterValue(size_t paramIndex);
+
+	/// The derivated class should call this function at the end of this overloaded method
+	virtual void setFloatParameterValue(size_t paramIndex, double value);
+
+	virtual void singleMotion(int axis, double position) = 0;
+	virtual void allMotionSync(std::vector<double> positions);
+	virtual void allMotionSeq(std::vector< std::vector<double> > positionsSeq);
+
 private:
     /**
      * Set the default values of the parameters (if they have a default value)

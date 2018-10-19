@@ -62,6 +62,30 @@ void Meca500::setIpAddressFromFactoryTree()
 	ipAddress = grandPa->parseSelector(dad->getSelector());
 }
 
+double Meca500::getFloatParameterValue(size_t paramIndex)
+{
+	if (paramIndex < axisIndexCnt)
+		return MotionDevice::getFloatParameterValue(paramIndex);
+	else
+	{
+		// no supplementary parameter implemented here
+		poco_bugcheck_msg("invalid parameter index");
+		throw Poco::BugcheckException();
+	}
+}
+
+void Meca500::setFloatParameterValue(size_t paramIndex, double value)
+{
+	if (paramIndex < axisIndexCnt)
+		return MotionDevice::setFloatParameterValue(paramIndex, value);
+	else
+	{
+		// no supplementary parameter implemented here
+		poco_bugcheck_msg("invalid parameter index");
+		throw Poco::BugcheckException();
+	}
+}
+
 //void Meca500::applyParameters()
 //{
 //	poco_information(logger(), "apply " + name() + " parameters");
@@ -258,3 +282,8 @@ void Meca500::setIpAddressFromFactoryTree()
 //	else
 //		return response.at(pos+4)-'0';
 //}
+
+void Meca500::singleMotion(int axis, double position)
+{
+	poco_information(logger(), "single move axis: " + axisName(axis));
+}

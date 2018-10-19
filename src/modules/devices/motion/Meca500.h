@@ -54,8 +54,8 @@ private:
     //Poco::Int64 getIntParameterValue(size_t paramIndex);
     //double getFloatParameterValue(size_t paramIndex);
 
-	 //double getFloatParameterValue(size_t paramIndex);
-	 //void setFloatParameterValue(size_t paramIndex, double value);
+	 double getFloatParameterValue(size_t paramIndex);
+	 void setFloatParameterValue(size_t paramIndex, double value);
 
     ///**
     // * Apply simultanously all the parameters.
@@ -79,6 +79,8 @@ private:
     // *  * Err 5: (Warning only) A timing parameter was out of range and has been adjusted
     // */
     //int checkResponseError(std::string response);
+
+	 void singleMotion(int axis, double position);
 };
 
 #endif /* SRC_MODULES_DEVICES_MOTION_MECA500_H_ */
