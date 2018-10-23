@@ -112,6 +112,10 @@ void MotionDevice::construct(std::string internalName, std::string customName)
     notifyCreation();
 }
 
+void MotionDevice::process()
+{
+}
+
 void MotionDevice::setParametersDefaultValue()
 {
 	ParameterSet pSet;

@@ -46,7 +46,7 @@ using namespace Poco::Net;
 #define TIMEOUT 500
 
 // how many times timeout before aborting response awaiting
-#define TIMEOUT_COUNTER_LIMIT 100
+#define TIMEOUT_COUNTER_LIMIT 200
 
 Meca500::Meca500(ModuleFactory* parent, std::string customName):
 		MotionDevice(parent, customName, 
@@ -189,11 +189,20 @@ void Meca500::sendCommand(std::string command)
 std::string Meca500::sendQueryCheckResp(std::string query,
 	std::string respSubStr)
 {
-	std::string resp = sendQuery(query);
+    std::string resp;
 
+    try
+    {
+        resp = sendQuery(query);
+    }
+    catch (Poco::TimeoutException&)
+    {
+        poco_warning(logger(), "response awaiting timed out once. ");
+    }
+
+    int timeoutCnter = 0;
     while (resp.find(respSubStr) == std::string::npos)
     {
-        int timeoutCnter = 0;
         try
         {
             resp += waitResp();
@@ -261,7 +270,10 @@ Poco::Int64 Meca500::getIntParameterValue(size_t paramIndex)
 	switch (paramIndex)
 	{
 	case paramSimuMode:
-		return 0;
+        if (getStatus() & simu)
+            return 1;
+        else
+            return 0;
 	default:
 		poco_bugcheck_msg("invalid parameter index");
 		throw Poco::BugcheckException();
@@ -273,7 +285,30 @@ void Meca500::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
 	if (paramIndex != paramSimuMode)
 		poco_bugcheck_msg("invalid parameter index");
 
-	//TODO
+    if (value)
+    {
+        if (getIntParameterValue(paramIndex) == 0)
+        {
+            sendQueryCheckResp("DeactivateRobot", "[2004][Motors deactivated.]");
+            sendQueryCheckResp("ActivateSim", "[2045][The simulation mode is enabled.]");
+            sendQueryCheckResp("ActivateRobot", "[2000][Motors activated.]");
+            sendQueryCheckResp("Home", "[2002][Homing done.]");
+            sendQuery("SetEOB(0)");
+            sendQuery("SetEOM(1)");
+        }
+    }
+    else
+    {
+        if (getIntParameterValue(paramIndex) == 1)
+        {
+            sendQueryCheckResp("DeactivateRobot", "[2004][Motors deactivated.]");
+            sendQueryCheckResp("DeactivateSim", "[2046][The simulation mode is disabled.]");
+            sendQueryCheckResp("ActivateRobot", "[2000][Motors activated.]");
+            sendQuery("SetEOB(0)");
+            sendQuery("SetEOM(1)");
+            poco_warning(logger(), "Please reset manually the homing, TRF, WRF, ... ");
+        }
+    }
 }
 
 double Meca500::getFloatParameterValue(size_t paramIndex)
@@ -319,203 +354,6 @@ void Meca500::setStrParameterValue(size_t paramIndex, std::string value)
 
 	sendCommand(parseMultipleQueries(value));
 }
-
-//void Meca500::applyParameters()
-//{
-//	poco_information(logger(), "apply " + name() + " parameters");
-//
-//	// set pulse mode for every channel
-//	for (int ind = 1; ind <= chanCnt; ind++)
-//	{
-//		std::string command, resp;
-//
-//		double delay, duration;
-//		Poco::Int64 brightness;
-//
-//		getInternalFloatParameterValue(paramDelay, delay);
-//		getInternalFloatParameterValue(paramDuration, duration);
-//		getInternalIntParameterValue(paramBrightness, brightness);
-//
-//		command = Poco::format("RT%d,%.3f,%.3f,%?d\r",
-//				ind, duration, delay, brightness);
-//
-//		resp = comm.sendQuery(command);
-//
-//		if (*(resp.end()-1) != '>')
-//			poco_warning(logger(), "Command acknowledgment failed for command: \n" + command);
-//
-//		int err = checkResponseError(resp);
-//		if (err)
-//			poco_warning(logger(), Poco::format("Error #%d happened. ", err));
-//	}
-//
-//	// set output current rating
-//	for (int ind = 1; ind <= chanCnt; ind++)
-//	{
-//		std::string command, resp;
-//
-//		double nominalCur;
-//
-//		getInternalFloatParameterValue(paramNominalCurrent, nominalCur);
-//
-//		command = Poco::format("RR%d,%.3f\r",
-//				ind, nominalCur);
-//
-//		resp = comm.sendQuery(command);
-//
-//		if (*(resp.end()-1) != '>')
-//			poco_warning(logger(), "Command acknowledgment failed for command: \n" + command);
-//
-//		int err = checkResponseError(resp);
-//		if (err)
-//			poco_warning(logger(), Poco::format("Error #%d happened. ", err));
-//	}
-//
-//	refreshParameterInternalValues();
-//}
-//
-//#include "Poco/StringTokenizer.h"
-//#include "Poco/NumberParser.h"
-//
-//void Meca500::refreshParameterInternalValues()
-//{
-//	poco_information(logger(), "refreshing parameters value");
-//
-//	std::string resp = comm.sendQuery("ST\r");
-//
-//	std::vector<double> delay(chanCnt), duration(chanCnt), nominalCurr(chanCnt);
-//	std::vector<Poco::Int64> brightness(chanCnt);
-//
-//	for (int ind=1; ind <= chanCnt; ind++)
-//	{
-//		size_t startPos = resp.find(Poco::format("CH %d", ind));
-//		if (startPos == std::string::npos)
-//		{
-//			poco_error(logger(), "Not able to find CH "
-//					+ Poco::NumberFormatter::format(ind)
-//					+ " status response");
-//			return;
-//		}
-//
-//		size_t endPos = resp.find('\n', startPos); // termination is "\n\r"
-//
-//		std::string chanSt(resp, startPos, (endPos == std::string::npos) ? endPos : endPos - startPos);
-//
-//		poco_information(logger(), "Channel #" + Poco::NumberFormatter::format(ind)
-//			+ " status: ");
-//
-//		startPos = chanSt.find("MD");
-//		endPos = chanSt.find(",", startPos);
-//		switch (Poco::NumberParser::parse(chanSt.substr(startPos+3, endPos-startPos-3)))
-//		{
-//		case 0:
-//			poco_information(logger(), " - Continuous mode");
-//			break;
-//		case 1:
-//			poco_information(logger(), " - Pulsed mode");
-//			break;
-//		case 2:
-//			poco_information(logger(), " - Switched mode");
-//			break;
-//		default:
-//			poco_bugcheck_msg("unrecognized mode");
-//		}
-//
-//		startPos = chanSt.find("CS");
-//		endPos = chanSt.find(",", startPos);
-//		poco_assert(chanSt.at(endPos-1) == 'A'); // assuming ampers
-//		nominalCurr[ind-1] = Poco::NumberParser::parseFloat(chanSt.substr(startPos+3, endPos-startPos-3-1));
-//
-//		poco_information(logger(), " - nominal current: "
-//				+ Poco::NumberFormatter::format(nominalCurr[ind-1]) + " A");
-//
-//		startPos = chanSt.find("SE");
-//		endPos = chanSt.find(",", startPos);
-//		brightness[ind-1] = static_cast<Poco::Int64>(Poco::NumberParser::parseFloat(chanSt.substr(startPos+3, endPos-startPos-3)));
-//
-//		poco_information(logger(), " - brightness: " +
-//				Poco::NumberFormatter::format(brightness[ind-1]) + "%");
-//
-//		startPos = chanSt.find("DL");
-//		endPos = chanSt.find(",", startPos);
-//		poco_assert(chanSt.at(endPos-1) == 's');
-//		double multiplier = 1;
-//		if (chanSt.at(endPos-2) == 'u')
-//			multiplier = 0.001;
-//		else
-//			poco_assert(chanSt.at(endPos-2) == 'm');
-//		delay[ind-1] = multiplier * Poco::NumberParser::parseFloat(chanSt.substr(startPos+3, endPos-startPos-3-2));
-//
-//		poco_information(logger(), " - delay: "
-//				+ Poco::NumberFormatter::format(delay[ind-1]) + " ms");
-//
-//		startPos = chanSt.find("PU");
-//		endPos = chanSt.find(",", startPos);
-//		poco_assert(chanSt.at(endPos-1) == 's');
-//		multiplier = 1;
-//		if (chanSt.at(endPos-2) == 'u')
-//			multiplier = 0.001;
-//		else
-//			poco_assert(chanSt.at(endPos-2) == 'm');
-//		duration[ind-1] = multiplier * Poco::NumberParser::parseFloat(chanSt.substr(startPos+3, endPos-startPos-3-2));
-//
-//		poco_information(logger(), " - duration: "
-//				+ Poco::NumberFormatter::format(duration[ind-1]) + " ms");
-//	}
-//
-//	setParameterValue<double>(paramDelay, delay[0], false);
-//	setParameterValue<double>(paramDuration, duration[0], false);
-//	setParameterValue<double>(paramNominalCurrent, nominalCurr[0], false);
-//	setParameterValue<Poco::Int64>(paramBrightness, brightness[0], false);
-//
-//	// clear needApplication flag
-//	double purger;
-//	Poco::Int64 purger64;
-//	getInternalFloatParameterValue(paramDelay, purger);
-//	getInternalFloatParameterValue(paramDuration, purger);
-//	getInternalFloatParameterValue(paramNominalCurrent, purger);
-//	getInternalIntParameterValue(paramBrightness, purger64);
-//}
-//
-//Poco::Int64 Meca500::getIntParameterValue(size_t paramIndex)
-//{
-//	Poco::Int64 value;
-//	bool needApplication = getInternalIntParameterValue(paramIndex, value);
-//
-//	if (needApplication)
-//	{
-//		setParameterValue<Poco::Int64>(paramIndex, value, false);
-//		applyParameters();
-//		return getIntParameterValue(paramIndex);
-//	}
-//	else
-//		return value;
-//}
-//
-//double Meca500::getFloatParameterValue(size_t paramIndex)
-//{
-//	double value;
-//	bool needApplication = getInternalFloatParameterValue(paramIndex, value);
-//
-//	if (needApplication)
-//	{
-//		setParameterValue<double>(paramIndex, value, false);
-//		applyParameters();
-//		return getFloatParameterValue(paramIndex);
-//	}
-//	else
-//		return value;
-//}
-//
-//int Meca500::checkResponseError(std::string response)
-//{
-//	size_t pos = response.find("Err");
-//
-//	if (pos == std::string::npos)
-//		return 0;
-//	else
-//		return response.at(pos+4)-'0';
-//}
 
 void Meca500::singleMotion(int axis, double position)
 {

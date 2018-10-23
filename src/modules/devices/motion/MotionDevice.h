@@ -60,7 +60,9 @@ protected:
 	 */
 	void construct(std::string internalName, std::string customName);
 
-	enum axisMask ///< axes to be used as masks
+    void process();
+
+    enum axisMask ///< axes to be used as masks
 	{
 		xAxis = 001,
 		yAxis = 002,
@@ -79,11 +81,6 @@ protected:
      * Resize the parameter set from paramCompatCnt to new size
      */
     virtual void defineParameters() { }
-
-    /**
-     * Refresh the internal values of the parameters
-     */
-    virtual void refreshParameterInternalValues() { }
 
     bool useExtendedParams; ///< flag used to know if the extended parameters are used... or just the compat param
 

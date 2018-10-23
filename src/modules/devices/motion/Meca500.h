@@ -49,8 +49,6 @@ public:
     std::string description();
 
 private:
-//    void process();
-
 	 void setIpAddressFromFactoryTree();
 	 Poco::Net::IPAddress ipAddress;
 	 Poco::Net::StreamSocket tcpSocket;
