@@ -38,16 +38,15 @@
 
 #include "Poco/Net/SocketAddress.h"
 
-#include "Poco/Net/HTTPClientSession.h"
-#include "Poco/Net/HTTPRequest.h"
-#include "Poco/Net/HTTPResponse.h"
-
 #include "Poco/Net/NetException.h"
 
 using namespace Poco::Net;
 
 /// socket receive timeout (ms)
 #define TIMEOUT 500
+
+// how many times timeout before aborting response awaiting
+#define TIMEOUT_COUNTER_LIMIT 100
 
 Meca500::Meca500(ModuleFactory* parent, std::string customName):
 		MotionDevice(parent, customName, 
@@ -85,69 +84,53 @@ void Meca500::setIpAddressFromFactoryTree()
 
 void Meca500::initComm()
 {
+	setLogger("module.Meca500.startup");
+
 	// open communication with the device
 	SocketAddress sa(ipAddress, 10000); // control port
-	HTTPClientSession httpSession(sa);
-	HTTPRequest simpleReq;
-	HTTPResponse resp;
 
 	try
 	{
-		tcpSocket = new WebSocket(httpSession, simpleReq, resp);
-		tcpSocket->setReceiveTimeout(TIMEOUT * 1000);
+		tcpSocket.connect(sa);
+		tcpSocket.setReuseAddress(true);
+		tcpSocket.setReusePort(true);
+		tcpSocket.setKeepAlive(true);
+		// tcpSocket.setNoDelay(true);
+		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
+		tcpSocket.setSendTimeout(TIMEOUT * 1000); // to check if the connections is still active
 
-		sendQuery("GetStatusRobot");
+		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
 
-		// if not initialized correctly: closeComm and quit
+		try
+		{
+			waitResp(); // purge input
+		}
+		catch (Poco::TimeoutException&)
+		{
+			poco_warning(logger(), "No msg received at socket connexion");
+		}
 
-		// if homed
-		sendQuery("GetPose");
-
-		sendQuery("SetEOB 0");
-		sendQuery("SetEOM 1");
-
-		//std::string response;
-
-		//char buffer[4096];
-		//int length = 4096;
-
-		//try
-		//{
-		//	int len = tcpSocket->receiveBytes(buffer, length);
-
-		//	if (len)
-		//	{
-		//		response.assign(buffer, len);
-
-		//		poco_information(logger(),
-		//			Poco::NumberFormatter::format(len) + " bytes received: \n" +
-		//			decoratedCommandKeep(response));
-
-		//		tcpSocket->shutdown();
-		//		tcpSocket->close();
-		//		return true;
-		//	}
-		//}
-		//catch (Poco::TimeoutException&)
-		//{
-		//	poco_information(logger(), "Timeout on monitoring port. "
-		//		"Please check if the homing routine was ran. ");
-		//}
+        if (isErrored(sendQuery("GetStatusRobot"))
+            || isErrored(sendQuery("GetPose"))
+            || isErrored(sendQuery("SetEOB(0)"))
+            || isErrored(sendQuery("SetEOM(1)")))
+        {
+            closeComm();
+            throw Poco::RuntimeException("Robot init error");
+        }
 	}
 	catch (Poco::Exception& e)
 	{
 		poco_warning(logger(), "Not able to open the control port: " + e.displayText());
 	}
-
 }
 
 void Meca500::closeComm()
 {
 	// close comm
-	tcpSocket->shutdown();
-	tcpSocket->close();
-
-	delete tcpSocket;
+    waitResp(); // purge input
+	tcpSocket.shutdown();
+	tcpSocket.close();
 }
 
 std::string Meca500::sendQuery(std::string query)
@@ -160,7 +143,7 @@ std::string Meca500::sendQuery(std::string query)
 	try
 	{
 		// we send length + 1 chars to include the \0 char
-		tcpSocket->sendBytes(query.c_str(), length + 1); 
+		tcpSocket.sendBytes(query.c_str(), length + 1); 
 
 		poco_information(logger(),
 			Poco::NumberFormatter::format(length) + " bytes sent: \n" +
@@ -174,13 +157,51 @@ std::string Meca500::sendQuery(std::string query)
 	return waitResp();
 }
 
+void Meca500::sendCommand(std::string command)
+{
+    Poco::FastMutex::ScopedLock lock(usingSocket);
+
+    int length = command.size();
+    try
+    {
+        // we send length + 1 chars to include the \0 char
+        tcpSocket.sendBytes(command.c_str(), length + 1);
+
+        poco_information(logger(),
+            Poco::NumberFormatter::format(length) + " bytes sent: \n" +
+            decoratedCommandKeep(command, length + 1));
+    }
+    catch (Poco::Exception& e)
+    {
+        poco_error(logger(), command + " [## SEND ERROR ##]: " + e.displayText());
+    }
+}
+
 std::string Meca500::sendQueryCheckResp(std::string query,
 	std::string respSubStr)
 {
 	std::string resp = sendQuery(query);
 
-	while (resp.find(respSubStr) == std::string::npos)
-		resp += waitResp();
+    while (resp.find(respSubStr) == std::string::npos)
+    {
+        int timeoutCnter = 0;
+        try
+        {
+            resp += waitResp();
+        }
+        catch (Poco::TimeoutException&)
+        {
+            poco_warning(logger(), "response awaiting timed out (#"
+                + Poco::NumberFormatter::format(timeoutCnter)
+                + ")");
+            timeoutCnter++;
+            if (timeoutCnter > TIMEOUT_COUNTER_LIMIT)
+                throw;
+        }
+
+        if (isErrored(resp))
+            throw Poco::RuntimeException("Meca500 error");
+    }
 
 	return resp;
 }
@@ -191,7 +212,7 @@ std::string Meca500::waitResp()
 
 	char buffer[4096];
 	int length = 4096;
-	int len = tcpSocket->receiveBytes(buffer, length);
+	int len = tcpSocket.receiveBytes(buffer, length);
 
 	if (len)
 	{
@@ -207,6 +228,36 @@ std::string Meca500::waitResp()
 	}
 
 	return response;
+}
+
+void Meca500::defineParameters()
+{
+	poco_information(logger(), "define device-specific parameters");
+
+	setParameterCount(totalParamCnt);
+
+	addParameter(paramQuery, "query", "direct query to the robot", ParamItem::typeString);
+	addParameter(paramSimuMode, "simuMode", "go to simulation mode (0=simu, 1=real motion)", ParamItem::typeInteger);
+}
+
+Poco::Int64 Meca500::getIntParameterValue(size_t paramIndex)
+{
+	switch (paramIndex)
+	{
+	case paramSimuMode:
+		return 0;
+	default:
+		poco_bugcheck_msg("invalid parameter index");
+		throw Poco::BugcheckException();
+	}
+}
+
+void Meca500::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
+{
+	if (paramIndex != paramSimuMode)
+		poco_bugcheck_msg("invalid parameter index");
+
+	//TODO
 }
 
 double Meca500::getFloatParameterValue(size_t paramIndex)
@@ -231,6 +282,26 @@ void Meca500::setFloatParameterValue(size_t paramIndex, double value)
 		poco_bugcheck_msg("invalid parameter index");
 		throw Poco::BugcheckException();
 	}
+}
+
+std::string Meca500::getStrParameterValue(size_t paramIndex)
+{
+	switch (paramIndex)
+	{
+	case paramQuery:
+		return sendQuery("GetStatusRobot");
+	default:
+		poco_bugcheck_msg("invalid parameter index");
+		throw Poco::BugcheckException();
+	}
+}
+
+void Meca500::setStrParameterValue(size_t paramIndex, std::string value)
+{
+	if (paramIndex != paramQuery)
+		poco_bugcheck_msg("invalid parameter index");
+
+	sendCommand(value);
 }
 
 //void Meca500::applyParameters()
@@ -494,14 +565,60 @@ double Meca500::getPosition(int axis)
 	}
 }
 
+#include "Poco/RegularExpression.h"
+#include "Poco/NumberParser.h"
+
+using Poco::RegularExpression;
+using Poco::NumberParser;
+
 void Meca500::getPosition(double& x, double& y, double& z, double& a, double& b, double& c)
 {
+	std::string response = sendQuery("GetPose");
 
+	// parse answer, e.g.
+	// [2027][-182.255,0.000,-124.203,0.000,90.000,0.000]
+	RegularExpression regexp("\\[2027\\]\\[(-?[0-9]+\\.[0-9]+),(-?[0-9]+\\.[0-9]+)"
+		",(-?[0-9]+\\.[0-9]+),(-?[0-9]+\\.[0-9]+)"
+		",(-?[0-9]+\\.[0-9]+),(-?[0-9]+\\.[0-9]+)\\]");
+
+    std::vector<std::string> strVec;
+    regexp.split(response, 0, strVec);
+    poco_information(logger(), "position parsing: got " 
+        + Poco::NumberFormatter::format(strVec.size()-1) + " coords");
+
+    if (strVec.size() != 7)
+        throw Poco::DataFormatException("not able to parse the Meca500 position");
+
+    x = NumberParser::parseFloat(strVec[1]);
+    y = NumberParser::parseFloat(strVec[2]);
+    z = NumberParser::parseFloat(strVec[3]);
+    a = NumberParser::parseFloat(strVec[4]);
+    b = NumberParser::parseFloat(strVec[5]);
+    c = NumberParser::parseFloat(strVec[6]);
 }
+
+
+#include "Poco/Format.h"
 
 void Meca500::setPosition(double x, double y, double z, double a, double b, double c)
 {
-	// move
+	// move and wait end of move
+    sendQueryCheckResp(
+        Poco::format("MoveLin(%f,%f,%f,%f,%f,%f)",x,y,z,a,b,c),
+        "[3004][End of movement.]");
+}
 
-	// wait end of move
+bool Meca500::isErrored(std::string resp)
+{
+    RegularExpression regexp("\\[(10[0-9][0-9])\\]\\[(.*)\\]");
+
+    std::vector<std::string> vec;
+    if (regexp.split(resp, vec))
+    {
+        poco_error(logger(), name() + " error #" + vec[0]
+            + ": " + vec[1]);
+        return true;
+    }
+    else
+        return false;
 }

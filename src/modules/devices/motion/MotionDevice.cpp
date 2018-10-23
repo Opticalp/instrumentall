@@ -171,18 +171,13 @@ double MotionDevice::getFloatParameterValue(size_t paramIndex)
 		switch (axisMasks.at(paramIndex))
 		{
 		case xAxis:
-			return 0; //TODO: 
 		case yAxis:
-			return 0; //TODO: 
 		case zAxis:
-			return 0; //TODO: 
 		case aAxis:
-			return 0; //TODO: 
 		case bAxis:
-			return 0; //TODO: 
 		case cAxis:
-			return 0; //TODO: 
-		default:
+            return getPosition(axisMasks.at(paramIndex));
+        default:
 			poco_bugcheck_msg("impossible index. axis unkown");
 			throw Poco::BugcheckException();
 		}

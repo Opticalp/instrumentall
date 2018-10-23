@@ -33,7 +33,7 @@
 #include "MotionDevice.h"
 
 #include "Poco/Net/IPAddress.h"
-#include "Poco/Net/WebSocket.h"
+#include "Poco/Net/StreamSocket.h"
 
 #include "Poco/Mutex.h"
 
@@ -53,7 +53,7 @@ private:
 
 	 void setIpAddressFromFactoryTree();
 	 Poco::Net::IPAddress ipAddress;
-	 Poco::Net::WebSocket* tcpSocket;
+	 Poco::Net::StreamSocket tcpSocket;
 
 	 void initComm();
 	 void closeComm();
@@ -64,6 +64,13 @@ private:
 	 * @return response
 	 */
 	 std::string sendQuery(std::string query);
+
+     /**
+      * Send command
+      *
+      * do not wait for an answer
+      */
+     void sendCommand(std::string command);
 
 	 /**
 	 * Send the given query and wait that the given substring is present in the response
@@ -80,21 +87,31 @@ private:
 	 */
 	 std::string waitResp();
 
+	 enum supplParameters
+	 {
+		 paramQuery=6, // direct query
+		 paramSimuMode, // change to simu mode (0, 1)
+		 totalParamCnt
+	 };
+
 	 /**
 	  * Define additional parameters
 	  * 
 	  * - simu mode
 	  * - send command
 	  */
-	 // void defineParameters();
+	 void defineParameters();
 
-    //Poco::Int64 getIntParameterValue(size_t paramIndex);
-    //double getFloatParameterValue(size_t paramIndex);
+    Poco::Int64 getIntParameterValue(size_t paramIndex);
+	void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
 
-	 double getFloatParameterValue(size_t paramIndex);
-	 void setFloatParameterValue(size_t paramIndex, double value);
+	double getFloatParameterValue(size_t paramIndex);
+	void setFloatParameterValue(size_t paramIndex, double value);
 
-    ///**
+	std::string getStrParameterValue(size_t paramIndex);
+	void setStrParameterValue(size_t paramIndex, std::string value);
+
+	///**
     // * Apply simultanously all the parameters.
     // *
     // * use TcpIpWithWatchDog variable comm for the communication
@@ -124,6 +141,8 @@ private:
 
 	 void getPosition(double& x, double& y, double& z, double& a, double& b, double& c);
 	 void setPosition(double x, double y, double z, double a, double b, double c);
+
+     bool isErrored(std::string resp);
 
 	 Poco::FastMutex usingSocket;
 };
