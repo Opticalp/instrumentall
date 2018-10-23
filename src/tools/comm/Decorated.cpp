@@ -32,7 +32,14 @@ std::string decoratedCommand(std::string command)
 {
     size_t place;
 
-    place = command.find('\r');
+	place = command.find('\0');
+	while (place != std::string::npos)
+	{
+		command.replace(place, 1, "\\0");
+		place = command.find('\0');
+	}
+	
+	place = command.find('\r');
     while (place != std::string::npos)
     {
         command.replace(place,1,"\\r");
@@ -49,11 +56,28 @@ std::string decoratedCommand(std::string command)
     return command;
 }
 
+std::string decoratedCommand(std::string command, size_t length)
+{
+	if (length <= command.size())
+		return decoratedCommand(command.substr(0, length));
+	else if (length == command.size() + 1)
+		return decoratedCommand(command) + "\\0";
+	else
+		throw std::out_of_range("string overflow");
+}
+
 std::string decoratedCommandKeep(std::string command)
 {
     size_t place;
 
-    place = command.find('\n');
+	place = command.find('\0');
+	while (place != std::string::npos)
+	{
+		command.replace(place, 1, "\\0\0");
+		place = command.find('\0', place + 3);
+	}
+
+	place = command.find('\n');
     while (place != std::string::npos)
     {
         command.replace(place,1,"\\n\n");
@@ -68,4 +92,14 @@ std::string decoratedCommandKeep(std::string command)
     }
 
     return command;
+}
+
+std::string decoratedCommandKeep(std::string command, size_t length)
+{
+	if (length <= command.size())
+		return decoratedCommandKeep(command.substr(0, length));
+	else if (length == command.size() + 1)
+		return decoratedCommandKeep(command) + "\\0\n";
+	else
+		throw std::out_of_range("string overflow");
 }

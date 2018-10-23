@@ -32,17 +32,38 @@
 #include <string>
 
 /**
+ * Replace \0 by explicit '\0'
  * Replace \r by explicit '\r'
  * Replace \n by explicit '\n'
  */
 std::string decoratedCommand(std::string command);
 
 /**
+ * Replace \0 by explicit '\0'
+ * Replace \r by explicit '\r'
+ * Replace \n by explicit '\n'
+ *
+ * @param command string to be parsed
+ * @param length required length. If length == command.size() + 1, a null terminator is appended
+ */
+std::string decoratedCommand(std::string command, size_t length);
+
+/**
+ * Replace \0 by explicit '\0'
  * Replace \r by explicit '\r'
  * Replace \n by explicit '\n'
  *
  * Keep a cariage return
  */
 std::string decoratedCommandKeep(std::string command);
+
+/**
+* Replace \0 by explicit '\0'
+* Replace \r by explicit '\r'
+* Replace \n by explicit '\n'
+*
+* Keep a cariage return
+*/
+std::string decoratedCommandKeep(std::string command, size_t length);
 
 #endif /* SRC_TOOLS_DECORATED_H_ */

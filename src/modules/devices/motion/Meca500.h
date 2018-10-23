@@ -33,6 +33,9 @@
 #include "MotionDevice.h"
 
 #include "Poco/Net/IPAddress.h"
+#include "Poco/Net/WebSocket.h"
+
+#include "Poco/Mutex.h"
 
 /**
  * Module interfacing a Meca500 Mecademic robot arm
@@ -41,6 +44,7 @@ class Meca500: public MotionDevice
 {
 public:
     Meca500(ModuleFactory* parent, std::string customName);
+	~Meca500();
 
     std::string description();
 
@@ -48,8 +52,41 @@ private:
 //    void process();
 
 	 void setIpAddressFromFactoryTree();
-
 	 Poco::Net::IPAddress ipAddress;
+	 Poco::Net::WebSocket* tcpSocket;
+
+	 void initComm();
+	 void closeComm();
+
+	 /**
+	 * Send the given query
+	 *
+	 * @return response
+	 */
+	 std::string sendQuery(std::string query);
+
+	 /**
+	 * Send the given query and wait that the given substring is present in the response
+	 *
+	 * @return response
+	 */
+	 std::string sendQueryCheckResp(std::string query, std::string respSubStr);
+
+	 /**
+	 * Wait a response
+	 *
+	 * @return the response
+	 * @throw Poco::TimeoutException
+	 */
+	 std::string waitResp();
+
+	 /**
+	  * Define additional parameters
+	  * 
+	  * - simu mode
+	  * - send command
+	  */
+	 // void defineParameters();
 
     //Poco::Int64 getIntParameterValue(size_t paramIndex);
     //double getFloatParameterValue(size_t paramIndex);
@@ -81,6 +118,14 @@ private:
     //int checkResponseError(std::string response);
 
 	 void singleMotion(int axis, double position);
+	 void allMotionSync(std::vector<double> positions);
+
+	 double getPosition(int axis);
+
+	 void getPosition(double& x, double& y, double& z, double& a, double& b, double& c);
+	 void setPosition(double x, double y, double z, double a, double b, double c);
+
+	 Poco::FastMutex usingSocket;
 };
 
 #endif /* SRC_MODULES_DEVICES_MOTION_MECA500_H_ */

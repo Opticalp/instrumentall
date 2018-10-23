@@ -31,18 +31,39 @@
 #include "core/ModuleFactoryBranch.h"
 
 #include "IpDeviceFactory.h"
+#include "tools/comm/Decorated.h"
 
 #include "Poco/String.h"
 #include "Poco/NumberFormatter.h"
 
+#include "Poco/Net/SocketAddress.h"
+
+#include "Poco/Net/HTTPClientSession.h"
+#include "Poco/Net/HTTPRequest.h"
+#include "Poco/Net/HTTPResponse.h"
+
+#include "Poco/Net/NetException.h"
+
 using namespace Poco::Net;
+
+/// socket receive timeout (ms)
+#define TIMEOUT 500
 
 Meca500::Meca500(ModuleFactory* parent, std::string customName):
 		MotionDevice(parent, customName, 
 			xAxis | yAxis | zAxis | aAxis | bAxis | cAxis)
 {
 	setIpAddressFromFactoryTree();
+
+	// create the control socket
+	initComm();
+
 	construct("meca500_ip" + ipAddress.toString(), customName);
+}
+
+Meca500::~Meca500()
+{
+	closeComm();
 }
 
 std::string Meca500::description()
@@ -60,6 +81,132 @@ void Meca500::setIpAddressFromFactoryTree()
 		reinterpret_cast<IpDeviceFactory*>(dad->parent());
 
 	ipAddress = grandPa->parseSelector(dad->getSelector());
+}
+
+void Meca500::initComm()
+{
+	// open communication with the device
+	SocketAddress sa(ipAddress, 10000); // control port
+	HTTPClientSession httpSession(sa);
+	HTTPRequest simpleReq;
+	HTTPResponse resp;
+
+	try
+	{
+		tcpSocket = new WebSocket(httpSession, simpleReq, resp);
+		tcpSocket->setReceiveTimeout(TIMEOUT * 1000);
+
+		sendQuery("GetStatusRobot");
+
+		// if not initialized correctly: closeComm and quit
+
+		// if homed
+		sendQuery("GetPose");
+
+		sendQuery("SetEOB 0");
+		sendQuery("SetEOM 1");
+
+		//std::string response;
+
+		//char buffer[4096];
+		//int length = 4096;
+
+		//try
+		//{
+		//	int len = tcpSocket->receiveBytes(buffer, length);
+
+		//	if (len)
+		//	{
+		//		response.assign(buffer, len);
+
+		//		poco_information(logger(),
+		//			Poco::NumberFormatter::format(len) + " bytes received: \n" +
+		//			decoratedCommandKeep(response));
+
+		//		tcpSocket->shutdown();
+		//		tcpSocket->close();
+		//		return true;
+		//	}
+		//}
+		//catch (Poco::TimeoutException&)
+		//{
+		//	poco_information(logger(), "Timeout on monitoring port. "
+		//		"Please check if the homing routine was ran. ");
+		//}
+	}
+	catch (Poco::Exception& e)
+	{
+		poco_warning(logger(), "Not able to open the control port: " + e.displayText());
+	}
+
+}
+
+void Meca500::closeComm()
+{
+	// close comm
+	tcpSocket->shutdown();
+	tcpSocket->close();
+
+	delete tcpSocket;
+}
+
+std::string Meca500::sendQuery(std::string query)
+{
+	Poco::FastMutex::ScopedLock lock(usingSocket);
+
+	int length;
+
+	length = query.size();
+	try
+	{
+		// we send length + 1 chars to include the \0 char
+		tcpSocket->sendBytes(query.c_str(), length + 1); 
+
+		poco_information(logger(),
+			Poco::NumberFormatter::format(length) + " bytes sent: \n" +
+			decoratedCommandKeep(query, length + 1));
+	}
+	catch (Poco::Exception& e)
+	{
+		poco_error(logger(), query + " [## SEND ERROR ##]: " + e.displayText());
+	}
+
+	return waitResp();
+}
+
+std::string Meca500::sendQueryCheckResp(std::string query,
+	std::string respSubStr)
+{
+	std::string resp = sendQuery(query);
+
+	while (resp.find(respSubStr) == std::string::npos)
+		resp += waitResp();
+
+	return resp;
+}
+
+std::string Meca500::waitResp()
+{
+	std::string response;
+
+	char buffer[4096];
+	int length = 4096;
+	int len = tcpSocket->receiveBytes(buffer, length);
+
+	if (len)
+	{
+		response.assign(buffer, len);
+
+		poco_information(logger(),
+			Poco::NumberFormatter::format(len) + " bytes received: \n" +
+			decoratedCommandKeep(response));
+	}
+	else
+	{
+		throw Poco::Net::ConnectionResetException("Connection reset by peer");
+	}
+
+	return response;
 }
 
 double Meca500::getFloatParameterValue(size_t paramIndex)
@@ -286,4 +433,75 @@ void Meca500::setFloatParameterValue(size_t paramIndex, double value)
 void Meca500::singleMotion(int axis, double position)
 {
 	poco_information(logger(), "single move axis: " + axisName(axis));
+
+	double x, y, z, a, b, c;
+	getPosition(x, y, z, a, b, c);
+
+	// change position
+	switch (axis)
+	{
+	case xAxis:
+		setPosition(x, y, z, a, b, c);
+		break;
+	case yAxis:
+		setPosition(x, y, z, a, b, c);
+		break;
+	case zAxis:
+		setPosition(x, y, z, a, b, c);
+		break;
+	case aAxis:
+		setPosition(x, y, z, a, b, c);
+		break;
+	case bAxis:
+		setPosition(x, y, z, a, b, c);
+		break;
+	case cAxis:
+		setPosition(x, y, z, a, b, c);
+		break;
+	default:
+		poco_bugcheck_msg("impossible axis index");
+		throw Poco::BugcheckException();
+	}
+}
+
+void Meca500::allMotionSync(std::vector<double> positions)
+{
+	setPosition(positions[xIndex], positions[yIndex], positions[zIndex], 
+		positions[aIndex], positions[bIndex], positions[cIndex]);
+}
+
+double Meca500::getPosition(int axis)
+{
+	double x, y, z, a, b, c;
+	getPosition(x, y, z, a, b, c);
+	switch (axis)
+	{
+	case xAxis:
+		return x;
+	case yAxis: 
+		return y;
+	case zAxis:
+		return z;
+	case aAxis:
+		return a;
+	case bAxis:
+		return b;
+	case cAxis:
+		return c;
+	default:
+		poco_bugcheck_msg("impossible axis index");
+		throw Poco::BugcheckException();
+	}
+}
+
+void Meca500::getPosition(double& x, double& y, double& z, double& a, double& b, double& c)
+{
+
+}
+
+void Meca500::setPosition(double x, double y, double z, double a, double b, double c)
+{
+	// move
+
+	// wait end of move
 }

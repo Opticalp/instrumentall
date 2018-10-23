@@ -99,6 +99,8 @@ protected:
 	virtual void allMotionSync(std::vector<double> positions);
 	virtual void allMotionSeq(std::vector< std::vector<double> > positionsSeq);
 
+	virtual double getPosition(int axis) = 0;
+
 private:
     /**
      * Set the default values of the parameters (if they have a default value)
