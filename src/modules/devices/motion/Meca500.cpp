@@ -110,8 +110,9 @@ void Meca500::initComm()
 			poco_warning(logger(), "No msg received at socket connexion");
 		}
 
-        if (isErrored(sendQuery("GetStatusRobot"))
-            || isErrored(sendQuery("GetPose"))
+        fixStatus(getStatus());
+
+        if (isErrored(sendQuery("GetPose"))
             || isErrored(sendQuery("SetEOB(0)"))
             || isErrored(sendQuery("SetEOM(1)")))
         {
@@ -128,7 +129,15 @@ void Meca500::initComm()
 void Meca500::closeComm()
 {
 	// close comm
-    waitResp(); // purge input
+    try 
+    {
+        waitResp(); // purge input
+    }
+    catch (Poco::TimeoutException&)
+    {
+        // nothing to do
+    }
+
 	tcpSocket.shutdown();
 	tcpSocket.close();
 }
@@ -227,6 +236,13 @@ std::string Meca500::waitResp()
 		throw Poco::Net::ConnectionResetException("Connection reset by peer");
 	}
 
+    for (std::string::iterator it = response.begin(),
+        ite = response.end(); it != ite; it++)
+    {
+        if (*it == '\0')
+            *it = '\n';
+    }
+
 	return response;
 }
 
@@ -301,7 +317,7 @@ void Meca500::setStrParameterValue(size_t paramIndex, std::string value)
 	if (paramIndex != paramQuery)
 		poco_bugcheck_msg("invalid parameter index");
 
-	sendCommand(value);
+	sendCommand(parseMultipleQueries(value));
 }
 
 //void Meca500::applyParameters()
@@ -571,6 +587,56 @@ double Meca500::getPosition(int axis)
 using Poco::RegularExpression;
 using Poco::NumberParser;
 
+int Meca500::getStatus()
+{
+    std::string resp = sendQuery("GetStatusRobot");
+
+    RegularExpression regexp("\\[2007\\]\\[([01]),([01]),([01]),([01]),([01]),([01]),([01])\\]");
+    std::vector<std::string> strVec;
+    regexp.split(resp, 0, strVec);
+
+    poco_information(logger(), "status parsing: got "
+        + Poco::NumberFormatter::format(strVec.size() - 1) + " bits");
+
+    if (strVec.size() != 8)
+        throw Poco::DataFormatException("not able to parse the Meca500 status");
+
+    int status = 0;
+
+    if (strVec[1] == "1")
+        status |= activated;
+    if (strVec[2] == "1")
+        status |= homed;
+    if (strVec[3] == "1")
+        status |= simu;
+    if (strVec[4] == "1")
+        status |= errored;
+    if (strVec[5] == "1")
+        status |= paused;
+    if (strVec[6] == "1")
+        status |= eobEnabled;
+    if (strVec[7] == "1")
+        status |= eomEnabled;
+
+    return status;
+}
+
+
+void Meca500::fixStatus(int status)
+{
+    if (status & errored)
+    {
+        if (sendQuery("ResetError").find("[2005][The error was reset.]") != std::string::npos)
+            poco_information(logger(), "The error was reset");
+        else
+            throw Poco::RuntimeException("unable to reset robot error");
+    }
+
+    if (status & paused)
+        sendQueryCheckResp("ResumeMotion","[2043][Motion resumed.]");
+}
+
+
 void Meca500::getPosition(double& x, double& y, double& z, double& a, double& b, double& c)
 {
 	std::string response = sendQuery("GetPose");
@@ -622,3 +688,12 @@ bool Meca500::isErrored(std::string resp)
     else
         return false;
 }
+
+std::string Meca500::parseMultipleQueries(std::string queries)
+{
+    RegularExpression regexp("[\\n\\r\\t\\;]+");
+    regexp.subst(queries, std::string("\0",1), RegularExpression::RE_GLOBAL);
+
+    return queries;
+}
+

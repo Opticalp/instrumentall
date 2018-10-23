@@ -58,6 +58,25 @@ private:
 	 void initComm();
 	 void closeComm();
 
+     int getStatus();
+     void fixStatus(int status);
+
+     enum statusRobot
+     {
+         activated = 0x01,
+         homed = 0x02,
+         simu = 0x04,
+         errored = 0x08,
+         paused = 0x10,
+         eobEnabled = 0x20,
+         eomEnabled = 0x40,
+     };
+
+     /**
+      * replace newline or semicolon by \0 in query
+      */
+     std::string parseMultipleQueries(std::string queries);
+
 	 /**
 	 * Send the given query
 	 *
