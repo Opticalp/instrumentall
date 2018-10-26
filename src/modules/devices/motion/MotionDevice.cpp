@@ -100,8 +100,8 @@ void MotionDevice::construct(std::string internalName, std::string customName)
 
 	for (int ind = 0; ind < axisIndexCnt; ind++)
 	{
-		addInPort(axisName(ind), axisName(ind) + " position", DataItem::typeFloat, ind);
-		addOutPort(axisName(ind), axisName(ind) + " position after movement", DataItem::typeFloat, ind);
+		addInPort(axisName(ind), axisName(ind) + " position", DataItem::typeDblFloat, ind);
+		addOutPort(axisName(ind), axisName(ind) + " position after movement", DataItem::typeDblFloat, ind);
 		addParameter(ind, axisName(ind) + "Pos", "Get or set " + axisName(ind) + " position", ParamItem::typeFloat);
 	}
 
@@ -112,8 +112,65 @@ void MotionDevice::construct(std::string internalName, std::string customName)
     notifyCreation();
 }
 
-void MotionDevice::process()
+void MotionDevice::process(int startCond)
 {
+    switch (startCond)
+    {
+    case noDataStartState:
+        poco_information(logger(), name() + ": no input data. Exiting. ");
+        return;
+    case allDataStartState:
+        break;
+    default:
+        poco_bugcheck_msg("impossible start condition");
+        throw Poco::BugcheckException();
+    }
+
+    // get data from inputs
+    std::vector<DataAttributeIn> attrIn(axisIndexCnt, DataAttributeIn());
+    std::vector<double> dataIn(axisIndexCnt, 0);
+    std::vector<double*> pDataOut(axisIndexCnt, NULL);
+
+    double* pData;
+    for (int ind=0; ind < axisIndexCnt; ind++)
+    {
+        readLockInPort(ind);
+        readInPortData<double>(ind, pData);
+        dataIn[ind] = *pData;
+        readInPortDataAttribute(ind, &(attrIn[ind]));
+    }
+
+    // reserve outputs (in case of pending task using the results)
+    reserveLockOut(); // recursive outMutex locked once
+
+    std::set<size_t> allPorts;
+    for (int ind = 0; ind < axisIndexCnt; ind++)
+        allPorts.insert(ind);
+
+    try
+    {
+        while (allPorts.size())
+        {
+            int ind = reserveOutPortOneOf(allPorts);
+            getDataToWrite<double>(ind, pDataOut[ind]);
+        }
+    }
+    catch (...) // prevent deadlock if canceling during reserveOutPortOneOf
+    {
+        unlockOut();
+        throw;
+    }
+
+    unlockOut(); // outMutex released twice. OK. unlocked.
+
+    // motion command
+    allMotionSync(dataIn);
+
+    for (int ind = 0; ind < axisIndexCnt; ind++)
+    {
+        *(pDataOut[ind]) = getPosition(axisMask(ind));
+        notifyOutPortReady(ind, attrIn[ind]); // outMutex released once here
+    }
 }
 
 void MotionDevice::setParametersDefaultValue()

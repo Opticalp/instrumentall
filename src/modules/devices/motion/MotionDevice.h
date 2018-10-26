@@ -60,7 +60,14 @@ protected:
 	 */
 	void construct(std::string internalName, std::string customName);
 
-    void process();
+    /**
+     * Main logic
+     *
+     * Motion starts when all inputs are present. 
+     * TODO: if sequence, launch the movement only when the sequence 
+     * is totally arrived
+     */
+    void process(int startCond);
 
     enum axisMask ///< axes to be used as masks
 	{
@@ -84,7 +91,8 @@ protected:
 
     bool useExtendedParams; ///< flag used to know if the extended parameters are used... or just the compat param
 
-	std::string axisName(int index) { return axisNames[index]; }
+	std::string axisName(int index) { return axisNames.at(index); }
+    int axisMask(int index) { return axisMasks.at(index); }
 
 	/// The derivated class should call this function at the end of this overloaded method
 	virtual double getFloatParameterValue(size_t paramIndex);
@@ -93,8 +101,34 @@ protected:
 	virtual void setFloatParameterValue(size_t paramIndex, double value);
 
 	virtual void singleMotion(int axis, double position) = 0;
+
+    /**
+     * Go to the given position
+     *
+     * Implementation should only return after the end of the movement
+     *
+     * Positions are in the order of the indexes.
+     * use:
+     *      
+     *      goTo(positions[xIndex]);
+     *      goTo(positions[bIndex]);
+     *
+     */
 	virtual void allMotionSync(std::vector<double> positions);
-	virtual void allMotionSeq(std::vector< std::vector<double> > positionsSeq);
+
+    /**
+    * Go to the given positions
+    *
+    * Implementation should only return after the end of the movements
+    *
+    * Positions are in the order of the indexes.
+    * use:
+    *
+    *      goTo(positionsSeq[p][xIndex]);
+    *      goTo(positionsSeq[p][bIndex]);
+    *
+    */
+    virtual void allMotionSeq(std::vector< std::vector<double> > positionsSeq);
 
 	virtual double getPosition(int axis) = 0;
 
