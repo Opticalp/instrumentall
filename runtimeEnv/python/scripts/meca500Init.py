@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-## @file   python/scripts/meda500Test.py
+## @file   python/scripts/meca500Init.py
 ## @date   Oct. 2018
 ## @author PhRG - opticalp.fr
 ##
@@ -30,7 +30,21 @@
 def myMain(baseDir):
     """Main function. Run the tests. """
 
-    print("Test the Meca500. ")
+    import Tkinter as tk
+    import tkMessageBox as msg
+
+    window = tk.Tk()
+    window.wm_withdraw()
+
+    #centre screen message
+    window.geometry("1x1+"+str(window.winfo_screenwidth()/2)+"+"+str(window.winfo_screenheight()/2))
+    resp = msg.showinfo(title="Connexion", message="""
+        Initialization of the Meca500.
+
+        Please, power on and home the robot first.
+        Press the window button when done. """)
+
+    print(resp)
 
     from instru import * 
     
@@ -41,48 +55,34 @@ def myMain(baseDir):
         if nic.find("192.168.0.") is 0:
             fac = fac.select(nic)
             break
-        
+
     print("Retrieve robot factory at the default robot IP address... ")
-    fac = fac.select("192.168.0.100")
+    
+    try:
+        fac = fac.select("192.168.0.100")
+    except:
+        print "Unexpected error:", sys.exc_info()[0]
+        raise
     
     print("Create robot from its factory")
     robo = fac.create("robo")
     print("Robot module: " + robo.name + " was created. (" + robo.internalName + ") ")
 
-    print("Assuming that the TRF and WRF were nicely set. ")
+    msg.showwarning(title="Set references", message="""Redefining TRF and WRF.
 
-    print("Create coord sources")
-    seqGen = Factory("DataGenFactory").select("seq").create("seqGen")
-    dataGen = Factory("DataGenFactory").select("dblFloat").create("dataGen")
-    dataGenArray = Factory("DataGenFactory").select("dblFloat").create("dataGenArray")
+        Please, take care of the robot movements. """)
 
-    print("Prepare dataFlow")
-    bind(seqGen.outPort("data"),dataGen.inPort("trig"))
-    bind(seqGen.outPort("data"),dataGenArray.inPort("trig"))
-    bind(dataGen.outPort("data"), robo.inPort("xAxis"))
-    bind(dataGen.outPort("data"), robo.inPort("yAxis"))
-    bind(dataGen.outPort("data"), robo.inPort("zAxis"))
-    bind(dataGen.outPort("data"), robo.inPort("aAxis"))
-    bind(dataGen.outPort("data"), robo.inPort("bAxis"))
-    bind(dataGenArray.outPort("data"), robo.inPort("cAxis"))
+    robo.setParameterValue("query","SetTRF(0,0,55,0,-45,0)")
+    robo.setParameterValue("query","SetWRF(300,0,250,0,0,0)")
+    robo.setParameterValue("query","SetJointVel(20)")
 
+    if not msg.askokcancel("Movement", "Ready to move? "):
+        return
 
-    print("Prepare movement")
-    seqSize = 11
-    rows = 11
+    robo.setParameterValue("query","SetPose(0,0,0,0,0,0)")
 
-    print("go row after row")
-    for row in range(-(rows-1)/2, (rows+1)/2):
-        seqGen.setParameterValue("seqSize",seqSize)
-        for x in range(-(seqSize-1)/2, (seqSize+1)/2):
-            dataGenArray.setParameterValue("value",2*float(x))
-        dataGen.setParameterValue("value",float(row))
-
-        print("Run row (" + str(row) + ")")
-        runModule(seqGen)
-        waitAll()
-    
-    print("End of script meca500Test.py")
+    resp = msg.showinfo(title="Init", message="Init done. ")
+    window.destroy()
     
 # main body    
 import sys
