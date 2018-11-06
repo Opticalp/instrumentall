@@ -68,15 +68,15 @@ def myMain(baseDir):
 
 
     print("Prepare movement")
-    seqSize = 11
-    rows = 11
+    seqSize = 5
+    rows = 5
 
     print("go row after row")
     for row in range(-(rows-1)/2, (rows+1)/2):
         seqGen.setParameterValue("seqSize",seqSize)
         for x in range(-(seqSize-1)/2, (seqSize+1)/2):
-            dataGenArray.setParameterValue("value",2*float(x))
-        dataGen.setParameterValue("value",float(row))
+            dataGenArray.setParameterValue("value",4*float(x))
+        dataGen.setParameterValue("value",2*float(row))
 
         print("Run row (" + str(row) + ")")
         runModule(seqGen)

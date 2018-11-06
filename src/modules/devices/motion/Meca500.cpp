@@ -46,7 +46,7 @@ using namespace Poco::Net;
 #define TIMEOUT 500
 
 // how many times timeout before aborting response awaiting
-#define TIMEOUT_COUNTER_LIMIT 200
+#define TIMEOUT_COUNTER_LIMIT 20
 
 Meca500::Meca500(ModuleFactory* parent, std::string customName):
 		MotionDevice(parent, customName, 
@@ -360,8 +360,6 @@ void Meca500::setStrParameterValue(size_t paramIndex, std::string value)
 
 void Meca500::singleMotion(int axis, double position)
 {
-	poco_information(logger(), "single move axis: " + axisName(axis));
-
 	double x, y, z, a, b, c;
 	getPosition(x, y, z, a, b, c);
 
@@ -369,27 +367,33 @@ void Meca500::singleMotion(int axis, double position)
 	switch (axis)
 	{
 	case xAxis:
-		if (abs(position - x) > EPS_MV)
+        poco_information(logger(), "single move xAxis");
+        if (abs(position - x) > EPS_MV)
 			setPosition(position, y, z, a, b, c);
 		break;
 	case yAxis:
-		if (abs(position - y) > EPS_MV)
-		setPosition(x, position, z, a, b, c);
+        poco_information(logger(), "single move yAxis");
+        if (abs(position - y) > EPS_MV)
+		    setPosition(x, position, z, a, b, c);
 		break;
 	case zAxis:
-		if (abs(position - z) > EPS_MV)
+        poco_information(logger(), "single move zAxis");
+        if (abs(position - z) > EPS_MV)
 			setPosition(x, y, position, a, b, c);
 		break;
 	case aAxis:
-		if (abs(position - a) > EPS_MV)
+        poco_information(logger(), "single move aAxis");
+        if (abs(position - a) > EPS_MV)
 			setPosition(x, y, z, position, b, c);
 		break;
 	case bAxis:
-		if (abs(position - b) > EPS_MV)
+        poco_information(logger(), "single move bAxis");
+        if (abs(position - b) > EPS_MV)
 			setPosition(x, y, z, a, position, c);
 		break;
 	case cAxis:
-		if (abs(position - c) > EPS_MV)
+        poco_information(logger(), "single move cAxis");
+        if (abs(position - c) > EPS_MV)
 			setPosition(x, y, z, a, b, position);
 		break;
 	default:
