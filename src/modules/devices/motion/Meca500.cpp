@@ -355,6 +355,9 @@ void Meca500::setStrParameterValue(size_t paramIndex, std::string value)
 	sendCommand(parseMultipleQueries(value));
 }
 
+/// minimal movement: 0.5 um, 0.0005 deg (arbitrary)
+#define EPS_MV 0.0005
+
 void Meca500::singleMotion(int axis, double position)
 {
 	poco_information(logger(), "single move axis: " + axisName(axis));
@@ -366,22 +369,28 @@ void Meca500::singleMotion(int axis, double position)
 	switch (axis)
 	{
 	case xAxis:
-		setPosition(x, y, z, a, b, c);
+		if (abs(position - x) > EPS_MV)
+			setPosition(position, y, z, a, b, c);
 		break;
 	case yAxis:
-		setPosition(x, y, z, a, b, c);
+		if (abs(position - y) > EPS_MV)
+		setPosition(x, position, z, a, b, c);
 		break;
 	case zAxis:
-		setPosition(x, y, z, a, b, c);
+		if (abs(position - z) > EPS_MV)
+			setPosition(x, y, position, a, b, c);
 		break;
 	case aAxis:
-		setPosition(x, y, z, a, b, c);
+		if (abs(position - a) > EPS_MV)
+			setPosition(x, y, z, position, b, c);
 		break;
 	case bAxis:
-		setPosition(x, y, z, a, b, c);
+		if (abs(position - b) > EPS_MV)
+			setPosition(x, y, z, a, position, c);
 		break;
 	case cAxis:
-		setPosition(x, y, z, a, b, c);
+		if (abs(position - c) > EPS_MV)
+			setPosition(x, y, z, a, b, position);
 		break;
 	default:
 		poco_bugcheck_msg("impossible axis index");

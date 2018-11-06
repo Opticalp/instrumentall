@@ -59,10 +59,10 @@ IpDeviceFactory::IpDeviceFactory(ModuleFactory* parent, std::string selector):
 
 NetworkInterface IpDeviceFactory::nic()
 {
-    NetworkInterface::NetworkInterfaceList nicList = NetworkInterface::list();
+    NetworkInterface::List nicList = NetworkInterface::list();
     IPAddress wantedIP(getSelector());
 
-    for (NetworkInterface::NetworkInterfaceList::iterator it = nicList.begin(),
+    for (NetworkInterface::List::iterator it = nicList.begin(),
             ite = nicList.end(); it != ite; it++)
         if (it->address() == wantedIP)
             return *it;

@@ -76,9 +76,9 @@ using namespace Poco::Net;
 
 void MotionFactory::findNics(std::vector<std::string>& nicNameList)
 {
-	NetworkInterface::NetworkInterfaceList nicList = NetworkInterface::list();
+	NetworkInterface::List nicList = NetworkInterface::list();
 
-    for (NetworkInterface::NetworkInterfaceList::iterator it = nicList.begin(),
+    for (NetworkInterface::List::iterator it = nicList.begin(),
             ite = nicList.end(); it != ite; it++)
     {
         IPAddress address = it->address();
@@ -92,9 +92,9 @@ void MotionFactory::findNics(std::vector<std::string>& nicNameList)
 
 bool MotionFactory::hasNic(const std::string ifaceName)
 {
-	NetworkInterface::NetworkInterfaceList nicList = NetworkInterface::list();
+	NetworkInterface::List nicList = NetworkInterface::list();
 
-    for (NetworkInterface::NetworkInterfaceList::iterator it = nicList.begin(),
+    for (NetworkInterface::List::iterator it = nicList.begin(),
             ite = nicList.end(); it != ite; it++)
         if (it->address() == IPAddress(ifaceName))
             return true;
