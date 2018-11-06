@@ -106,9 +106,28 @@ class App:
         self.robo.setParameterValue("cAxisPos",pos)
 
     def setWRF(self):
-        print("setWRF with current coord (TBD)")
-    
-
+        self.robo.setParameterValue("query","SetWRF(0,0,0,0,0,0)")
+        x = self.robo.getParameterValue("xAxisPos")
+        y = self.robo.getParameterValue("yAxisPos")
+        z = self.robo.getParameterValue("zAxisPos")
+        a = self.robo.getParameterValue("aAxisPos")
+        b = self.robo.getParameterValue("bAxisPos")
+        c = self.robo.getParameterValue("cAxisPos")
+        print("setWRF with current coord (" + str(x) + ";" +
+              str(y) + ";" +
+              str(z) + ";" +
+              str(a) + ";" +
+              str(b) + ";" +
+              str(c) + ")")
+        self.robo.setParameterValue("query","SetWRF(" +
+              str(x) + "," +
+              str(y) + "," +
+              str(z) + "," +
+              str(a) + "," +
+              str(b) + "," +
+              str(c) + ")")
+        print("done. ")
+        self.robo.getParameterValue("query")
     
 # main body    
 import sys
