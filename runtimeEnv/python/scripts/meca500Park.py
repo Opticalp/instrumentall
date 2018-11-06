@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-## @file   python/scripts/meca500Init.py
+## @file   python/scripts/meca500Park.py
 ## @date   Oct. 2018
 ## @author PhRG - opticalp.fr
 ##
@@ -38,13 +38,6 @@ def myMain(baseDir):
 
     #centre screen message
     window.geometry("1x1+"+str(window.winfo_screenwidth()/2)+"+"+str(window.winfo_screenheight()/2))
-    resp = msg.showinfo(title="Connexion", message="""
-        Initialization of the Meca500.
-
-        Please, power on and home the robot first.
-        Press the window button when done. """)
-
-    print(resp)
 
     from instru import * 
     
@@ -68,21 +61,14 @@ def myMain(baseDir):
     robo = fac.create("robo")
     print("Robot module: " + robo.name + " was created. (" + robo.internalName + ") ")
 
-    msg.showwarning(title="Set references", message="""
-        Redefining TRF and WRF.
-
-        Please, take care of the robot movements. """)
-
-    robo.setParameterValue("query",
-        "SetTRF(0,0,55,0,-45,0);SetWRF(300,0,250,0,0,0)")
     robo.setParameterValue("query","SetJointVel(20)")
 
-    if not msg.askokcancel("Movement", "Ready to move? "):
+    if not msg.askokcancel("Movement", "Ready to park? "):
         return
 
-    robo.setParameterValue("query","MovePose(0,0,0,0,0,0)")
+    robo.setParameterValue("query","MoveJoints(0,-45,70,0,20,0)")
 
-    resp = msg.showinfo(title="Init", message="Init done. ")
+    msg.showinfo(title="Parking", message="Park done. ")
     window.destroy()
     
 # main body    
