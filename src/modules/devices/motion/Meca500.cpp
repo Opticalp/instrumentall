@@ -340,7 +340,14 @@ std::string Meca500::getStrParameterValue(size_t paramIndex)
 	switch (paramIndex)
 	{
 	case paramQuery:
-		return sendQuery("GetStatusRobot");
+        try
+        {
+            return waitResp();
+        }
+        catch (Poco::TimeoutException&)
+        {
+            return sendQuery("GetStatusRobot");
+        }
 	default:
 		poco_bugcheck_msg("invalid parameter index");
 		throw Poco::BugcheckException();
