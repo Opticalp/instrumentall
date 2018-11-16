@@ -32,6 +32,11 @@ class App:
         import Tkinter as tk
         from instru import Factory
         
+        btn = tk.Button(top, text="Init", command=self.init)
+        btn.pack()
+        btn = tk.Button(top, text="Reset error", command=self.resetError)
+        btn.pack()
+
         label = tk.Label(top, text="Set increment")
         label.pack()
 
@@ -51,9 +56,23 @@ class App:
         btn = tk.Button(top, text="C", command=self.C)
         btn.pack()
 
+        self.qu = tk.Entry(top)
+        self.qu.pack()
+        
+        btn = tk.Button(top, text="Query", command=self.query)
+        btn.pack()
+        btn = tk.Button(top, text="Response", command=self.response)
+        btn.pack()
+
+        btn = tk.Button(top, text="Park", command=self.park)
+        btn.pack()
+
         btn = tk.Button(top, text="setWRF", command=self.setWRF, bd=10)
         btn.pack(side=tk.BOTTOM)
         
+        btn = tk.Button(top, text="Quit", command=top.quit)
+        btn.pack(side=tk.BOTTOM)
+
         fac = Factory("DeviceFactory").select("motion")
         NIClist = fac.selectValueList()
 
@@ -74,6 +93,30 @@ class App:
         self.robo = fac.create("robo")
         print("Robot module: " + self.robo.name + " was created. (" + self.robo.internalName + ") ")
 
+    def init(self):
+        import tkMessageBox as msg
+        
+        msg.showwarning(title="Set references", message="""
+        Redefining TRF and WRF.
+
+        Please, take care of the robot movements. """)
+
+        self.robo.setParameterValue("query",
+            "SetWRF(152.537,-11.412,38.803,-179.850,36.618,-162.090)")
+
+        if not msg.askokcancel("Movement", "Ready to move? "):
+            return
+
+        self.robo.setParameterValue("query","MoveJoints(0,-20,70,0,20,0)")
+        self.robo.setParameterValue("query","MoveJoints(0,8,46,0,16,0)")
+        self.robo.setParameterValue("query","MovePose(0,0,0,0,0,0)")
+        self.robo.getParameterValue("query")
+
+        resp = msg.showinfo(title="Init", message="Initializing... ")
+
+    def resetError(self):
+        self.robo.setParameterValue("query","ResetError();ResumeMotion()")
+        self.robo.getParameterValue("query")
         
     def X(self):
         pos = self.robo.getParameterValue("xAxisPos") + float(self.e.get())
@@ -128,6 +171,16 @@ class App:
               str(c) + ")")
         print("done. ")
         self.robo.getParameterValue("query")
+
+    def park(self):
+        import tkMessageBox as msg
+
+        if not msg.askokcancel("Movement", "Ready to park? "):
+            return
+        self.robo.setParameterValue("query","MoveJoints(0,-45,70,0,20,0)")
+
+        msg.showinfo(title="Parking", message="Parking... ")
+        
     
 # main body    
 import sys
