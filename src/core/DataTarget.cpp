@@ -51,12 +51,61 @@ DataSource* DataTarget::getDataSource()
 				"no data source");
 }
 
+bool DataTarget::hasDataSource()
+{
+	Poco::ScopedLock<Poco::FastMutex> lock(sourceLock);
+
+	return (dataSource != NULL);
+}
+
 void DataTarget::setDataSource(DataSource* source)
 {
-    if (source && !isSupportedInputDataType(source->dataType()))
-        throw Poco::DataFormatException("setDataSource",
-                "The target does not support this data type: "
-        		+ DataItem::dataTypeStr(source->dataType()));
+	int exchangeType = DataItem::typeUndefined;
+
+	// check if the source supports a compatible data type
+    if (source)
+	{
+//    	if (source->dataType() == DataItem::typeUndefined)
+//    	{
+    		if (supportedInputDataType().size() == 1)
+    		{
+    			if (!source->isSupportedOutputDataType(*(supportedInputDataType().begin())))
+    		        throw Poco::DataFormatException("setDataSource",
+    		                "No compatible data type found. Current target only supports: "
+    		        		+ DataItem::dataTypeStr(*(supportedInputDataType().begin())));
+    			else
+    				exchangeType = *(supportedInputDataType().begin());
+    		}
+    		else // both are undefined
+    		{
+    			int preferred = source->preferredOutputDataType();
+    			if (source->isSupportedOutputDataType(preferred))
+    			{
+    				exchangeType = preferred;
+    			}
+    			else
+    			{
+    				// check if there is no fit at all
+    				std::set<int> sourceTypes = source->supportedOutputDataType();
+
+    				bool fitFound = false;
+
+    				for (std::set<int>::iterator it = sourceTypes.begin(),
+    						ite = sourceTypes.end(); it != ite; it++)
+    					if (isSupportedInputDataType(*it))
+    					{
+    						fitFound = true;
+    						exchangeType = *it;
+    						break;
+    					}
+
+    				if (!fitFound)
+        		        throw Poco::DataFormatException("setDataSource",
+        		                "No compatible data type found. ");
+    			}
+    		}
+//    	}
+	}
 
 	bool dec = false; // decrementator flag
 
@@ -75,7 +124,7 @@ void DataTarget::setDataSource(DataSource* source)
 		dataSource = source;
 
 		if (dataSource)
-			dataSource->addDataTarget(this);
+			dataSource->addDataTarget(this, exchangeType);
     }
 
 	if (dec)
@@ -228,3 +277,14 @@ void DataTarget::resetFromSource(DataSource* source)
 
     targetCancelling = false;
 }
+
+bool DataTarget::isSupportedInputDataType(int dataType)
+{
+	std::set<int> types = supportedInputDataType();
+
+	if (types.size() == 0)
+		return true;
+	else
+		return (types.count(dataType)>0);
+}
+

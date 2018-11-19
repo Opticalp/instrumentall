@@ -117,11 +117,109 @@ static PyMethodDef pyMethodDataProxyDetach =
     "Detach the proxy from its source and target"
 };
 
+/// python wrapper to set the name of the dataLogger
+extern "C"
+PyObject* pyDataProxySetName(DataProxyMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataProxySetName =
+{
+    "setName",
+    (PyCFunction)pyDataProxySetName,
+    METH_VARARGS,
+    "setName(newName): set a new name for the data logger, "
+    "change the parameters prefix key for the conf file, "
+    "load the parameters from the conf file if any. "
+};
+
+
+/// DataProxy::parameterSet() python wrapper
+extern "C" PyObject* pyDataProxyGetParameterSet(DataProxyMembers *self);
+
+static PyMethodDef pyMethodDataProxyGetParameterSet =
+{
+    "getParameterSet",
+    (PyCFunction)pyDataProxyGetParameterSet,
+    METH_NOARGS,
+    "Retrieve the parameter set"
+};
+
+/// DataProxy::getParameterValue python wrapper
+extern "C"
+PyObject* pyDataProxyGetParameterValue(DataProxyMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataProxyGetParameterValue =
+{
+    "getParameterValue",
+    (PyCFunction)pyDataProxyGetParameterValue,
+    METH_VARARGS,
+    "getParameterValue(paramName): get the value of the given parameter"
+};
+
+/// DataProxy::setParameterValue python wrapper
+extern "C"
+PyObject* pyDataProxySetParameterValue(DataProxyMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataProxySetParameterValue =
+{
+    "setParameterValue",
+    (PyCFunction)pyDataProxySetParameterValue,
+    METH_VARARGS,
+    "setParameterValue(paramName, value): set the value of the given parameter"
+};
+
+/// Bind to setParameterValue and applyParameters
+extern "C"
+PyObject* pyDataProxySetParameterValues(DataProxyMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataProxySetParameterValues =
+{
+    "setParameterValues",
+    (PyCFunction)pyDataProxySetParameterValues,
+    METH_VARARGS,
+    "setParameterValues(dict): set the values of the given parameters. "
+    "The dict keys are the parameter names, "
+    "the corresponding values are the parameter values. "
+};
+
+/// DataProxy::setVerbosity python wrapper
+extern "C"
+PyObject* pyDataProxySetVerbosity(DataProxyMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataProxySetVerbosity =
+{
+    "setVerbosity",
+    (PyCFunction)pyDataProxySetVerbosity,
+    METH_VARARGS,
+    "getVerbosity: set the dataLogger logger verbosity (with integer value)"
+};
+
+/// DataProxy::getVerbosity python wrapper
+extern "C"
+PyObject* pyDataProxyGetVerbosity(DataProxyMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataProxyGetVerbosity =
+{
+    "getVerbosity",
+    (PyCFunction)pyDataProxyGetVerbosity,
+    METH_NOARGS,
+    "getVerbosity: set the dataLogger logger verbosity"
+};
+
 /// exported methods
 static PyMethodDef pyDataProxyMethods[] = {
         pyMethodDataProxySource,
 		//pyMethodDataProxyTargets,
         pyMethodDataProxyDetach,
+
+        pyMethodDataProxySetName,
+
+        pyMethodDataProxyGetParameterSet,
+        pyMethodDataProxyGetParameterValue,
+        pyMethodDataProxySetParameterValue,
+        pyMethodDataProxySetParameterValues,
+
+        pyMethodDataProxySetVerbosity,
+        pyMethodDataProxyGetVerbosity,
 
         {NULL} // sentinel
 };

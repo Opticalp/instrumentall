@@ -58,6 +58,8 @@ public:
 	std::string name() { return mName; }
 	std::string description();
 
+	void detach();
+
 private:
 	ParameterSetter();
 
@@ -67,9 +69,6 @@ private:
 	 * getParameterValue and send it as dataSource
 	 */
 	void runTarget();
-
-	bool isSupportedInputDataType(int datatype)
-		{ return (datatype == getParameterDataType()); }
 
     std::set<int> supportedInputDataType();
 

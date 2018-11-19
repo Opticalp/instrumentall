@@ -94,6 +94,16 @@ public:
     DataAttributeOut& operator =(const DataAttributeIn& other);
 	DataAttributeOut& operator =(const DataAttributeOut& other);
 
+	DataAttributeOut& operator +=(const DataAttributeOut& rhs);
+
+	// friends defined inside class body are inline and are hidden from non-ADL lookup
+	friend DataAttributeOut operator+(DataAttributeOut lhs,  // passing lhs by value helps optimize chained a+b+c
+		const DataAttributeOut& rhs)       // otherwise, both parameters may be const references
+	{
+		lhs += rhs; // reuse compound assignment
+		return lhs; // return the result by value (uses move constructor)
+	}
+
 	/**
 	 * Prefix ++ operator
 	 */

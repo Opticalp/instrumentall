@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-## @file     conf/console.py
-## @date     jun. 2013
-## @author   PhRG / opticalp.fr
-## @license  MIT
+## @file   testsuite/resources/pyModCancelScript.py
+## @date   oct. 2017
+## @author PhRG - opticalp.fr
+##
+## Test the python module with cancel
 
 #
-# Copyright (c) 2013 Ph. Renaud-Goud / Opticalp
+# Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,32 +27,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-class Quitter(object):
-    def __init__(self, name):
-        self.name = name
-    def __repr__(self):
-        return 'Use %s() to exit' % (self.name)
-    def __call__(self, code=None):
-        raise SystemExit(code)
 
-import code
+def myMain(baseDir):
+    """Main function. Do simple things. """
+    
+    print("pyMod executing script... pyMod is launched via the pyModTest.py script of /testsuite/python")
 
-# dictionary definition to transmit local variables
-dico = {} 
-dico['quit']=Quitter('quit')
-dico['exit']=Quitter('exit')
+    from instru import *
+    
+    print("cancelling!") 
 
-try:
-    import instru
-except ImportError:
-    print 'WARNING: "instru" module is not available...'
-else:
-    print '"instru" module loaded...'
-    dico['instru']=instru
+    cancelAllNoWait()
+    
+    print("cancel dispatched")
+    print("End of pyModCancel script")
+    
+# main body    
+import sys
+import os
+from os.path import dirname
+    
+if len(sys.argv) >= 1:
+    # probably called from InstrumentAll
+    checker = os.path.basename(sys.argv[0])
+    if checker == "instrumentall" or checker == "instrumentall.exe":
+        print("current script: ",os.path.realpath(__file__))
+        
+        baseDir = dirname(dirname(__file__))
+        
+        myMain(baseDir)
+        exit(0)
 
-# interactive console launch
-try:    
-    code.interact(local=dico)
-except SystemExit:
-    print "console.py: We just left the interactive console on SystemExit exception..."            
+print("Presumably not called from InstrumentAll >> Exiting...")
 
+exit("This script has to be launched from inside InstrumentAll")

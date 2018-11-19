@@ -36,14 +36,16 @@
  *
  * This is a special proxy that does not convert the data type.
  * Its only role is to buffer the data.
+ *
+ * @par 2.1.0-dev.6
+ * Add parameters support
+ *
  */
 class DataBuffer: public DataProxy
 {
 public:
-	DataBuffer(int datatype);
+	DataBuffer();
 	virtual ~DataBuffer() { }
-
-	std::string name() { return mName; }
 
     std::string description() { return classDescription(); }
 
@@ -51,25 +53,18 @@ public:
         { return "Buffer data without any conversion. "
         		"To be used to release earlier data sources"; }
 
-private:
-	DataBuffer();
-
-	static size_t refCount;
-	std::string mName;
-
-    bool isSupportedInputDataType(int datatype)
-    {
-    	return (datatype == mDatatype);
-    }
-
     std::set<int> supportedInputDataType()
-	{
-		std::set<int> ret;
-		ret.insert(mDatatype);
-		return ret;
-	}
+		{ return supportedDataType(); }
 
-    /**
+    std::set<int> supportedOutputDataType()
+		{ return supportedDataType(); }
+
+private:
+	static size_t refCount;
+
+	std::set<int> supportedDataType();
+
+	/**
      * No conversion. Copy the input to the output.
      */
     void convert();

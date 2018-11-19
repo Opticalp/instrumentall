@@ -31,6 +31,9 @@
 
 #include "DataSource.h"
 #include "DataTarget.h"
+#include "VerboseEntity.h"
+#include "ParameterizedEntity.h"
+#include "UniqueNameEntity.h"
 
 #include "Poco/Thread.h"
 #include "Poco/RefCountedObject.h"
@@ -44,8 +47,20 @@
  * The derived classes shall implement a classDescription
  * static method. DataTarget::description can be implemented
  * as linking to this method.
+ *
+ * @par 2.1.0-dev.6
+ * Add parameters support
+ *
+ * The implementations overload:
+ *
+ *     virtual std::set<int> supportedOutputDataType();
+ *
  */
-class DataProxy: public DataTarget, public DataSource, public Poco::RefCountedObject
+class DataProxy: public DataTarget, public DataSource,
+	public ParameterizedEntity,
+    public UniqueNameEntity,
+	public VerboseEntity,
+	public Poco::RefCountedObject
 {
 public:
 	/**
@@ -54,13 +69,35 @@ public:
 	 * In the implementations, the constructor could set
 	 * the unique name of the data proxy.
 	 */
-	DataProxy(int datatype):
-		DataSource(datatype) { }
+	DataProxy(std::string newClassName):
+		className(newClassName),
+		ParameterizedEntity("dataProxy." + newClassName),
+		VerboseEntity("dataProxy." + newClassName) // startup logger name
+		{   }
 
-	virtual ~DataProxy() { }
+	virtual ~DataProxy() { poco_information(logger(), "deleting " + name()); }
 
-	virtual std::string name() = 0;
-	virtual std::string description() = 0;
+    /**
+     * Get the data logger implementation class name
+     *
+     * @see DataLogger::DataLogger(std::string implementationName)
+     */
+    const std::string& getClassName() const { return className; }
+
+    /**
+     * Implement ParameterizedEntity::name(),  DataTarget::name()
+     * and DataSource::name()
+     */
+    std::string name() { return UniqueNameEntity::name(); }
+
+    /**
+     * Set a new name for the data proxy
+     *
+     *  - change logger()
+     *  - change ParameterizedEntity prefix key
+     *  - reload the default parameters if any
+     */
+    void setName(std::string newName);
 
 protected:
 	/**
@@ -75,6 +112,16 @@ protected:
 	virtual void convert() = 0;
 
 	bool yield() { Poco::Thread::yield(); return false; }
+
+    /**
+     * Set data proxy internal name
+     *
+     * This function shall be called in the constructor implementation,
+     * using a static ref counter.
+     */
+    void setName(size_t refCount);
+
+    Poco::Logger& logger() { return VerboseEntity::logger(); }
 
 private:
 	DataProxy();
@@ -100,30 +147,10 @@ private:
 	void sourceCancel() { cancelWithSource(); }
 	void sourceWaitCancelled() { waitSourceCancelled(); }
 	void sourceReset() { resetWithSource(); }
+
+	std::string className; ///< data logger implementation class name
 };
 
 #include "Poco/DynamicFactory.h"
-
-/**
- * DataProxy instantiator
- *
- * Allow the data proxies to be constructed easily using the Poco::DynamicFactory
- *
- * Proxy is a class derived from DataProxy
- */
-template <class Proxy> class DataProxyInstantiator:
-		public Poco::AbstractInstantiator<DataProxy>
-{
-public:
-	DataProxyInstantiator(int datatype): mDatatype(datatype) { }
-
-	DataProxy* createInstance() const
-	{
-		return new Proxy(mDatatype);
-	}
-
-private:
-	int mDatatype;
-};
 
 #endif /* SRC_DATAPROXY_H_ */

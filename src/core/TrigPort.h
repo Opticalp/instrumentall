@@ -60,9 +60,6 @@ public:
     bool tryDataAttribute(DataAttributeIn* pAttr);
 
 private:
-    bool isSupportedInputDataType(int dataType)
-    	{ return true; }
-
     std::set<int> supportedInputDataType()
     	{ return std::set<int>(); }
 };

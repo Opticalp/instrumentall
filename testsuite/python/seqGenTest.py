@@ -48,14 +48,14 @@ def myMain(baseDir):
     mod3 = fac.select("leafSeqMax").create("mod3")
     print("module " + mod3.name + " created. ")
     
-##    # query the possible DataProxy class names for DataProxy creation
-##    proxyClasses = dataProxyClasses() # DataManager::dataProxyClasses()
-##    print "Available data proxy classes: "
-##    for proxyClass in proxyClasses:
-##        print " - " + proxyClass + ": " + proxyClasses[proxyClass]
+    # query the possible DataProxy class names for DataProxy creation
+    proxyClasses = dataProxyClasses() # DataManager::dataProxyClasses()
+    print "Available data proxy classes: "
+    for proxyClass in proxyClasses:
+        print " - " + proxyClass + ": " + proxyClasses[proxyClass]
     
-    print('Proxy creation using the constructor: DataProxy("SimpleNumConverterint32")')
-    proxy = DataProxy("SimpleNumConverterint32") 
+    print('Proxy creation using the constructor: DataProxy("SimpleNumConverter")')
+    proxy = DataProxy("SimpleNumConverter") 
     print(" - Name: " + proxy.name)
     print(" - Description: " + proxy.description)
 
@@ -90,6 +90,26 @@ def myMain(baseDir):
     waitAll()
 
     print("Ok, no deadlock occured...")
+    
+    print("Test the clocked generation. Period is 1s")
+    seqGen.setParameterValue("delay", 1000)
+    
+    print("and run seqGen once. ")
+    t0 = time.time()
+    
+    runModule(seqGen)
+    waitAll()
+    
+    elapsed = time.time()-t0
+    print("elapsed time was: " + str(elapsed) + " seconds")
+    if elapsed < 3: # 4 data generated <=> 3 intervals
+        raise RuntimeError("the delay was not effective")
+    elif elapsed > 4: 
+        raise RuntimeError("the delay setting seems wrong. duration was too long. ")  
+    
+    print("Reset the delay to zero to reset the clocked generation")
+    seqGen.setParameterValue("delay",0)
+    
     print("Set endless seq")
     seqGen.setParameterValue("seqSize",0)
     print("run")

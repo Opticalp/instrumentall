@@ -76,7 +76,7 @@ public:
 	virtual std::string name() = 0;
 
 	/**
-	 * Retrieve a copy of the parameter set of the module
+	 * Retrieve a copy of the parameter set of the entity
 	 *
 	 * @param pSet reference to a user allocated ParameterSet
 	 */
@@ -214,25 +214,24 @@ protected:
      * Set parameter set size
      *
      * to be called before adding parameters
+     *
+     * @par 2.2.0-dev.2
+     * Allowed to be call multiple times, if the new count is bigger
+     * than the previous one
      */
-    void setParameterCount(size_t count)
-    {
-    	paramSet.resize(count);
-    	paramValues.resize(count);
-    	needApplication = std::vector<bool>(count, false);
-    }
+    void setParameterCount(size_t count);
 
     /**
      * Add a parameter in the parameter set
      *
-     * Should be called in the module constructor
+     * Should be called in the entity constructor
      */
     void addParameter(size_t index, std::string name, std::string descr, ParamItem::ParamType datatype);
 
     /**
      * Add a parameter in the parameter set
      *
-     * Should be called in the module constructor.
+     * Should be called in the entity constructor.
      * Specify a default value as a string,
      * as could be read in a config file
      */
@@ -245,7 +244,7 @@ protected:
      * Retrieve the default value for the given parameter
      *
      * - Check if the parameter has an entry in the configuration:
-     *      module.<name>.<paramName>
+     *      <entity>.<name>.<paramName>
      * - if not found, return the hard-coded value that was defined at creation,
      * - if not found...
      * @throw Poco::NotFoundException
@@ -256,19 +255,19 @@ protected:
 
     virtual Poco::Int64 getIntParameterValue(size_t paramIndex)
     {
-        poco_bugcheck_msg("getIntParameterValue not implemented for this module");
+        poco_bugcheck_msg("getIntParameterValue not implemented for this entity");
         throw Poco::BugcheckException();
     }
 
     virtual double getFloatParameterValue(size_t paramIndex)
     {
-        poco_bugcheck_msg("getFloatParameterValue not implemented for this module");
+        poco_bugcheck_msg("getFloatParameterValue not implemented for this entity");
         throw Poco::BugcheckException();
     }
 
     virtual std::string getStrParameterValue(size_t paramIndex)
     {
-        poco_bugcheck_msg("getStrParameterValue not implemented for this module");
+        poco_bugcheck_msg("getStrParameterValue not implemented for this entity");
         throw Poco::BugcheckException();
     }
 
@@ -281,15 +280,31 @@ protected:
      *
      * @param[in] paramIndex parameter index
      * @param[out] value parameter value from the internal storage
+     * @param [in] keepNeedAppFlag if true, do not reset the needApplication flag
      * @return needApplication flag
      */
-    bool getInternalIntParameterValue(size_t paramIndex, Poco::Int64& value);
+    bool getInternalIntParameterValue(size_t paramIndex, Poco::Int64& value, bool keepNeedAppFlag = false);
 
     /// @see getInternalIntParameterValue
-    bool getInternalFloatParameterValue(size_t paramIndex, double& value);
+    bool getInternalFloatParameterValue(size_t paramIndex, double& value, bool keepNeedAppFlag = false);
 
     /// @see getInternalIntParameterValue
-    bool getInternalStrParameterValue(size_t paramIndex, std::string& value);
+    bool getInternalStrParameterValue(size_t paramIndex, std::string& value, bool keepNeedAppFlag = false);
+
+    /**
+     * Set the internal storage value of the parameter
+     *
+     * @param paramIndex parameter index
+     * @param value new value
+     * @param alterNeedAppFlag set needApplication flag if alterNeedAppFlag is true
+     */
+    void setInternalIntParameterValue(size_t paramIndex, Poco::Int64 value, bool alterNeedAppFlag = true);
+
+    /// @see setInternalIntParameterValue
+    void setInternalFloatParameterValue(size_t paramIndex, double value, bool alterNeedAppFlag = true);
+
+    /// @see setInternalIntParameterValue
+    void setInternalStrParameterValue(size_t paramIndex, const std::string& value, bool alterNeedAppFlag = true);
 
     virtual void setIntParameterValue(size_t paramIndex, Poco::Int64 value)
         { poco_bugcheck_msg("setIntParameterValue not implemented"); }
@@ -304,8 +319,32 @@ protected:
 
     /**
      * Check if the given parameter has a default value defined in the conf file
+     *
+     * Hardcoded default values are not considered.
      */
-    bool hasParameterDefaultValue(size_t index);
+    bool hasParameterDefaultValueFromConf(size_t index);
+
+    /**
+     * Set parameters to default values from conf file if any, and apply.
+     *
+     * For each parameter:
+     *  - check if there is a default value (not using hardcoded values)
+     *  - set the default value
+     * and then, apply.
+     *
+     * To be used to specificaly apply only the special values of the parameters
+     * e.g. after a conf has been newly loaded or after a parameterizedEntity
+     * changed its confPrefixKey (DataLogger or DataProxy name change)
+     */
+    void setAllParametersFromConf();
+
+    /**
+     * Set parameters to default values whereever it comes from
+     * (conf file, hardcoded)
+     *
+     * To be called at entity initialization
+     */
+    void setParametersDefaultValue();
 
 private:
     ParameterizedEntity();

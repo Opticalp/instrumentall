@@ -31,6 +31,11 @@
 #include "PythonParameterSetter.h"
 
 #include "core/ParameterizedEntityWithWorkers.h"
+#include "core/Module.h"
+
+#include "core/ModuleManager.h"
+
+#include "PythonModule.h"
 
 using Poco::AutoPtr;
 
@@ -84,6 +89,73 @@ PyObject* pyParameterSetterParameterName(ParameterSetterMembers* self)
 	PyObject* pyRet = PyString_FromString(ret.c_str());
 
 	return pyRet;
+}
+
+PyObject* pyParameterSetterDetach(ParameterSetterMembers* self)
+{
+	try
+	{
+		(*self->setter)->detach();
+	}
+	catch (Poco::Exception& e)
+	{
+		PyErr_SetString(PyExc_RuntimeError,
+			e.displayText().c_str());
+		return NULL;
+	}
+
+	Py_RETURN_NONE;
+}
+
+PyObject* pyParameterSetterParent(ParameterSetterMembers* self)
+{
+    Poco::SharedPtr<Module*> module;
+
+    try
+    {
+        module = Poco::Util::Application::instance()
+                          .getSubsystem<ModuleManager>()
+                          .getModule( reinterpret_cast<Module*>((*self->setter)->getParent()) );
+    }
+    catch (Poco::Exception& e)
+    {
+        PyErr_SetString(PyExc_RuntimeError,
+                e.displayText().c_str());
+        return NULL;
+    }
+
+    // alloc
+    if (PyType_Ready(&PythonModule) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+                "Not able to create the Module Type");
+        return NULL;
+    }
+
+    ModMembers* pyParent =
+            (ModMembers*)(
+                    pyModNew((PyTypeObject*)&PythonModule, NULL, NULL) );
+
+    PyObject* tmp=NULL;
+
+    // init
+    // retrieve name, internal name, and description
+    tmp = pyParent->name;
+    pyParent->name = PyString_FromString((*module)->name().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = pyParent->internalName;
+    pyParent->internalName = PyString_FromString((*module)->internalName().c_str());
+    Py_XDECREF(tmp);
+
+    tmp = pyParent->description;
+    pyParent->description = PyString_FromString((*module)->description().c_str());
+    Py_XDECREF(tmp);
+
+    // set ModuleFactory reference
+    *(pyParent->module) = module;
+
+    return (PyObject*)(pyParent);
 }
 
 #endif /* HAVE_PYTHON27 */

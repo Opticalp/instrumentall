@@ -28,22 +28,35 @@
 
 #include "ImageProcFactory.h"
 
-// #include "ImproveThings.h"
+#include "ImgAnalyzeFactory.h"
+#include "ImgModifyFactory.h"
+#include "MaskGenFactory.h"
 
 std::vector<std::string> ImageProcFactory::selectValueList()
 {
     std::vector<std::string> list;
-//    list.push_back("improveThings");
+
+	list.push_back("maskGen"); // boxMask
+	list.push_back("analyze"); // simpleStats, histogram
+	list.push_back("modify"); // rotCrop
     return list;
 }
 
 ModuleFactoryBranch* ImageProcFactory::newChildFactory(std::string selector)
 {
-//	if (selector.compare("improveThings") == 0)
-//	{
-//		return new ImproveThings(this, selector);
-//	}
-//	else
+	if (selector.compare("analyze") == 0)
+	{
+		return new ImgAnalyzeFactory(this, selector);
+	}
+	else if (selector.compare("modify") == 0)
+	{
+		return new ImgModifyFactory(this, selector);
+	}
+	else if (selector.compare("maskGen") == 0)
+	{
+		return new MaskGenFactory(this, selector);
+	}
+	else
 	{
 		poco_bugcheck_msg("Create: unknown selector");
 		throw Poco::BugcheckException();

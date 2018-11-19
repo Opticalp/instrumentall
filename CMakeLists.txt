@@ -18,8 +18,12 @@ option (no-opencv
     "if specified, don't try to use the OpenCV libraries"    )
 option (no-wxwidgets
     "if specified, don't try to import the wxWidgets libraries to build the graphical interface"   )
+option (no-genAPI
+    "if specified, don't try to use the GenICam API"  ON )
 option (loop-gui-script
     "if specified, the GUI script is executed over and over again (until failure or cancellation)" )
+option (manage-users
+    "if specified, the user permissions are managed" ON) # default to ON for CI tests
 
 # main sources
 # custom parameters
@@ -54,8 +58,13 @@ if (loop-gui-script)
   add_definitions ( -DGUI_SCRIPT_LOOP ) 
 endif (loop-gui-script)
 
+if (manage-users)
+  include ( ${PROJECT_SOURCE_DIR}/cmake/users.cmake )
+endif (manage-users)
+
 if (MSVC)
   add_definitions ( -DNOMINMAX )
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif (MSVC)
 
 ## configure dependencies
@@ -87,12 +96,12 @@ if ( NOT no-opencv )
     message ( STATUS "OpenCV ${OpenCV_VERSION} was found" )
     message ( STATUS "OpenCV installed components are: ${OpenCV_LIB_COMPONENTS}" )
     
-	if ( ${OpenCV_VERSION} VERSION_GREATER 2.3.3 )
-	    set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
-		set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL RELEASE)
-	else ( ${OpenCV_VERSION} VERSION_GREATER 2.3.3 )
-		message ( WARNING "OpenCV version less than 2.3.3. Undefined behaviour in relWithDebInfo and minSizeRel can occur. ")
-	endif ( )
+    if ( ${OpenCV_VERSION} VERSION_GREATER 2.3.3 )
+        set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+        set_target_properties(${OpenCV_LIBS} PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL RELEASE)
+    else ( ${OpenCV_VERSION} VERSION_GREATER 2.3.3 )
+        message ( WARNING "OpenCV version less than 2.3.3. Undefined behaviour in relWithDebInfo and minSizeRel can occur. ")
+    endif ( )
 
     add_definitions ( -DHAVE_OPENCV )
     target_link_libraries( instrumentall ${OpenCV_LIBS} )
@@ -118,9 +127,9 @@ if ( NOT no-wxwidgets )
     file (
       GLOB_RECURSE
       resource_files
-      "${PROJECT_SOURCE_DIR}/conf/rc/*.xrc"
-      "${PROJECT_SOURCE_DIR}/conf/rc/*.png"
-      "${PROJECT_SOURCE_DIR}/conf/rc/*.jpg"
+      "${PROJECT_SOURCE_DIR}/runtimeEnv/conf/rc/*.xrc"
+      "${PROJECT_SOURCE_DIR}/runtimeEnv/conf/rc/*.png"
+      "${PROJECT_SOURCE_DIR}/runtimeEnv/conf/rc/*.jpg"
       )
       
     file (
@@ -129,6 +138,16 @@ if ( NOT no-wxwidgets )
       FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
       )
 endif ( NOT no-wxwidgets )
+
+# find genAPI
+if ( NOT no-genAPI ) 
+    find_package( GenAPI REQUIRED )
+    message ( STATUS "GenAPI ${GenAPI_VERSION} was found" )
+    
+    add_definitions ( -DHAVE_GENAPI )
+    target_link_libraries( instrumentall GenAPI )
+endif ( NOT no-genAPI ) 
+
 
 ## generate build info
 
@@ -189,12 +208,8 @@ endif (UNIX)
 
 # install directives
 install ( TARGETS instrumentall DESTINATION . )
-install ( DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/conf/
-          DESTINATION conf
-          FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-          DIRECTORY_PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-#install ( FILES testsuite/resources/uEye.ini DESTINATION conf ) 
+install ( DIRECTORY runtimeEnv/
+          DESTINATION .
+          PATTERN "*.wxg" EXCLUDE
+          PATTERN "*/README.txt" EXCLUDE)
 
-#install ( DIRECTORY runtimeEnv/guiscripts/ DESTINATION python/scripts )
-#install ( DIRECTORY runtimeEnv/initscripts/ DESTINATION python/scripts )
-install ( DIRECTORY runtimeEnv/python/embed/ DESTINATION python/embed )

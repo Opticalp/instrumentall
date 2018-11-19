@@ -85,7 +85,7 @@ public:
     bool isScriptRunning();
 
 #ifdef HAVE_OPENCV
-    void showImage(cv::Mat img);
+    void showImage(cv::Mat img, int panelIndex = 0);
 #endif
 
     std::string getStatusBarTxt(int field);
@@ -93,6 +93,11 @@ public:
 
     std::string getTextCtrlTxt();
     void setTextCtrlTxt(std::string txt);
+
+#ifdef MANAGE_USERS
+    bool tryLogin(std::string userName, std::string passwd);
+    void logout();
+#endif /* MANAGE_USERS */
 
 private:
     TopFrame* topFrame;
@@ -102,6 +107,10 @@ private:
     PythonScriptRunner pyRunner;
 
     Poco::Thread pyThread; ///< thread for the pyRunner
+
+#ifdef MANAGE_USERS
+    void forwardGuiUserToPython();
+#endif /* MANAGE_USERS */
 };
 
 #endif /* HAVE_WXWIDGETS */

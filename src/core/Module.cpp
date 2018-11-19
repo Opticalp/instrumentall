@@ -38,9 +38,6 @@
 #include "Poco/NumberFormatter.h"
 #include "Poco/NumberParser.h"
 
-std::set<std::string> Module::names;
-Poco::RWLock Module::namesLock;
-
 void Module::notifyCreation()
 {
     // if not EmptyModule, add this to module manager
@@ -59,67 +56,33 @@ Module::~Module()
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeModule(this);
     }
 
-    if (!mName.empty())
-        names.erase(mName);
     if (!mInternalName.empty())
-        names.erase(mInternalName);
+        freeName(mInternalName);
 }
 
 void Module::setInternalName(std::string internalName)
 {
-    namesLock.writeLock();
-
-    switch (checkName(internalName))
-    {
-    case nameOk:
-        mInternalName = internalName;
-        names.insert(mInternalName);
-        namesLock.unlock();
-        return;
-    case nameExists:
-        namesLock.unlock();
-        throw Poco::ExistsException("setInternalName",
-                internalName + " already in use");
-    case nameBadSyntax:
-        namesLock.unlock();
-        throw Poco::SyntaxException("setInternalName",
-                "The name should only contain alphanumeric characters "
-                "or \"-\", \"_\", \".\"");
-    }
+    setName(internalName);
+    mInternalName = internalName;
 }
 
 void Module::setCustomName(std::string customName)
 {
     if (customName.empty() || customName.compare(internalName())==0)
     {
-        mName = internalName();
-
         // update conf file prefix key
-        setPrefixKey("module." + mName);
-
+        setPrefixKey("module." + name());
         return;
     }
 
-    namesLock.writeLock();
-
-    switch (checkName(customName))
+    try
     {
-    case nameOk:
-        mName = customName;
-        names.insert(mName);
-        namesLock.unlock();
-        return;
-    case nameExists:
-        freeInternalName();
-        namesLock.unlock();
-        throw Poco::ExistsException("setCustomName",
-                customName + " already in use");
-    case nameBadSyntax:
-        freeInternalName();
-        namesLock.unlock();
-        throw Poco::SyntaxException("setCustomName",
-                "The name should only contain alphanumeric characters "
-                "or \"-\", \"_\", \".\"");
+        setName(customName, false);
+    }
+    catch (...)
+    {
+        freeName(name());
+        throw;
     }
 }
 
@@ -130,31 +93,6 @@ ModuleFactory* Module::parent()
     else
         throw Poco::InvalidAccessException("parent",
                 "This module has no valid parent factory");
-}
-
-#include "Poco/RegularExpression.h"
-
-Module::NameStatus Module::checkName(std::string newName)
-{
-    // check syntax
-    Poco::RegularExpression regex("^[0-9a-zA-Z\\._-]+$");
-    if (!regex.match(newName))
-        return nameBadSyntax;
-
-    // check existence
-    if (names.count(newName))
-        return nameExists;
-
-    return nameOk;
-}
-
-void Module::freeInternalName()
-{
-    // verify that this is a module creation process
-    if (!name().empty())
-        return;
-
-    names.erase(internalName());
 }
 
 void Module::releaseProcessingMutex(bool force)
@@ -298,7 +236,10 @@ void Module::run(ModuleTask* pTask)
 		waitParameters();
 
 	    if (!isParamKeptLocked())
+	    {
 	        parametersTreated();
+	        runGetters();
+	    }
 
         while (!tryReadLockParameters())
             if (yield())

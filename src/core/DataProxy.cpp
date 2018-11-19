@@ -29,6 +29,8 @@
 #include "DataProxy.h"
 #include "ExecutionAbortedException.h"
 
+#include "Poco/NumberFormatter.h"
+
 void DataProxy::runTarget()
 {
 	if (!tryCatchSource())
@@ -62,4 +64,28 @@ void DataProxy::runTarget()
 
 	releaseInputData();
 	notifyReady(attr);
+}
+
+void DataProxy::setName(size_t refCount)
+{
+    if (className.empty())
+        poco_bugcheck_msg("trying to set the name of the data proxy "
+                "but its class name is empty");
+
+    std::string tmpName(className);
+    if (refCount)
+        tmpName += Poco::NumberFormatter::format(refCount);
+
+    UniqueNameEntity::setName(tmpName);
+}
+
+void DataProxy::setName(std::string newName)
+{
+    UniqueNameEntity::setName(newName);
+
+    std::string identifier = "dataProxy." + getClassName() + "." + newName;
+    setLogger(identifier);
+    setPrefixKey(identifier);
+
+    setAllParametersFromConf();
 }

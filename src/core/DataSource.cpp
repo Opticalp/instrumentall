@@ -59,11 +59,26 @@ std::set<DataTarget*> DataSource::getDataTargets()
     return dataTargets;
 }
 
-void DataSource::addDataTarget(DataTarget* target)
+void DataSource::addDataTarget(DataTarget* target, int datatype)
 {
 	Poco::ScopedLock<Poco::FastMutex> lock(targetsLock);
-    if (dataTargets.insert(target).second)
-    	incUser();
+
+	if (dataTargets.count(target))
+		return;
+
+	if (dataTargets.size())
+	{
+		if (dataType() != datatype)
+			throw Poco::DataFormatException("addDataTarget",
+					"A target is already plugged with a different data type");
+	}
+	else
+	{
+		setNewData(datatype);
+	}
+
+	poco_assert(dataTargets.insert(target).second);
+    incUser();
 }
 
 void DataSource::notifyReady(DataAttribute attribute)
@@ -289,4 +304,26 @@ void DataSource::resetFromTarget(DataTarget* target)
 
 	// self
 	sourceReset();
+}
+
+bool DataSource::isSupportedOutputDataType(int dataType)
+{
+	std::set<int> types = supportedOutputDataType();
+
+	if (types.size() == 0)
+		return true;
+	else
+		return (types.count(dataType)>0);
+}
+
+std::set<int> DataSource::supportedOutputDataType()
+{
+	std::set<int> types;
+	types.insert(dataType());
+	return types;
+}
+
+int DataSource::preferredOutputDataType()
+{
+	return *(supportedOutputDataType().begin());
 }

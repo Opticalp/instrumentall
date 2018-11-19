@@ -193,6 +193,9 @@ int InPortUser::startCondition()
 
 			if (!allPresent)
 			{
+				if (inPortCaughtsCount() == inPortPluggedCount())
+					return allPluggedDataStartState;
+
 				if (yield())
 					throw ExecutionAbortedException("startCondition",
 							"Task cancellation upon user request");
@@ -208,6 +211,17 @@ int InPortUser::startCondition()
 	}
 
 	return allDataStartState;
+}
+
+size_t InPortUser::inPortPluggedCount()
+{
+	size_t plugged = 0;
+
+	for (size_t ind = 0; ind < inPorts.size(); ind++)
+		if (inPorts[ind]->hasDataSource())
+			plugged++;
+
+	return plugged;
 }
 
 InPortUser::~InPortUser()

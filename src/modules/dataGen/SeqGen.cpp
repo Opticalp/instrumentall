@@ -1,6 +1,6 @@
 /**
- * @file	src/SeqGen.cpp
- * @date	9 mai 2017
+ * @file	src/modules/dataGen/SeqGen.cpp
+ * @date	May 2017
  * @author	PhRG - opticalp.fr
  */
 
@@ -29,6 +29,7 @@
 #include "SeqGen.h"
 
 #include "Poco/NumberFormatter.h"
+#include "Poco/Timestamp.h"
 
 size_t SeqGen::refCount = 0;
 
@@ -36,8 +37,12 @@ SeqGen::SeqGen(ModuleFactory* parent, std::string customName):
     Module(parent, customName),
     seqSize(0)
 {
-    setInternalName("SeqGen"
+    if (refCount)
+        setInternalName("SeqGen"
                         + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("SeqGen");
+
     setCustomName(customName);
     setLogger("module." + name());
 
@@ -55,8 +60,14 @@ SeqGen::SeqGen(ModuleFactory* parent, std::string customName):
             "If 0: endless sequence is generated, until abortion. "
             "If 1: only one value is exported (0), without sequence. ",
             ParamItem::typeInteger, "0");
+    addParameter(paramDelay,
+            "delay",
+            "Size of the sequence to be generated. "
+            "If 0: immediate data generation. "
+            "Elsewhere: data generated every \"delay\" milliseconds",
+            ParamItem::typeInteger, "0");
 
-    seqSize = getIntParameterDefaultValue(paramSeqSize);
+    setParametersDefaultValue();
 
     notifyCreation();
 
@@ -116,6 +127,8 @@ void SeqGen::process(int startCond)
         *pData = nextInd++;
         notifyOutPortReady(outPortData, (*pOutAttr)++);
 
+        Poco::Timestamp last(0);
+
         while ((seqSize == 0) || (nextInd < seqSize))
         {
             reserveOutPort(outPortData);
@@ -126,6 +139,14 @@ void SeqGen::process(int startCond)
 
             *pData = nextInd++;
 
+            if (delay)
+            {
+                Poco::Int64 remaining = delay * 1000 - (Poco::Timestamp() - last);
+
+                if (remaining > 0)
+                    Poco::Thread::sleep(remaining / 1000);
+            }
+
             notifyOutPortReady(outPortData, (*pOutAttr)++);
 
             if (seqSize)
@@ -133,6 +154,8 @@ void SeqGen::process(int startCond)
 
             if (yield())
                 throw ExecutionAbortedException(name(), "Cancelled upon user request" );
+
+            last.update();
         }
     }
 
@@ -141,18 +164,37 @@ void SeqGen::process(int startCond)
 
 Poco::Int64 SeqGen::getIntParameterValue(size_t paramIndex)
 {
-    poco_assert(paramIndex == paramSeqSize);
-
-    return seqSize;
+    switch(paramIndex)
+    {
+    case paramSeqSize:
+        return seqSize;
+    case paramDelay:
+        return delay;
+    default:
+        poco_bugcheck_msg("incorrect param index");
+        throw Poco::BugcheckException();
+    }
 }
 
 void SeqGen::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
 {
-    poco_assert(paramIndex == paramSeqSize);
+    switch(paramIndex)
+    {
+    case paramSeqSize:
+        if (value<0)
+            throw Poco::RangeException("setParameterValue",
+                    "seqSize has to be positive or null");
+        seqSize = value;
+        break;
+    case paramDelay:
+        if (value<0)
+            throw Poco::RangeException("setParameterValue",
+                    "delay has to be positive or null");
+        delay = value;
+        break;
+    default:
+        poco_bugcheck_msg("incorrect param index");
+        throw Poco::BugcheckException();
+    }
 
-    if (value<0)
-        throw Poco::RangeException("setParameterValue",
-                "seqSize has to be positive or null");
-
-    seqSize = value;
 }

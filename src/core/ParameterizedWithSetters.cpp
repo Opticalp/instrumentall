@@ -69,6 +69,19 @@ Poco::AutoPtr<ParameterSetter> ParameterizedWithSetters::buildParameterSetter(
 	return buildParameterSetter(self->getParameterIndex(paramName), imm);
 }
 
+void ParameterizedWithSetters::removeParameterSetter(ParameterSetter* setter)
+{
+	setter->invalidate();
+
+	for (std::set< Poco::AutoPtr<ParameterSetter> >::iterator it = setters.begin(),
+		ite = setters.end(); it != ite; it++)
+		if (it->get() == setter)
+		{
+			setters.erase(*it);
+			break;
+		}
+}
+
 bool ParameterizedWithSetters::trySetParameter(size_t paramIndex)
 {
     alreadySetLock.lock();
@@ -87,15 +100,16 @@ void ParameterizedWithSetters::trigSetParameter(size_t paramIndex)
 
     if (paramAlreadySet.insert(paramIndex).second)
     {
-        if (paramAlreadySet.size() == setters.size())
+        bool done = (paramAlreadySet.size() == setters.size());
+
+        alreadySetLock.unlock();
+        if (done)
         {
             if (preApply)
                 self->tryApplyParameters(true);
 
             allSet.set();
         }
-
-        alreadySetLock.unlock();
     }
     else
     {

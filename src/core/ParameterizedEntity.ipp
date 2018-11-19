@@ -128,27 +128,7 @@ void ParameterizedEntity::setParameterValue(std::string paramName, T value, bool
 template <> inline
 void ParameterizedEntity::setParameterValue<Poco::Int64>(size_t paramIndex, Poco::Int64 value, bool immediateApply)
 {
-    switch (paramSet[paramIndex].datatype)
-    {
-    case ParamItem::typeInteger:
-        break;
-    case ParamItem::typeFloat:
-        throw Poco::DataFormatException("setParameterValue",
-                "The parameter " + paramSet[paramIndex].name + " has float type. "
-                "Integer was given. ");
-    case ParamItem::typeString:
-        throw Poco::DataFormatException("setParameterValue",
-                "The parameter " + paramSet[paramIndex].name + " has string type. "
-                "Integer was given. ");
-    default:
-        poco_bugcheck_msg("unrecognized parameter type");
-        throw Poco::BugcheckException(); // to avoid compiler warning
-    }
-
-    Poco::ScopedLockWithUnlock<Poco::Mutex> lock(internalParamMutex);
-    paramValues[paramIndex] = Poco::Any(value);
-    needApplication[paramIndex] = true;
-    lock.unlock();
+    setInternalIntParameterValue(paramIndex, value);
 
     if (immediateApply)
         tryApplyParameters(true);
@@ -157,27 +137,7 @@ void ParameterizedEntity::setParameterValue<Poco::Int64>(size_t paramIndex, Poco
 template <> inline
 void ParameterizedEntity::setParameterValue<double>(size_t paramIndex, double value, bool immediateApply)
 {
-    switch (paramSet[paramIndex].datatype)
-    {
-    case ParamItem::typeInteger:
-        throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramSet[paramIndex].name + " has integer type. "
-                "Float was given. ");
-    case ParamItem::typeFloat:
-        break;
-    case ParamItem::typeString:
-        throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramSet[paramIndex].name + " has string type. "
-                "Float was given. ");
-    default:
-        poco_bugcheck_msg("unrecognized parameter type");
-        throw Poco::BugcheckException(); // to avoid compiler warning
-    }
-
-    Poco::ScopedLockWithUnlock<Poco::Mutex> lock(internalParamMutex);
-    paramValues[paramIndex] = Poco::Any(value);
-    needApplication[paramIndex] = true;
-	lock.unlock();
+    setInternalFloatParameterValue(paramIndex, value);
 
     if (immediateApply)
         tryApplyParameters(true);
@@ -187,27 +147,7 @@ void ParameterizedEntity::setParameterValue<double>(size_t paramIndex, double va
 template <> inline
 void ParameterizedEntity::setParameterValue<std::string>(size_t paramIndex, std::string value, bool immediateApply)
 {
-    switch (paramSet[paramIndex].datatype)
-    {
-    case ParamItem::typeInteger:
-        throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramSet[paramIndex].name + " has integer type. "
-                "String was given. ");
-    case ParamItem::typeFloat:
-        throw Poco::DataFormatException("getParameterValue",
-                "The parameter " + paramSet[paramIndex].name + " has float type. "
-                "String was given. ");
-    case ParamItem::typeString:
-        break;
-    default:
-        poco_bugcheck_msg("unrecognized parameter type");
-        throw Poco::BugcheckException(); // to avoid compiler warning
-    }
-
-    Poco::ScopedLockWithUnlock<Poco::Mutex> lock(internalParamMutex);
-    paramValues[paramIndex] = Poco::Any(value);
-    needApplication[paramIndex] = true;
-    lock.unlock();
+    setInternalStrParameterValue(paramIndex, value);
 
     if (immediateApply)
         tryApplyParameters(true);

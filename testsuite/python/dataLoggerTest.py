@@ -171,6 +171,9 @@ def myMain(baseDir):
         raise RuntimeError("strParam error. Should have got \"instrumentall\"")
 
     loadConfiguration(cfgFile)
+    
+    print("unbind the data logger")
+    unbind(DataTarget(logger))
 
     print("End of script dataLoggerTest.py")
     

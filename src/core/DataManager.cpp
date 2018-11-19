@@ -43,6 +43,11 @@
 // proxies
 #include "dataProxies/DataBuffer.h"
 #include "dataProxies/SimpleNumConverter.h"
+#include "dataProxies/LinearConverter.h"
+#include "dataProxies/Delayer.h"
+#ifdef HAVE_OPENCV
+#    include "dataProxies/ImageReticle.h"
+#endif
 
 #include "Poco/Exception.h"
 #include "Poco/Util/Application.h"
@@ -74,118 +79,23 @@ DataManager::DataManager():
     loggerClasses.insert(classPair("SaveImageLogger", SaveImageLogger::classDescription()));
 #endif
 
-    // Register data proxies in the factory using the (augmented) C++ class name
-    std::string proxyName;
+    // Register data proxies in the factory using their C++ class name
+    proxyFactory.registerClass<DataBuffer>("DataBuffer");
+    proxyClasses.insert(classPair("DataBuffer", DataBuffer::classDescription()));
 
-    proxyName = "DataBuffer";
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt32),
-    		new DataProxyInstantiator<DataBuffer>(typeInt32));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt32),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt32),
-    		new DataProxyInstantiator<DataBuffer>(typeUInt32));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt32),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt64),
-    		new DataProxyInstantiator<DataBuffer>(typeInt64));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt64),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt64),
-    		new DataProxyInstantiator<DataBuffer>(typeUInt64));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt64),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeFloat),
-    		new DataProxyInstantiator<DataBuffer>(typeFloat));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeFloat),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeDblFloat),
-    		new DataProxyInstantiator<DataBuffer>(typeDblFloat));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeDblFloat),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeString),
-    		new DataProxyInstantiator<DataBuffer>(typeString));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeString),
-    		DataBuffer::classDescription()));
+    proxyFactory.registerClass<SimpleNumConverter>("SimpleNumConverter");
+    proxyClasses.insert(classPair("SimpleNumConverter", SimpleNumConverter::classDescription()));
 
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt32|contVector),
-    		new DataProxyInstantiator<DataBuffer>(typeInt32|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt32|contVector),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt32|contVector),
-    		new DataProxyInstantiator<DataBuffer>(typeUInt32|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt32|contVector),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt64|contVector),
-    		new DataProxyInstantiator<DataBuffer>(typeInt64|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt64|contVector),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt64|contVector),
-    		new DataProxyInstantiator<DataBuffer>(typeUInt64|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt64|contVector),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeFloat|contVector),
-    		new DataProxyInstantiator<DataBuffer>(typeFloat|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeFloat|contVector),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeDblFloat|contVector),
-    		new DataProxyInstantiator<DataBuffer>(typeDblFloat|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeDblFloat|contVector),
-    		DataBuffer::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeString|contVector),
-    		new DataProxyInstantiator<DataBuffer>(typeString|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeString|contVector),
-    		DataBuffer::classDescription()));
+	proxyFactory.registerClass<LinearConverter>("LinearConverter");
+	proxyClasses.insert(classPair("LinearConverter", LinearConverter::classDescription()));
 
-    proxyName = "SimpleNumConverter";
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt32),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeInt32));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt32),
-    		SimpleNumConverter::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt32),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeUInt32));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt32),
-    		SimpleNumConverter::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt64),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeInt64));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt64),
-    		SimpleNumConverter::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt64),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeUInt64));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt64),
-    		SimpleNumConverter::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeFloat),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeFloat));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeFloat),
-    		SimpleNumConverter::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeDblFloat),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeDblFloat));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeDblFloat),
-    		SimpleNumConverter::classDescription()));
+	proxyFactory.registerClass<Delayer>("Delayer");
+    proxyClasses.insert(classPair("Delayer", Delayer::classDescription()));
 
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt32|contVector),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeInt32|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt32|contVector),
-    		SimpleNumConverter::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt32|contVector),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeUInt32|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt32|contVector),
-    		SimpleNumConverter::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeInt64|contVector),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeInt64|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeInt64|contVector),
-    		SimpleNumConverter::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeUInt64|contVector),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeUInt64|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeUInt64|contVector),
-    		SimpleNumConverter::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeFloat|contVector),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeFloat|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeFloat|contVector),
-    		SimpleNumConverter::classDescription()));
-    proxyFactory.registerClass(proxyName + DataItem::dataTypeShortStr(typeDblFloat|contVector),
-    		new DataProxyInstantiator<SimpleNumConverter>(typeDblFloat|contVector));
-    proxyClasses.insert(classPair(proxyName + DataItem::dataTypeShortStr(typeDblFloat|contVector),
-    		SimpleNumConverter::classDescription()));
+#ifdef HAVE_OPENCV
+    proxyFactory.registerClass<ImageReticle>("ImageReticle");
+    proxyClasses.insert(classPair("ImageReticle", ImageReticle::classDescription()));
+#endif
 }
 
 DataManager::~DataManager()

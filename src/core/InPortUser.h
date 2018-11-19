@@ -53,6 +53,9 @@ class DataAttributeIn;
  * InPortUser::startCondition is a semi-automated method (virtual,
  * can be overloaded), that manages the possible module task starting
  * conditions.
+ *
+ * @par 2.1.0-dev.7
+ * Add allPluggedDataStartState
  */
 class InPortUser
 {
@@ -190,12 +193,18 @@ protected:
 	std::set<size_t> inPortCoughts()
 		{ return caughts.get(); }
 
+	/**
+	 * Count how many input ports are plugged to a data source
+	 */
+	size_t inPortPluggedCount();
+
     /// Start states as to be returned by startCondition
     enum baseStartStates
 	{
     	noDataStartState,
 //		unknownStartState,
 		allDataStartState,
+		allPluggedDataStartState, // if not all inPorts are plugged
 		firstUnusedBaseStartState // to be used to extend the start states with another enum
 	};
 

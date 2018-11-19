@@ -195,6 +195,20 @@ static PyMethodDef pyMethodModSetParameterValue =
     "setParameterValue(paramName, value): set the value of the given parameter"
 };
 
+/// Bind to setParameterValue and applyParameters
+extern "C"
+PyObject* pyModSetParameterValues(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModSetParameterValues =
+{
+    "setParameterValues",
+    (PyCFunction)pyModSetParameterValues,
+    METH_VARARGS,
+    "setParameterValues(dict): set the values of the given parameters. "
+    "The dict keys are the parameter names, "
+    "the corresponding values are the parameter values. "
+};
+
 /// Module::setVerbosity python wrapper
 extern "C"
 PyObject* pyModSetVerbosity(ModMembers *self, PyObject *args);
@@ -245,18 +259,17 @@ static PyMethodDef pyMethodModBuildParamSetter =
     "build a parameter setter for the given parameter"
 };
 
-/// Module::buildParameterSetter python wrapper
-//extern "C"
-//PyObject* pyModBuildParamSetter(ModMembers *self, PyObject *args);
-//
-//static PyMethodDef pyMethodModBuildParamSetter =
-//{
-//    "buildParameterSetter",
-//    (PyCFunction)pyModBuildParamSetter,
-//    METH_VARARGS,
-//    "buildParameterSetter(paramName): "
-//    "build a parameter setter for the given parameter"
-//};
+/// Module::getParameterSetters python wrapper
+extern "C"
+PyObject* pyModGetParamSetters(ModMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodModGetParamSetters =
+{
+    "getParameterSetters",
+    (PyCFunction)pyModGetParamSetters,
+    METH_NOARGS,
+    "Retrieve the parameterSetters of the module"
+};
 
 /// exported methods
 static PyMethodDef pyModMethods[] = {
@@ -272,12 +285,14 @@ static PyMethodDef pyModMethods[] = {
 	pyMethodModGetParameterSet,
 	pyMethodModGetParameterValue,
 	pyMethodModSetParameterValue,
+	pyMethodModSetParameterValues,
 
 	pyMethodModSetVerbosity,
 	pyMethodModGetVerbosity,
 
 	pyMethodModBuildParamGetter,
 	pyMethodModBuildParamSetter,
+	pyMethodModGetParamSetters,
 
 	{NULL} // sentinel
 };

@@ -108,7 +108,7 @@ static PyMethodDef pyMethodModFactSelectDescription =
     "select() usage help"
 };
 
-/// ModuleFactory::selectDescription python wrapper
+/// ModuleFactory::selectValueList python wrapper
 extern "C" PyObject* pyModFactSelectValueList(ModFactMembers *self);
 
 static PyMethodDef pyMethodModFactSelectValueList =
@@ -118,6 +118,30 @@ static PyMethodDef pyMethodModFactSelectValueList =
     METH_NOARGS,
     "List select() possible values. "
     "An empty string means that the choice is open"
+};
+
+/// ModuleFactoryBranch::getSelector python wrapper
+extern "C" PyObject* pyModFactGetSelector(ModFactMembers *self);
+
+static PyMethodDef pyMethodModFactGetSelector =
+{
+    "getSelector",
+    (PyCFunction)pyModFactGetSelector,
+    METH_NOARGS,
+    "Get the selector that built this factory. "
+    "A root factory returns NONE"
+};
+
+/// ModuleFactoryBranch::parent python wrapper
+extern "C" PyObject* pyModFactParent(ModFactMembers *self);
+
+static PyMethodDef pyMethodModFactParent =
+{
+    "parent",
+    (PyCFunction)pyModFactParent,
+    METH_NOARGS,
+    "Get the parent factory that built this factory. "
+    "A root factory returns NONE"
 };
 
 /// ModuleFactory::countRemain python wrapper
@@ -195,6 +219,9 @@ static PyMethodDef pyModFactMethods[] = {
         pyMethodModFactSelect,
         pyMethodModFactSelectDescription,
         pyMethodModFactSelectValueList,
+
+		pyMethodModFactGetSelector,
+		pyMethodModFactParent,
 
         pyMethodModFactCountRemain,
         pyMethodModFactIsLeaf,

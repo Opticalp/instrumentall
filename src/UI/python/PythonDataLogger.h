@@ -158,6 +158,20 @@ static PyMethodDef pyMethodDataLoggerSetParameterValue =
     "setParameterValue(paramName, value): set the value of the given parameter"
 };
 
+/// Bind to setParameterValue and applyParameters
+extern "C"
+PyObject* pyDataLoggerSetParameterValues(DataLoggerMembers *self, PyObject *args);
+
+static PyMethodDef pyMethodDataLoggerSetParameterValues =
+{
+    "setParameterValues",
+    (PyCFunction)pyDataLoggerSetParameterValues,
+    METH_VARARGS,
+    "setParameterValues(dict): set the values of the given parameters. "
+    "The dict keys are the parameter names, "
+    "the corresponding values are the parameter values. "
+};
+
 /// DataLogger::setVerbosity python wrapper
 extern "C"
 PyObject* pyDataLoggerSetVerbosity(DataLoggerMembers *self, PyObject *args);
@@ -192,6 +206,7 @@ static PyMethodDef pyDataLoggerMethods[] = {
         pyMethodDataLoggerGetParameterSet,
         pyMethodDataLoggerGetParameterValue,
         pyMethodDataLoggerSetParameterValue,
+        pyMethodDataLoggerSetParameterValues,
 
         pyMethodDataLoggerSetVerbosity,
         pyMethodDataLoggerGetVerbosity,

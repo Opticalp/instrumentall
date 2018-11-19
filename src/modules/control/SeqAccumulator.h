@@ -36,7 +36,7 @@
 /**
  * SeqAccumulator
  *
- * Transform an array into a data sequence. This module is a sequence source.
+ * Transform a data sequence into an array.
  */
 class SeqAccumulator: public Module
 {
@@ -65,6 +65,9 @@ private:
      */
     void clearStore();
 
+    /**
+     * Send data array to the outPort
+     */
     void writeOutData();
 
     bool seqRunning()
@@ -91,15 +94,6 @@ private:
 
     size_t seqIndex;
     TypeNeutralData dataStore; ///< array to accumulate the seq data
-
-    /**
-     * Send the input array, unstacked.
-     *
-     * Reserve the outport as much times as necessary,
-     * set the data, and notify the outport.
-     */
-    template <typename T>
-    void sendData(std::vector<T>& input, DataAttributeIn attr);
 
     int mDataType;
 };

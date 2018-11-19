@@ -70,8 +70,17 @@ public:
 
 	/**
 	 * Retrieve the data source
+	 *
+	 * @throw Poco::NullPointerException if no source is plugged
 	 */
 	DataSource* getDataSource();
+
+	/**
+	 * Check if a data source is plugged
+	 *
+	 * Check if a data source is plugged to this data target
+	 */
+	bool hasDataSource();
 
     /**
      * Check if data is available at this source
@@ -218,17 +227,22 @@ protected:
     /**
      * Check if the given data type is supported
      *
-     * To be overridden in the implementations
+     * Read the supported data types and check if the given type is supported.
+     *
+     * @see supportedInputDataType
      * @see DataItem for the data type definitions
      */
-    virtual bool isSupportedInputDataType(int dataType) = 0;
+    bool isSupportedInputDataType(int dataType);
 
     /**
      * Return the supported data types
      *
      * To be used when looking for a suited data proxy
      *
-     * @see isSupportedDataType
+     * @return a set containing the supported data types.
+     * The empty set means that all data types are supported.
+     *
+     * @see isSupportedInputDataType
      */
     virtual std::set<int> supportedInputDataType() = 0;
 

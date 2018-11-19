@@ -240,6 +240,11 @@ PyObject* pyDataLoggerSetParameterValue(DataLoggerMembers* self, PyObject* args)
     return pySetParameterValue(*self->logger, args);
 }
 
+PyObject* pyDataLoggerSetParameterValues(DataLoggerMembers* self, PyObject* args)
+{
+    return pySetParameterValues(*self->logger, args);
+}
+
 PyObject* pyDataLoggerSetVerbosity(DataLoggerMembers* self, PyObject* args)
 {
     return pySetVerbosity(*self->logger, args);

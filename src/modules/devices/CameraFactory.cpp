@@ -28,6 +28,7 @@
 
 #include "CameraFactory.h"
 
+#include "modules/devices/GenicamRootFactory.h"
 #include "modules/GenericLeafFactory.h"
 #include "modules/devices/CameraFromFiles.h"
 
@@ -38,6 +39,8 @@ std::vector<std::string> CameraFactory::selectValueList()
 #ifdef HAVE_OPENCV
     list.push_back("fromFiles");
 #endif
+
+    list.push_back("genicam");
 
     return list;
 }
@@ -53,5 +56,8 @@ ModuleFactoryBranch* CameraFactory::newChildFactory(std::string selector)
                 this, selector);
     else
 #endif
+    if  (selector.compare("genicam") == 0)
+        return new GenicamRootFactory(this, selector);
+    else
         return NULL;
 }

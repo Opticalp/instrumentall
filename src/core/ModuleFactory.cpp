@@ -33,6 +33,7 @@
 ModuleFactory::ModuleFactory(bool leaf, bool root):
     bRoot(root), bLeaf(leaf),
     deletingChildFact(NULL),
+	selectingNewFact(false),
     deletingChildMod(NULL), 
 	VerboseEntity()
 {
@@ -40,39 +41,49 @@ ModuleFactory::ModuleFactory(bool leaf, bool root):
         Poco::Util::Application::instance().getSubsystem<ModuleManager>().addFactory(this);
 }
 
+void ModuleFactory::delThis()
+{
+	if (isLeaf())
+		deleteChildModules();
+
+	deleteChildFactories();
+	
+	delete this;
+}
+
 ModuleFactory::~ModuleFactory()
 {
-    if (isLeaf())
-        deleteChildModules();
-
-    deleteChildFactories();
-
-    terminate();
-
-    if (!isRoot())
-        Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeFactory(this);
+	if (!isRoot()) 
+		Poco::Util::Application::instance().getSubsystem<ModuleManager>().removeFactory(this);
 }
 
 ModuleFactoryBranch& ModuleFactory::select(std::string selector)
 {
+    if (isLeaf())
+        throw Poco::RuntimeException(name() + "::select",
+                "No child factory: this factory is a leaf");
+
     std::string validated(validateSelector(selector));
 
-    childFactLock.writeLock();
+    Poco::RWLock::ScopedWriteLock wLock(childFactLock);
 
     for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end(); it != ite ; it++)
-    {
         if (validated.compare((*it)->getSelector())==0)
-        {
-            childFactLock.unlock();
             return **it;
-        }
-    }
 
     // child factory not found, create one.
-    ModuleFactoryBranch* factory(newChildFactory(validated));
-    childFactories.push_back(factory);
-    childFactLock.unlock();
-    return *factory;
+	try
+	{
+		selectingNewFact = true;
+		ModuleFactoryBranch* factory(newChildFactory(validated));
+		childFactories.push_back(factory);
+		return *factory;
+	}
+	catch (...)
+	{
+		selectingNewFact = false;
+		throw;
+	}
 }
 
 std::string ModuleFactory::validateSelector(std::string selector)
@@ -98,7 +109,7 @@ void ModuleFactory::deleteChildFactory(std::string property)
 
     std::string validated(validateSelector(property));
 
-    childFactLock.writeLock();
+    Poco::RWLock::ScopedWriteLock wLock(childFactLock);
 
     for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(),ite=childFactories.end();
             it!=ite;
@@ -107,14 +118,12 @@ void ModuleFactory::deleteChildFactory(std::string property)
         if (validated.compare((*it)->getSelector())==0)
         {
             deletingChildFact = *it;
-            delete (*it);
+			deletingChildFact->delThis();
             deletingChildFact = NULL;
-            childFactLock.unlock();
             return;
         }
     }
 
-    childFactLock.unlock();
     throw Poco::RuntimeException(name() + "deleteChildFactory",
             "Child factory not found");
 }
@@ -122,8 +131,13 @@ void ModuleFactory::deleteChildFactory(std::string property)
 void ModuleFactory::removeChildFactory(ModuleFactoryBranch* factory)
 {
     if (deletingChildFact != factory)
-        childFactLock.writeLock();
-
+	{
+		if (selectingNewFact && !isChildFactory(factory))
+			// exception during child factory creation
+			return;
+		else
+			childFactLock.writeLock();
+	}
     for (std::vector<ModuleFactoryBranch*>::reverse_iterator it = childFactories.rbegin(),
             ite = childFactories.rend(); it != ite; it++)
     {
@@ -142,6 +156,16 @@ void ModuleFactory::removeChildFactory(ModuleFactoryBranch* factory)
             "Child factory not found");
 }
 
+bool ModuleFactory::isChildFactory(ModuleFactoryBranch * factory)
+{
+	for (std::vector<ModuleFactoryBranch*>::iterator it = childFactories.begin(),
+		ite = childFactories.end(); it != ite; it++)
+		if (*it == factory)
+			return true;
+
+	return false;
+}
+
 void ModuleFactory::deleteChildFactories()
 {
     if (isLeaf())
@@ -158,7 +182,7 @@ void ModuleFactory::deleteChildFactories()
         deletingChildFact = childFactories.back();
         poco_information(logger(),"deleting child factory: "
                                     + std::string(deletingChildFact->name()));
-        delete (deletingChildFact);
+        deletingChildFact->delThis();
         deletingChildFact = NULL;
     }
 
@@ -191,26 +215,21 @@ Module* ModuleFactory::create(std::string customName)
 {
     if (!isLeaf())
     {
-        childFactLock.readLock();
+        Poco::RWLock::ScopedReadLock rLock(childFactLock);
+
         for (std::vector<ModuleFactoryBranch*>::iterator it=childFactories.begin(), ite=childFactories.end();
                 it != ite ;
                 it++)
-        {
             if ((*it)->countRemain())
-			{
-                childFactLock.unlock();
                 return (*it)->create(customName);
-			}
-        }
 
-        childFactLock.unlock();
         throw Poco::RuntimeException(name() + "::create()",
                 "ChildFact countRemain() is null! ");
     }
 
     {
     	// check if a module already exists with this custom name here
-    	Poco::ScopedReadRWLock lock(childModLock);
+        Poco::RWLock::ScopedReadLock rLock(childModLock);
 
     	for (std::vector<Module*>::iterator it = childModules.begin(), ite = childModules.end();
     			it != ite; it++)

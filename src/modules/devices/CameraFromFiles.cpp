@@ -46,9 +46,14 @@
 size_t CameraFromFiles::refCount = 0;
 
 CameraFromFiles::CameraFromFiles(ModuleFactory* parent, std::string customName):
-            Module(parent, customName)
+            Module(parent, customName),
+            forceGrayscale(true)
 {
-    setInternalName("CameraFromFiles" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("CameraFromFiles" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("CameraFromFiles");
+
     setCustomName(customName);
     setLogger("module." + name());
 
@@ -59,12 +64,12 @@ CameraFromFiles::CameraFromFiles(ModuleFactory* parent, std::string customName):
             ParamItem::typeString, ""); // default is empty: relative path
     addParameter(paramFiles, "files",
             "CR-separated list of files to be used as image sources",
-            ParamItem::typeString);
+            ParamItem::typeString, "");
     currentImgPath = imgPaths.begin();
     addParameter(paramForceGrayscale, "forceGrayscale", "force a color image to be grayscale (ON). "
             "Leave as is elsewhere (OFF)", ParamItem::typeString, "ON");
 
-    setStrParameterValue(paramForceGrayscale, getStrParameterDefaultValue(paramForceGrayscale));
+    setParametersDefaultValue();
 
     // ports
     setInPortCount(inPortCnt);
@@ -84,15 +89,25 @@ CameraFromFiles::CameraFromFiles(ModuleFactory* parent, std::string customName):
 
 void CameraFromFiles::process(int startCond)
 {
-    // first tests: do not make the difference between direct run or trigged run.
+    DataAttributeOut attr;
+
     switch (startCond)
     {
     case noDataStartState:
         poco_information(logger(), name() + " processing direct launch.");
         break;
     case allDataStartState:
-        poco_information(logger(), name() + " processing trigged launch.");
-        break;
+        {
+            DataAttributeIn inAttr;
+            readLockInPort(trigPort);
+            readInPortDataAttribute(trigPort, &inAttr);
+            releaseInPort(trigPort);
+
+            attr = inAttr;
+
+            poco_information(logger(), name() + " processing trigged launch.");
+            break;
+        }
     default:
         poco_bugcheck_msg("impossible start condition");
         throw Poco::BugcheckException();
@@ -117,9 +132,10 @@ void CameraFromFiles::process(int startCond)
     Poco::Path fullImagePath = imgDir;
     fullImagePath.append(*currentImgPath++);
 
-    dataLock.unlock();
+    poco_information(logger(), name() + " tries to open: "
+            + fullImagePath.toString());
 
-    DataAttributeOut attr;
+    dataLock.unlock();
 
     processingTerminated();
 

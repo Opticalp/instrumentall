@@ -1,0 +1,88 @@
+2.2
+---
+ * reintegrate serial comm
+ * add distance to origin
+ * add linear converter
+
+2.2.0-rc.3
+----------
+ * reintegrate threshold
+ * add img center of mass
+
+2.2.0-rc.2
+----------
+ * Develop image proc factory tree
+ * import box mask, rot crop, img stats
+
+2.2.0-rc.1
+----------
+Fix ModuleFactory::terminate issue
+
+2.2.0-dev.4
+-----------
+ * Add img reticle proxy
+ * fix the logger naming issue
+ * Deep modifications in default parameters management (Modules)
+
+2.2.0-dev.3
+-----------
+reintegrate genicam from private branch
+
+2.2.0-dev.2
+-----------
+Core improvements
+ * ParameterizedEntity internal parameter management
+ * minor fixes
+
+2.2.0-dev.1
+-----------
+Add python setParameterValues which bind to applyParameters
+
+2.2.0-dev.0
+-----------
+ * Add parameters to the data proxies
+ * Improve DataProxy and DataLogger creation
+ * isSupportedInputDataType(int datatype) does not need to be implemented in classes inherited from DataTarget any more
+
+2.1.0-dev.8
+-----------
+ - Fix python error forwarding
+ - add python wrappers for Factory::getSelector and Module::parent
+
+2.1.0-dev.7
+-----------
+Add InportUser::allPluggedDataStartState
+
+2.1.0-dev.6
+-----------
+Add optionnal user management (with permissions)
+
+2.1.0-dev.5
+-----------
+Change ParameterGetter to be triggged when the parent module runs
+
+2.1.0-dev.4
+-----------
+Add a second image panel in GUI
+
+2.1.0-dev.3
+-----------
+Some minor changes:
+ * cosmetic modifications (verbosity)
+ * minor bug fix with cancelAllNoWait()
+
+2.1.0-dev.2
+-----------
+ * Fix iconsole issue while using initscript
+
+2.1.0-dev.1
+-----------
+ * Add cancelAllNoWait()
+
+2.1.0-dev.0
+-----------
+ * Improve file hierarchy (runtimeEnv/)
+
+2.0
+-----------
+Stable release. 

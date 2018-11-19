@@ -67,7 +67,6 @@ extern "C" PyObject* pyDataTargetNew(PyTypeObject* type, PyObject* args, PyObjec
     return (PyObject *) self;
 }
 
-#include "PythonParameterGetter.h"
 #include "PythonParameterSetter.h"
 #include "PythonDataProxy.h"
 #include "PythonDataLogger.h"
@@ -95,12 +94,6 @@ extern "C" int pyDataTargetInit(DataTargetMembers* self, PyObject *args, PyObjec
 
         self->target = const_cast<DataProxy*>(pyProxy->proxy->get());
     }
-    else if (typeName.compare("instru.ParameterGetter") == 0)
-    {
-        ParameterGetterMembers* pyGetter = reinterpret_cast<ParameterGetterMembers*>(pyArg);
-
-        self->target = const_cast<ParameterGetter*>(pyGetter->getter->get());
-    }
     else if (typeName.compare("instru.ParameterSetter") == 0)
     {
         ParameterSetterMembers* pySetter = reinterpret_cast<ParameterSetterMembers*>(pyArg);
@@ -110,8 +103,8 @@ extern "C" int pyDataTargetInit(DataTargetMembers* self, PyObject *args, PyObjec
     else
     {
 		PyErr_SetString(PyExc_TypeError,
-				"The cast can only be done from a ParameterGetter, "
-				"DataLogger or DataProxy");
+				"The cast can only be done from a ParameterSetter, "
+				"a DataLogger or a DataProxy");
 		return -1;
     }
 

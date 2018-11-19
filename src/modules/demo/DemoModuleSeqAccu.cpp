@@ -45,7 +45,11 @@ DemoModuleSeqAccu::DemoModuleSeqAccu(ModuleFactory* parent, std::string customNa
 {
     // poco_information(logger(),"Creating a new DemoModuleSeqAccu");
 
-    setInternalName("DemoModuleSeqAccu" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("DemoModuleSeqAccu" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("DemoModuleSeqAccu");
+
     setCustomName(customName);
     setLogger("module." + name());
 

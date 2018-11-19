@@ -342,6 +342,9 @@ void ThreadManager::waitAll()
 
         //poco_information(logger(), "active threads are : " + nameList);
 
+		//if (cancellingAll)
+		//	poco_information(logger(),"cancellingAll is set");
+
         if (stoppedOnCancel)
             Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
         else if (cancelEvent.tryWait(TIME_LAPSE_WAIT_ALL))
@@ -355,10 +358,17 @@ void ThreadManager::waitAll()
 
     if (stoppedOnCancel || stoppedOnFailure)
     {
+		poco_information(logger(),"stopped on cancel or failure");
+
         ModuleManager& modMan = Poco::Util::Application::instance().getSubsystem<ModuleManager>();
+
+        poco_notice(logger(),"waitAll: execution stopped on cancellation or failure. "
+                "Waiting till all the module are ready. ");
 
         while (!modMan.allModuleReady())
             Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL);
+
+		poco_information(logger(), "All modules are ready");
 
         if (stoppedOnFailure)
             throw Poco::RuntimeException("waitAll","Stopped on module failure");
@@ -394,27 +404,48 @@ void ThreadManager::unregisterModuleTask(ModuleTaskPtr& pTask)
 	poco_information(logger(), pTask->name() + " erased from ThreadManager::pendingModTasks. ");
 }
 
-void ThreadManager::cancelAll()
+void ThreadManager::cancelAllActiveTasks()
+{
+    cancelEvent.set();
+
+    taskListLock.readLock();
+    std::set<ModuleTaskPtr> tempModTasks = pendingModTasks;
+    taskListLock.unlock();
+
+    poco_notice(logger(), "CancelAllActiveTasks: Dispatching cancel() to all active tasks");
+
+    for (std::set<ModuleTaskPtr>::iterator it = tempModTasks.begin(),
+            ite = tempModTasks.end(); it != ite; it++)
+    {
+        ModuleTaskPtr tsk(*it);
+        poco_information(logger(), "CancelAllActiveTasks: cancelling " + tsk->name());
+        tsk->cancel();
+    }
+}
+
+void ThreadManager::cancelAllNoWait()
 {
     if (cancellingAll)
         return;
 
 	cancellingAll = true;
-	cancelEvent.set();
 
-	taskListLock.readLock();
-	std::set<ModuleTaskPtr> tempModTasks = pendingModTasks;
-	taskListLock.unlock();
+	cancelAllActiveTasks();
 
-	poco_notice(logger(), "CancelAll: Dispatching cancel() to all active tasks");
+	// allow waitAll to see  the cancellation
+	Poco::Thread::sleep(TIME_LAPSE_WAIT_ALL * 2);
 
-	for (std::set<ModuleTaskPtr>::iterator it = tempModTasks.begin(),
-			ite = tempModTasks.end(); it != ite; it++)
-	{
-		ModuleTaskPtr tsk(*it);
-		poco_information(logger(), "CancelAll: cancelling " + tsk->name());
-		tsk->cancel();
-	}
+	cancellingAll = false;
+}
+
+void ThreadManager::cancelAll()
+{
+    if (cancellingAll)
+        return;
+
+    cancellingAll = true;
+
+    cancelAllActiveTasks();
 
 	poco_information(logger(), "CancelAll: All active tasks cancelled. Wait for them to delete. ");
 

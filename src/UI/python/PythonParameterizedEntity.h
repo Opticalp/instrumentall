@@ -38,6 +38,7 @@
 PyObject* pyGetParameterSet(ParameterizedEntity* pEntity);
 PyObject* pyGetParameterValue(ParameterizedEntity* pEntity, PyObject *args);
 PyObject* pySetParameterValue(ParameterizedEntity* pEntity, PyObject *args);
+PyObject* pySetParameterValues(ParameterizedEntity* pEntity, PyObject *args);
 
 #endif /* HAVE_PYTHON27 */
 #endif /* SRC_UI_PYTHON_PYTHONPARAMETERIZEDENTITY_H_ */

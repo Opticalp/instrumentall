@@ -43,7 +43,11 @@ DemoModuleForwarder::DemoModuleForwarder(ModuleFactory* parent, std::string cust
 {
     // poco_information(logger(),"Creating a new DemoModuleForwarder");
 
-    setInternalName("DemoModuleForwarder" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("DemoModuleForwarder" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("DemoModuleForwarder");
+
     setCustomName(customName);
     setLogger("module." + name());
 

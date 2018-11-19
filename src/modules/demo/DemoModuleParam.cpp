@@ -35,7 +35,11 @@ size_t DemoModuleParam::refCount = 0;
 DemoModuleParam::DemoModuleParam(ModuleFactory* parent, std::string customName):
     Module(parent, customName), iPar(421), fPar(3.14), sPar("Caramba")
 {
-    setInternalName("DemoModuleParam" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("DemoModuleParam" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("DemoModuleParam");
+
     setCustomName(customName);
     setLogger("module." + name());
 
@@ -47,6 +51,9 @@ DemoModuleParam::DemoModuleParam(ModuleFactory* parent, std::string customName):
 
     // test the default values
     setIntParameterValue(paramInt, getIntParameterDefaultValue(paramInt));
+
+    // another (global) way to use it
+    setParametersDefaultValue();
 
     try
     {

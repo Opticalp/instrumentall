@@ -418,17 +418,28 @@ pythonDispatchUnbind(PyObject* self, PyObject* args)
     // the comparison uses type name (str)
     std::string typeName(pyObj->ob_type->tp_name);
 
-    if (typeName.compare("instru.InPort"))
+    DataTarget* target;
+
+    if (typeName.compare("instru.InPort") == 0)
     {
-        PyErr_SetString(PyExc_TypeError, "inPort has to be an InPort");
+        InPortMembers* pyInPort = reinterpret_cast<InPortMembers*>(pyObj);
+        target = *pyInPort->inPort->get();
+    }
+    else if (typeName.compare("instru.DataTarget") == 0)
+    {
+        DataTargetMembers* pyDataTarget = reinterpret_cast<DataTargetMembers*>(pyObj);
+        target = pyDataTarget->target;
+    }
+    else
+    {
+        PyErr_SetString(PyExc_TypeError,
+                "The argument must be a DataTarget");
         return NULL;
     }
 
-    InPortMembers* pyPort = reinterpret_cast<InPortMembers*>(pyObj);
-
     Poco::Util::Application::instance()
         .getSubsystem<Dispatcher>()
-        .unbind(**pyPort->inPort);
+        .unbind(target);
 
     Py_RETURN_NONE;
 }
@@ -587,6 +598,16 @@ pythonThreadManCancelAll(PyObject *self, PyObject *args)
     Poco::Util::Application::instance()
             .getSubsystem<ThreadManager>()
             .cancelAll();
+
+    Py_RETURN_NONE;
+}
+
+extern "C" PyObject*
+pythonThreadManCancelAllNoWait(PyObject *self, PyObject *args)
+{
+    Poco::Util::Application::instance()
+            .getSubsystem<ThreadManager>()
+            .cancelAllNoWait();
 
     Py_RETURN_NONE;
 }

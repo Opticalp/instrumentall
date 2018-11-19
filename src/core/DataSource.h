@@ -165,6 +165,32 @@ public:
      */
     void resetWithTargets();
 
+    /**
+     * Check if the given data type is supported
+     *
+     * Read the supported data types and check if the given type is supported.
+     *
+     * @see supportedOutputDataType
+     * @see DataItem for the data type definitions
+     */
+    bool isSupportedOutputDataType(int dataType);
+
+    /**
+     * Return the supported data types
+     *
+     * @return a set containing the supported data types.
+     * Default behavior: current dataType
+     *
+     * @see isSupportedOutputDataType
+     */
+    virtual std::set<int> supportedOutputDataType();
+
+    /**
+     * @return preferred output data type
+     * e.g. based on the input data type for the proxies
+     */
+    virtual int preferredOutputDataType();
+
 protected:
     /**
      * Implement the cancellation in the concerned entity
@@ -195,7 +221,7 @@ private:
      *
      * This function should only be called by the target.
      */
-    void addDataTarget(DataTarget* port);
+    void addDataTarget(DataTarget* target, int datatype);
 
     /**
      * Remove a data target

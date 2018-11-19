@@ -1,5 +1,5 @@
 /**
- * @file	src/TypedSeqAccumulatorFactory.h
+ * @file	src/modules/control/TypedSeqAccumulatorFactory.h
  * @date	Jul. 2017
  * @author	PhRG - opticalp.fr
  */

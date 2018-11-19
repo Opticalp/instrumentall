@@ -107,12 +107,19 @@ TopFrame::TopFrame(wxWindow* parent):
     // go maximized
 //    Maximize(true);
 
-    imgPanel = XRCCTRL(*this, "imagePanel", ImagePanel);
+#ifdef HAVE_OPENCV
+    imgPanels.push_back(XRCCTRL(*this, "imagePanel", ImagePanel));
+    imgPanels.push_back(XRCCTRL(*this, "imagePanel2", ImagePanel));
+#endif
 
     stBar = XRCCTRL(*this,"topFrameStatusbar", wxStatusBar);
 
     stBar->SetStatusText("WxWidgets initialized...");
 //    stBar->SetStatusText("field #1 start text",1);
+
+#ifdef MANAGE_USERS
+    addUserManagementMenuEntry();
+#endif
 
     core.init();
 }
@@ -268,12 +275,13 @@ std::string TopFrame::getTextCtrlTxt()
 }
 
 #ifdef HAVE_OPENCV
-void TopFrame::setImage(cv::Mat img)
+void TopFrame::setImage(cv::Mat img, int pos)
 {
 //    _waitImageOk = true;
 //     XRCCTRL(*this,"imageContinueButton",wxButton)->Enable(true);
 
-     imgPanel->setImage(img);
+    if (pos < imgPanels.size())
+        imgPanels[pos]->setImage(img);
 
 //     if (milliseconds)
 //         for (int i=0 ; i< milliseconds/100 ; i++)
@@ -297,7 +305,9 @@ void TopFrame::setImage(cv::Mat img)
 
 void TopFrame::onZoomIn(wxCommandEvent& event)
 {
-    imgPanel->incZoom();
+    for (std::vector<ImagePanel*>::iterator it = imgPanels.begin(),
+        ite = imgPanels.end(); it != ite; it++)
+            (*it)->incZoom();
 
     // do not call refresh directly! since we can be in a worker thread...
     wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
@@ -307,7 +317,9 @@ void TopFrame::onZoomIn(wxCommandEvent& event)
 
 void TopFrame::onZoomOut(wxCommandEvent& event)
 {
-    imgPanel->decZoom();
+    for (std::vector<ImagePanel*>::iterator it = imgPanels.begin(),
+        ite = imgPanels.end(); it != ite; it++)
+            (*it)->decZoom();
 
     // do not call refresh directly! since we can be in a worker thread...
     wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
@@ -317,7 +329,9 @@ void TopFrame::onZoomOut(wxCommandEvent& event)
 
 void TopFrame::onZoomFit(wxCommandEvent& event)
 {
-    imgPanel->zoomReset();
+    for (std::vector<ImagePanel*>::iterator it = imgPanels.begin(),
+        ite = imgPanels.end(); it != ite; it++)
+            (*it)->zoomReset();
 
     // do not call refresh directly! since we can be in a worker thread...
     wxCommandEvent* evt = new wxCommandEvent(RefreshEvent,GetId());
@@ -354,4 +368,33 @@ void TopFrame::reportStatus(std::string statusMsg)
 	updateDisplay();
 }
 
+#ifdef MANAGE_USERS
+
+#include "LoginDialog.h"
+
+void TopFrame::addUserManagementMenuEntry()
+{
+	wxMenuBar* menuBar = GetMenuBar();
+	wxMenu* userMenu = new wxMenu;
+	int loginID = userMenu->Append(wxID_ANY, wxT("Login..."))->GetId();
+	int logoutID = userMenu->Append(wxID_ANY, wxT("Logout"))->GetId();
+	menuBar->Append(userMenu, "User");
+
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &TopFrame::onLogin, this, loginID);
+	Bind(wxEVT_COMMAND_MENU_SELECTED, &TopFrame::onLogout, this, logoutID);
+}
+
+void TopFrame::onLogin(wxCommandEvent& event)
+{
+	LoginDialog dlg(this, core);
+	dlg.ShowModal();
+}
+
+void TopFrame::onLogout(wxCommandEvent& event)
+{
+	core.logout();
+	wxMessageBox("User logged out.");
+}
+
+#endif /* MANAGE_USERS */
 #endif /* HAVE_WXWIDGETS */

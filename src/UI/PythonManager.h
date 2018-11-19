@@ -38,6 +38,9 @@
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
 
+#ifdef MANAGE_USERS
+#   include "core/User.h"
+#endif
 
 class PyThreadKeeper;
 
@@ -52,6 +55,11 @@ class PyThreadKeeper;
  * handle command line options (initscript, iconsole, execute).
  *
  * Since 2.0.0-dev.31: multithreading (almost) ready. TODO: setVar/getVar lock
+ *
+ * @par 2.1.0-dev.5
+ * Add users management. Control console launch and script launch (pyMod also).
+ *
+ * There is a known safety leak with python/embed that should be write protected.
  */
 class PythonManager: public Poco::Util::Subsystem, VerboseEntity
 {
@@ -117,6 +125,17 @@ public:
      */
     void errorMessage(std::string errorMsg);
 
+#ifdef MANAGE_USERS
+    /**
+     * Change the python user to the given one.
+     *
+     * e.g. to be called by the GuiManager with its own user.
+     *
+     * @param hUser user on which to point pythonUser
+     */
+    void setUser(const UserPtr hUser);
+#endif
+
 private:
     /**
      * Callback function to handle the use of 'i' or 'iconsole' command line option
@@ -140,8 +159,10 @@ private:
      */
     void runScript(Poco::Util::Application& app, Poco::Path scriptFile);
 
-    /// run the python console
-    void runConsole(Poco::Util::Application& app);
+    /*
+     * Run the python console
+     */
+    void runConsole();
 
     /**
      * Expose python API
@@ -219,6 +240,32 @@ private:
     bool iconsoleFlag;
 
     PyThreadKeeper* pyMultiThread; ///< allow to launch python executions in multiple C++ threads
+
+#ifdef MANAGE_USERS
+    /**
+     * Callback function to handle the use of 'u' or 'userlogin' command line option
+     */
+    void handleUserlogin(const std::string& name, const std::string& value)
+        { userloginFlag = true; }
+
+    bool userloginFlag;
+
+    /**
+     * Ask for user/password
+     *
+     * @return true if login succeeded
+     */
+    bool loginPrompt();
+
+    /**
+     * Ask until login succeeds.
+     *
+     * 3 times max.
+     */
+    void loginLoop();
+
+    UserPtr pythonUser;
+#endif
 };
 
 //

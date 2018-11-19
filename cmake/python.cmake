@@ -23,17 +23,11 @@ else ( NOT PYTHONLIBS_FOUND )
     include_directories ( ${PYTHON_INCLUDE_DIRS} )
     target_link_libraries ( instrumentall ${PYTHON_LIBRARIES} )
     
-    # install console.py
-    file (
-      COPY ${PROJECT_SOURCE_DIR}/conf/console.py
-      DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/conf/
-      FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-      )
-
     # building bin tree
     file (MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python)
     file (MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/embed)
     file (MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/scripts)
+    file (MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/python/modScripts)
 
 	# copy the embedded tools
 	file (
