@@ -1,3 +1,9 @@
+2.2.0-rc.3
+----------
+ * reintegrate threshold
+ * add img center of mass
+
+
 2.2.0-rc.2
 ----------
  * Develop image proc factory tree

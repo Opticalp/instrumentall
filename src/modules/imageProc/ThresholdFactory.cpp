@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/imageProc/MaskGenFactory.cpp
- * @date	Jun 2018
+ * @file	src/modules/imageProc/ThresholdFactory.cpp
+ * @date    Jan. 2017
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2018 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,39 +26,25 @@
  THE SOFTWARE.
  */
 
-#include "MaskGenFactory.h"
+#ifdef HAVE_OPENCV
 
-#include "modules/GenericLeafFactory.h"
-#include "BoxMask.h"
 #include "ThresholdFactory.h"
+#include "ThresholdSpecifiedFactory.h"
 
-std::vector<std::string> MaskGenFactory::selectValueList()
+std::vector<std::string> ThresholdFactory::selectValueList()
 {
     std::vector<std::string> list;
 
-#ifdef HAVE_OPENCV
-	list.push_back("boxMask");
-	list.push_back("threshold");
-#endif
+    list.push_back("absolute");
+    list.push_back("population");
+    list.push_back("mean");
+
     return list;
 }
 
-ModuleFactoryBranch* MaskGenFactory::newChildFactory(std::string selector)
+ModuleFactoryBranch* ThresholdFactory::newChildFactory(std::string selector)
 {
-#ifdef HAVE_OPENCV
-	if (selector.compare("boxMask") == 0)
-	{
-		return new GenericLeafFactory<BoxMask>("BoxMaskFactory",
-			"Build a generator for box (rectangle, ellipse) masks",
-			this, selector);
-	}
-	else if (selector.compare("threshold") == 0)
-	{
-		return new ThresholdFactory(this, selector);
-	}
-#endif /* HAVE_OPENCV */
-	{
-		poco_bugcheck_msg("Create: unknown selector");
-		throw Poco::BugcheckException();
-	}
+    return new ThresholdSpecifiedFactory(this, selector);
 }
+
+#endif /* HAVE_OPENCV */

@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/imageProc/MaskGenFactory.cpp
- * @date	Jun 2018
+ * @file	src/modules/imageProc/ThresholdSpecifiedFactory.h
+ * @date	Jan. 2017
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2018 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,39 +26,42 @@
  THE SOFTWARE.
  */
 
-#include "MaskGenFactory.h"
-
-#include "modules/GenericLeafFactory.h"
-#include "BoxMask.h"
-#include "ThresholdFactory.h"
-
-std::vector<std::string> MaskGenFactory::selectValueList()
-{
-    std::vector<std::string> list;
+#ifndef SRC_MODULES_IMAGEPROC_THRESHOLDSPECIFIEDFACTORY_H_
+#define SRC_MODULES_IMAGEPROC_THRESHOLDSPECIFIEDFACTORY_H_
 
 #ifdef HAVE_OPENCV
-	list.push_back("boxMask");
-	list.push_back("threshold");
-#endif
-    return list;
-}
 
-ModuleFactoryBranch* MaskGenFactory::newChildFactory(std::string selector)
+#include "core/ModuleFactoryBranch.h"
+
+/**
+ * Leaf factory for the thresholding modules
+ *
+ * @par 2.1.0-dev.7
+ * The previous leaf (with mask / no mask), that was one step deeper,
+ * is removed. This is now the leaf factory.
+ */
+class ThresholdSpecifiedFactory: public ModuleFactoryBranch
 {
-#ifdef HAVE_OPENCV
-	if (selector.compare("boxMask") == 0)
-	{
-		return new GenericLeafFactory<BoxMask>("BoxMaskFactory",
-			"Build a generator for box (rectangle, ellipse) masks",
-			this, selector);
-	}
-	else if (selector.compare("threshold") == 0)
-	{
-		return new ThresholdFactory(this, selector);
-	}
+public:
+    ThresholdSpecifiedFactory(ModuleFactory* parent, std::string selector);
+
+    std::string name();
+    std::string description();
+
+    size_t countRemain() { return 1; }
+
+private:
+    Module* newChildModule(std::string customName);
+
+    enum ThresTypes
+    {
+        absoluteType,
+        populationType,
+        meanType
+    };
+
+    ThresTypes mType;
+};
+
 #endif /* HAVE_OPENCV */
-	{
-		poco_bugcheck_msg("Create: unknown selector");
-		throw Poco::BugcheckException();
-	}
-}
+#endif /* SRC_MODULES_IMAGEPROC_THRESHOLDSPECIFIEDFACTORY_H_ */

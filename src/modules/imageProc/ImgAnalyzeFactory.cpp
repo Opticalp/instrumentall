@@ -30,6 +30,7 @@
 
 #include "modules/GenericLeafFactory.h"
 #include "HistogramMod.h"
+#include "CenterOfMass.h"
 #include "ImgStats.h"
 
 std::vector<std::string> ImgAnalyzeFactory::selectValueList()
@@ -39,6 +40,7 @@ std::vector<std::string> ImgAnalyzeFactory::selectValueList()
 #ifdef HAVE_OPENCV
 	list.push_back("simpleStats");
 	list.push_back("histogram");
+	list.push_back("centerOfMass");
 #endif /* HAVE_OPENCV*/
     return list;
 }
@@ -58,6 +60,12 @@ ModuleFactoryBranch* ImgAnalyzeFactory::newChildFactory(std::string selector)
           "Build image histogram module",
           this, selector);
     }
+	else if (selector.compare("centerOfMass") == 0)
+	{
+		return new GenericLeafFactory<CenterOfMass>("CenterOfMassFactory",
+			"Build image center of mass module",
+			this, selector);
+	}
 	else
 #endif /* HAVE_OPENCV */
 	{
