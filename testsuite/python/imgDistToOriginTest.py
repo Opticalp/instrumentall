@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-## @file   testsuite/python/imgPrintInfoTest.py
-## @date   jun 2018
+## @file   testsuite/python/imgDistToOriginTest.py
+## @date   aug 2018
 ## @author PhRG - opticalp.fr
 ##
-## Test the display of informations on an image
+## Test the display of decentering informations on an image
 
 #
 # Copyright (c) 2018 Ph. Renaud-Goud / Opticalp
@@ -62,62 +62,65 @@ def myMain(baseDir):
     print("Logger description: " + logger.description)
     logger.setName("imgShow")
 
-    print("Create the source for the value to be displayed")
-    print("Create a module from the floatDataGen factory")
-    floatGen = Factory("DataGenFactory").select("float").create("floatGen")
-    print("Create a module from the intDataGen factory")
-    intGen = Factory("DataGenFactory").select("int64").create("intGen")
+    print("Create the sources for the vector to be displayed")
+    print("Create 2 modules from the floatDataGen factory")
+    deltaX = Factory("DataGenFactory").select("float").create("deltaX")
+    deltaY = Factory("DataGenFactory").select("float").create("deltaY")
 
-    print("Create imgPrintInfo module")
-    printInfo = Factory("ImageProcFactory").select("modify").select("printInfo").create("printInfo")
-
-    print("set title: test")
-    printInfo.setParameterValue("title", "test")
-    instruTools.printModuleDetails(printInfo)
+    print("Create distToOrigin module")
+    dist = Factory("ImageProcFactory").select("modify").select("distToOrigin").create("dist")
 
     print("set color to black (0)")
-    printInfo.setParameterValue("level", 0)
+    dist.setParameterValue("level", 0)
 
-    print("Bind the image source to imgPrintInfo")
-    bind(cam.outPort("image"), printInfo.inPort("image"))
+    print("Bind the image source to distToOrigin")
+    bind(cam.outPort("image"), dist.inPort("image"))
     print("Bind the output image to the image shower")
-    bind(printInfo.outPort("image"), DataTarget(logger))
+    bind(dist.outPort("image"), DataTarget(logger))
 
-    print("run cam")
-    runModule(cam)
-    time.sleep(1)
+    print("Bind the decenter sources to distToOrigin")
+    bind(deltaX.outPort("data"), dist.inPort("deltaX"))
+    bind(deltaY.outPort("data"), dist.inPort("deltaY"))
 
-    print("Firstly bind the int source to printInfo")
-    bind(intGen.outPort("data"), printInfo.inPort("integer"))
-
-    print("set intGen value to 121")
-    intGen.setParameterValue("value", 121)
+    print("set deltaX value to 50")
+    deltaX.setParameterValue("value", 50)
+    print("set deltaY value to -25")
+    deltaY.setParameterValue("value", -25)
     print("set color to gray (50%)")
-    printInfo.setParameterValue("level", 128)
+    dist.setParameterValue("level", 128)
 
-    print("run both source modules: img and int")
+    print("run all source modules: img and deltas")
     runModule(cam)
-    runModule(intGen)
+    runModule(deltaX)
+    runModule(deltaY)
 
     time.sleep(1)
 
     print("change color mode to blue")
-    printInfo.setParameterValue("colorMode","blue")
-    printInfo.setParameterValue("level", 255)
+    dist.setParameterValue("colorMode","blue")
+    dist.setParameterValue("level", 255)
 
-    print("unbind intGen, bind floatGen")
-    unbind(printInfo.inPort("integer"))
+    print("change amplitude ratio to -1")
+    dist.setParameterValue("ratio", -1)
 
-    bind(floatGen.outPort("data"), printInfo.inPort("float"))
-    floatGen.setParameterValue("value", 3.14)
-    
-    print("run both source modules: img and float")
+    print("run all source modules (2): img and deltas")
     runModule(cam)
-    runModule(floatGen)
+    runModule(deltaX)
+    runModule(deltaY)
 
     time.sleep(1)
 
-    print("End of script imgPrintInfoTest.py")
+    print("change amplitude ratio to 2")
+    dist.setParameterValue("ratio", 2)
+
+    print("run all source modules (2): img and deltas")
+    runModule(cam)
+    runModule(deltaX)
+    runModule(deltaY)
+
+    time.sleep(1)
+
+    print("End of script imgDistToOriginTest.py")
     
 # main body    
 import sys

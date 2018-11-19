@@ -1,6 +1,6 @@
 /**
- * @file    src/Modules/imageProc/ImgPrintInfo.cpp
- * @date    Jun 2018
+ * @file    src/Modules/imageProc/DistToOrigin.cpp
+ * @date    Aug 2018
  * @author	PhRG - opticalp.fr
  */
 
@@ -28,22 +28,22 @@
 
 #ifdef HAVE_OPENCV
 
-#include "ImgPrintInfo.h"
+#include "DistToOrigin.h"
 
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "Poco/NumberFormatter.h"
 #include "Poco/String.h" // icompare
 
-size_t ImgPrintInfo::refCount = 0;
+size_t DistToOrigin::refCount = 0;
 
-ImgPrintInfo::ImgPrintInfo(ModuleFactory* parent, std::string customName):
+DistToOrigin::DistToOrigin(ModuleFactory* parent, std::string customName):
             Module(parent, customName)
 {
     if (refCount)
-         setInternalName("ImgPrintInfo" + Poco::NumberFormatter::format(refCount));
+         setInternalName("DistToOrigin" + Poco::NumberFormatter::format(refCount));
      else
-         setInternalName("ImgPrintInfo");
+         setInternalName("DistToOrigin");
 
      setCustomName(customName);
      setLogger("module." + name());
@@ -51,14 +51,14 @@ ImgPrintInfo::ImgPrintInfo(ModuleFactory* parent, std::string customName):
      // parameters
      setParameterCount(paramCnt);
      addParameter(paramXpos, "xPos",
-             "x-coord text position",
-             ParamItem::typeInteger, "10");
+             "x-coord origin/reference position. -1 means: image center. ",
+             ParamItem::typeInteger, "-1");
      addParameter(paramYpos, "yPos",
-             "y-coord text position",
-             ParamItem::typeInteger, "40");
-     addParameter(paramTitle, "title",
-             "Title of the displayed value",
-             ParamItem::typeString, "");
+             "y-coord origin/reference position. -1 means: image center. ",
+             ParamItem::typeInteger, "-1");
+     addParameter(paramRatio, "ratio",
+             "Amplification ratio of the centering error",
+             ParamItem::typeFloat, "1.0");
      addParameter(paramColorMode, "colorMode",
              "One of: gray, red, green, blue. \n"
              "If a color is given, the output image will be in color",
@@ -74,10 +74,10 @@ ImgPrintInfo::ImgPrintInfo(ModuleFactory* parent, std::string customName):
      setOutPortCount(outPortCnt);
 
      addInPort("image", "image to be annotated", DataItem::typeCvMat, imageInPort);
-     addInPort("integer", "Integer value to display", DataItem::typeInt64, intValueInPort);
-     addInPort("float", "float value to display", DataItem::typeFloat, floatValueInPort);
+     addInPort("deltaX", "Distance to the origin (x)", DataItem::typeFloat, deltaXPort);
+     addInPort("deltaY", "Distance to the origin (y)", DataItem::typeFloat, deltaYPort);
 
-     addOutPort("image", "Image with caption", DataItem::typeCvMat, imageOutPort);
+     addOutPort("image", "Image with added vector", DataItem::typeCvMat, imageOutPort);
 
      setParametersDefaultValue();
 
@@ -87,7 +87,7 @@ ImgPrintInfo::ImgPrintInfo(ModuleFactory* parent, std::string customName):
      refCount++;
 }
 
-Poco::Int64 ImgPrintInfo::getIntParameterValue(size_t paramIndex)
+Poco::Int64 DistToOrigin::getIntParameterValue(size_t paramIndex)
 {
     switch (paramIndex)
     {
@@ -103,7 +103,7 @@ Poco::Int64 ImgPrintInfo::getIntParameterValue(size_t paramIndex)
     }
 }
 
-void ImgPrintInfo::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
+void DistToOrigin::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
 {
     switch (paramIndex)
     {
@@ -124,12 +124,10 @@ void ImgPrintInfo::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
     }
 }
 
-std::string ImgPrintInfo::getStrParameterValue(size_t paramIndex)
+std::string DistToOrigin::getStrParameterValue(size_t paramIndex)
 {
     switch (paramIndex)
     {
-    case paramTitle:
-        return title;
     case paramColorMode:
         switch (color)
         {
@@ -152,13 +150,10 @@ std::string ImgPrintInfo::getStrParameterValue(size_t paramIndex)
     }
 }
 
-void ImgPrintInfo::setStrParameterValue(size_t paramIndex, std::string value)
+void DistToOrigin::setStrParameterValue(size_t paramIndex, std::string value)
 {
     switch (paramIndex)
     {
-    case paramTitle:
-        title = value;
-        break;
     case paramColorMode:
         if (Poco::icompare(value, "gray") == 0)
             color = colorGray;
@@ -177,61 +172,60 @@ void ImgPrintInfo::setStrParameterValue(size_t paramIndex, std::string value)
     }
 }
 
-void ImgPrintInfo::process(int startCond)
+double DistToOrigin::getFloatParameterValue(size_t paramIndex)
 {
-    if (startCond != allPluggedDataStartState)
+	switch (paramIndex)
+	{
+	case paramRatio:
+		return ratio;
+	default:
+		poco_bugcheck_msg("wrong parameter index");
+		throw Poco::BugcheckException();
+	}
+}
+
+void DistToOrigin::setFloatParameterValue(size_t paramIndex, double value)
+{
+	switch (paramIndex)
+	{
+	case paramRatio:
+		ratio = value;
+		break;
+	default:
+		poco_bugcheck_msg("wrong parameter index");
+		throw Poco::BugcheckException();
+	}
+}
+
+void DistToOrigin::process(int startCond)
+{
+    if (startCond != allDataStartState)
     {
-        poco_error(logger(), name() + ": wrong input data. Exiting. "
-                "Please unbind one of the input values. ");
+        poco_error(logger(), name() + ": no input data. Exiting. ");
         return;
     }
 
-    if (!isInPortCaught(imageInPort))
-    {
-        poco_error(logger(), "No image present, exiting. "
-                "Please plug the image input");
-        return;
-    }
+	float x, y, dX, dY;
+	float* pfData;
 
-    DataAttributeIn attr;
+	readLockInPort(deltaXPort);
+    readInPortData<float>(deltaXPort, pfData);
+	dX = *pfData;
+	releaseInPort(deltaXPort);
 
-    std::string msg;
+	readLockInPort(deltaYPort);
+	readInPortData<float>(deltaYPort, pfData);
+	dY = *pfData;
+	releaseInPort(deltaYPort);
 
-    bool hasDble = isInPortCaught(floatValueInPort);
-    bool hasInt = isInPortCaught(intValueInPort);
+	DataAttributeIn attr;
+	cv::Mat* pData;
 
-    if (!hasDble && !hasInt)
-    {
-        poco_notice(logger(), "no value plugged on the input ports");
-        msg = title;
-    }
-    else if (!title.empty())
-    {
-        msg = title + ": ";
-    }
+	readLockInPort(imageInPort);
+	readInPortData<cv::Mat>(imageInPort, pData);
+	readInPortDataAttribute(imageInPort, &attr);
 
-    if (hasDble)
-    {
-        float* pValue;
-        readLockInPort(floatValueInPort);
-        readInPortData<float>(floatValueInPort, pValue);
-        msg += Poco::NumberFormatter::format(*pValue);
-    }
-    else if (hasInt)
-    {
-        Poco::Int64* pValue;
-        readLockInPort(intValueInPort);
-        readInPortData<Poco::Int64>(intValueInPort, pValue);
-        msg += Poco::NumberFormatter::format(*pValue);
-    }
-
-    cv::Mat* pData;
-
-    readLockInPort(imageInPort);
-    readInPortData<cv::Mat>(imageInPort, pData);
-    readInPortDataAttribute(imageInPort, &attr);
-
-    DataAttributeOut outAttr = attr;
+	DataAttributeOut outAttr = attr;
 
     cv::Mat workingImg;
 
@@ -242,6 +236,16 @@ void ImgPrintInfo::process(int startCond)
 
     releaseInPort(imageInPort);
     reserveOutPort(imageOutPort);
+
+	if (xPos != -1)
+		x = xPos;
+	else
+		x = workingImg.cols / 2;
+
+	if (yPos != -1)
+		y = yPos;
+	else
+		y = workingImg.rows / 2;
 
     cv::Scalar fillCol;
 
@@ -261,12 +265,10 @@ void ImgPrintInfo::process(int startCond)
         break;
     }
 
-    int font = cv::FONT_HERSHEY_DUPLEX;
-    poco_information(logger(), "displaying: <" + msg + ">");
-    cv::putText(workingImg, msg, cv::Point(xPos, yPos),
-            font, 1, // font, font size
-            fillCol, // color
-            1, CV_AA); // thickness, line type
+	cv::line(workingImg,
+		cv::Point(x, y),
+		cv::Point(x + cvRound(dX * ratio), y + cvRound(dY * ratio)),
+		fillCol);
 
     processingTerminated();
 

@@ -43,6 +43,7 @@
 // proxies
 #include "dataProxies/DataBuffer.h"
 #include "dataProxies/SimpleNumConverter.h"
+#include "dataProxies/LinearConverter.h"
 #include "dataProxies/Delayer.h"
 #ifdef HAVE_OPENCV
 #    include "dataProxies/ImageReticle.h"
@@ -85,7 +86,10 @@ DataManager::DataManager():
     proxyFactory.registerClass<SimpleNumConverter>("SimpleNumConverter");
     proxyClasses.insert(classPair("SimpleNumConverter", SimpleNumConverter::classDescription()));
 
-    proxyFactory.registerClass<Delayer>("Delayer");
+	proxyFactory.registerClass<LinearConverter>("LinearConverter");
+	proxyClasses.insert(classPair("LinearConverter", LinearConverter::classDescription()));
+
+	proxyFactory.registerClass<Delayer>("Delayer");
     proxyClasses.insert(classPair("Delayer", Delayer::classDescription()));
 
 #ifdef HAVE_OPENCV

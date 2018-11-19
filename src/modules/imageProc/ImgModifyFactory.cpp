@@ -31,6 +31,7 @@
 #include "modules/GenericLeafFactory.h"
 #include "RotCrop.h"
 #include "ImgPrintInfo.h"
+#include "DistToOrigin.h"
 
 std::vector<std::string> ImgModifyFactory::selectValueList()
 {
@@ -39,6 +40,7 @@ std::vector<std::string> ImgModifyFactory::selectValueList()
 #ifdef HAVE_OPENCV
 	list.push_back("rotCrop");
 	list.push_back("printInfo");
+	list.push_back("distToOrigin");
 #endif
 
     return list;
@@ -59,6 +61,13 @@ ModuleFactoryBranch* ImgModifyFactory::newChildFactory(std::string selector)
             "Build module that displays infos on the input image",
             this, selector);
     }
+	else if (selector.compare("distToOrigin") == 0)
+	{
+		return new GenericLeafFactory<DistToOrigin>("DistToOriginFactory",
+			"Build module that displays visual infos (vector showing\n "
+			" the distance to a given reference) on the input image",
+			this, selector);
+	}
     else
 #endif /* HAVE_OPENCV */
 	{
