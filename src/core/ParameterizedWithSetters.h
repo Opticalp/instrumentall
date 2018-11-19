@@ -85,6 +85,11 @@ public:
 		{ return setters; }
 
 	/**
+	 * Remove a setter
+	 */
+	void removeParameterSetter(ParameterSetter* setter);
+
+	/**
 	 * Called by a ParameterSetter to notify the ParameterizedEntityWithWorkers
 	 * that a parameter will be set
 	 *

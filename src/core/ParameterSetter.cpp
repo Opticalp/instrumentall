@@ -59,6 +59,11 @@ std::string ParameterSetter::description()
 		return "Expired parameter setter. You should consider deleting it. ";
 }
 
+void ParameterSetter::detach()
+{
+	getParent()->removeParameterSetter(this);
+}
+
 std::set<int> ParameterSetter::supportedInputDataType()
 {
 	std::set<int> ret;

@@ -33,6 +33,7 @@
 ModuleFactory::ModuleFactory(bool leaf, bool root):
     bRoot(root), bLeaf(leaf),
     deletingChildFact(NULL),
+	selectingNewFact(false),
     deletingChildMod(NULL), 
 	VerboseEntity()
 {
@@ -71,9 +72,18 @@ ModuleFactoryBranch& ModuleFactory::select(std::string selector)
             return **it;
 
     // child factory not found, create one.
-    ModuleFactoryBranch* factory(newChildFactory(validated));
-    childFactories.push_back(factory);
-    return *factory;
+	try
+	{
+		selectingNewFact = true;
+		ModuleFactoryBranch* factory(newChildFactory(validated));
+		childFactories.push_back(factory);
+		return *factory;
+	}
+	catch (...)
+	{
+		selectingNewFact = false;
+		throw;
+	}
 }
 
 std::string ModuleFactory::validateSelector(std::string selector)
@@ -121,8 +131,13 @@ void ModuleFactory::deleteChildFactory(std::string property)
 void ModuleFactory::removeChildFactory(ModuleFactoryBranch* factory)
 {
     if (deletingChildFact != factory)
-        childFactLock.writeLock();
-
+	{
+		if (selectingNewFact && !isChildFactory(factory))
+			// exception during child factory creation
+			return;
+		else
+			childFactLock.writeLock();
+	}
     for (std::vector<ModuleFactoryBranch*>::reverse_iterator it = childFactories.rbegin(),
             ite = childFactories.rend(); it != ite; it++)
     {
@@ -139,6 +154,16 @@ void ModuleFactory::removeChildFactory(ModuleFactoryBranch* factory)
         childFactLock.unlock();
     poco_error(logger(), "removeChildFactory: "
             "Child factory not found");
+}
+
+bool ModuleFactory::isChildFactory(ModuleFactoryBranch * factory)
+{
+	for (std::vector<ModuleFactoryBranch*>::iterator it = childFactories.begin(),
+		ite = childFactories.end(); it != ite; it++)
+		if (*it == factory)
+			return true;
+
+	return false;
 }
 
 void ModuleFactory::deleteChildFactories()

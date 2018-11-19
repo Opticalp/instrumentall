@@ -34,7 +34,7 @@ TypeNeutralData::TypeNeutralData(int datatype):
 	setNewData(datatype, true);
 }
 
-TypeNeutralData::TypeNeutralData(TypeNeutralData& other):
+TypeNeutralData::TypeNeutralData(const TypeNeutralData& other):
 		mDataType(other.mDataType), dataStore(NULL)
 {
     switch (mDataType)
@@ -139,6 +139,24 @@ TypeNeutralData::TypeNeutralData(TypeNeutralData& other):
 TypeNeutralData::~TypeNeutralData()
 {
 	removeData();
+}
+
+TypeNeutralData& TypeNeutralData::operator =(const TypeNeutralData& other)
+{
+    TypeNeutralData tmp(other);
+    swap(tmp);
+    return *this;
+}
+
+void TypeNeutralData::swap(TypeNeutralData& other)
+{
+    void* tmpData = other.dataStore;
+    other.dataStore = this->dataStore;
+    this->dataStore = tmpData;
+    
+    int tmpDataType = other.mDataType;
+    other.mDataType = this->mDataType;
+    this->mDataType = tmpDataType;
 }
 
 void TypeNeutralData::setNewData(int datatype, bool force)
@@ -375,4 +393,3 @@ void TypeNeutralData::checkDataType(int datatype)
 
     throw Poco::DataFormatException(dataTypeStr(mDataType) + " is expected");
 }
-

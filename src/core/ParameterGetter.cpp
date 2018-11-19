@@ -98,6 +98,11 @@ void ParameterGetter::emitParamValue()
 	notifyReady(attr);
 }
 
+void ParameterGetter::detach()
+{
+	getParent()->removeParameterGetter(this);
+}
+
 void ParameterGetter::sourceCancel()
 {
     if (getParent())

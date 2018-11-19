@@ -159,23 +159,28 @@ void DataGen::process(int startCond)
     sendData();
 }
 
+void DataGen::prepareSeq()
+{
+	for (; seqStart > 0; seqStart--)
+	{
+		poco_information(logger(), name() + ":startSeq");
+		attr.startSequence();
+	}
+
+	// FIXME: should check that they are not sent more end sequence
+	// than start sequence.
+	for (; seqEnd > 0; seqEnd--)
+	{
+		poco_information(logger(), name() + ":endSeq");
+		attr.endSequence();
+	}
+}
+
 void DataGen::freeRun()
 {
 	poco_information(logger(),"DataGen: free run");
 
-    for (; seqStart > 0; seqStart--)
-    {
-        poco_information(logger(),name()+":startSeq");
-        attr.startSequence();
-    }
-
-    // FIXME: should check that they are not sent more end sequence
-    // than start sequence.
-    for (; seqEnd > 0; seqEnd--)
-    {
-        poco_information(logger(),name()+":endSeq");
-        attr.endSequence();
-    }
+	prepareSeq();
 
     attrQueue.push(attr++);
 }
@@ -184,6 +189,8 @@ void DataGen::triggedRun()
 {
 	poco_information(logger(),"DataGen: trigged run");
 
+	prepareSeq();
+
     DataAttributeIn inAttr;
 
 	readLockInPort(trigPort);
@@ -191,14 +198,9 @@ void DataGen::triggedRun()
     releaseInPort(trigPort);
 
     if (attr.isSettingSequence())
-    {
-        dataLock.unlock();
-        throw Poco::RuntimeException("DataGen",
-                "Concurrence between trig attribute "
-                "and module sequence parameters. ");
-    }
-
-    attrQueue.push(inAttr);
+		attrQueue.push(attr++ + DataAttributeOut(inAttr));
+	else
+		attrQueue.push(inAttr);
 }
 
 void DataGen::sendData()

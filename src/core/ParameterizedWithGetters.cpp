@@ -55,6 +55,19 @@ Poco::AutoPtr<ParameterGetter> ParameterizedWithGetters::buildParameterGetter(
 	return buildParameterGetter(self->getParameterIndex(paramName));
 }
 
+void ParameterizedWithGetters::removeParameterGetter(ParameterGetter * getter)
+{
+	getter->invalidate();
+
+	for (std::set< Poco::AutoPtr<ParameterGetter> >::iterator it = getters.begin(),
+		ite = getters.end(); it != ite; it++)
+		if (it->get() == getter)
+		{
+			getters.erase(*it);
+			break;
+		}
+}
+
 void ParameterizedWithGetters::runGetters()
 {
     for (std::set< Poco::AutoPtr<ParameterGetter> >::iterator it = getters.begin(),

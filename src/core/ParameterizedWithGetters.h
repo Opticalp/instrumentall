@@ -77,6 +77,12 @@ public:
 	std::set< Poco::AutoPtr<ParameterGetter> > getParameterGetters()
 		{ return getters; }
 
+	/**
+	* Remove a getter
+	*/
+	void removeParameterGetter(ParameterGetter* getter);
+
+
 protected:
     /**
      * Emit parameter values
