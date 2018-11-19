@@ -1,8 +1,13 @@
+2.2
+---
+ * reintegrate serial comm
+ * add distance to origin
+ * add linear converter
+
 2.2.0-rc.3
 ----------
  * reintegrate threshold
  * add img center of mass
-
 
 2.2.0-rc.2
 ----------
