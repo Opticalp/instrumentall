@@ -57,6 +57,11 @@ public:
 		{ return parent; }
 
 	/**
+	 * Detach from its parent
+	 */
+	virtual void detach() = 0;
+
+	/**
 	 * Retrieve the name of the pointed parameter
 	 */
 	std::string getParameterName() const;

@@ -91,6 +91,22 @@ PyObject* pyParameterSetterParameterName(ParameterSetterMembers* self)
 	return pyRet;
 }
 
+PyObject* pyParameterSetterDetach(ParameterSetterMembers* self)
+{
+	try
+	{
+		(*self->setter)->detach();
+	}
+	catch (Poco::Exception& e)
+	{
+		PyErr_SetString(PyExc_RuntimeError,
+			e.displayText().c_str());
+		return NULL;
+	}
+
+	Py_RETURN_NONE;
+}
+
 PyObject* pyParameterSetterParent(ParameterSetterMembers* self)
 {
     Poco::SharedPtr<Module*> module;

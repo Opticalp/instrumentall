@@ -108,6 +108,17 @@ static PyMethodDef pyMethodInPortGetSourcePort =
     "Retrieve the source port"
 };
 
+/// python wrapper to get the data source of the current input port
+extern "C" PyObject* pyInPortGetDataSource(InPortMembers *self);
+
+static PyMethodDef pyMethodInPortGetDataSource =
+{
+    "getDataSource",
+    (PyCFunction)pyInPortGetDataSource,
+    METH_NOARGS,
+    "Retrieve the data source"
+};
+
 /// python wrapper to get the source port of the current input port
 extern "C" PyObject* pyInPortGetSeqSourcePort(InPortMembers *self);
 
@@ -147,6 +158,7 @@ static PyMethodDef pyInPortMethods[] = {
         pyMethodInPortParent,
 
         pyMethodInPortGetSourcePort,
+        pyMethodInPortGetDataSource,
         pyMethodInPortGetSeqSourcePort,
 
 //		pyMethodInPortHoldData,

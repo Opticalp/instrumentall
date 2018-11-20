@@ -98,9 +98,18 @@ public:
 	/**
 	 * Copy constructor
 	 */
-	TypeNeutralData(TypeNeutralData& other);
-
+	TypeNeutralData(const TypeNeutralData& other);
+    
 	virtual ~TypeNeutralData();
+
+    TypeNeutralData& operator =(const TypeNeutralData& other);
+    
+    /**
+     * Swap content with the given object
+     * 
+     * @warning not thread safe
+     */
+    void swap(TypeNeutralData& other);
 
     /**
      * Get dataType as a character string

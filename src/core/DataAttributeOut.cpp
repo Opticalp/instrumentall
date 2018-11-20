@@ -86,6 +86,18 @@ DataAttributeOut& DataAttributeOut::operator =(const DataAttributeOut& other)
 	return *this;
 }
 
+DataAttributeOut& DataAttributeOut::operator+=(const DataAttributeOut & rhs)
+{
+	DataAttribute::operator+=(rhs);
+
+	if (!newIndex)
+		newIndex = rhs.newIndex;
+
+	seqManaging += rhs.seqManaging;
+
+	return *this; // return the result by reference
+}
+
 DataAttributeOut& DataAttributeOut::operator ++()
 {
     // remove previous index, add a new one.

@@ -41,7 +41,8 @@ ImageReticle::ImageReticle(): DataProxy("ImageReticle")
     addParameter(paramXpos, "xPos", "reticle x position (zero based)", ParamItem::typeInteger,"400");
     addParameter(paramYpos, "yPos", "reticle y position (zero based)", ParamItem::typeInteger,"300");
     addParameter(paramReticleSize, "reticleSize", "reticle size", ParamItem::typeInteger,"20");
-    addParameter(paramXwidth, "xWidth", "reticle x width", ParamItem::typeInteger, "0");
+	addParameter(paramBlankRatio, "blankRatio", "ratio of area preserved arround the crossing (in [0  1[)", ParamItem::typeFloat, "0.2");
+	addParameter(paramXwidth, "xWidth", "reticle x width", ParamItem::typeInteger, "0");
     addParameter(paramYwidth, "yWidth", "reticle y width", ParamItem::typeInteger, "0");
     addParameter(paramAngle, "angle", "reticle rotation (degrees)", ParamItem::typeFloat, "0.0");
     addParameter(paramAlter, "alter", "alter the input image (\"yes\") "
@@ -51,7 +52,8 @@ ImageReticle::ImageReticle(): DataProxy("ImageReticle")
     setIntParameterValue(paramXpos, getIntParameterDefaultValue(paramXpos));
     setIntParameterValue(paramYpos, getIntParameterDefaultValue(paramYpos));
     setIntParameterValue(paramReticleSize, getIntParameterDefaultValue(paramReticleSize));
-    setIntParameterValue(paramXwidth, getIntParameterDefaultValue(paramXwidth));
+	setFloatParameterValue(paramBlankRatio, getFloatParameterDefaultValue(paramBlankRatio));
+	setIntParameterValue(paramXwidth, getIntParameterDefaultValue(paramXwidth));
     setIntParameterValue(paramYwidth, getIntParameterDefaultValue(paramYwidth));
     setFloatParameterValue(paramAngle, getFloatParameterDefaultValue(paramAngle));
     setStrParameterValue(paramAlter, getStrParameterDefaultValue(paramAlter));
@@ -110,15 +112,40 @@ void ImageReticle::convert()
     cv::Point2f overallPoints[4];
     overallRect.points(overallPoints);
 
-    cv::line(workingImg,
-    		pt2fToPt(0.5*(overallPoints[0] + overallPoints[1])),
+	if (blankRatio == 0)
+	{
+		cv::line(workingImg,
+			pt2fToPt(0.5*(overallPoints[0] + overallPoints[1])),
 			pt2fToPt(0.5*(overallPoints[2] + overallPoints[3])),
 			CV_RGB(greyLevel, greyLevel, greyLevel));
 
-    cv::line(workingImg,
-    		pt2fToPt(0.5*(overallPoints[1] + overallPoints[2])),
+		cv::line(workingImg,
+			pt2fToPt(0.5*(overallPoints[1] + overallPoints[2])),
 			pt2fToPt(0.5*(overallPoints[3] + overallPoints[0])),
 			CV_RGB(greyLevel, greyLevel, greyLevel));
+	}
+	else
+	{
+		cv::line(workingImg,
+			pt2fToPt(0.5*(overallPoints[0] + overallPoints[1])),
+			pt2fToPt(0.25*((1 + blankRatio) * (overallPoints[0] + overallPoints[1]) + (1 - blankRatio) * (overallPoints[2] + overallPoints[3]))),
+			CV_RGB(greyLevel, greyLevel, greyLevel));
+
+		cv::line(workingImg,
+			pt2fToPt(0.5*(overallPoints[2] + overallPoints[3])),
+			pt2fToPt(0.25*((1 + blankRatio) * (overallPoints[2] + overallPoints[3]) + (1 - blankRatio) * (overallPoints[0] + overallPoints[1]))),
+			CV_RGB(greyLevel, greyLevel, greyLevel));
+
+		cv::line(workingImg,
+			pt2fToPt(0.5*(overallPoints[0] + overallPoints[3])),
+			pt2fToPt(0.25*((1 + blankRatio) * (overallPoints[0] + overallPoints[3]) + (1 - blankRatio) * (overallPoints[1] + overallPoints[2]))),
+			CV_RGB(greyLevel, greyLevel, greyLevel));
+
+		cv::line(workingImg,
+			pt2fToPt(0.5*(overallPoints[1] + overallPoints[2])),
+			pt2fToPt(0.25*((1 + blankRatio) * (overallPoints[1] + overallPoints[2]) + (1 - blankRatio) * (overallPoints[0] + overallPoints[3]))),
+			CV_RGB(greyLevel, greyLevel, greyLevel));
+	}
 
     if (xWidth)
     {
@@ -227,14 +254,34 @@ void ImageReticle::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
 
 double ImageReticle::getFloatParameterValue(size_t paramIndex)
 {
-	poco_assert(paramIndex == paramAngle);
-	return angle;
+	switch (paramIndex)
+	{
+	case paramAngle:
+		return angle;
+	case paramBlankRatio:
+		return blankRatio;
+	default:
+		poco_bugcheck_msg("wrong parameter index");
+		throw Poco::BugcheckException();
+	}
 }
 
 void ImageReticle::setFloatParameterValue(size_t paramIndex, double value)
 {
-	poco_assert(paramIndex == paramAngle);
-	angle = value;
+	switch (paramIndex)
+	{
+	case paramAngle:
+		angle = value;
+		break;
+	case paramBlankRatio:
+		if ((value < 0) || (value >=1))
+			throw Poco::RangeException("blankRatio must be in [0 1[");
+		blankRatio = value;
+		break;
+	default:
+		poco_bugcheck_msg("wrong parameter index");
+		throw Poco::BugcheckException();
+	}
 }
 
 std::string ImageReticle::getStrParameterValue(size_t paramIndex)

@@ -65,6 +65,7 @@ private:
         paramXpos,
         paramYpos,
 		paramReticleSize,
+		paramBlankRatio,
         paramXwidth,
         paramYwidth,
 		paramAngle,
@@ -76,7 +77,7 @@ private:
     int xPos, yPos, xWidth, yWidth, reticleSize;
     unsigned char greyLevel;
     bool alter;
-    double angle;
+    double angle, blankRatio;
 
     Poco::Int64 getIntParameterValue(size_t paramIndex);
     void setIntParameterValue(size_t paramIndex, Poco::Int64 value);

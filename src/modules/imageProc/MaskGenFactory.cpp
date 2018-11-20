@@ -30,6 +30,7 @@
 
 #include "modules/GenericLeafFactory.h"
 #include "BoxMask.h"
+#include "ThresholdFactory.h"
 
 std::vector<std::string> MaskGenFactory::selectValueList()
 {
@@ -37,6 +38,7 @@ std::vector<std::string> MaskGenFactory::selectValueList()
 
 #ifdef HAVE_OPENCV
 	list.push_back("boxMask");
+	list.push_back("threshold");
 #endif
     return list;
 }
@@ -50,7 +52,10 @@ ModuleFactoryBranch* MaskGenFactory::newChildFactory(std::string selector)
 			"Build a generator for box (rectangle, ellipse) masks",
 			this, selector);
 	}
-	else
+	else if (selector.compare("threshold") == 0)
+	{
+		return new ThresholdFactory(this, selector);
+	}
 #endif /* HAVE_OPENCV */
 	{
 		poco_bugcheck_msg("Create: unknown selector");
