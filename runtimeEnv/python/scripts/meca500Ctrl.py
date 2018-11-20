@@ -113,6 +113,7 @@ class App:
         self.robo.getParameterValue("query")
 
         resp = msg.showinfo(title="Init", message="Initializing... ")
+        self.robo.getParameterValue("query")
 
     def resetError(self):
         self.robo.setParameterValue("query","ResetError();ResumeMotion()")
@@ -149,6 +150,7 @@ class App:
         self.robo.setParameterValue("cAxisPos",pos)
 
     def setWRF(self):
+        import tkMessageBox as msg
         self.robo.setParameterValue("query","SetWRF(0,0,0,0,0,0)")
         x = self.robo.getParameterValue("xAxisPos")
         y = self.robo.getParameterValue("yAxisPos")
@@ -171,6 +173,14 @@ class App:
               str(c) + ")")
         print("done. ")
         self.robo.getParameterValue("query")
+        
+        if (abs(self.robo.getParameterValue("xAxisPos"))>0.001 or
+            abs(self.robo.getParameterValue("yAxisPos"))>0.001 or 
+            abs(self.robo.getParameterValue("zAxisPos"))>0.001 or 
+            abs(self.robo.getParameterValue("aAxisPos"))>0.001 or 
+            abs(self.robo.getParameterValue("bAxisPos"))>0.001 or 
+            abs(self.robo.getParameterValue("cAxisPos"))>0.001): 
+            msg.showerror("setWRF","Set WRF failed! Pose is not zero. ")
 
     def park(self):
         import tkMessageBox as msg
@@ -180,6 +190,8 @@ class App:
         self.robo.setParameterValue("query","MoveJoints(0,-45,70,0,20,0)")
 
         msg.showinfo(title="Parking", message="Parking... ")
+        self.robo.getParameterValue("query")
+
         
     
 # main body    
