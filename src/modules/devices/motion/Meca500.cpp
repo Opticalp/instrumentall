@@ -526,7 +526,12 @@ void Meca500::getPosition(double& x, double& y, double& z, double& a, double& b,
 
 void Meca500::setPosition(double x, double y, double z, double a, double b, double c)
 {
-	// move and wait end of move
+    double xo, yo, zo, ao, bo, co;
+    getPosition(xo, yo, zo, ao, bo, co);
+    if ((x == xo) && (y == yo) && (z == zo) && (a == ao) && (b == bo) && (c == co))
+        return;
+
+    // move and wait end of move
     sendQueryCheckResp(
         Poco::format("MoveLin(%f,%f,%f,%f,%f,%f)",x,y,z,a,b,c),
         "[3004][End of movement.]");
