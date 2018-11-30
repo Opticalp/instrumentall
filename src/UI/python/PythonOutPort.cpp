@@ -206,6 +206,65 @@ PyObject* pyOutPortGetTargetPorts(OutPortMembers* self)
     return pyPorts;
 }
 
+
+#include "PythonDataTarget.h"
+
+PyObject* pyOutPortGetDataTargets(OutPortMembers* self)
+{
+    std::set<DataTarget*> targets = (**self->outPort)->getDataTargets();
+
+    if (targets.size() == 0)
+        Py_RETURN_NONE;
+
+    // prepare python list
+    PyObject* pyTargets = PyList_New(0);
+
+    // prepare InPort python type
+    if (PyType_Ready(&PythonDataTarget) < 0)
+    {
+        PyErr_SetString(PyExc_ImportError,
+            "Not able to create the DataTarget Type");
+        return NULL;
+    }
+
+
+    for (std::set<DataTarget*>::iterator it = targets.begin(),
+        ite = targets.end(); it != ite; it++)
+    {
+        // create the python object
+        DataTargetMembers* pyTarget =
+            (DataTargetMembers*)(pyDataTargetNew((PyTypeObject*)&PythonDataTarget, NULL, NULL));
+
+        PyObject* tmp = NULL;
+
+        // init
+        // retrieve name and description
+        tmp = pyTarget->name;
+        pyTarget->name = PyString_FromString((*it)->name().c_str());
+        Py_XDECREF(tmp);
+
+        tmp = pyTarget->description;
+        pyTarget->description = PyString_FromString((*it)->description().c_str());
+        Py_XDECREF(tmp);
+
+        // set ModuleFactory reference
+        pyTarget->target = *it;
+
+        // create the dict entry
+        if (0 > PyList_Append(
+            pyTargets,
+            (PyObject*)pyTarget))
+        {
+            // appending the item failed
+            PyErr_SetString(PyExc_RuntimeError,
+                "Not able to build the return list");
+            return NULL;
+        }
+    }
+
+    return pyTargets;
+}
+
 PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers* self)
 {
     std::set< Poco::SharedPtr<InPort*> > targetPorts;
