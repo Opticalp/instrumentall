@@ -31,6 +31,7 @@ class App:
     def __init__(self, top):
         import Tkinter as tk
         from instru import Factory
+        import sys
         
         btn = tk.Button(top, text="Init", command=self.init)
         btn.pack()
