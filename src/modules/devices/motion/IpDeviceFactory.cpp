@@ -116,6 +116,19 @@ IpDeviceFactory::DevType IpDeviceFactory::hasDevice(std::string selector)
 
 void IpDeviceFactory::findMeca500(std::vector<std::string>& devList)
 {
+	if (nic().isLoopback())
+	{
+		poco_warning(logger(), "NIC " + nic().adapterName() + 
+			" is loopback. Skip. ");
+		return;
+	}
+
+	if (nic().isPointToPoint())
+	{
+		poco_notice(logger(), "NIC " + nic().adapterName() +
+			" is point to point. ");
+	}
+
 	NetworkInterface::AddressList addrList = nic().addressList();
 	for (NetworkInterface::AddressList::iterator it = addrList.begin(),
 		ite = addrList.end(); it != ite; it++)
@@ -170,9 +183,12 @@ bool IpDeviceFactory::hasMeca500(IPAddress IP)
 	HTTPRequest simpleReq;
 	HTTPResponse resp;
 
+	httpSession.setTimeout(TIMEOUT * 1000, TIMEOUT * 1000, TIMEOUT * 1000);
+
 	try
 	{
 		WebSocket tcpSocket(httpSession, simpleReq, resp);
+		tcpSocket.setSendTimeout(TIMEOUT * 1000);
 		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
 
 		std::string response;
