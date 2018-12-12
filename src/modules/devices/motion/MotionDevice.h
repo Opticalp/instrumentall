@@ -100,7 +100,17 @@ protected:
 	/// The derivated class should call this function at the end of this overloaded method
 	virtual void setFloatParameterValue(size_t paramIndex, double value);
 
-	virtual void singleMotion(int axis, double position) = 0;
+	/// Convenience function
+	void singleMotion(int axis, double position)
+	   { singleMotion(axis, std::vector<double>(axisIndexCnt, position)); }
+
+	/**
+	 * Go to the given position 
+	 *
+	 * Only for the axis given by the mask in first argument
+	 * @param axis combination (bitwise OR) of xAxis, yAxis, zAxis aAxis, bAxis or cAxis
+	 */
+	virtual void singleMotion(int axis, std::vector<double> positions) = 0;
 
     /**
      * Go to the given position

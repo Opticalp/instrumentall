@@ -151,7 +151,7 @@ private:
     // */
     //int checkResponseError(std::string response);
 
-	 void singleMotion(int axis, double position);
+	 void singleMotion(int axis, std::vector<double> positions);
 	 void allMotionSync(std::vector<double> positions);
 
 	 double getPosition(int axis);

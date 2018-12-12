@@ -365,48 +365,49 @@ void Meca500::setStrParameterValue(size_t paramIndex, std::string value)
 /// minimal movement: 0.5 um, 0.0005 deg (arbitrary)
 #define EPS_MV 0.0005
 
-void Meca500::singleMotion(int axis, double position)
+void Meca500::singleMotion(int axis, std::vector<double> positions)
 {
 	double x, y, z, a, b, c;
 	getPosition(x, y, z, a, b, c);
 
-	// change position
-	switch (axis)
+	bool move = false; 
+
+	if (axis & xAxis)
 	{
-	case xAxis:
-        poco_information(logger(), "single move xAxis");
-        if (abs(position - x) > EPS_MV)
-			setPosition(position, y, z, a, b, c);
-		break;
-	case yAxis:
-        poco_information(logger(), "single move yAxis");
-        if (abs(position - y) > EPS_MV)
-		    setPosition(x, position, z, a, b, c);
-		break;
-	case zAxis:
-        poco_information(logger(), "single move zAxis");
-        if (abs(position - z) > EPS_MV)
-			setPosition(x, y, position, a, b, c);
-		break;
-	case aAxis:
-        poco_information(logger(), "single move aAxis");
-        if (abs(position - a) > EPS_MV)
-			setPosition(x, y, z, position, b, c);
-		break;
-	case bAxis:
-        poco_information(logger(), "single move bAxis");
-        if (abs(position - b) > EPS_MV)
-			setPosition(x, y, z, a, position, c);
-		break;
-	case cAxis:
-        poco_information(logger(), "single move cAxis");
-        if (abs(position - c) > EPS_MV)
-			setPosition(x, y, z, a, b, position);
-		break;
-	default:
-		poco_bugcheck_msg("impossible axis index");
-		throw Poco::BugcheckException();
+		move = (abs(positions.at(xIndex) - x) > EPS_MV);
+		x = positions.at(xIndex);
 	}
+	if (axis & yAxis)
+	{
+		move = move || (abs(positions.at(yIndex) - y) > EPS_MV);
+		y = positions.at(yIndex);
+	}
+	if (axis & zAxis)
+	{
+		move = move || (abs(positions.at(zIndex) - z) > EPS_MV);
+		z = positions.at(zIndex);
+	}
+	if (axis & aAxis)
+	{
+		move = move || (abs(positions.at(aIndex) - a) > EPS_MV);
+		a = positions.at(aIndex);
+	}
+	if (axis & bAxis)
+	{
+		move = move || (abs(positions.at(bIndex) - b) > EPS_MV);
+		b = positions.at(xIndex);
+	}
+	if (axis & cAxis)
+	{
+		move = move || (abs(positions.at(cIndex) - c) > EPS_MV);
+		c = positions.at(cIndex);
+	}
+
+	// set new position
+	if (move)
+		setPosition(x, y, z, a, b, c);
+	else
+		poco_information(logger(), "new position too close to move");
 }
 
 void Meca500::allMotionSync(std::vector<double> positions)
