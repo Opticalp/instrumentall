@@ -103,13 +103,11 @@ class App:
         Please, take care of the robot movements. """)
 
         self.robo.setParameterValue("query",
-            "SetWRF(152.537,-11.412,38.803,-179.850,36.618,-162.090)")
+            "SetWRF(300,0,250,0,0,0)")
 
         if not msg.askokcancel("Movement", "Ready to move? "):
             return
 
-        self.robo.setParameterValue("query","MoveJoints(0,-20,70,0,20,0)")
-        self.robo.setParameterValue("query","MoveJoints(0,8,46,0,16,0)")
         self.robo.setParameterValue("query","MovePose(0,0,0,0,0,0)")
         self.robo.getParameterValue("query")
 
@@ -150,6 +148,13 @@ class App:
         print("move to new c pos: " + str(pos))
         self.robo.setParameterValue("cAxisPos",pos)
 
+    def query(self):
+        self.robo.setParameterValue("query",self.qu.get())
+
+    def response(self):
+        import tkMessageBox as msg
+        msg.showinfo(title="Response", message=self.robo.getParameterValue("query"))
+        
     def setWRF(self):
         import tkMessageBox as msg
         self.robo.setParameterValue("query","SetWRF(0,0,0,0,0,0)")

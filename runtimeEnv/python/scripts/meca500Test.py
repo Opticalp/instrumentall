@@ -54,15 +54,18 @@ def myMain(baseDir):
     print("Create coord sources")
     seqGen = Factory("DataGenFactory").select("seq").create("seqGen")
     dataGen = Factory("DataGenFactory").select("dblFloat").create("dataGen")
+    zeroGen = Factory("DataGenFactory").select("dblFloat").create("zeroGen")
+    zeroGen.setParameterValue("value",0)
     dataGenArray = Factory("DataGenFactory").select("dblFloat").create("dataGenArray")
 
     print("Prepare dataFlow")
     bind(seqGen.outPort("data"),dataGen.inPort("trig"))
+    bind(seqGen.outPort("data"),zeroGen.inPort("trig"))
     bind(seqGen.outPort("data"),dataGenArray.inPort("trig"))
-    bind(dataGen.outPort("data"), robo.inPort("xAxis"))
-    bind(dataGen.outPort("data"), robo.inPort("yAxis"))
-    bind(dataGen.outPort("data"), robo.inPort("zAxis"))
-    bind(dataGen.outPort("data"), robo.inPort("aAxis"))
+    bind(zeroGen.outPort("data"), robo.inPort("xAxis"))
+    bind(zeroGen.outPort("data"), robo.inPort("yAxis"))
+    bind(zeroGen.outPort("data"), robo.inPort("zAxis"))
+    bind(zeroGen.outPort("data"), robo.inPort("aAxis"))
     bind(dataGen.outPort("data"), robo.inPort("bAxis"))
     bind(dataGenArray.outPort("data"), robo.inPort("cAxis"))
 
@@ -70,17 +73,23 @@ def myMain(baseDir):
     print("Prepare movement")
     seqSize = 5
     rows = 5
+    interlacing = 1
 
     print("go row after row")
     for row in range(-(rows-1)/2, (rows+1)/2):
         seqGen.setParameterValue("seqSize",seqSize)
         for x in range(-(seqSize-1)/2, (seqSize+1)/2):
-            dataGenArray.setParameterValue("value",4*float(x))
+            dataGenArray.setParameterValue("value",interlacing*2*float(x))
         dataGen.setParameterValue("value",2*float(row))
 
         print("Run row (" + str(row) + ")")
         runModule(seqGen)
         waitAll()
+        
+        interlacing = interlacing * -1
+    
+    robo.setParameterValue("query","movePose(0,0,0,0,0,0)")
+    robo.getParameterValue("query")
     
     print("End of script meca500Test.py")
     

@@ -75,7 +75,7 @@ def myMain(baseDir):
 
     robo.setParameterValue("query",
         "SetTRF(0,0,55,0,-45,0);SetWRF(300,0,250,0,0,0)")
-    robo.setParameterValue("query","SetJointVel(20)")
+    robo.setParameterValue("query","SetJointVel(10);SetCartLinVel(5);SetCartAngVel(5)")
 
     if not msg.askokcancel("Movement", "Ready to move? "):
         return
