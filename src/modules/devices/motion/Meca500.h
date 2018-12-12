@@ -49,75 +49,75 @@ public:
     std::string description();
 
 private:
-	 void setIpAddressFromFactoryTree();
-	 Poco::Net::IPAddress ipAddress;
-	 Poco::Net::StreamSocket tcpSocket;
+	void setIpAddressFromFactoryTree();
+	Poco::Net::IPAddress ipAddress;
+	Poco::Net::StreamSocket tcpSocket;
 
-	 void initComm();
-	 void closeComm();
+	void initComm();
+	void closeComm();
 
-     int getStatus();
-     void fixStatus(int status);
+    int getStatus();
+    void fixStatus(int status);
 
-     enum statusRobot
-     {
-         activated = 0x01,
-         homed = 0x02,
-         simu = 0x04,
-         errored = 0x08,
-         paused = 0x10,
-         eobEnabled = 0x20,
-         eomEnabled = 0x40,
-     };
+    enum statusRobot
+    {
+        activated = 0x01,
+        homed = 0x02,
+        simu = 0x04,
+        errored = 0x08,
+        paused = 0x10,
+        eobEnabled = 0x20,
+        eomEnabled = 0x40,
+    };
 
-     /**
-      * replace newline or semicolon by \0 in query
-      */
-     std::string parseMultipleQueries(std::string queries);
+    /**
+     * replace newline or semicolon by \0 in query
+     */
+    std::string parseMultipleQueries(std::string queries);
 
-	 /**
+	/**
 	 * Send the given query
 	 *
 	 * @return response
 	 */
-	 std::string sendQuery(std::string query);
+	std::string sendQuery(std::string query);
 
-     /**
-      * Send command
-      *
-      * do not wait for an answer
-      */
-     void sendCommand(std::string command);
+    /**
+     * Send command
+     *
+     * do not wait for an answer
+     */
+    void sendCommand(std::string command);
 
-	 /**
+	/**
 	 * Send the given query and wait that the given substring is present in the response
 	 *
 	 * @return response
 	 */
-	 std::string sendQueryCheckResp(std::string query, std::string respSubStr);
+	std::string sendQueryCheckResp(std::string query, std::string respSubStr);
 
-	 /**
+	/**
 	 * Wait a response
 	 *
 	 * @return the response
 	 * @throw Poco::TimeoutException
 	 */
-	 std::string waitResp();
+	std::string waitResp();
 
-	 enum supplParameters
-	 {
-		 paramQuery=6, // direct query
-		 paramSimuMode, // change to simu mode (0, 1)
-		 totalParamCnt
-	 };
+	enum supplParameters
+	{
+		paramQuery=6, // direct query
+		paramSimuMode, // change to simu mode (0, 1)
+		totalParamCnt
+	};
 
-	 /**
-	  * Define additional parameters
-	  * 
-	  * - simu mode
-	  * - send command
-	  */
-	 void defineParameters();
+	/**
+	 * Define additional parameters
+	 * 
+	 * - simu mode
+	 * - send command
+	 */
+	void defineParameters();
 
     Poco::Int64 getIntParameterValue(size_t paramIndex);
 	void setIntParameterValue(size_t paramIndex, Poco::Int64 value);

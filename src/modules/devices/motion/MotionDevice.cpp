@@ -225,6 +225,27 @@ void MotionDevice::allMotionSeq(std::vector< std::vector<double> > positionsSeq)
 		allMotionSync(positionsSeq[time]);
 }
 
+void MotionDevice::applyParameters()
+{
+	std::vector<double> positions(axisIndexCnt, 0);
+	int axes = 0;
+
+	for (size_t index = 0; index < axisIndexCnt; index++)
+	{
+		double tmp;
+		if (getInternalFloatParameterValue(index, tmp))
+		{
+			axes = axes | axisMasks.at(index);
+			positions[index] = tmp;
+		}
+	}
+
+	if (axes)
+		singleMotion(axes, positions);
+
+	Module::applyParameters();
+}
+
 double MotionDevice::getFloatParameterValue(size_t paramIndex)
 {
 	try
@@ -247,17 +268,5 @@ double MotionDevice::getFloatParameterValue(size_t paramIndex)
 	{
 		poco_bugcheck_msg("impossible index. axis unkown");
 		throw Poco::BugcheckException();
-	}
-}
-
-void MotionDevice::setFloatParameterValue(size_t paramIndex, double value)
-{
-	try
-	{
-		singleMotion(axisMasks.at(paramIndex), value);
-	}
-	catch (std::out_of_range&)
-	{
-		poco_bugcheck_msg("impossible index. axis unkown");
 	}
 }

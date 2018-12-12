@@ -65,6 +65,9 @@ class App:
         btn = tk.Button(top, text="Response", command=self.response)
         btn.pack()
 
+        btn = tk.Button(top, text="Zero robot", command=self.zeroRobo)
+        btn.pack()
+            
         btn = tk.Button(top, text="Park", command=self.park)
         btn.pack()
 
@@ -155,6 +158,16 @@ class App:
         import tkMessageBox as msg
         msg.showinfo(title="Response", message=self.robo.getParameterValue("query"))
         
+    def zeroRobo(self):
+        pos = dict()
+        pos["xAxisPos"] = 0
+        pos["yAxisPos"] = 0
+        pos["zAxisPos"] = 0
+        pos["aAxisPos"] = 0
+        pos["bAxisPos"] = 0
+        pos["cAxisPos"] = 0
+        self.robo.setParameterValues(pos)
+
     def setWRF(self):
         import tkMessageBox as msg
         self.robo.setParameterValue("query","SetWRF(0,0,0,0,0,0)")

@@ -94,13 +94,21 @@ protected:
 	std::string axisName(int index) { return axisNames.at(index); }
     int axisMask(int index) { return axisMasks.at(index); }
 
+	/**
+	 * Apply all the position parameters at the same time
+	 *
+	 * a custom implementation should call this function at the end. 
+	 */
+	virtual void applyParameters();
+
 	/// The derivated class should call this function at the end of this overloaded method
 	virtual double getFloatParameterValue(size_t paramIndex);
 
-	/// The derivated class should call this function at the end of this overloaded method
-	virtual void setFloatParameterValue(size_t paramIndex, double value);
-
-	/// Convenience function
+	/** 
+	 * Convenience function
+	 *
+	 * This function is not virtual, and hence, should not be derived. 
+	 */
 	void singleMotion(int axis, double position)
 	   { singleMotion(axis, std::vector<double>(axisIndexCnt, position)); }
 
