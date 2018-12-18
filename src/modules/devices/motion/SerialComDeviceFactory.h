@@ -30,7 +30,7 @@
 #define SRC_MODULES_DEVICES_MOTION_SERIALCOMDEVICEFACTORY_H_
 
 #include "core/ModuleFactoryBranch.h"
-#include "tools/serial/SerialComm.h"
+#include "tools/serial/SerialCom.h"
 
 /**
  * Branch factory used to select the right serial comm device

@@ -49,6 +49,8 @@ AsiMotion::AsiMotion(ModuleFactory* parent, std::string customName, bool tiger):
             DataItem::typeDblFloat, inPortX);
     addInPort("Y", "y position",
             DataItem::typeDblFloat, inPortY);
+    addInPort("Z", "z position",
+            DataItem::typeDblFloat, inPortZ);
 
     // the output ports are set with the current position when
     // a motion has finished.
@@ -58,6 +60,8 @@ AsiMotion::AsiMotion(ModuleFactory* parent, std::string customName, bool tiger):
             DataItem::typeDblFloat, outPortX);
     addOutPort("Y", "y position after movement",
             DataItem::typeDblFloat, outPortY);
+    addOutPort("Z", "z position after movement",
+            DataItem::typeDblFloat, outPortZ);
 
     // parameters
     setParameterCount(paramCnt);
@@ -101,13 +105,17 @@ void AsiMotion::process(int startCond)
     	readInPortDataAttribute(inPortX, attrs + inPortX);
 		readLockInPort(inPortY);
     	readInPortDataAttribute(inPortY, attrs + inPortY);
+		readLockInPort(inPortZ);
+    	readInPortDataAttribute(inPortZ, attrs + inPortZ);
 		outAttrs[inPortX] = attrs[inPortX];
 		outAttrs[inPortY] = attrs[inPortY];
+		outAttrs[inPortZ] = attrs[inPortZ];
     	move();
     	releaseAllInPorts(); // release when the movement has stopped
     	break;
     case noDataStartState:
     	outAttrs[inPortY] = outAttrs[inPortX];
+    	outAttrs[inPortZ] = outAttrs[inPortX];
     	break;
     default:
     	poco_bugcheck_msg("impossible start condition");
@@ -117,11 +125,13 @@ void AsiMotion::process(int startCond)
     double* outData[outPortCnt];
     getDataToWrite<double>(outPortX, outData[outPortX]);
     getDataToWrite<double>(outPortY, outData[outPortY]);
+    getDataToWrite<double>(outPortZ, outData[outPortZ]);
 
-    whereXY(*outData[outPortX], *outData[outPortY]);
+    whereXYZ(*outData[outPortX], *outData[outPortY], *outData[outPortZ]);
 
     notifyOutPortReady(outPortX, outAttrs[inPortX]);
     notifyOutPortReady(outPortY, outAttrs[inPortY]);
+    notifyOutPortReady(outPortZ, outAttrs[inPortZ]);
 }
 
 void AsiMotion::move()
@@ -130,10 +140,11 @@ void AsiMotion::move()
 
     readInPortData(inPortX, *(pData + inPortX));
     readInPortData(inPortY, *(pData + inPortY));
+    readInPortData(inPortZ, *(pData + inPortZ));
 
     waitMoveStop();
 
-	goXY(*pData[inPortX], *pData[inPortY]);
+	goXYZ(*pData[inPortX], *pData[inPortY], *pData[inPortZ]);
 
 	releaseAllInPorts();
 }
@@ -163,7 +174,7 @@ void AsiMotion::setStrParameterValue(size_t paramIndex, std::string value)
     info();
 
 	setRunningTask(NULL);
-	sendXY();
+	sendXYZ();
 }
 
 void AsiMotion::info()
@@ -183,6 +194,11 @@ void AsiMotion::info()
 
     poco_information(logger(), "Querying ASI motion Y axis info (INFO Y)...");
     query = "INFO Y";
+    serial.write(query);
+    readUntilCRLF();
+
+    poco_information(logger(), "Querying ASI motion Z axis info (INFO Z)...");
+    query = "INFO Z";
     serial.write(query);
     readUntilCRLF();
 
@@ -304,13 +320,14 @@ void AsiMotion::waitMoveStop()
     throw Poco::TimeoutException("waitMoveStop");
 }
 
-void AsiMotion::goXY(double posX, double posY)
+void AsiMotion::goXYZ(double posX, double posY, double posZ)
 {
 	Poco::FastMutex::ScopedLock lock(mutex);
 
 	poco_information(logger(), "Go to ( "
             + Poco::NumberFormatter::format(posX) + " ; "
-            + Poco::NumberFormatter::format(posY) + " )");
+            + Poco::NumberFormatter::format(posY) + " ; "
+            + Poco::NumberFormatter::format(posZ) + " )");
 
     serial.checkOpen();
 
@@ -318,6 +335,8 @@ void AsiMotion::goXY(double posX, double posY)
     query += Poco::NumberFormatter::format(posX*10);
     query += " Y=";
     query += Poco::NumberFormatter::format(posY*10);
+    query += " Z=";
+    query += Poco::NumberFormatter::format(posZ*10);
 
     serial.write(query);
 
@@ -329,17 +348,17 @@ void AsiMotion::goXY(double posX, double posY)
     case 0: // no error
         return;
     case -4:
-        throw Poco::RangeException("goXY", "Out of range position parameter");
+        throw Poco::RangeException("goXYZ", "Out of range position parameter");
     default:
-        throw Poco::RuntimeException("goXY",
+        throw Poco::RuntimeException("goXYZ",
                 Poco::NumberFormatter::format(err)
                 + ": unknown error");
     }
 }
 
-void AsiMotion::whereXY(double& posX, double& posY)
+void AsiMotion::whereXYZ(double& posX, double& posY, double& posZ)
 {
-    poco_information(logger(), "Retrieve XY position");
+    poco_information(logger(), "Retrieve XYZ position");
 
     serial.checkOpen();
 
@@ -364,9 +383,17 @@ void AsiMotion::whereXY(double& posX, double& posY)
     answer = readUntilCRLF();
     poco_information(logger(), serial.niceString(answer));
     posY = parseSimpleAnswer(answer)/10;
+
+    poco_information(logger(), "Query Z position (WHERE Z)");
+    query = "WHERE Z";
+    serial.write(query);
+
+    answer = readUntilCRLF();
+    poco_information(logger(), serial.niceString(answer));
+    posZ = parseSimpleAnswer(answer)/10;
 }
 
-void AsiMotion::sendXY()
+void AsiMotion::sendXYZ()
 {
     double* outData[outPortCnt];
     DataAttributeOut attr;
@@ -375,8 +402,9 @@ void AsiMotion::sendXY()
 
     getDataToWrite<double>(outPortX, outData[outPortX]);
     getDataToWrite<double>(outPortY, outData[outPortY]);
+    getDataToWrite<double>(outPortZ, outData[outPortZ]);
 
-    whereXY(*outData[outPortX], *outData[outPortY]);
+    whereXYZ(*outData[outPortX], *outData[outPortY], *outData[outPortZ]);
 
     notifyAllOutPortReady(attr);
 }

@@ -73,6 +73,7 @@ private:
     {
         inPortX,
         inPortY,
+        inPortZ,
         inPortCnt
     };
 
@@ -81,6 +82,7 @@ private:
     {
         outPortX,
         outPortY,
+        outPortZ,
         outPortCnt
     };
 
@@ -103,15 +105,15 @@ private:
 
     void waitMoveStop();
 
-    void goXY(double posX, double posY);
-    void whereXY(double& posX, double& posY);
+    void goXYZ(double posX, double posY, double posZ);
+    void whereXYZ(double& posX, double& posY, double& posZ);
 
     /**
      * Update the output ports with the current position
      *
      * To be used when the settings just changed.
      */
-    void sendXY();
+    void sendXYZ();
 
     bool tigerType; ///< flag to determine if the controler is an ASI Tiger
 

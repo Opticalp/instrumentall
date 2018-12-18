@@ -99,8 +99,15 @@ bool MotionFactory::hasNic(const std::string ifaceName)
 
     for (NetworkInterface::List::iterator it = nicList.begin(),
             ite = nicList.end(); it != ite; it++)
-        if (it->address() == IPAddress(ifaceName))
-            return true;
+		try
+		{ 
+			if (it->address() == IPAddress(ifaceName))
+				return true;
+		}
+		catch (Poco::Exception &e)
+		{
+			poco_information(logger(), ifaceName + ": " + e.displayText());
+		}
 
     return false;
 }
@@ -118,10 +125,17 @@ bool MotionFactory::hasSerial(const std::string ifaceName)
     std::vector<std::string> serialList;
     
     findSerial(serialList);
-    for (std::vector<std::string>::iterator it = serialList.begin(), 
-        ite = serialList.end(); it != ite; it++)
-            if (ifaceName.compare(*it) == 0)
-                return true;
+	for (std::vector<std::string>::iterator it = serialList.begin(),
+		ite = serialList.end(); it != ite; it++)
+	{
+		if (it->compare(ifaceName) == 0)
+		{
+			poco_information(logger(), "interface found: " + *it);
+			return true;
+		}
+		else
+			poco_information(logger(), ifaceName + " is not " + *it);
+	}
                 
     return false;
 }
