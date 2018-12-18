@@ -27,6 +27,7 @@
  */
 
 #include "Decorated.h"
+#include <stdexcept>
 
 std::string decoratedCommand(std::string command)
 {
