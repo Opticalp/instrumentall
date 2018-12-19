@@ -28,6 +28,9 @@
 
 #include "MotionFactory.h"
 #include "motion/IpDeviceFactory.h"
+#include "motion/SerialComDeviceFactory.h"
+
+#include "Poco/NumberFormatter.h"
 
 std::vector<std::string> MotionFactory::selectValueList()
 {
@@ -44,8 +47,8 @@ ModuleFactoryBranch* MotionFactory::newChildFactory(std::string selector)
     {
     case nicIface:
         return new IpDeviceFactory(this, selector);
-//    case serialIface:
-//        return new SerialDeviceFactory(this, selector);
+    case serialIface:
+        return new SerialComDeviceFactory(this, selector);
     case undefinedIface:
     default:
         poco_bugcheck_msg("Create: unknown interface");
@@ -57,15 +60,15 @@ void MotionFactory::findInterfaces(std::vector<std::string>& list)
 {
     list.clear();
     findNics(list);
-    //findSerial(list);
+    findSerial(list);
 }
 
 MotionFactory::ifaceType MotionFactory::hasInterface(const std::string ifaceName)
 {
     if (hasNic(ifaceName))
         return nicIface;
-//    else if (hasSerial(ifaceName))
-//        return serialIface;
+    else if (hasSerial(ifaceName))
+        return serialIface;
 
     return undefinedIface;
 }
@@ -99,5 +102,26 @@ bool MotionFactory::hasNic(const std::string ifaceName)
         if (it->address() == IPAddress(ifaceName))
             return true;
 
+    return false;
+}
+
+
+#include "tools/serial/SerialCom.h"
+
+void MotionFactory::findSerial(std::vector<std::string>& serialPortNamelist)
+{
+    SerialCom::listComPorts(serialPortNamelist);
+}
+
+bool MotionFactory::hasSerial(const std::string ifaceName)
+{
+    std::vector<std::string> serialList;
+    
+    findSerial(serialList);
+    for (std::vector<std::string>::iterator it = serialList.begin(), 
+        ite = serialList.end(); it != ite; it++)
+            if (ifaceName.compare(*it) == 0)
+                return true;
+                
     return false;
 }

@@ -57,7 +57,7 @@ private:
     enum ifaceType {
         undefinedIface = -1,
         nicIface,
-        //serialIface,
+        serialIface,
         ifaceTypeCnt
     };
 
@@ -78,6 +78,15 @@ private:
     void findNics(std::vector<std::string>& nicNamelist);
 
     /**
+     * Check which serial interfaces are present
+     *
+     * Present implementation returns only free choice
+     *
+     * @param[out] list serial coms are pushed back into this parameter
+     */
+    void findSerial(std::vector<std::string>& serialPortNamelist);
+
+    /**
      * check if an interface is still present
      *
      * @return its type
@@ -88,6 +97,11 @@ private:
      * Check if the given interface name is a valid NIC
      */
     bool hasNic(const std::string ifaceName);
+
+    /**
+     * Check if the given interface name is a valid serial comm port
+     */
+    bool hasSerial(const std::string ifaceName);
 };
 
 #endif /* SRC_MOTIONFACTORY_H_ */
