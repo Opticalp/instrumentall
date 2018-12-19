@@ -40,6 +40,7 @@
 #include <time.h>   // time calls
 
 #include <string>
+#include <vector>
 
 /**
  * SerialComImpl
@@ -91,6 +92,11 @@ public:
      * @return number of sent characters
      */
     size_t write(const char* buffer, size_t bufSize);
+
+    /**
+     * Retrieve the list of the COM ports
+     */
+    static void listComPorts(std::vector<std::string>& portList);
 
 protected:
     size_t mBufSize;

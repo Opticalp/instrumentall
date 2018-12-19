@@ -113,6 +113,9 @@ public:
 
     std::string deviceName()
         { return portName; }
+        
+    static void listComPorts(std::vector<std::string>& portList)
+        { SerialComImpl::listComPorts(portList); }
 
 private:
     char delimiter;
