@@ -29,6 +29,8 @@
 #ifdef WIN32
 #include "SerialComImpl_Win32.h"
 
+#include "Poco/NumberFormatter.h"
+
 #include <tchar.h>
 
 SerialComImpl::SerialComImpl():
@@ -285,6 +287,22 @@ size_t SerialComImpl::write(const char* buffer, size_t bufSize)
     WriteFile(fileHandle,buffer,static_cast<DWORD>(bufSize),&write, NULL);
 
     return write;
+}
+
+void SerialComImpl::listComPorts(std::vector<std::string>& portList)
+{
+    for(size_t ind = 1; ind <= 32; ind++)
+    {
+        std::string port = "COM" + Poco::NumberFormatter::format(ind);
+
+        //std::wstring ws_portName;
+        //ws_portName.assign(port.begin(), port.end());
+
+        DWORD dwSize = sizeof(COMMCONFIG);
+        LPCOMMCONFIG lpCC = (LPCOMMCONFIG) new char[dwSize];
+        if (GetDefaultCommConfig(port.c_str(), lpCC, &dwSize))
+            portList.push_back(port);
+    }
 }
 
 #endif /* WIN32 */

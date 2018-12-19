@@ -316,4 +316,9 @@ size_t SerialComImpl::write(const char* buffer, size_t bufSize)
     return ::write(fd, buffer, bufSize);
 }
 
+void SerialComImpl::listComPorts(std::vector<std::string>& portList)
+{
+    // see https://stackoverflow.com/q/2530096
+}
+
 #endif /* __unix__ */
