@@ -93,16 +93,6 @@ bool SerialComImpl::isOpen()
     return (fd != -1);
 }
 
-void SerialComImpl::checkOpen()
-{
-    if (!isOpen())
-    {
-        throw Poco::IOException(
-                std::string("SerialCom ") + portName,
-                "Invalid serial com port file handle");
-    }
-}
-
 void SerialComImpl::close()
 {
     if (!isOpen())
@@ -121,8 +111,6 @@ void SerialComImpl::close()
 void SerialComImpl::setPortSettings(int speed, char parity, int wordSize,
         int stopBits, size_t bufSize)
 {
-    checkOpen();
-
     mBufSize = bufSize;
 
     //create the struct
