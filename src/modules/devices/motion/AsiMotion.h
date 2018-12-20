@@ -30,7 +30,7 @@
 #define SRC_ASIMOTION_H_
 
 #include "core/Module.h"
-#include "tools/serial/SerialCom.h"
+#include "tools/comm/serial/SerialCom.h"
 
 /**
  * AsiMotion
