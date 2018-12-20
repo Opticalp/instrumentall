@@ -34,8 +34,9 @@
 
 size_t AsiMotion::refCount = 0;
 
-AsiMotion::AsiMotion(ModuleFactory* parent, std::string customName, bool tiger):
+AsiMotion::AsiMotion(ModuleFactory* parent, std::string customName, SerialCom& commObj, bool tiger):
     Module(parent, customName),
+    serial(commObj),
     tigerType(tiger)
 {
     setInternalName("AsiMotion" + Poco::NumberFormatter::format(refCount));
@@ -63,17 +64,8 @@ AsiMotion::AsiMotion(ModuleFactory* parent, std::string customName, bool tiger):
     addOutPort("Z", "z position after movement",
             DataItem::typeDblFloat, outPortZ);
 
-    // parameters
-    setParameterCount(paramCnt);
-    addParameter(paramSerialPortIndex,
-                    "serialPort",
-                    "serial port name, e.g. COM3 for windows or /dev/ttys1 for unix",
-                    ParamItem::typeString, "");
-
-    std::string portName = getStrParameterDefaultValue(paramSerialPortIndex);
-
-    if (portName.size())
-        setStrParameterValue(paramSerialPortIndex, portName);
+//    // parameters
+//    setParameterCount(paramCnt);
 
     notifyCreation();
 
@@ -149,83 +141,55 @@ void AsiMotion::move()
 	releaseAllInPorts();
 }
 
-std::string AsiMotion::getStrParameterValue(size_t paramIndex)
-{
-    // get the serial port name from the serial port object
-    return serial.deviceName();
-}
-
-void AsiMotion::setStrParameterValue(size_t paramIndex, std::string value)
-{
-    serial.close();
-    serial.open(value);
-
-    // ASI Motion default settings
-    serial.setPortSettings(
-            (tigerType?115200:9600), // baudrate
-            'n',  // parity
-            8,    // word size
-            1,    // stop bits
-            2048 ); // buffer size
-    serial.setDelimiter('\r'); // carriage return
-
-    poco_information(logger(),"port "+ serial.deviceName() + " configured");
-
-    info();
-
-	setRunningTask(NULL);
-	sendXYZ();
-}
-
-void AsiMotion::info()
+void AsiMotion::info(SerialCom &commObj, Poco::Logger& tmpLog)
 {
     std::string query;
     std::vector<std::string> answer;
 
-    poco_information(logger(), "Querying ASI motion build info (BU X)...");
+    poco_information(tmpLog, "Querying ASI motion build info (BU X)...");
     query = "BU X";
-    serial.write(query);
-    readUntilCRLF();
+    commObj.write(query);
+    readUntilCRLF(commObj, tmpLog);
 
-    poco_information(logger(), "Querying ASI motion X axis info (INFO X)...");
+    poco_information(tmpLog, "Querying ASI motion X axis info (INFO X)...");
     query = "INFO X";
-    serial.write(query);
-    readUntilCRLF();
+    commObj.write(query);
+    readUntilCRLF(commObj, tmpLog);
 
-    poco_information(logger(), "Querying ASI motion Y axis info (INFO Y)...");
+    poco_information(tmpLog, "Querying ASI motion Y axis info (INFO Y)...");
     query = "INFO Y";
-    serial.write(query);
-    readUntilCRLF();
+    commObj.write(query);
+    readUntilCRLF(commObj, tmpLog);
 
-    poco_information(logger(), "Querying ASI motion Z axis info (INFO Z)...");
+    poco_information(tmpLog, "Querying ASI motion Z axis info (INFO Z)...");
     query = "INFO Z";
-    serial.write(query);
-    readUntilCRLF();
+    commObj.write(query);
+    readUntilCRLF(commObj, tmpLog);
 
-    poco_information(logger(),"done.");
+    poco_information(tmpLog,"done.");
 }
 
 #define COUNT_LIMIT 300
 
-std::string AsiMotion::readUntilCRLF()
+std::string AsiMotion::readUntilCRLF(SerialCom &commObj, Poco::Logger& tmpLog)
 {
     std::string response;
     bool end = false;
 
-    poco_information(logger(), ">>>>>");
+    poco_information(tmpLog, ">>>>>");
 
     for (size_t count = 0; count < COUNT_LIMIT; count++)
     {
         std::string resp;
-        resp = serial.read(32);
+        resp = commObj.read(32);
 
         if (resp.size() == 0)
             continue;
 
         //if (count)
-        //    poco_information(logger(), "--------");
+        //    poco_information(tmpLog, "--------");
 
-        //poco_information(logger(), serial.niceString(resp));
+        //poco_information(tmpLog, commObj.niceString(resp));
 
         response += resp;
 
@@ -233,13 +197,13 @@ std::string AsiMotion::readUntilCRLF()
         {
             if (*(response.rbegin()+1) == '\r')
             {
-				poco_information(logger(), serial.niceString(response));
-                poco_information(logger(), "<<<<<");
+				poco_information(tmpLog, commObj.niceString(response));
+                poco_information(tmpLog, "<<<<<");
                 return response;
             }
             else
             {
-                poco_information(logger(), "\\n alone?   <=======");
+                poco_information(tmpLog, "\\n alone?   <=======");
             }
         }
     }

@@ -30,6 +30,7 @@
 #define SRC_ASIMOTIONFACTORY_H_
 
 #include "core/ModuleFactoryBranch.h"
+#include "tools/comm/serial/SerialCom.h"
 
 /**
  * AsiMotionFactory
@@ -57,6 +58,9 @@ public:
 
 private:
     Module* newChildModule(std::string customName);
+    
+    SerialCom serial; ///< serial communication object
+    
     bool tiger;
 };
 

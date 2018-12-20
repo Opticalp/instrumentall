@@ -113,7 +113,7 @@ bool MotionFactory::hasNic(const std::string ifaceName)
 }
 
 
-#include "tools/serial/SerialCom.h"
+#include "tools/comm/serial/SerialCom.h"
 
 void MotionFactory::findSerial(std::vector<std::string>& serialPortNamelist)
 {

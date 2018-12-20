@@ -40,7 +40,7 @@
 class AsiMotion: public Module
 {
 public:
-    AsiMotion(ModuleFactory* parent, std::string customName, bool tiger=false);
+    AsiMotion(ModuleFactory* parent, std::string customName, SerialCom& commObj, bool tiger=false);
 
     /**
      * Destructor
@@ -56,17 +56,11 @@ public:
 
     void process(int startCond);
 
+    static void info(SerialCom &commObj, Poco::Logger& tmpLog);
+    static std::string readUntilCRLF(SerialCom &commObj, Poco::Logger& tmpLog);
+
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name
-
-    enum params
-    {
-        paramSerialPortIndex,
-        paramCnt
-    };
-
-    std::string getStrParameterValue(size_t paramIndex);
-    void setStrParameterValue(size_t paramIndex, std::string value);
 
     /// Indexes of the input ports
     enum inPorts
@@ -86,9 +80,9 @@ private:
         outPortCnt
     };
 
-    SerialCom serial; ///< serial communication object
+    SerialCom &serial; ///< serial communication object
 
-    void info();
+    void info() { info(serial, logger()); }
 
     /**
      * Called by process() if input data is present
@@ -98,7 +92,7 @@ private:
     /**
      * Read data until "\r\n" is reached
      */
-    std::string readUntilCRLF();
+    std::string readUntilCRLF() { return readUntilCRLF(serial, logger()); }
 
     double parseSimpleAnswer(const std::string& answer);
     int parseErrorAnswer(const std::string& answer);
