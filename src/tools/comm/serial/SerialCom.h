@@ -73,15 +73,20 @@ public:
      */
     void setPortSettings(int speed=9600, char parity='n', int wordSize=8,
             int stopBits=1, size_t bufSize=1024)
-    { SerialComImpl::setPortSettings(speed, parity, wordSize, stopBits, bufSize); }
+    { 
+        checkOpen();
+        SerialComImpl::setPortSettings(speed, parity, wordSize, stopBits, bufSize); 
+    }
 
     /**
      * Check if the port is open and valid
      *
      * @throw Poco::IOException if not valid
      */
-    void checkOpen()
-    { SerialComImpl::checkOpen(); }
+    void checkOpen();
+    
+    bool isOpen()
+    { return SerialComImpl::isOpen(); }
 
     /**
      * Set the command delimiter

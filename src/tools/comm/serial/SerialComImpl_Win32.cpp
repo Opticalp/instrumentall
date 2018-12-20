@@ -110,16 +110,6 @@ bool SerialComImpl::isOpen()
     return !(fileHandle == INVALID_HANDLE_VALUE);
 }
 
-void SerialComImpl::checkOpen()
-{
-    if (!isOpen())
-    {
-        throw Poco::IOException(
-                std::string("SerialCom ") + portName,
-                "Invalid serial com port file handle");
-    }
-}
-
 void SerialComImpl::close()
 {
     if (!isOpen())

@@ -79,13 +79,11 @@ public:
 
     /**
      * Check if the port is open and valid
-     *
-     * @throw Poco::IOException if not valid
      */
-    void checkOpen()
+    bool isOpen()
     {
         throw Poco::NotImplementedException(
-            "SerialCom::checkOpen() is not implemented "
+            "SerialCom::isOpen() is not implemented "
             "for this platform");
     }
 

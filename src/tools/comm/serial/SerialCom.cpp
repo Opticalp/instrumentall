@@ -36,6 +36,14 @@ using Poco::StringTokenizer;
 #define BUFFER_SIZE 1024
 #define COUNT_LIMIT 4
 
+void SerialCom::checkOpen()
+{
+    if (!isOpen())
+        throw Poco::IOException(
+                std::string("SerialCom ") + portName,
+                "Invalid serial com port file handle");
+}
+
 std::string SerialCom::read(size_t maxCharCnt)
 {
     // if (maxCharCnt > BUFFER_SIZE)
@@ -91,32 +99,9 @@ void SerialCom::write(std::string command)
     }
 }
 
+#include "tools/comm/Decorated.h"
+
 std::string SerialCom::niceString(std::string msg)
 {
-    std::string retMsg;
-
-    for (std::string::iterator it = msg.begin(), ite = msg.end();
-            it != ite; it++)
-    {
-        if (*it == '\r')
-        {
-#ifdef WIN32
-            retMsg += "\\r\r\n";
-#else
-            retMsg += "\\r\n";
-#endif
-        }
-        else if (*it == '\n')
-        {
-#ifdef WIN32
-            retMsg += "\\n\r\n";
-#else
-            retMsg += "\\n\n";
-#endif
-        }
-        else
-            retMsg.push_back(*it);
-    }
-
-    return retMsg;
+    return decoratedCommandKeep(msg);
 }

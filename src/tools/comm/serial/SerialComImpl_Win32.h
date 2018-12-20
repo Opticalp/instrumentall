@@ -63,10 +63,8 @@ public:
 
     /**
      * Check if the port is open and valid
-     *
-     * @throw Poco::IOException if not valid
      */
-    void checkOpen();
+    bool isOpen();
 
     /**
      * read data from the com port
@@ -98,8 +96,6 @@ protected:
     std::string portName;
 
 private:
-    bool isOpen();
-
     HANDLE fileHandle; ///< com port file handle
 };
 
