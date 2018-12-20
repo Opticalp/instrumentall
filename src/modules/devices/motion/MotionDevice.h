@@ -157,6 +157,16 @@ private:
      * And then apply.
      */
     void setParametersDefaultValue();
+    
+    /**
+     * Process move for all input ports
+     */
+    void processFullMove();
+    
+    /**
+     * Process move trigged by all plugged data
+     */
+    void processPartMove();
 
 	std::vector< std::string > axisNames; ///< index to axis correspondance
 	std::vector<int> axisMasks; ///< retrieve mask from index
