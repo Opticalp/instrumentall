@@ -40,7 +40,7 @@
 class AsiMotion: public Module
 {
 public:
-    AsiMotion(ModuleFactory* parent, std::string customName, SerialCom& commObj, bool tiger=false);
+    AsiMotion(ModuleFactory* parent, std::string customName, SerialCom& commObj);
 
     /**
      * Destructor
@@ -108,8 +108,6 @@ private:
      * To be used when the settings just changed.
      */
     void sendXYZ();
-
-    bool tigerType; ///< flag to determine if the controler is an ASI Tiger
 
     Poco::FastMutex mutex;
 };

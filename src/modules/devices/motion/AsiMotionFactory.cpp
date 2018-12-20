@@ -75,5 +75,5 @@ size_t AsiMotionFactory::countRemain()
 
 Module* AsiMotionFactory::newChildModule(std::string customName)
 {
-    return new AsiMotion(this, customName, serial, tiger);
+    return new AsiMotion(this, customName, serial);
 }

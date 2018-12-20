@@ -34,10 +34,9 @@
 
 size_t AsiMotion::refCount = 0;
 
-AsiMotion::AsiMotion(ModuleFactory* parent, std::string customName, SerialCom& commObj, bool tiger):
+AsiMotion::AsiMotion(ModuleFactory* parent, std::string customName, SerialCom& commObj):
     Module(parent, customName),
-    serial(commObj),
-    tigerType(tiger)
+    serial(commObj)
 {
     setInternalName("AsiMotion" + Poco::NumberFormatter::format(refCount));
     setCustomName(customName);
