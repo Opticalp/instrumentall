@@ -36,8 +36,6 @@
 #include "Poco/String.h"
 #include "Poco/NumberFormatter.h"
 
-#include "Poco/Net/SocketAddress.h"
-
 #include "Poco/Net/NetException.h"
 
 using namespace Poco::Net;
@@ -50,10 +48,12 @@ using namespace Poco::Net;
 
 Meca500::Meca500(ModuleFactory* parent, std::string customName):
 		MotionDevice(parent, customName, 
-			xAxis | yAxis | zAxis | aAxis | bAxis | cAxis)
+			xAxis | yAxis | zAxis | aAxis | bAxis | cAxis), 
+		ipAddress(ipAddressFromFactoryTree()), 
+		sa(ipAddress, 10000), // control port
+		httpSession(sa),
+		tcpSocket(httpSession, simpleReq, resp)
 {
-	setIpAddressFromFactoryTree();
-
 	// create the control socket
 	initComm();
 
@@ -71,7 +71,7 @@ std::string Meca500::description()
 	// TODO: add ID, version, etc
 }
 
-void Meca500::setIpAddressFromFactoryTree()
+Poco::Net::IPAddress Meca500::ipAddressFromFactoryTree()
 {
 	ModuleFactoryBranch* dad =
 		reinterpret_cast<ModuleFactoryBranch*>(parent());
@@ -79,27 +79,19 @@ void Meca500::setIpAddressFromFactoryTree()
 	IpDeviceFactory* grandPa =
 		reinterpret_cast<IpDeviceFactory*>(dad->parent());
 
-	ipAddress = grandPa->parseSelector(dad->getSelector());
+	return grandPa->parseSelector(dad->getSelector());
 }
 
 void Meca500::initComm()
 {
 	setLogger("module.Meca500.startup");
 
-	// open communication with the device
-	SocketAddress sa(ipAddress, 10000); // control port
+	httpSession.setTimeout(TIMEOUT * 1000, TIMEOUT * 1000, TIMEOUT * 1000);
 
 	try
 	{
-		tcpSocket.connect(sa);
-		tcpSocket.setReuseAddress(true);
-		tcpSocket.setReusePort(true);
-		tcpSocket.setKeepAlive(true);
-		// tcpSocket.setNoDelay(true);
-		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
-		tcpSocket.setSendTimeout(TIMEOUT * 1000); // to check if the connections is still active
-
-		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
+		//tcpSocket.setSendTimeout(TIMEOUT * 1000); // to check if the connections is still active
+		//tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
 
 		try
 		{

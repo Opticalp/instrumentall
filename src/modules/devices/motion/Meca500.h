@@ -33,7 +33,10 @@
 #include "MotionDevice.h"
 
 #include "Poco/Net/IPAddress.h"
-#include "Poco/Net/StreamSocket.h"
+#include "Poco/Net/HTTPClientSession.h"
+#include "Poco/Net/HTTPRequest.h"
+#include "Poco/Net/HTTPResponse.h"
+#include "Poco/Net/WebSocket.h"
 
 #include "Poco/Mutex.h"
 
@@ -49,9 +52,13 @@ public:
     std::string description();
 
 private:
-	void setIpAddressFromFactoryTree();
+	Poco::Net::IPAddress ipAddressFromFactoryTree();
 	Poco::Net::IPAddress ipAddress;
-	Poco::Net::StreamSocket tcpSocket;
+	Poco::Net::SocketAddress sa; // control port
+	Poco::Net::HTTPClientSession httpSession;
+	Poco::Net::HTTPRequest simpleReq;
+	Poco::Net::HTTPResponse resp;
+	Poco::Net::WebSocket tcpSocket;
 
 	void initComm();
 	void closeComm();
