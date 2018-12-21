@@ -195,10 +195,11 @@ bool IpDeviceFactory::hasMeca500(IPAddress IP)
 
 		char buffer[4096];
 		int length = 4096;
+		int flags;
 
 		try
 		{
-			int len = tcpSocket.receiveBytes(buffer, length);
+			int len = tcpSocket.receiveFrame(buffer, length, flags);
 
 			if (len)
 			{
