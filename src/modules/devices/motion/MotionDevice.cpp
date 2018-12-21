@@ -117,7 +117,8 @@ void MotionDevice::process(int startCond)
     switch (startCond)
     {
     case noDataStartState:
-        poco_information(logger(), name() + ": no input data. Exiting. ");
+        poco_information(logger(), name() + ": no input data. Outputs position. ");
+		dryRun();
         return;
     case allDataStartState:
         break;
@@ -208,6 +209,41 @@ void MotionDevice::setParametersDefaultValue()
 		}
 
 	applyParameters();
+}
+
+void MotionDevice::dryRun()
+{
+	std::vector<DataAttribute> attr(axisIndexCnt, DataAttribute());
+	std::vector<double*> pDataOut(axisIndexCnt, NULL);
+
+	// reserve outputs (in case of pending task using the results)
+	reserveLockOut(); // recursive outMutex locked once
+
+	std::set<size_t> allPorts;
+	for (int ind = 0; ind < axisIndexCnt; ind++)
+		allPorts.insert(ind);
+
+	try
+	{
+		while (allPorts.size())
+		{
+			int ind = reserveOutPortOneOf(allPorts);
+			getDataToWrite<double>(ind, pDataOut[ind]);
+		}
+	}
+	catch (...) // prevent deadlock if canceling during reserveOutPortOneOf
+	{
+		unlockOut();
+		throw;
+	}
+
+	unlockOut(); // outMutex released twice. OK. unlocked.
+
+	for (int ind = 0; ind < axisIndexCnt; ind++)
+	{
+		*(pDataOut[ind]) = getPosition(axisMask(ind));
+		notifyOutPortReady(ind, attr[ind]); // outMutex released once here
+	}
 }
 
 void MotionDevice::allMotionSync(std::vector<double> positions)
