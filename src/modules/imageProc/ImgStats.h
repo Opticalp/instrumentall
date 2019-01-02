@@ -37,6 +37,9 @@
  * Retrieve simple stats of an image
  * 
  * Width, height, mean value, min, max
+ * 
+ * @par ver 2.2.1
+ * With mask
  */
 class ImgStats: public Module
 {
@@ -60,7 +63,8 @@ private:
     /// Indexes of the input ports
     enum inPorts
     {
-        imagePort,
+		maskPort,
+		imagePort,
         inPortCnt
     };
 
