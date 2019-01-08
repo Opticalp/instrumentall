@@ -72,7 +72,12 @@ public:
      */
     void checkOpen();
 
-    /**
+	/**
+	 * Check if the port is open and valid
+	 */
+	bool isOpen();
+
+	/**
      * read data from the com port
      *
      * @param buffer allocated char buffer that will be filled
@@ -97,8 +102,6 @@ protected:
     std::string portName;
 
 private:
-    bool isOpen();
-
     int fd; ///< serial com port file descriptor
 
 };
