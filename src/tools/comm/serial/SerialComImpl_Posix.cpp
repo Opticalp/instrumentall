@@ -51,8 +51,6 @@ SerialComImpl::~SerialComImpl()
 
 void SerialComImpl::open(std::string port)
 {
-    portName = port;
-
     fd = ::open(
     //the name of the serial port
     //as a c-string (char *)
@@ -73,19 +71,21 @@ void SerialComImpl::open(std::string port)
 
     if (fd < 0)
         throw Poco::IOException(
-                std::string("SerialCom ") + portName,
+                std::string("SerialCom ") + port,
                 "Unable to open the port");
 
     // Flush Port
     if (tcflush( fd, TCIFLUSH )<0) // or TCIOFLUSH or TCOFLUSH
         throw Poco::IOException(
-                std::string("SerialCom ") + portName,
+                std::string("SerialCom ") + port,
                 "Unable to flush the port");
 
     // wait for a character to be in the input buffer
     // while read
     fcntl(fd, F_SETFL, 0);
     //fcntl(_fd, F_SETFL, FNDELAY);
+
+	portName = port;
 }
 
 bool SerialComImpl::isOpen()
@@ -106,6 +106,7 @@ void SerialComImpl::close()
     }
 
     fd = -1;
+	portName = "";
 }
 
 void SerialComImpl::setPortSettings(int speed, char parity, int wordSize,

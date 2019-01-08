@@ -88,6 +88,12 @@ public:
     bool isOpen()
     { return SerialComImpl::isOpen(); }
 
+	/**
+	 * Check if the port is open and valid
+	 */
+	bool isOpen()
+	{ return SerialComImpl::isOpen(); }
+
     /**
      * Set the command delimiter
      *
