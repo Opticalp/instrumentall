@@ -102,18 +102,16 @@ void Meca500::initComm()
 			poco_warning(logger(), "No msg received at socket connexion");
 		}
 
-        fixStatus(getStatus());
+		fixStatus(getStatus());
 
         if (isErrored(sendQuery("GetPose"))
             || isErrored(sendQuery("SetEOB(0)"))
             || isErrored(sendQuery("SetEOM(1)")))
-        {
-            closeComm();
-            throw Poco::RuntimeException("Robot init error");
-        }
+	            throw Poco::RuntimeException("Robot init error");
 	}
 	catch (Poco::Exception& e)
 	{
+		closeComm();
 		poco_warning(logger(), "Not able to open the control port: " + e.displayText());
 	}
 }
