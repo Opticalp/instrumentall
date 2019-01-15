@@ -180,7 +180,7 @@ bool IpDeviceFactory::hasMeca500(IPAddress IP)
 	// open communication with the device
 	SocketAddress sa(IP, 10001); // monitoring port
 	HTTPClientSession httpSession(sa);
-	HTTPRequest simpleReq;
+	HTTPRequest simpleReq(HTTPRequest::HTTP_GET, "/", HTTPMessage::HTTP_1_1);
 	HTTPResponse resp;
 
 	httpSession.setTimeout(TIMEOUT * 1000, TIMEOUT * 1000, TIMEOUT * 1000);

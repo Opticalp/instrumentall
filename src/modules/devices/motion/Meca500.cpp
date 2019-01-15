@@ -52,6 +52,7 @@ Meca500::Meca500(ModuleFactory* parent, std::string customName):
 		ipAddress(ipAddressFromFactoryTree()), 
 		sa(ipAddress, 10000), // control port
 		httpSession(sa),
+		simpleReq(HTTPRequest::HTTP_GET, "/", HTTPMessage::HTTP_1_1),
 		tcpSocket(httpSession, simpleReq, resp)
 {
 	// create the control socket
