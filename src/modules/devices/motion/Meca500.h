@@ -32,9 +32,7 @@
 #include "core/Module.h"
 #include "MotionDevice.h"
 
-#include "Poco/Net/StreamSocket.h"
-
-#include "Poco/Mutex.h"
+#include "tools/comm/net/TcpComm.h"
 
 /**
  * Module interfacing a Meca500 Mecademic robot arm
@@ -43,13 +41,11 @@ class Meca500: public MotionDevice
 {
 public:
     Meca500(ModuleFactory* parent, std::string customName, 
-		Poco::Net::StreamSocket& socket);
+		TcpComm& comm);
 
     std::string description();
 
 private:
-	Poco::Net::StreamSocket &tcpSocket;
-
 	/**
 	 * @return the robot status as statusRobot
 	 */
@@ -81,14 +77,10 @@ private:
 	 *
 	 * @return response
 	 */
-	std::string sendQuery(std::string query);
-
-    /**
-     * Send command
-     *
-     * do not wait for an answer
-     */
-    void sendCommand(std::string command);
+	std::string sendQuery(std::string query) 
+	{
+		return comm.sendQuery(query, 256);
+	}
 
 	/**
 	 * Send the given query and wait that the given substring is present in the response
@@ -103,7 +95,7 @@ private:
 	 * @return the response
 	 * @throw Poco::TimeoutException
 	 */
-	std::string waitResp();
+	std::string waitResp() { return comm.read(256); }
 
 	enum supplParameters
 	{
@@ -147,7 +139,7 @@ private:
 
      bool isErrored(std::string resp);
 
-	 Poco::FastMutex usingSocket;
+	 TcpComm& comm;
 };
 
 #endif /* SRC_MODULES_DEVICES_MOTION_MECA500_H_ */

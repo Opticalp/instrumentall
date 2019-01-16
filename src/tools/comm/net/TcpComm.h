@@ -98,18 +98,23 @@ public:
 	 *
 	 * @return response
 	 */
-	std::string sendQuery(std::string query);
+	std::string sendQuery(std::string query, size_t maxCharCnt = 0);
 
 	/**
 	 * Send the given query and wait that the given substring is present in the response
 	 *
 	 * @return response
 	 */
-	std::string sendQueryCheckResp(std::string query, std::string respSubStr);
+	std::string sendQueryCheckResp(std::string query, std::string respSubStr, size_t maxCharCnt = 0);
 
 	std::string deviceName()
 	{
 		return tcpSocket.address().toString();
+	}
+
+	std::string shortName()
+	{
+		return tcpSocket.address().host().toString();
 	}
 
     void setLogger(std::string loggerName);

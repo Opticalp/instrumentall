@@ -42,7 +42,10 @@ using namespace Poco::Net;
 #define TIMEOUT_COUNTER_LIMIT 20
 
 TcpComm::TcpComm(Poco::Net::IPAddress remoteAddress, int remotePort) :
-	delimiter('\r'), sa(remoteAddress, remotePort), opened(false)
+	delimiter('\r'), 
+	sa(remoteAddress, remotePort), 
+	opened(false),
+	_pLogger(&Poco::Logger::get("comm.tcp." + sa.toString()))
 {
 }
 
@@ -96,47 +99,77 @@ void TcpComm::close()
 
 std::string TcpComm::read(size_t maxCharCnt)
 {
-	std::string response;
+	checkOpen();
 
-	char* buffer = new char[maxCharCnt];
+	std::string response, accu;
 
-	try
+	size_t length = 4096;
+	if (maxCharCnt)
+		length = maxCharCnt;
+
+	char* buffer = new char[length];
+
+	bool timeout = true;
+
+	if (maxCharCnt == 0) // receive until timeout
+		timeout = false;
+
+	do
 	{
-		int len = tcpSocket.receiveBytes(buffer, maxCharCnt);
-
-		if (len)
+		try
 		{
-			response.assign(buffer, len);
+			int len = tcpSocket.receiveBytes(buffer, length);
 
-			poco_information(logger(),
-				Poco::NumberFormatter::format(len) + " bytes received: \n" +
-				decoratedCommandKeep(response));
-		}
-		else
-		{
-			close();
-			throw Poco::Net::ConnectionResetException("Connection reset by peer");
-		}
+			if (len)
+			{
+				response.assign(buffer, len);
 
-		for (std::string::iterator it = response.begin(),
-			ite = response.end(); it != ite; it++)
-		{
-			if (*it == delimiter)
-				*it = '\n';
+				poco_information(logger(),
+					Poco::NumberFormatter::format(len) + " bytes received: \n" +
+					decoratedCommandKeep(response));
+			}
+			else
+			{
+				close();
+				throw Poco::Net::ConnectionResetException("Connection reset by peer");
+			}
+
+			for (std::string::iterator it = response.begin(),
+				ite = response.end(); it != ite; it++)
+			{
+				if (*it == delimiter)
+					*it = '\n';
+			}
+
+			accu += response;
 		}
-	}
-	catch (...)
-	{
-		delete[] buffer;
-		throw;
-	}
+		catch (Poco::TimeoutException)
+		{
+			if (maxCharCnt)
+			{
+				delete[] buffer;
+				throw;
+			}
+			else
+			{
+				timeout = true;
+			}
+		}
+		catch (...)
+		{
+			delete[] buffer;
+			throw;
+		}
+	} while (!timeout);
 
 	delete[] buffer;
-	return response;
+	return accu;
 }
 
 void TcpComm::write(std::string command)
 {
+	checkOpen();
+
 	int length = command.size();
 	try
 	{
@@ -152,8 +185,10 @@ void TcpComm::write(std::string command)
 	}
 }
 
-std::string TcpComm::sendQuery(std::string query)
+std::string TcpComm::sendQuery(std::string query, size_t maxCharCnt)
 {
+	checkOpen();
+
 	int length;
 
 	length = query.size();
@@ -171,17 +206,17 @@ std::string TcpComm::sendQuery(std::string query)
 		poco_error(logger(), query + " [## SEND ERROR ##]: " + e.displayText());
 	}
 
-	return read();
+	return read(maxCharCnt);
 }
 
 std::string TcpComm::sendQueryCheckResp(std::string query,
-	std::string respSubStr)
+	std::string respSubStr, size_t maxCharCnt)
 {
 	std::string resp;
 
 	try
 	{
-		resp = sendQuery(query);
+		resp = sendQuery(query, maxCharCnt);
 	}
 	catch (Poco::TimeoutException&)
 	{

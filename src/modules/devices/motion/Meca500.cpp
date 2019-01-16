@@ -31,7 +31,6 @@
 #include "core/ModuleFactoryBranch.h"
 
 #include "IpDeviceFactory.h"
-#include "tools/comm/Decorated.h"
 
 #include "Poco/String.h"
 #include "Poco/NumberFormatter.h"
@@ -47,8 +46,8 @@ using namespace Poco::Net;
 #define TIMEOUT_COUNTER_LIMIT 20
 
 Meca500::Meca500(ModuleFactory* parent, std::string customName,
-					StreamSocket& socket):
-	tcpSocket(socket),
+					TcpComm& commTmp):
+	comm(commTmp),
 	MotionDevice(parent, customName,
 			xAxis | yAxis | zAxis | aAxis | bAxis | cAxis)
 {
@@ -74,7 +73,7 @@ Meca500::Meca500(ModuleFactory* parent, std::string customName,
 		|| isErrored(sendQuery("SetEOM(1)")))
 		throw Poco::RuntimeException("Robot init error");
 
-	construct("meca500_ip" + tcpSocket.address().host().toString(), customName);
+	construct("meca500_ip" + comm.shortName(), customName);
 }
 
 std::string Meca500::description()
@@ -83,117 +82,16 @@ std::string Meca500::description()
 	// TODO: add ID, version, etc
 }
 
-std::string Meca500::sendQuery(std::string query)
-{
-	Poco::FastMutex::ScopedLock lock(usingSocket);
-
-	int length;
-
-	length = query.size();
-	try
-	{
-		// we send length + 1 chars to include the \0 char
-		tcpSocket.sendBytes(query.c_str(), length + 1); 
-
-		poco_information(logger(),
-			Poco::NumberFormatter::format(length) + " bytes sent: \n" +
-			decoratedCommandKeep(query, length + 1));
-	}
-	catch (Poco::Exception& e)
-	{
-		poco_error(logger(), query + " [## SEND ERROR ##]: " + e.displayText());
-	}
-
-	return waitResp();
-}
-
-void Meca500::sendCommand(std::string command)
-{
-    Poco::FastMutex::ScopedLock lock(usingSocket);
-
-    int length = command.size();
-    try
-    {
-        // we send length + 1 chars to include the \0 char
-        tcpSocket.sendBytes(command.c_str(), length + 1);
-
-        poco_information(logger(),
-            Poco::NumberFormatter::format(length) + " bytes sent: \n" +
-            decoratedCommandKeep(command, length + 1));
-    }
-    catch (Poco::Exception& e)
-    {
-        poco_error(logger(), command + " [## SEND ERROR ##]: " + e.displayText());
-    }
-}
 
 std::string Meca500::sendQueryCheckResp(std::string query,
 	std::string respSubStr)
 {
-    std::string resp;
+    std::string resp = comm.sendQueryCheckResp(query, respSubStr, 256);
 
-    try
-    {
-        resp = sendQuery(query);
-    }
-    catch (Poco::TimeoutException&)
-    {
-        poco_warning(logger(), "response awaiting timed out once. ");
-    }
-
-    int timeoutCnter = 0;
-    while (resp.find(respSubStr) == std::string::npos)
-    {
-        try
-        {
-            resp += waitResp();
-        }
-        catch (Poco::TimeoutException&)
-        {
-            poco_warning(logger(), "response awaiting timed out (#"
-                + Poco::NumberFormatter::format(timeoutCnter)
-                + ")");
-            timeoutCnter++;
-            if (timeoutCnter > TIMEOUT_COUNTER_LIMIT)
-                throw;
-        }
-
-        if (isErrored(resp))
-            throw Poco::RuntimeException("Meca500 error");
-    }
+    if (isErrored(resp))
+        throw Poco::RuntimeException("Meca500 error");
 
 	return resp;
-}
-
-std::string Meca500::waitResp()
-{
-	std::string response;
-
-	char buffer[4096];
-	int length = 4096;
-	int len = tcpSocket.receiveBytes(buffer, length);
-
-	if (len)
-	{
-		response.assign(buffer, len);
-
-		poco_information(logger(),
-			Poco::NumberFormatter::format(len) + " bytes received: \n" +
-			decoratedCommandKeep(response));
-	}
-	else
-	{
-		throw Poco::Net::ConnectionResetException("Connection reset by peer");
-	}
-
-    for (std::string::iterator it = response.begin(),
-        ite = response.end(); it != ite; it++)
-    {
-        if (*it == '\0')
-            *it = '\n';
-    }
-
-	return response;
 }
 
 void Meca500::defineParameters()
@@ -300,7 +198,7 @@ void Meca500::setStrParameterValue(size_t paramIndex, std::string value)
 	if (paramIndex != paramQuery)
 		poco_bugcheck_msg("invalid parameter index");
 
-	sendCommand(parseMultipleQueries(value));
+	comm.write(parseMultipleQueries(value));
 }
 
 /// minimal movement: 0.5 um, 0.0005 deg (arbitrary)

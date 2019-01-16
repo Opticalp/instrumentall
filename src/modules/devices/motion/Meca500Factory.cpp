@@ -45,30 +45,16 @@ using namespace Poco::Net;
 
 Meca500Factory::Meca500Factory(ModuleFactory* parent, std::string selector) :
 	ModuleFactoryBranch(parent, selector), // leaf = true (default)
-	sa(reinterpret_cast<IpDeviceFactory*>(parent)->parseSelector(selector), 10000)
+	comm(reinterpret_cast<IpDeviceFactory*>(parent)->parseSelector(selector), 10000)
 {
 	setLogger("Meca500Factory");
 
 	// open comm socket or throw error
-	tcpSocket.connect(sa);
-	try
-	{
-		tcpSocket.setReuseAddress(true);
-		tcpSocket.setReusePort(true);
-		tcpSocket.setKeepAlive(true);
-		tcpSocket.setSendTimeout(TIMEOUT * 1000);
-		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
+	comm.setDelimiter('\0');
+	comm.open();
+	poco_information(logger(), "Control socket connected");
 
-		poco_information(logger(), "Control socket connected");
-
-		checkFirstResponse();
-	}
-	catch (...)
-	{
-		tcpSocket.shutdown();
-		tcpSocket.close();
-		throw;
-	}
+	checkFirstResponse();
 }
 
 size_t Meca500Factory::countRemain()
@@ -81,31 +67,17 @@ size_t Meca500Factory::countRemain()
 
 void Meca500Factory::checkFirstResponse()
 {
-	std::string response;
-
-	char buffer[4096];
-	int length = 4096;
-
 	try
 	{
-		int len = tcpSocket.receiveBytes(buffer, length);
+		std::string response = comm.read(256);
 
-		if (len)
+		if (response.find("[3000][Connected to Meca500") == std::string::npos)
 		{
-			response.assign(buffer, len);
-
-			poco_information(logger(),
-				Poco::NumberFormatter::format(len) + " bytes received: \n" +
-				decoratedCommandKeep(response));
-
-			if (response.find("[3000][Connected to Meca500") == std::string::npos)
-			{
-				poco_warning(logger(), "Invalid first response. "
-					"should be: \"[3000][Connected to Meca500 3_7.0.6]\\0\" "
-					"or similar. ");
-				throw Poco::IOException("Meca500Factory::checkFirstResponse",
-						"invalid response");
-			}
+			poco_warning(logger(), "Invalid first response. "
+				"should be: \"[3000][Connected to Meca500 3_7.0.6]\\0\" "
+				"or similar. ");
+			throw Poco::IOException("Meca500Factory::checkFirstResponse",
+					"invalid response");
 		}
 	}
 	catch (Poco::TimeoutException&)
@@ -122,5 +94,5 @@ bool Meca500Factory::isAvailable()
 
 Module * Meca500Factory::newChildModule(std::string customName)
 {
-	return new Meca500(this, customName, tcpSocket);
+	return new Meca500(this, customName, comm);
 }

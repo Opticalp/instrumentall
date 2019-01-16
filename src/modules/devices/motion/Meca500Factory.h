@@ -31,7 +31,7 @@
 
 #include "core/ModuleFactoryBranch.h"
 
-#include "Poco/Net/StreamSocket.h"
+#include "tools/comm/net/TcpComm.h"
 
 /**
  * Mecademic Meca500 module factory
@@ -51,8 +51,7 @@ public:
 
 	~Meca500Factory() 
 	{
-		tcpSocket.shutdown();
-		tcpSocket.close();
+		comm.close();
 	}
 
     std::string name() { return "Meca500Factory"; }
@@ -61,7 +60,7 @@ public:
 	{ 
 		return "Factory that builds a Meca500 module \n"
 			"for the Mecademic meca500 robot arm \n"
-			"on IP: " + sa.host().toString();
+			"on comm: " + comm.deviceName();
 	}
 
     size_t countRemain();
@@ -85,8 +84,7 @@ private:
 
 	Module* newChildModule(std::string customName);
 
-	Poco::Net::StreamSocket tcpSocket;
-	Poco::Net::SocketAddress sa;
+	TcpComm comm;
 };
 
 #endif /* SRC_MODULES_DEVICES_MOTION_MECA500FACTORY_H_ */
