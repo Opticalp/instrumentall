@@ -86,9 +86,33 @@ void Meca500Factory::checkFirstResponse()
 	}
 }
 
+#include "Poco/RegularExpression.h"
+
 bool Meca500Factory::isAvailable()
 {
-	// TODO
+	std::string resp = comm.sendQuery("GetStatusRobot", 256);
+
+	Poco::RegularExpression regexp("\\[2007\\]\\[([01]),([01]),([01]),([01]),([01]),([01]),([01])\\]");
+	std::vector<std::string> strVec;
+	regexp.split(resp, 0, strVec);
+
+	poco_information(logger(), "status parsing: got "
+		+ Poco::NumberFormatter::format(strVec.size() - 1) + " bits");
+
+	if (strVec.size() != 8)
+		throw Poco::DataFormatException("not able to parse the Meca500 status");
+
+	if (strVec[1] != "1") // activation
+	{
+		poco_warning(logger(), "The meca500 is not activated");
+		return false;
+	}
+	if (strVec[2] != "1") // homing
+	{
+		poco_warning(logger(), "The meca500 is not homed");
+		return false;
+	}
+
 	return true;
 }
 
