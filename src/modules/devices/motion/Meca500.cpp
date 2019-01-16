@@ -50,10 +50,10 @@ Meca500::Meca500(ModuleFactory* parent, std::string customName):
 		MotionDevice(parent, customName, 
 			xAxis | yAxis | zAxis | aAxis | bAxis | cAxis), 
 		ipAddress(ipAddressFromFactoryTree()), 
-		sa(ipAddress, 10000), // control port
-		httpSession(sa),
-		simpleReq(HTTPRequest::HTTP_GET, "/", HTTPMessage::HTTP_1_1),
-		tcpSocket(httpSession, simpleReq, resp)
+		sa(ipAddress, 10000) // control port
+		//httpSession(sa),
+		//simpleReq(HTTPRequest::HTTP_GET, "/", HTTPMessage::HTTP_1_1),
+		//tcpSocket(httpSession, simpleReq, resp)
 {
 	// create the control socket
 	initComm();
@@ -87,10 +87,13 @@ void Meca500::initComm()
 {
 	setLogger("module.Meca500.startup");
 
-	httpSession.setTimeout(TIMEOUT * 1000, TIMEOUT * 1000, TIMEOUT * 1000);
+	tcpSocket.connect(sa);
 
 	try
 	{
+		tcpSocket.setReuseAddress(true);
+		tcpSocket.setReusePort(true);
+		tcpSocket.setKeepAlive(true);
 		tcpSocket.setSendTimeout(TIMEOUT * 1000); // to check if the connections is still active
 		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
 
@@ -143,7 +146,7 @@ std::string Meca500::sendQuery(std::string query)
 	try
 	{
 		// we send length + 1 chars to include the \0 char
-		tcpSocket.sendFrame(query.c_str(), length + 1); 
+		tcpSocket.sendBytes(query.c_str(), length + 1); 
 
 		poco_information(logger(),
 			Poco::NumberFormatter::format(length) + " bytes sent: \n" +
@@ -221,14 +224,13 @@ std::string Meca500::waitResp()
 
 	char buffer[4096];
 	int length = 4096;
-	int flags;
-	int len = tcpSocket.receiveFrame(buffer, length, flags);
+	int len = tcpSocket.receiveBytes(buffer, length);
 
-	if (!(flags & WebSocket::FRAME_FLAG_FIN))
-		poco_warning(logger(), "webSocket frame is not complete");
+	//if (!(flags & WebSocket::FRAME_FLAG_FIN))
+	//	poco_warning(logger(), "webSocket frame is not complete");
 
-	if (!(flags & WebSocket::FRAME_OP_TEXT))
-		poco_warning(logger(), "receiving: not a text frame");
+	//if (!(flags & WebSocket::FRAME_OP_TEXT))
+	//	poco_warning(logger(), "receiving: not a text frame");
 
 	if (len)
 	{

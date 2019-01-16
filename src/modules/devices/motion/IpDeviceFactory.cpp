@@ -178,28 +178,40 @@ void IpDeviceFactory::findMeca500(std::vector<std::string>& devList)
 bool IpDeviceFactory::hasMeca500(IPAddress IP)
 {
 	// open communication with the device
-	SocketAddress sa(IP, 10001); // monitoring port
-	HTTPClientSession httpSession(sa);
-	HTTPRequest simpleReq(HTTPRequest::HTTP_GET, "/", HTTPMessage::HTTP_1_1);
-	HTTPResponse resp;
+	SocketAddress sa(IP, 10000); // control port
+	//HTTPClientSession httpSession(sa);
+	//HTTPRequest simpleReq(HTTPRequest::HTTP_GET, "/", HTTPMessage::HTTP_1_1);
+	//HTTPResponse resp;
 
-	httpSession.setTimeout(TIMEOUT * 1000, TIMEOUT * 1000, TIMEOUT * 1000);
+	//httpSession.setTimeout(TIMEOUT * 1000, TIMEOUT * 1000, TIMEOUT * 1000);
 
 	try
 	{
-		WebSocket tcpSocket(httpSession, simpleReq, resp);
+		//WebSocket tcpSocket(httpSession, simpleReq, resp);
+		StreamSocket tcpSocket(sa); 
+		//tcpSocket.connect(sa);
+		tcpSocket.setReuseAddress(true);
+		tcpSocket.setReusePort(true);
+		tcpSocket.setKeepAlive(true);
 		tcpSocket.setSendTimeout(TIMEOUT * 1000);
 		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
+
+		poco_information(logger(), "Control socket connected");
 
 		std::string response;
 
 		char buffer[4096];
 		int length = 4096;
-		int flags;
+		//int flags;
 
 		try
 		{
-			int len = tcpSocket.receiveFrame(buffer, length, flags);
+			//std::string query("GetStatusRobot");
+			//tcpSocket.sendFrame(query.c_str(), query.size() + 1);
+//			int len = tcpSocket.receiveFrame(buffer, length, flags);
+			int len = tcpSocket.receiveBytes(buffer, length);
+
+			// TODO: if not powered on / homed >> can not create
 
 			if (len)
 			{
@@ -216,17 +228,17 @@ bool IpDeviceFactory::hasMeca500(IPAddress IP)
 		}
 		catch (Poco::TimeoutException&)
 		{
-			poco_information(logger(), "Timeout on monitoring port. "
+			poco_information(logger(), "Timeout on control port. "
 				"Please check if the homing routine was ran. ");
 		}
 
 		tcpSocket.shutdown();
-		tcpSocket.close();
+		// tcpSocket.close();
 		return false;
 	}
 	catch (Poco::Exception& e)
 	{
-		poco_warning(logger(), "Not able to open the monitoring port: " + e.displayText());
+		poco_warning(logger(), "Not able to open the control port: " + e.displayText());
 		return false;
 	}
 }
