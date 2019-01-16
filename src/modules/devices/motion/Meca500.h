@@ -32,11 +32,6 @@
 #include "core/Module.h"
 #include "MotionDevice.h"
 
-#include "Poco/Net/IPAddress.h"
-//#include "Poco/Net/HTTPClientSession.h"
-//#include "Poco/Net/HTTPRequest.h"
-//#include "Poco/Net/HTTPResponse.h"
-//#include "Poco/Net/WebSocket.h"
 #include "Poco/Net/StreamSocket.h"
 
 #include "Poco/Mutex.h"
@@ -47,25 +42,23 @@
 class Meca500: public MotionDevice
 {
 public:
-    Meca500(ModuleFactory* parent, std::string customName);
-	~Meca500();
+    Meca500(ModuleFactory* parent, std::string customName, 
+		Poco::Net::StreamSocket& socket);
 
     std::string description();
 
 private:
-	Poco::Net::IPAddress ipAddressFromFactoryTree();
-	Poco::Net::IPAddress ipAddress;
-	Poco::Net::SocketAddress sa; // control port
-	//Poco::Net::HTTPClientSession httpSession;
-	//Poco::Net::HTTPRequest simpleReq;
-	//Poco::Net::HTTPResponse resp;
-	Poco::Net::StreamSocket tcpSocket;
+	Poco::Net::StreamSocket &tcpSocket;
 
-	void initComm();
-	void closeComm();
-
+	/**
+	 * @return the robot status as statusRobot
+	 */
     int getStatus();
-    void fixStatus(int status);
+
+	/**
+	 * @return updated robot status
+	 */
+    int fixStatus(int status);
 
     enum statusRobot
     {
@@ -136,26 +129,11 @@ private:
 	std::string getStrParameterValue(size_t paramIndex);
 	void setStrParameterValue(size_t paramIndex, std::string value);
 
-	///**
-    // * Apply simultanously all the parameters.
-    // *
-    // * use TcpIpWithWatchDog variable comm for the communication
-    // */
-    //void applyParameters();
-
-    //void refreshParameterInternalValues();
-
     ///**
     // * Check if the given response string contains an error code
     // *
     // * @return 0 if no error. error code if any.
     // *
-    // * error codes:
-    // *  * Err 1: A parameter value is invalid
-    // *  * Err 2: Command not recognised
-    // *  * Err 3: Numeric value is wrong format
-    // *  * Err 4: Wrong number of parameters
-    // *  * Err 5: (Warning only) A timing parameter was out of range and has been adjusted
     // */
     //int checkResponseError(std::string response);
 

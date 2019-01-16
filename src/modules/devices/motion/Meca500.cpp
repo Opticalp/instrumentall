@@ -46,94 +46,41 @@ using namespace Poco::Net;
 // how many times timeout before aborting response awaiting
 #define TIMEOUT_COUNTER_LIMIT 20
 
-Meca500::Meca500(ModuleFactory* parent, std::string customName):
-		MotionDevice(parent, customName, 
-			xAxis | yAxis | zAxis | aAxis | bAxis | cAxis), 
-		ipAddress(ipAddressFromFactoryTree()), 
-		sa(ipAddress, 10000) // control port
-		//httpSession(sa),
-		//simpleReq(HTTPRequest::HTTP_GET, "/", HTTPMessage::HTTP_1_1),
-		//tcpSocket(httpSession, simpleReq, resp)
+Meca500::Meca500(ModuleFactory* parent, std::string customName,
+					StreamSocket& socket):
+	tcpSocket(socket),
+	MotionDevice(parent, customName,
+			xAxis | yAxis | zAxis | aAxis | bAxis | cAxis)
 {
-	// create the control socket
-	initComm();
+	setLogger("module.Meca500.startup");
 
-	construct("meca500_ip" + ipAddress.toString(), customName);
-}
+	try
+	{
+		waitResp(); // purge input
+	}
+	catch (Poco::TimeoutException&)
+	{
+		poco_information(logger(), "no pending response");
+	}
 
-Meca500::~Meca500()
-{
-	closeComm();
+	int status = fixStatus(getStatus());
+	if (~status & activated)
+		throw("Meca500::Meca500", "robot not activated");
+	if (~status & homed)
+		throw("Meca500::Meca500", "robot not homed");
+
+	if (isErrored(sendQuery("GetPose"))
+		|| isErrored(sendQuery("SetEOB(0)"))
+		|| isErrored(sendQuery("SetEOM(1)")))
+		throw Poco::RuntimeException("Robot init error");
+
+	construct("meca500_ip" + tcpSocket.address().host().toString(), customName);
 }
 
 std::string Meca500::description()
 {
 	return "Meca500 robot device, ";
 	// TODO: add ID, version, etc
-}
-
-Poco::Net::IPAddress Meca500::ipAddressFromFactoryTree()
-{
-	ModuleFactoryBranch* dad =
-		reinterpret_cast<ModuleFactoryBranch*>(parent());
-
-	IpDeviceFactory* grandPa =
-		reinterpret_cast<IpDeviceFactory*>(dad->parent());
-
-	return grandPa->parseSelector(dad->getSelector());
-}
-
-void Meca500::initComm()
-{
-	setLogger("module.Meca500.startup");
-
-	tcpSocket.connect(sa);
-
-	try
-	{
-		tcpSocket.setReuseAddress(true);
-		tcpSocket.setReusePort(true);
-		tcpSocket.setKeepAlive(true);
-		tcpSocket.setSendTimeout(TIMEOUT * 1000); // to check if the connections is still active
-		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
-
-		try
-		{
-			waitResp(); // purge input
-		}
-		catch (Poco::TimeoutException&)
-		{
-			poco_warning(logger(), "No msg received at socket connexion");
-		}
-
-		fixStatus(getStatus());
-
-        if (isErrored(sendQuery("GetPose"))
-            || isErrored(sendQuery("SetEOB(0)"))
-            || isErrored(sendQuery("SetEOM(1)")))
-	            throw Poco::RuntimeException("Robot init error");
-	}
-	catch (Poco::Exception& e)
-	{
-		closeComm();
-		poco_warning(logger(), "Not able to open the control port: " + e.displayText());
-	}
-}
-
-void Meca500::closeComm()
-{
-	// close comm
-    try 
-    {
-        waitResp(); // purge input
-    }
-    catch (Poco::TimeoutException&)
-    {
-        // nothing to do
-    }
-
-	tcpSocket.shutdown();
-	tcpSocket.close();
 }
 
 std::string Meca500::sendQuery(std::string query)
@@ -225,12 +172,6 @@ std::string Meca500::waitResp()
 	char buffer[4096];
 	int length = 4096;
 	int len = tcpSocket.receiveBytes(buffer, length);
-
-	//if (!(flags & WebSocket::FRAME_FLAG_FIN))
-	//	poco_warning(logger(), "webSocket frame is not complete");
-
-	//if (!(flags & WebSocket::FRAME_OP_TEXT))
-	//	poco_warning(logger(), "receiving: not a text frame");
 
 	if (len)
 	{
@@ -480,8 +421,7 @@ int Meca500::getStatus()
     return status;
 }
 
-
-void Meca500::fixStatus(int status)
+int Meca500::fixStatus(int status)
 {
     if (status & errored)
     {
@@ -493,6 +433,8 @@ void Meca500::fixStatus(int status)
 
     if (status & paused)
         sendQueryCheckResp("ResumeMotion","[2043][Motion resumed.]");
+
+	return (status & ~errored & ~paused);
 }
 
 

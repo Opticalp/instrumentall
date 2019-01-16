@@ -27,25 +27,9 @@
  */
 
 #include "IpDeviceFactory.h"
-#include "modules/GenericLeafFactory.h"
-#include "Meca500.h"
-
-#include "tools/comm/Decorated.h"
+#include "Meca500Factory.h"
 
 #include "Poco/NumberFormatter.h"
-
-#include "Poco/Net/NetException.h"
-#include "Poco/Net/DatagramSocket.h"
-#include "Poco/Net/SocketAddress.h"
-#include "Poco/Net/MulticastSocket.h"
-#include "Poco/Net/StreamSocket.h"
-#include "Poco/Net/WebSocket.h"
-#include "Poco/Net/HTTPClientSession.h"
-#include "Poco/Net/HTTPRequest.h"
-#include "Poco/Net/HTTPResponse.h"
-
- /// socket receive timeout (ms)
-#define TIMEOUT 500
 
 using namespace Poco::Net;
 
@@ -85,9 +69,7 @@ ModuleFactoryBranch* IpDeviceFactory::newChildFactory(std::string selector)
     switch (hasDevice(selector))
     {
     case meca500Dev:
-        return new GenericLeafFactory<Meca500>(
-                "Meca500Factory", "Create a Meca500 robot arm module",
-                this, selector, true);
+        return meca500candidates[selector];
     case undefinedDev:
     default:
         poco_bugcheck_msg("Create: unknown device");
@@ -157,7 +139,7 @@ void IpDeviceFactory::findMeca500(std::vector<std::string>& devList)
 			if (address == it->get<0>())
 				continue;
 
-			poco_information(logger(), "ping " + address.toString());
+			poco_information(logger(), "Check " + address.toString());
 
 			try
 			{
@@ -169,7 +151,8 @@ void IpDeviceFactory::findMeca500(std::vector<std::string>& devList)
 			}
 			catch (Poco::Exception& e)
 			{
-				poco_warning(logger(), "ping failed: " + e.displayText());
+				poco_warning(logger(), "Meca500 discover failed on " +
+					address.toString() + ": " + e.displayText());
 			}
 		}
 	}
@@ -177,68 +160,24 @@ void IpDeviceFactory::findMeca500(std::vector<std::string>& devList)
 
 bool IpDeviceFactory::hasMeca500(IPAddress IP)
 {
-	// open communication with the device
-	SocketAddress sa(IP, 10000); // control port
-	//HTTPClientSession httpSession(sa);
-	//HTTPRequest simpleReq(HTTPRequest::HTTP_GET, "/", HTTPMessage::HTTP_1_1);
-	//HTTPResponse resp;
+	std::string selector;
+	selector = buildSelector(IP, meca500Dev);
 
-	//httpSession.setTimeout(TIMEOUT * 1000, TIMEOUT * 1000, TIMEOUT * 1000);
+	if (meca500candidates.count(selector))
+		// NOTE: could check that the socket is stil opened
+		return true;
 
 	try
 	{
-		//WebSocket tcpSocket(httpSession, simpleReq, resp);
-		StreamSocket tcpSocket(sa); 
-		//tcpSocket.connect(sa);
-		tcpSocket.setReuseAddress(true);
-		tcpSocket.setReusePort(true);
-		tcpSocket.setKeepAlive(true);
-		tcpSocket.setSendTimeout(TIMEOUT * 1000);
-		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
-
-		poco_information(logger(), "Control socket connected");
-
-		std::string response;
-
-		char buffer[4096];
-		int length = 4096;
-		//int flags;
-
-		try
-		{
-			//std::string query("GetStatusRobot");
-			//tcpSocket.sendFrame(query.c_str(), query.size() + 1);
-//			int len = tcpSocket.receiveFrame(buffer, length, flags);
-			int len = tcpSocket.receiveBytes(buffer, length);
-
-			// TODO: if not powered on / homed >> can not create
-
-			if (len)
-			{
-				response.assign(buffer, len);
-
-				poco_information(logger(),
-					Poco::NumberFormatter::format(len) + " bytes received: \n" +
-					decoratedCommandKeep(response));
-
-				tcpSocket.shutdown();
-				tcpSocket.close();
-				return true;
-			}
-		}
-		catch (Poco::TimeoutException&)
-		{
-			poco_information(logger(), "Timeout on control port. "
-				"Please check if the homing routine was ran. ");
-		}
-
-		tcpSocket.shutdown();
-		// tcpSocket.close();
-		return false;
+		meca500candidates[selector]=
+				new Meca500Factory(this, selector);
+		return true;
 	}
 	catch (Poco::Exception& e)
 	{
-		poco_warning(logger(), "Not able to open the control port: " + e.displayText());
+		poco_warning( logger(), 
+			"Not able to open the control port: " + 
+			e.displayText()  );
 		return false;
 	}
 }

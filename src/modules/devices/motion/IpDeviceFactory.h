@@ -125,6 +125,11 @@ private:
     bool hasMeca500(Poco::Net::IPAddress IP);
 
     UdpFromNic comm;
+
+	/**
+	 * Selector to factory candidate
+	 */
+	std::map<std::string, ModuleFactoryBranch*> meca500candidates;
 };
 
 #endif /* SRC_MODULES_DEVICES_MOTION_IPDEVICEFACTORY_H_ */
