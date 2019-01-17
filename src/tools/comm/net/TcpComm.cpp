@@ -228,7 +228,7 @@ std::string TcpComm::sendQueryCheckResp(std::string query,
 	{
 		try
 		{
-			resp += read();
+			resp += read(maxCharCnt);
 		}
 		catch (Poco::TimeoutException&)
 		{
