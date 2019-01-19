@@ -129,7 +129,7 @@ void SerialComImpl::close()
 void SerialComImpl::setPortSettings(int speed, char parity, int wordSize,
         int stopBits, size_t bufSize)
 {
-    checkOpen();
+    //checkOpen();
 
     mBufSize = bufSize;
 
@@ -260,8 +260,6 @@ void SerialComImpl::setPortSettings(int speed, char parity, int wordSize,
 
 size_t SerialComImpl::read(char* buffer, size_t bufSize)
 {
-    checkOpen();
-
     DWORD read = -1;
 
     ReadFile(fileHandle, buffer, static_cast<DWORD>(bufSize), &read, NULL);
@@ -271,8 +269,6 @@ size_t SerialComImpl::read(char* buffer, size_t bufSize)
 
 size_t SerialComImpl::write(const char* buffer, size_t bufSize)
 {
-    checkOpen();
-
     DWORD write = -1;
     WriteFile(fileHandle,buffer,static_cast<DWORD>(bufSize),&write, NULL);
 

@@ -46,6 +46,8 @@ void SerialCom::checkOpen()
 
 std::string SerialCom::read(size_t maxCharCnt)
 {
+	checkOpen();
+
     // if (maxCharCnt > BUFFER_SIZE)
     // undefined behavior
 
@@ -82,6 +84,8 @@ std::string SerialCom::read(size_t maxCharCnt)
 
 void SerialCom::write(std::string command)
 {
+	checkOpen();
+
     command += delimiter;
 
     if (command.size() <= mBufSize)
