@@ -106,7 +106,8 @@ bool MotionFactory::hasNic(const std::string ifaceName)
 		}
 		catch (Poco::Exception &e)
 		{
-			poco_information(logger(), ifaceName + ": " + e.displayText());
+			poco_information(logger(), "Looking for: " + ifaceName +
+				". " + it->adapterName() + ": " + e.displayText());
 		}
 
     return false;

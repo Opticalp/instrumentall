@@ -42,21 +42,25 @@ AsiMotionFactory::AsiMotionFactory(ModuleFactory* parent, std::string selector):
 
 size_t AsiMotionFactory::countRemain()
 {
-    if (serial.isOpen())
-        return 0;
-        
-    serial.open(getSelector());
+	if (getChildModules().size())
+		return 0;
 
-    // ASI Motion default settings
-    serial.setPortSettings(
-            (tiger?115200:9600), // baudrate
-            'n',  // parity
-            8,    // word size
-            1,    // stop bits
-            2048 ); // buffer size
-    serial.setDelimiter('\r'); // carriage return
+	if (!serial.isOpen())
+	{
+		std::string port = reinterpret_cast<ModuleFactoryBranch*>(parent())->getSelector();
+		serial.open(port);
 
-    poco_information(logger(),"port "+ serial.deviceName() + " configured");
+		// ASI Motion default settings
+		serial.setPortSettings(
+			(tiger ? 115200 : 9600), // baudrate
+			'n',  // parity
+			8,    // word size
+			1,    // stop bits
+			2048); // buffer size
+		serial.setDelimiter('\r'); // carriage return
+
+		poco_information(logger(), "port " + serial.deviceName() + " configured");
+	}
 
     try
     {
@@ -65,7 +69,8 @@ size_t AsiMotionFactory::countRemain()
     catch (Poco::Exception& e)
     {
         poco_error(logger(), "No ASI motion stage found on " + getSelector() 
-                                    + " with standard baudrate configuration. ");
+                                    + " with standard baudrate configuration. \n"
+									+ e.displayText());
         serial.close();
         return 0;
     }
