@@ -168,6 +168,11 @@ private:
      */
     void processPartMove();
 
+	/**
+	 * Send position to output ports
+	 */
+	void dryRun();
+
 	std::vector< std::string > axisNames; ///< index to axis correspondance
 	std::vector<int> axisMasks; ///< retrieve mask from index
 };

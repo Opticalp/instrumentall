@@ -31,12 +31,9 @@
 #include "core/ModuleFactoryBranch.h"
 
 #include "IpDeviceFactory.h"
-#include "tools/comm/Decorated.h"
 
 #include "Poco/String.h"
 #include "Poco/NumberFormatter.h"
-
-#include "Poco/Net/SocketAddress.h"
 
 #include "Poco/Net/NetException.h"
 
@@ -48,21 +45,35 @@ using namespace Poco::Net;
 // how many times timeout before aborting response awaiting
 #define TIMEOUT_COUNTER_LIMIT 20
 
-Meca500::Meca500(ModuleFactory* parent, std::string customName):
-		MotionDevice(parent, customName, 
+Meca500::Meca500(ModuleFactory* parent, std::string customName,
+					TcpComm& commTmp):
+	comm(commTmp),
+	MotionDevice(parent, customName,
 			xAxis | yAxis | zAxis | aAxis | bAxis | cAxis)
 {
-	setIpAddressFromFactoryTree();
+	setLogger("module.Meca500.startup");
 
-	// create the control socket
-	initComm();
+	try
+	{
+		waitResp(); // purge input
+	}
+	catch (Poco::TimeoutException&)
+	{
+		poco_information(logger(), "no pending response");
+	}
 
-	construct("meca500_ip" + ipAddress.toString(), customName);
-}
+	int status = fixStatus(getStatus());
+	if (~status & activated)
+		throw("Meca500::Meca500", "robot not activated");
+	if (~status & homed)
+		throw("Meca500::Meca500", "robot not homed");
 
-Meca500::~Meca500()
-{
-	closeComm();
+	if (isErrored(sendQuery("GetPose"))
+		|| isErrored(sendQuery("SetEOB(0)"))
+		|| isErrored(sendQuery("SetEOM(1)")))
+		throw Poco::RuntimeException("Robot init error");
+
+	construct("meca500_ip" + comm.shortName(), customName);
 }
 
 std::string Meca500::description()
@@ -71,188 +82,16 @@ std::string Meca500::description()
 	// TODO: add ID, version, etc
 }
 
-void Meca500::setIpAddressFromFactoryTree()
-{
-	ModuleFactoryBranch* dad =
-		reinterpret_cast<ModuleFactoryBranch*>(parent());
-
-	IpDeviceFactory* grandPa =
-		reinterpret_cast<IpDeviceFactory*>(dad->parent());
-
-	ipAddress = grandPa->parseSelector(dad->getSelector());
-}
-
-void Meca500::initComm()
-{
-	setLogger("module.Meca500.startup");
-
-	// open communication with the device
-	SocketAddress sa(ipAddress, 10000); // control port
-
-	try
-	{
-		tcpSocket.connect(sa);
-		tcpSocket.setReuseAddress(true);
-		tcpSocket.setReusePort(true);
-		tcpSocket.setKeepAlive(true);
-		// tcpSocket.setNoDelay(true);
-		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
-		tcpSocket.setSendTimeout(TIMEOUT * 1000); // to check if the connections is still active
-
-		tcpSocket.setReceiveTimeout(TIMEOUT * 1000);
-
-		try
-		{
-			waitResp(); // purge input
-		}
-		catch (Poco::TimeoutException&)
-		{
-			poco_warning(logger(), "No msg received at socket connexion");
-		}
-
-        fixStatus(getStatus());
-
-        if (isErrored(sendQuery("GetPose"))
-            || isErrored(sendQuery("SetEOB(0)"))
-            || isErrored(sendQuery("SetEOM(1)")))
-        {
-            closeComm();
-            throw Poco::RuntimeException("Robot init error");
-        }
-	}
-	catch (Poco::Exception& e)
-	{
-		poco_warning(logger(), "Not able to open the control port: " + e.displayText());
-	}
-}
-
-void Meca500::closeComm()
-{
-	// close comm
-    try 
-    {
-        waitResp(); // purge input
-    }
-    catch (Poco::TimeoutException&)
-    {
-        // nothing to do
-    }
-
-	tcpSocket.shutdown();
-	tcpSocket.close();
-}
-
-std::string Meca500::sendQuery(std::string query)
-{
-	Poco::FastMutex::ScopedLock lock(usingSocket);
-
-	int length;
-
-	length = query.size();
-	try
-	{
-		// we send length + 1 chars to include the \0 char
-		tcpSocket.sendBytes(query.c_str(), length + 1); 
-
-		poco_information(logger(),
-			Poco::NumberFormatter::format(length) + " bytes sent: \n" +
-			decoratedCommandKeep(query, length + 1));
-	}
-	catch (Poco::Exception& e)
-	{
-		poco_error(logger(), query + " [## SEND ERROR ##]: " + e.displayText());
-	}
-
-	return waitResp();
-}
-
-void Meca500::sendCommand(std::string command)
-{
-    Poco::FastMutex::ScopedLock lock(usingSocket);
-
-    int length = command.size();
-    try
-    {
-        // we send length + 1 chars to include the \0 char
-        tcpSocket.sendBytes(command.c_str(), length + 1);
-
-        poco_information(logger(),
-            Poco::NumberFormatter::format(length) + " bytes sent: \n" +
-            decoratedCommandKeep(command, length + 1));
-    }
-    catch (Poco::Exception& e)
-    {
-        poco_error(logger(), command + " [## SEND ERROR ##]: " + e.displayText());
-    }
-}
 
 std::string Meca500::sendQueryCheckResp(std::string query,
 	std::string respSubStr)
 {
-    std::string resp;
+    std::string resp = comm.sendQueryCheckResp(query, respSubStr, 256);
 
-    try
-    {
-        resp = sendQuery(query);
-    }
-    catch (Poco::TimeoutException&)
-    {
-        poco_warning(logger(), "response awaiting timed out once. ");
-    }
-
-    int timeoutCnter = 0;
-    while (resp.find(respSubStr) == std::string::npos)
-    {
-        try
-        {
-            resp += waitResp();
-        }
-        catch (Poco::TimeoutException&)
-        {
-            poco_warning(logger(), "response awaiting timed out (#"
-                + Poco::NumberFormatter::format(timeoutCnter)
-                + ")");
-            timeoutCnter++;
-            if (timeoutCnter > TIMEOUT_COUNTER_LIMIT)
-                throw;
-        }
-
-        if (isErrored(resp))
-            throw Poco::RuntimeException("Meca500 error");
-    }
+    if (isErrored(resp))
+        throw Poco::RuntimeException("Meca500 error");
 
 	return resp;
-}
-
-std::string Meca500::waitResp()
-{
-	std::string response;
-
-	char buffer[4096];
-	int length = 4096;
-	int len = tcpSocket.receiveBytes(buffer, length);
-
-	if (len)
-	{
-		response.assign(buffer, len);
-
-		poco_information(logger(),
-			Poco::NumberFormatter::format(len) + " bytes received: \n" +
-			decoratedCommandKeep(response));
-	}
-	else
-	{
-		throw Poco::Net::ConnectionResetException("Connection reset by peer");
-	}
-
-    for (std::string::iterator it = response.begin(),
-        ite = response.end(); it != ite; it++)
-    {
-        if (*it == '\0')
-            *it = '\n';
-    }
-
-	return response;
 }
 
 void Meca500::defineParameters()
@@ -359,7 +198,7 @@ void Meca500::setStrParameterValue(size_t paramIndex, std::string value)
 	if (paramIndex != paramQuery)
 		poco_bugcheck_msg("invalid parameter index");
 
-	sendCommand(parseMultipleQueries(value));
+	comm.write(parseMultipleQueries(value));
 }
 
 /// minimal movement: 0.5 um, 0.0005 deg (arbitrary)
@@ -480,8 +319,7 @@ int Meca500::getStatus()
     return status;
 }
 
-
-void Meca500::fixStatus(int status)
+int Meca500::fixStatus(int status)
 {
     if (status & errored)
     {
@@ -493,6 +331,8 @@ void Meca500::fixStatus(int status)
 
     if (status & paused)
         sendQueryCheckResp("ResumeMotion","[2043][Motion resumed.]");
+
+	return (status & ~errored & ~paused);
 }
 
 

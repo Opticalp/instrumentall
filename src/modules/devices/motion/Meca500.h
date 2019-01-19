@@ -32,10 +32,7 @@
 #include "core/Module.h"
 #include "MotionDevice.h"
 
-#include "Poco/Net/IPAddress.h"
-#include "Poco/Net/StreamSocket.h"
-
-#include "Poco/Mutex.h"
+#include "tools/comm/net/TcpComm.h"
 
 /**
  * Module interfacing a Meca500 Mecademic robot arm
@@ -43,21 +40,21 @@
 class Meca500: public MotionDevice
 {
 public:
-    Meca500(ModuleFactory* parent, std::string customName);
-	~Meca500();
+    Meca500(ModuleFactory* parent, std::string customName, 
+		TcpComm& comm);
 
     std::string description();
 
 private:
-	void setIpAddressFromFactoryTree();
-	Poco::Net::IPAddress ipAddress;
-	Poco::Net::StreamSocket tcpSocket;
-
-	void initComm();
-	void closeComm();
-
+	/**
+	 * @return the robot status as statusRobot
+	 */
     int getStatus();
-    void fixStatus(int status);
+
+	/**
+	 * @return updated robot status
+	 */
+    int fixStatus(int status);
 
     enum statusRobot
     {
@@ -80,14 +77,10 @@ private:
 	 *
 	 * @return response
 	 */
-	std::string sendQuery(std::string query);
-
-    /**
-     * Send command
-     *
-     * do not wait for an answer
-     */
-    void sendCommand(std::string command);
+	std::string sendQuery(std::string query) 
+	{
+		return comm.sendQuery(query, 256);
+	}
 
 	/**
 	 * Send the given query and wait that the given substring is present in the response
@@ -102,7 +95,7 @@ private:
 	 * @return the response
 	 * @throw Poco::TimeoutException
 	 */
-	std::string waitResp();
+	std::string waitResp() { return comm.read(256); }
 
 	enum supplParameters
 	{
@@ -128,26 +121,11 @@ private:
 	std::string getStrParameterValue(size_t paramIndex);
 	void setStrParameterValue(size_t paramIndex, std::string value);
 
-	///**
-    // * Apply simultanously all the parameters.
-    // *
-    // * use TcpIpWithWatchDog variable comm for the communication
-    // */
-    //void applyParameters();
-
-    //void refreshParameterInternalValues();
-
     ///**
     // * Check if the given response string contains an error code
     // *
     // * @return 0 if no error. error code if any.
     // *
-    // * error codes:
-    // *  * Err 1: A parameter value is invalid
-    // *  * Err 2: Command not recognised
-    // *  * Err 3: Numeric value is wrong format
-    // *  * Err 4: Wrong number of parameters
-    // *  * Err 5: (Warning only) A timing parameter was out of range and has been adjusted
     // */
     //int checkResponseError(std::string response);
 
@@ -161,7 +139,7 @@ private:
 
      bool isErrored(std::string resp);
 
-	 Poco::FastMutex usingSocket;
+	 TcpComm& comm;
 };
 
 #endif /* SRC_MODULES_DEVICES_MOTION_MECA500_H_ */
