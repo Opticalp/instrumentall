@@ -60,8 +60,6 @@ public:
     static std::string readUntilCRLF(SerialCom &commObj, Poco::Logger& tmpLog);
 
 private:
-    static size_t refCount; ///< reference counter to generate a unique internal name
-
     void info() { info(serial, logger()); }
 
     enum supplParameters
@@ -84,7 +82,6 @@ private:
     void setStrParameterValue(size_t paramIndex, std::string value);
 
     void singleMotion(int axis, std::vector<double> positions);
-    void allMotionSync(std::vector<double> positions);
 
     double getPosition(int axis);
 
@@ -93,30 +90,7 @@ private:
      */
     std::string parseMultipleQueries(std::string queries);
 
-    /// Indexes of the input ports
-    enum inPorts
-    {
-        inPortX,
-        inPortY,
-        inPortZ,
-        inPortCnt
-    };
-
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        outPortX,
-        outPortY,
-        outPortZ,
-        outPortCnt
-    };
-
     SerialCom &serial; ///< serial communication object
-
-    /**
-     * Called by process() if input data is present
-     */
-    void move();
 
     /**
      * Read data until "\r\n" is reached
@@ -130,15 +104,6 @@ private:
 
     void goXYZ(double posX, double posY, double posZ);
     void whereXYZ(double& posX, double& posY, double& posZ);
-
-    /**
-     * Update the output ports with the current position
-     *
-     * To be used when the settings just changed.
-     */
-    void sendXYZ();
-
-    Poco::FastMutex mutex;
 };
 
 #endif /* SRC_ASIMOTION_H_ */

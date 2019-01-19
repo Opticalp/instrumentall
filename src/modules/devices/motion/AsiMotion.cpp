@@ -32,112 +32,21 @@
 #include "Poco/NumberParser.h"
 #include "Poco/String.h" // trim in place
 
-size_t AsiMotion::refCount = 0;
-
 AsiMotion::AsiMotion(ModuleFactory* parent, std::string customName, SerialCom& commObj):
-    Module(parent, customName),
-    serial(commObj)
+    serial(commObj),
+   	MotionDevice(parent, customName,
+			xAxis | yAxis | zAxis)
 {
-    setInternalName("AsiMotion" + Poco::NumberFormatter::format(refCount));
-    setCustomName(customName);
-    setLogger("module." + name());
+    setLogger("module.AsiMotion.startup");
 
-    // ports
-    setInPortCount(inPortCnt);
+    waitMoveStop(); // purge input
 
-    addInPort("X", "x position",
-            DataItem::typeDblFloat, inPortX);
-    addInPort("Y", "y position",
-            DataItem::typeDblFloat, inPortY);
-    addInPort("Z", "z position",
-            DataItem::typeDblFloat, inPortZ);
-
-    // the output ports are set with the current position when
-    // a motion has finished.
-    setOutPortCount(outPortCnt);
-
-    addOutPort("X", "x position after movement",
-            DataItem::typeDblFloat, outPortX);
-    addOutPort("Y", "y position after movement",
-            DataItem::typeDblFloat, outPortY);
-    addOutPort("Z", "z position after movement",
-            DataItem::typeDblFloat, outPortZ);
-
-//    // parameters
-//    setParameterCount(paramCnt);
-
-    notifyCreation();
-
-    // if nothing failed
-    refCount++;
+    construct("AsiMotion_" + serial.deviceName(), customName);
 }
 
 AsiMotion::~AsiMotion()
 {
     // the serial port closing is directly done by the SerialCom object destruction
-}
-
-void AsiMotion::process(int startCond)
-{
-	poco_information(logger(), "serial port opened;");
-
-    serial.checkOpen();
-
-    // prevent a target module from using expired position data
-    reserveAllOutPorts();
-
-    DataAttributeIn attrs[inPortCnt];
-	DataAttributeOut outAttrs[inPortCnt];
-
-    switch (startCond)
-    {
-    case allDataStartState:
-		readLockInPort(inPortX);
-    	readInPortDataAttribute(inPortX, attrs + inPortX);
-		readLockInPort(inPortY);
-    	readInPortDataAttribute(inPortY, attrs + inPortY);
-		readLockInPort(inPortZ);
-    	readInPortDataAttribute(inPortZ, attrs + inPortZ);
-		outAttrs[inPortX] = attrs[inPortX];
-		outAttrs[inPortY] = attrs[inPortY];
-		outAttrs[inPortZ] = attrs[inPortZ];
-    	move();
-    	releaseAllInPorts(); // release when the movement has stopped
-    	break;
-    case noDataStartState:
-    	outAttrs[inPortY] = outAttrs[inPortX];
-    	outAttrs[inPortZ] = outAttrs[inPortX];
-    	break;
-    default:
-    	poco_bugcheck_msg("impossible start condition");
-    	throw Poco::BugcheckException();
-    }
-
-    double* outData[outPortCnt];
-    getDataToWrite<double>(outPortX, outData[outPortX]);
-    getDataToWrite<double>(outPortY, outData[outPortY]);
-    getDataToWrite<double>(outPortZ, outData[outPortZ]);
-
-    whereXYZ(*outData[outPortX], *outData[outPortY], *outData[outPortZ]);
-
-    notifyOutPortReady(outPortX, outAttrs[inPortX]);
-    notifyOutPortReady(outPortY, outAttrs[inPortY]);
-    notifyOutPortReady(outPortZ, outAttrs[inPortZ]);
-}
-
-void AsiMotion::move()
-{
-    double* pData[inPortCnt];
-
-    readInPortData(inPortX, *(pData + inPortX));
-    readInPortData(inPortY, *(pData + inPortY));
-    readInPortData(inPortZ, *(pData + inPortZ));
-
-    waitMoveStop();
-
-	goXYZ(*pData[inPortX], *pData[inPortY], *pData[inPortZ]);
-
-	releaseAllInPorts();
 }
 
 void AsiMotion::info(SerialCom &commObj, Poco::Logger& tmpLog)
@@ -247,8 +156,6 @@ int AsiMotion::parseErrorAnswer(const std::string& answer)
 
 void AsiMotion::waitMoveStop()
 {
-	Poco::FastMutex::ScopedLock lock(mutex);
-
 	std::string query("STATUS");
 //    char answer[3];
 //    size_t ansSize;
@@ -283,42 +190,6 @@ void AsiMotion::waitMoveStop()
     throw Poco::TimeoutException("waitMoveStop");
 }
 
-void AsiMotion::goXYZ(double posX, double posY, double posZ)
-{
-	Poco::FastMutex::ScopedLock lock(mutex);
-
-	poco_information(logger(), "Go to ( "
-            + Poco::NumberFormatter::format(posX) + " ; "
-            + Poco::NumberFormatter::format(posY) + " ; "
-            + Poco::NumberFormatter::format(posZ) + " )");
-
-    serial.checkOpen();
-
-    std::string query("MOVE X=");
-    query += Poco::NumberFormatter::format(posX*10);
-    query += " Y=";
-    query += Poco::NumberFormatter::format(posY*10);
-    query += " Z=";
-    query += Poco::NumberFormatter::format(posZ*10);
-
-    serial.write(query);
-
-    std::string answer(readUntilCRLF());
-
-    int err = parseErrorAnswer(answer);
-    switch (err)
-    {
-    case 0: // no error
-        return;
-    case -4:
-        throw Poco::RangeException("goXYZ", "Out of range position parameter");
-    default:
-        throw Poco::RuntimeException("goXYZ",
-                Poco::NumberFormatter::format(err)
-                + ": unknown error");
-    }
-}
-
 void AsiMotion::whereXYZ(double& posX, double& posY, double& posZ)
 {
     poco_information(logger(), "Retrieve XYZ position");
@@ -326,8 +197,6 @@ void AsiMotion::whereXYZ(double& posX, double& posY, double& posZ)
     serial.checkOpen();
 
     waitMoveStop();
-
-	Poco::FastMutex::ScopedLock lock(mutex);
 
 	std::string query, answer;
 
@@ -354,22 +223,6 @@ void AsiMotion::whereXYZ(double& posX, double& posY, double& posZ)
     answer = readUntilCRLF();
     poco_information(logger(), serial.niceString(answer));
     posZ = parseSimpleAnswer(answer)/10;
-}
-
-void AsiMotion::sendXYZ()
-{
-    double* outData[outPortCnt];
-    DataAttributeOut attr;
-
-    reserveAllOutPorts();
-
-    getDataToWrite<double>(outPortX, outData[outPortX]);
-    getDataToWrite<double>(outPortY, outData[outPortY]);
-    getDataToWrite<double>(outPortZ, outData[outPortZ]);
-
-    whereXYZ(*outData[outPortX], *outData[outPortY], *outData[outPortZ]);
-
-    notifyAllOutPortReady(attr);
 }
 
 void AsiMotion::defineParameters()
@@ -434,12 +287,74 @@ void AsiMotion::setStrParameterValue(size_t paramIndex, std::string value)
 
 void AsiMotion::singleMotion(int axis, std::vector<double> positions)
 {
-}
+    std::string query("MOVE");
+    
+    if (axis & xAxis)
+        query += " X=" + Poco::NumberFormatter::format(positions.at(xIndex)*10000);
+    if (axis & yAxis)
+        query += " Y=" + Poco::NumberFormatter::format(positions.at(yIndex)*10000);
+    if (axis & zAxis)
+        query += " Z=" + Poco::NumberFormatter::format(positions.at(zIndex)*10000);
 
-void AsiMotion::allMotionSync(std::vector<double> positions)
-{
+    serial.write(query);
+
+    std::string answer(readUntilCRLF());
+
+    int err = parseErrorAnswer(answer);
+    switch (err)
+    {
+    case 0: // no error
+        return;
+    case -4:
+        throw Poco::RangeException("singeMotion", "Out of range position parameter");
+    default:
+        throw Poco::RuntimeException("singleMotion",
+                Poco::NumberFormatter::format(err)
+                + ": unknown error");
+    }
+    
+    waitMoveStop();
 }
 
 double AsiMotion::getPosition(int axis)
 {
+    waitMoveStop();
+
+	std::string query, answer;
+    
+    switch (axis)
+    {
+    case xAxis:
+        poco_information(logger(), "Query X position (WHERE X)");
+        query = "WHERE X";
+        serial.write(query);
+        break;
+    case yAxis:
+        poco_information(logger(), "Query Y position (WHERE Y)");
+        query = "WHERE Y";
+        serial.write(query);
+        break;
+    case zAxis:
+        poco_information(logger(), "Query Z position (WHERE Z)");
+        query = "WHERE Z";
+        serial.write(query);
+        break;
+    default:
+        poco_bugcheck_msg("getPosition: impossible axis mask");
+    }
+
+    answer = readUntilCRLF();
+    poco_information(logger(), serial.niceString(answer));
+    return parseSimpleAnswer(answer)/10000;
+}
+
+#include "Poco/RegularExpression.h"
+using Poco::RegularExpression;
+
+std::string AsiMotion::parseMultipleQueries(std::string queries)
+{
+    RegularExpression regexp("[\\n\\r\\t\\;]+");
+    regexp.subst(queries, std::string("\0",1), RegularExpression::RE_GLOBAL);
+
+    return queries;
 }
