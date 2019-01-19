@@ -30,6 +30,8 @@
 #define SRC_ASIMOTION_H_
 
 #include "core/Module.h"
+#include "MotionDevice.h"
+
 #include "tools/comm/serial/SerialCom.h"
 
 /**
@@ -37,7 +39,7 @@
  *
  * ASI Motion stage device controller module
  */
-class AsiMotion: public Module
+class AsiMotion: public MotionDevice
 {
 public:
     AsiMotion(ModuleFactory* parent, std::string customName, SerialCom& commObj);
@@ -54,13 +56,42 @@ public:
         return "Control a XY ASI Motion positioning stage (MS 2000)";
     }
 
-    void process(int startCond);
-
     static void info(SerialCom &commObj, Poco::Logger& tmpLog);
     static std::string readUntilCRLF(SerialCom &commObj, Poco::Logger& tmpLog);
 
 private:
     static size_t refCount; ///< reference counter to generate a unique internal name
+
+    void info() { info(serial, logger()); }
+
+    enum supplParameters
+    {
+        paramQuery=3, // direct query
+        totalParamCnt
+    };
+
+    /**
+     * Define additional parameters
+     * 
+     * - send command
+     */
+    void defineParameters();
+
+    double getFloatParameterValue(size_t paramIndex);
+    void setFloatParameterValue(size_t paramIndex, double value);
+
+    std::string getStrParameterValue(size_t paramIndex);
+    void setStrParameterValue(size_t paramIndex, std::string value);
+
+    void singleMotion(int axis, std::vector<double> positions);
+    void allMotionSync(std::vector<double> positions);
+
+    double getPosition(int axis);
+
+    /**
+     * replace newline or semicolon by delimiter ('\r') in query
+     */
+    std::string parseMultipleQueries(std::string queries);
 
     /// Indexes of the input ports
     enum inPorts
@@ -81,8 +112,6 @@ private:
     };
 
     SerialCom &serial; ///< serial communication object
-
-    void info() { info(serial, logger()); }
 
     /**
      * Called by process() if input data is present

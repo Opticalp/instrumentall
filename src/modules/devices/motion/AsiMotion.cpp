@@ -371,3 +371,75 @@ void AsiMotion::sendXYZ()
 
     notifyAllOutPortReady(attr);
 }
+
+void AsiMotion::defineParameters()
+{
+	poco_information(logger(), "define device-specific parameters");
+
+	setParameterCount(totalParamCnt);
+
+	addParameter(paramQuery, "query", "direct query to the robot", ParamItem::typeString);
+}
+
+double AsiMotion::getFloatParameterValue(size_t paramIndex)
+{
+	if (paramIndex < axisIndexCnt)
+		return MotionDevice::getFloatParameterValue(paramIndex);
+	else
+	{
+		// no supplementary parameter implemented here
+		poco_bugcheck_msg("invalid parameter index");
+		throw Poco::BugcheckException();
+	}
+}
+
+void AsiMotion::setFloatParameterValue(size_t paramIndex, double value)
+{
+	if (paramIndex < axisIndexCnt)
+		return MotionDevice::setFloatParameterValue(paramIndex, value);
+	else
+	{
+		// no supplementary parameter implemented here
+		poco_bugcheck_msg("invalid parameter index");
+		throw Poco::BugcheckException();
+	}
+}
+
+std::string AsiMotion::getStrParameterValue(size_t paramIndex)
+{
+	switch (paramIndex)
+	{
+	case paramQuery:
+        try
+        {
+            return readUntilCRLF();
+        }
+        catch (Poco::TimeoutException&)
+        {
+            return "";
+        }
+	default:
+		poco_bugcheck_msg("invalid parameter index");
+		throw Poco::BugcheckException();
+	}
+}
+
+void AsiMotion::setStrParameterValue(size_t paramIndex, std::string value)
+{
+	if (paramIndex != paramQuery)
+		poco_bugcheck_msg("invalid parameter index");
+
+	serial.write(parseMultipleQueries(value));
+}
+
+void AsiMotion::singleMotion(int axis, std::vector<double> positions)
+{
+}
+
+void AsiMotion::allMotionSync(std::vector<double> positions)
+{
+}
+
+double AsiMotion::getPosition(int axis)
+{
+}
