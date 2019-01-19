@@ -100,9 +100,9 @@ void MotionDevice::construct(std::string internalName, std::string customName)
 
 	for (int ind = 0; ind < axisIndexCnt; ind++)
 	{
-		addInPort(axisName(ind), axisName(ind) + " position", DataItem::typeDblFloat, ind);
-		addOutPort(axisName(ind), axisName(ind) + " position after movement", DataItem::typeDblFloat, ind);
-		addParameter(ind, axisName(ind) + "Pos", "Get or set " + axisName(ind) + " position", ParamItem::typeFloat);
+		addInPort(axisName(ind), axisName(ind) + " position (mm, degrees)", DataItem::typeDblFloat, ind);
+		addOutPort(axisName(ind), axisName(ind) + " position (mm, degrees) after movement", DataItem::typeDblFloat, ind);
+		addParameter(ind, axisName(ind) + "Pos", "Get or set " + axisName(ind) + " position (mm, degrees)", ParamItem::typeFloat);
 	}
 
     defineParameters();
