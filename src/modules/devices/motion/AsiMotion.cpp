@@ -78,6 +78,7 @@ void AsiMotion::info(SerialCom &commObj, Poco::Logger& tmpLog)
 }
 
 #define COUNT_LIMIT 300
+#define COUNT_ZERO_LIMIT 5
 
 std::string AsiMotion::readUntilCRLF(SerialCom &commObj, Poco::Logger& tmpLog)
 {
@@ -86,13 +87,21 @@ std::string AsiMotion::readUntilCRLF(SerialCom &commObj, Poco::Logger& tmpLog)
 
     poco_information(tmpLog, ">>>>>");
 
+	size_t cntZeros = 0;
+
     for (size_t count = 0; count < COUNT_LIMIT; count++)
     {
         std::string resp;
         resp = commObj.read(32);
 
-        if (resp.size() == 0)
-            continue;
+		if (resp.size() == 0)
+		{
+			if (cntZeros++ > COUNT_ZERO_LIMIT)
+				throw Poco::TimeoutException(commObj.deviceName(),
+					"response timeout");
+			else
+				continue;
+		}
 
         //if (count)
         //    poco_information(tmpLog, "--------");
