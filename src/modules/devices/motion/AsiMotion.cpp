@@ -299,11 +299,11 @@ void AsiMotion::singleMotion(int axis, std::vector<double> positions)
     std::string query("MOVE");
     
     if (axis & xAxis)
-        query += " X=" + Poco::NumberFormatter::format(positions.at(xIndex)*10000);
+        query += " X=" + Poco::NumberFormatter::format(static_cast<int>(positions.at(xIndex)*10000));
     if (axis & yAxis)
-        query += " Y=" + Poco::NumberFormatter::format(positions.at(yIndex)*10000);
+        query += " Y=" + Poco::NumberFormatter::format(static_cast<int>(positions.at(yIndex)*10000));
     if (axis & zAxis)
-        query += " Z=" + Poco::NumberFormatter::format(positions.at(zIndex)*10000);
+        query += " Z=" + Poco::NumberFormatter::format(static_cast<int>(positions.at(zIndex)*10000));
 
     serial.write(query);
 
