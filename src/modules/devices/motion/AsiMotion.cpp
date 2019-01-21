@@ -313,7 +313,7 @@ void AsiMotion::singleMotion(int axis, std::vector<double> positions)
     switch (err)
     {
     case 0: // no error
-        return;
+		break;
     case -4:
         throw Poco::RangeException("singeMotion", "Out of range position parameter");
     default:
