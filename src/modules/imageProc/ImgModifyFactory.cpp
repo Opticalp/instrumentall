@@ -32,6 +32,7 @@
 #include "RotCrop.h"
 #include "ImgPrintInfo.h"
 #include "DistToOrigin.h"
+#include "BorderCut.h"
 
 std::vector<std::string> ImgModifyFactory::selectValueList()
 {
@@ -41,6 +42,7 @@ std::vector<std::string> ImgModifyFactory::selectValueList()
 	list.push_back("rotCrop");
 	list.push_back("printInfo");
 	list.push_back("distToOrigin");
+    list.push_back("borderCut");
 #endif
 
     return list;
@@ -66,6 +68,12 @@ ModuleFactoryBranch* ImgModifyFactory::newChildFactory(std::string selector)
 		return new GenericLeafFactory<DistToOrigin>("DistToOriginFactory",
 			"Build module that displays visual infos (vector showing\n "
 			" the distance to a given reference) on the input image",
+			this, selector);
+	}
+	else if (selector.compare("borderCut") == 0)
+	{
+		return new GenericLeafFactory<BorderCut>("BorderCutFactory",
+			"Build module that remove the borders of an image",
 			this, selector);
 	}
     else
