@@ -80,8 +80,10 @@ ModuleFactoryBranch* IpDeviceFactory::newChildFactory(std::string selector)
 void IpDeviceFactory::findDevices(std::vector<std::string>& devList)
 {
     devList.clear();
-    findMeca500(devList);
-    // TODO: check uniqueness?
+    
+	findMeca500(devList);
+
+	// TODO: check uniqueness?
 }
 
 IpDeviceFactory::DevType IpDeviceFactory::hasDevice(std::string selector)
@@ -98,64 +100,70 @@ IpDeviceFactory::DevType IpDeviceFactory::hasDevice(std::string selector)
 
 void IpDeviceFactory::findMeca500(std::vector<std::string>& devList)
 {
-	if (nic().isLoopback())
-	{
-		poco_warning(logger(), "NIC " + nic().adapterName() + 
-			" is loopback. Skip. ");
-		return;
-	}
+	// remove meca500 discovery: too slow. 
+	// wait for firmware update including broadcast discovery. 
 
-	if (nic().isPointToPoint())
-	{
-		poco_notice(logger(), "NIC " + nic().adapterName() +
-			" is point to point. ");
-	}
+	devList.push_back(""); 
+	return;
 
-	NetworkInterface::AddressList addrList = nic().addressList();
-	for (NetworkInterface::AddressList::iterator it = addrList.begin(),
-		ite = addrList.end(); it != ite; it++)
-	{
-		poco_information(logger(), "analyzing " + it->get<0>().toString());
+	//if (nic().isLoopback())
+	//{
+	//	poco_warning(logger(), "NIC " + nic().adapterName() + 
+	//		" is loopback. Skip. ");
+	//	return;
+	//}
 
-		if (it->get<0>().family() != AddressFamily::IPv4)
-		{
-			poco_warning(logger(), "NIC " + nic().adapterName() +
-				" address: " + it->get<0>().toString() +
-				" is not IPV4. Skip. ");
-			continue;
-		}
+	//if (nic().isPointToPoint())
+	//{
+	//	poco_notice(logger(), "NIC " + nic().adapterName() +
+	//		" is point to point. ");
+	//}
 
-		std::string addrPrefix = it->get<0>().toString();
+	//NetworkInterface::AddressList addrList = nic().addressList();
+	//for (NetworkInterface::AddressList::iterator it = addrList.begin(),
+	//	ite = addrList.end(); it != ite; it++)
+	//{
+	//	poco_information(logger(), "analyzing " + it->get<0>().toString());
 
-		// remove last token
-		size_t ptPos = addrPrefix.rfind('.');
-		addrPrefix.erase(ptPos);
-		
-		// ping all devices in subnet (but not the broadcast address). 
-		for (int ipMinor = 1; ipMinor < 256; ipMinor++)
-		{
-			IPAddress address = IPAddress(addrPrefix + "." + Poco::NumberFormatter::format(ipMinor));
+	//	if (it->get<0>().family() != AddressFamily::IPv4)
+	//	{
+	//		poco_warning(logger(), "NIC " + nic().adapterName() +
+	//			" address: " + it->get<0>().toString() +
+	//			" is not IPV4. Skip. ");
+	//		continue;
+	//	}
 
-			if (address == it->get<0>())
-				continue;
+	//	std::string addrPrefix = it->get<0>().toString();
 
-			poco_information(logger(), "Check " + address.toString());
+	//	// remove last token
+	//	size_t ptPos = addrPrefix.rfind('.');
+	//	addrPrefix.erase(ptPos);
+	//	
+	//	// ping all devices in subnet (but not the broadcast address). 
+	//	for (int ipMinor = 1; ipMinor < 256; ipMinor++)
+	//	{
+	//		IPAddress address = IPAddress(addrPrefix + "." + Poco::NumberFormatter::format(ipMinor));
 
-			try
-			{
-				if (hasMeca500(address))
-				{
-					poco_information(logger(), "meca500 found. ");
-					devList.push_back(buildSelector(address, meca500Dev));
-				}
-			}
-			catch (Poco::Exception& e)
-			{
-				poco_warning(logger(), "Meca500 discover failed on " +
-					address.toString() + ": " + e.displayText());
-			}
-		}
-	}
+	//		if (address == it->get<0>())
+	//			continue;
+
+	//		poco_information(logger(), "Check " + address.toString());
+
+	//		try
+	//		{
+	//			if (hasMeca500(address))
+	//			{
+	//				poco_information(logger(), "meca500 found. ");
+	//				devList.push_back(buildSelector(address, meca500Dev));
+	//			}
+	//		}
+	//		catch (Poco::Exception& e)
+	//		{
+	//			poco_warning(logger(), "Meca500 discover failed on " +
+	//				address.toString() + ": " + e.displayText());
+	//		}
+	//	}
+	//}
 }
 
 bool IpDeviceFactory::hasMeca500(IPAddress IP)
