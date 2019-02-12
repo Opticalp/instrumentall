@@ -283,7 +283,9 @@ size_t SerialComImpl::write(const char* buffer, size_t bufSize)
 
 void SerialComImpl::listComPorts(std::vector<std::string>& portList)
 {
-    for(size_t ind = 1; ind <= 32; ind++)
+	TCHAR lpTargetPath[4096]; // buffer to store the path of the COMPORTS
+
+	for(size_t ind = 1; ind <= 32; ind++)
     {
         std::string port = "COM" + Poco::NumberFormatter::format(ind);
 
@@ -294,6 +296,9 @@ void SerialComImpl::listComPorts(std::vector<std::string>& portList)
         LPCOMMCONFIG lpCC = (LPCOMMCONFIG) new char[dwSize];
         if (GetDefaultCommConfig(port.c_str(), lpCC, &dwSize))
             portList.push_back(port);
+		else if (QueryDosDevice(port.c_str(), (LPSTR)lpTargetPath, 4096))
+			portList.push_back(port);
+
     }
 }
 
