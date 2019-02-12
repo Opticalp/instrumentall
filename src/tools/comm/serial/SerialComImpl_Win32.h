@@ -66,11 +66,6 @@ public:
      */
     bool isOpen();
 
-	/**
-	 * Check if the port is open and valid
-	 */
-	bool isOpen();
-
     /**
      * read data from the com port
      *
