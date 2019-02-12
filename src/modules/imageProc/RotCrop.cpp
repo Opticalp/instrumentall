@@ -189,8 +189,20 @@ void RotCrop::process(int startCond)
     warp_mat.at<double>(1,1) = alpha;
 
     // translation
-    warp_mat.at<double>(0,2) = width/2. - xCenter * alpha - yCenter * beta;
-    warp_mat.at<double>(1,2) = height/2. + xCenter * beta - yCenter * alpha;
+    int xC, yC;
+    
+    if (xCenter==-1)
+        xC = pData->cols/2;
+    else
+        xC = xCenter;
+
+    if (yCenter==-1)
+        yC = pData->rows/2;
+    else
+        yC = yCenter;
+
+    warp_mat.at<double>(0,2) = width/2. - xC * alpha - yC * beta;
+    warp_mat.at<double>(1,2) = height/2. + xC * beta - yC * alpha;
 
     warpAffine(*pData, workingImg, warp_mat, cv::Size(width, height));
 

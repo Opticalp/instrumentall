@@ -34,7 +34,8 @@
 /**
  * Generic module factory
  * 
- * countRemain() returns always 1.
+ * countRemain() returns always 1 if unique parameter in constructor
+ * is set to false (default). 
  */
 template <class M>
 class GenericLeafFactory: public ModuleFactoryBranch

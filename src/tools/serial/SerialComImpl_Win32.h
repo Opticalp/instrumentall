@@ -67,6 +67,11 @@ public:
      */
     void checkOpen();
 
+	/**
+	 * Check if the port is open and valid
+	 */
+	bool isOpen();
+
     /**
      * read data from the com port
      *
@@ -92,8 +97,6 @@ protected:
     std::string portName;
 
 private:
-    bool isOpen();
-
     HANDLE fileHandle; ///< com port file handle
 };
 

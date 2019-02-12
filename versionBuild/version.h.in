@@ -3,8 +3,8 @@
  * @date	jan. 2016
  * @author	PhRG - opticalp.fr
  *
- * This file is automatically trasncripted by cmake into version.h. 
- * You could be reading this file. 
+ * This file is automatically transcripted by cmake into version.h. 
+ * You could be reading this last file. 
  */
 
 /*
@@ -31,6 +31,7 @@ THE SOFTWARE.
 
 #define VERSION      "@VERSION@"
 #define BUILD_DATE   "@BUILD_DATE@"
+#define GIT_HASH     "@GIT_HASH@"
 #define GIT_BRANCH   "@GIT_BRANCH@"
 
 #define IS_FORK      @IS_FORK@

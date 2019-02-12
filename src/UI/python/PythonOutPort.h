@@ -108,6 +108,17 @@ static PyMethodDef pyMethodOutPortGetTargetPorts =
     "Retrieve the target ports"
 };
 
+/// python wrapper to get the data targets of the current output port
+extern "C" PyObject* pyOutPortGetDataTargets(OutPortMembers *self);
+
+static PyMethodDef pyMethodOutPortGetDataTargets =
+{
+    "getDataTargets",
+    (PyCFunction)pyOutPortGetDataTargets,
+    METH_NOARGS,
+    "Retrieve the data targets"
+};
+
 /// python wrapper to get the target ports of the current output port
 extern "C" PyObject* pyOutPortGetSeqTargetPorts(OutPortMembers *self);
 
@@ -157,6 +168,7 @@ static PyMethodDef pyOutPortMethods[] = {
         pyMethodOutPortParent,
 
         pyMethodOutPortGetTargetPorts,
+        pyMethodOutPortGetDataTargets,
         pyMethodOutPortGetSeqTargetPorts,
 
 		pyMethodOutPortGetDataValue,
