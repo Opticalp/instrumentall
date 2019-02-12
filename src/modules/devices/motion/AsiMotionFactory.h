@@ -1,5 +1,5 @@
 /**
- * @file	src/modules/devices/AsiMotionFactory.h
+ * @file	src/modules/devices/motion/AsiMotionFactory.h
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
@@ -26,8 +26,8 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_ASIMOTIONFACTORY_H_
-#define SRC_ASIMOTIONFACTORY_H_
+#ifndef SRC_MODULES_DEVICES_MOTION_ASIMOTIONFACTORY_H_
+#define SRC_MODULES_DEVICES_MOTION_ASIMOTIONFACTORY_H_
 
 #include "core/ModuleFactoryBranch.h"
 #include "tools/comm/serial/SerialCom.h"
@@ -36,8 +36,6 @@
  * AsiMotionFactory
  *
  * Create AsiMotion modules to control ASI Motion stages.
- * The presence of the stage is not checked at the creation.
- * You have to create the module, and then open the port of the module.
  */
 class AsiMotionFactory: public ModuleFactoryBranch
 {
@@ -49,9 +47,7 @@ public:
     std::string description()
     {
         return "Leaf factory to create a module "
-                "to interface an ASI Motion stage. "
-                "The ASI Motion stage presence can not "
-                "be checked at this step. ";
+                "to interface an ASI Motion stage. ";
     }
 
     size_t countRemain();
@@ -64,4 +60,4 @@ private:
     bool tiger;
 };
 
-#endif /* SRC_ASIMOTIONFACTORY_H_ */
+#endif /* SRC_MODULES_DEVICES_MOTION_ASIMOTIONFACTORY_H_ */

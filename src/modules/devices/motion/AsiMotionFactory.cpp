@@ -1,5 +1,5 @@
 /**
- * @file	AsiMotionFactory.cpp
+ * @file	src/modules/devices/motion/AsiMotionFactory.cpp
  * @date	Mar 2016
  * @author	PhRG - opticalp.fr
  */
