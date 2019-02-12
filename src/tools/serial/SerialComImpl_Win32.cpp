@@ -51,8 +51,6 @@ SerialComImpl::~SerialComImpl()
 
 void SerialComImpl::open(std::string port)
 {
-    portName = port;
-
     std::wstring ws_portName;
     ws_portName.assign(port.begin(), port.end());
 
@@ -98,9 +96,12 @@ void SerialComImpl::open(std::string port)
         }
 
         throw Poco::IOException(
-                std::string("SerialCom ") + portName,
+                std::string("SerialCom ") + port,
                 errorMsg);
     }
+
+	// if success
+	portName = port;
 }
 
 bool SerialComImpl::isOpen()
@@ -132,6 +133,7 @@ void SerialComImpl::close()
     }
 
     fileHandle = INVALID_HANDLE_VALUE;
+	portName = "";
 }
 
 void SerialComImpl::setPortSettings(int speed, char parity, int wordSize,

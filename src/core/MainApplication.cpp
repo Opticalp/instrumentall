@@ -187,6 +187,9 @@ std::string MainApplication::about()
     std::string gitBranch(GIT_BRANCH);
     if (!gitBranch.empty())
         strAbout += "Git branch: " + gitBranch + "\n";
+    std::string gitHash(GIT_HASH);
+    if (!gitHash.empty())
+        strAbout += "Git hash: " + gitHash + "\n";
 
 #ifdef MANAGE_USERS
     strAbout += "The user management is active. \n";
