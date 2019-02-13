@@ -145,14 +145,19 @@ void BorderCut::process(int startCond)
 
     DataAttributeOut outAttr = attr;
 
+	int xLeft, xRight; 
+	int yTop, yBottom;
+
     cv::Mat tmp1, tmp2;
     int borderLeft, borderRight, borderTop, borderBottom;
 
     cv::reduce(*pData,tmp1,0,CV_REDUCE_AVG,CV_32F); // result is a row
     
     borderLeft = hasEdge(tmp1);
-    if (borderLeft)
-        poco_information(logger(), "left border at: " + Poco::NumberFormatter::format(borderLeft));
+	if (borderLeft)
+		poco_information(logger(), "left border at: " + Poco::NumberFormatter::format(borderLeft));
+
+	xLeft = borderLeft;
     
     cv::flip(tmp1,tmp2,1); // flip row
     
@@ -160,12 +165,16 @@ void BorderCut::process(int startCond)
     if (borderRight)
         poco_information(logger(), "right border at: " + Poco::NumberFormatter::format(-borderRight));
 
+	xRight = pData->cols - borderRight - 1;
+
     cv::reduce(*pData,tmp1,1,CV_REDUCE_AVG,CV_32F); // result is a column
     tmp1 = tmp1.t();
 
     borderTop = hasEdge(tmp1);
     if (borderTop)
         poco_information(logger(), "top border at: " + Poco::NumberFormatter::format(borderTop));
+
+	yTop = borderTop;
     
     cv::flip(tmp1,tmp2,1); // flip row
 
@@ -173,13 +182,22 @@ void BorderCut::process(int startCond)
     if (borderBottom)
         poco_information(logger(), "bottom border at: " + Poco::NumberFormatter::format(-borderBottom));
 
-    // TODO: crop
-    tmp1 = pData->clone();
-    poco_information(logger(),"cropping ====================");
-    
-    
-    
+	yBottom = pData->rows - borderBottom - 1;
 
+	poco_information(logger(), "Cropping +------ " + 
+	Poco::NumberFormatter::format(yTop) + " --------");
+	poco_information(logger(), "         |                     |");
+	poco_information(logger(), "       " + 
+		Poco::NumberFormatter::format(xLeft) + "                 " +
+		Poco::NumberFormatter::format(xRight)  );
+	poco_information(logger(), "         |                     |");
+	poco_information(logger(), "         + ------ " +
+		Poco::NumberFormatter::format(yBottom) + " --------");
+
+	(*pData)( cv::Range(yTop, yBottom+1),
+					 cv::Range(xLeft, xRight+1) ).copyTo(tmp1);
+	poco_information(logger(), "Cropping done. ");
+  
     releaseInPort(imageInPort);
     reserveOutPort(imageOutPort);
     processingTerminated();
