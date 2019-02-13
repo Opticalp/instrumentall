@@ -116,7 +116,14 @@ public:
      */
     void write(std::string command);
 
-    std::string deviceName()
+	/**
+	 * Send the given query
+	 *
+	 * @return response
+	 */
+	std::string sendQuery(std::string query, size_t maxCharCnt = 0);
+	
+	std::string deviceName()
         { return portName; }
         
     static void listComPorts(std::vector<std::string>& portList)

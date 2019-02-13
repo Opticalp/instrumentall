@@ -53,8 +53,6 @@ SerialComImpl::~SerialComImpl()
 
 void SerialComImpl::open(std::string port)
 {
-    portName = port;
-
     std::wstring ws_portName;
     ws_portName.assign(port.begin(), port.end());
 
@@ -100,9 +98,12 @@ void SerialComImpl::open(std::string port)
         }
 
         throw Poco::IOException(
-                std::string("SerialCom ") + portName,
+                std::string("SerialCom ") + port,
                 errorMsg);
     }
+
+	// if success
+	portName = port;
 }
 
 bool SerialComImpl::isOpen()
@@ -124,6 +125,7 @@ void SerialComImpl::close()
     }
 
     fileHandle = INVALID_HANDLE_VALUE;
+	portName = "";
 }
 
 void SerialComImpl::setPortSettings(int speed, char parity, int wordSize,
@@ -277,7 +279,9 @@ size_t SerialComImpl::write(const char* buffer, size_t bufSize)
 
 void SerialComImpl::listComPorts(std::vector<std::string>& portList)
 {
-    for(size_t ind = 1; ind <= 32; ind++)
+	TCHAR lpTargetPath[4096]; // buffer to store the path of the COMPORTS
+
+	for(size_t ind = 1; ind <= 32; ind++)
     {
         std::string port = "COM" + Poco::NumberFormatter::format(ind);
 
@@ -288,6 +292,9 @@ void SerialComImpl::listComPorts(std::vector<std::string>& portList)
         LPCOMMCONFIG lpCC = (LPCOMMCONFIG) new char[dwSize];
         if (GetDefaultCommConfig(port.c_str(), lpCC, &dwSize))
             portList.push_back(port);
+		else if (QueryDosDevice(port.c_str(), (LPSTR)lpTargetPath, 4096))
+			portList.push_back(port);
+
     }
 }
 

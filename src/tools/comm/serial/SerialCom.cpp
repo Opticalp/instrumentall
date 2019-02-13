@@ -103,6 +103,13 @@ void SerialCom::write(std::string command)
     }
 }
 
+std::string SerialCom::sendQuery(std::string query, size_t maxCharCnt)
+{
+	write(query);
+
+	return read(maxCharCnt);
+}
+
 #include "tools/comm/Decorated.h"
 
 std::string SerialCom::niceString(std::string msg)
