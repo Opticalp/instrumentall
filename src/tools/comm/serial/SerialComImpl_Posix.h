@@ -72,11 +72,6 @@ public:
     bool isOpen();
 
 	/**
-	 * Check if the port is open and valid
-	 */
-	bool isOpen();
-
-	/**
      * read data from the com port
      *
      * @param buffer allocated char buffer that will be filled
