@@ -97,6 +97,19 @@ class Camera:
             runModule(self.cam)
         else:
             print("Img shower initialization failed. Can not plug the viewer. ")
+
+    def setExposure(self, value):
+        try:
+            setParameterValue("ExposureTime",value)
+        except Exception as e:
+            print("Failed to set camera exposure: " + str(e))
+        
+    def getExposure(self):
+        try:
+            return getParameterValue("ExposureTime")
+        except Exception as e:
+            print("Failed to get camera exposure: " + str(e))
+            return None
         
 
 def logger():
@@ -120,8 +133,24 @@ class Dialog:
 
         tk.Button(dlg, text="Appliquer", command=self.monitor).pack()
 
+        self.eExp = tk.Entry(dlg)
+        self.initExpo()
+        self.eExp.pack()
+
+        tk.Button(dlg, text="Appliquer", command=self.expo).pack()
+
     def monitor(self):
-        camera.monitor(int(self.eMon.get()))       
+        camera.monitor(int(self.eMon.get()))
+
+    def expo(self):
+        camera.setExposure(float(self.eExp.get()))
+
+    def initExpo(self):
+        self.eExp.delete(0,END)
+        exp = camera.getExposure()
+        if exp:
+            self.eExp.insert(0,str(exp))
+
 
 import os
 from os.path import dirname
