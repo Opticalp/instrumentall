@@ -45,21 +45,39 @@ size_t AsiMotionFactory::countRemain()
 	if (getChildModules().size())
 		return 0;
 
+	std::string port = reinterpret_cast<ModuleFactoryBranch*>(parent())->getSelector();
+
 	if (!serial.isOpen())
 	{
-		std::string port = reinterpret_cast<ModuleFactoryBranch*>(parent())->getSelector();
-		serial.open(port);
+		try
+		{
+			poco_information(logger(), "Opening port " + port + "... ");
+			serial.open(port);
+			poco_information(logger(), "Port " + port + " opened. ");
 
-		// ASI Motion default settings
-		serial.setPortSettings(
-			(tiger ? 115200 : 9600), // baudrate
-			'n',  // parity
-			8,    // word size
-			1,    // stop bits
-			2048); // buffer size
-		serial.setDelimiter('\r'); // carriage return
+			// ASI Motion default settings
+			serial.setPortSettings(
+				(tiger ? 115200 : 9600), // baudrate
+				'n',  // parity
+				8,    // word size
+				1,    // stop bits
+				2048); // buffer size
+			serial.setDelimiter('\r'); // carriage return
+			poco_information(logger(), "Port settings donne. ");
 
-		poco_information(logger(), "port " + serial.deviceName() + " configured");
+			poco_information(logger(), "port " + serial.deviceName() + " configured");
+		}
+		catch (Poco::Exception& e)
+		{
+			poco_error(logger(), "Port " + port + " can not be opened: " +
+				e.displayText());
+			return 0;
+		}
+		catch (...)
+		{
+			poco_error(logger(), "Port " + port + " opening failed on unknown error. ");
+			return 0;
+		}
 	}
 
     try
@@ -68,12 +86,22 @@ size_t AsiMotionFactory::countRemain()
     }
     catch (Poco::Exception& e)
     {
-        poco_error(logger(), "No ASI motion stage found on " + getSelector() 
-                                    + " with standard baudrate configuration. \n"
-									+ e.displayText());
+        poco_error(logger(), "No " + getSelector() + " stage found on port "
+						+ port +
+                        + " with standard baudrate configuration. \n"
+						+ e.displayText());
         serial.close();
         return 0;
     }
+	catch (...)
+	{
+		poco_error(logger(), "No " + getSelector() + " stage found on port "
+			+ port +
+			+ " with standard baudrate configuration. \n"
+			"Unknown error. ");
+		serial.close();
+		return 0;
+	}
 
     return 1;
 }
