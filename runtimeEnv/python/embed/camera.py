@@ -57,6 +57,7 @@ class Camera:
             genFact = genFact.select(devId)
 
 ##            confFile = join(join(baseDir,"conf"),"mako.yml")
+##            confFile = join(join(baseDir,"conf"),"DMK38U.yml")
             confFile = "None"
             print("Loading conf file: " + confFile)
             self.cam = genFact.select(confFile).create("camera")
@@ -76,7 +77,7 @@ class Camera:
             print("Image(s) found: \n" + files)
             self.cam.setParameterValue("files", files)
 
-        print("Create fullscreen logger")
+        print("Create image shower")
         self.logger = None
         try:
             self.logger = DataLogger("FullscreenLogger")
@@ -99,14 +100,16 @@ class Camera:
             print("Img shower initialization failed. Can not plug the viewer. ")
 
     def setExposure(self, value):
+        from instru import runModule
         try:
-            setParameterValue("ExposureTime",value)
+            self.cam.setParameterValue("ExposureTime",value)
+            runModule(self.cam)
         except Exception as e:
             print("Failed to set camera exposure: " + str(e))
         
     def getExposure(self):
         try:
-            return getParameterValue("ExposureTime")
+            return self.cam.getParameterValue("ExposureTime")
         except Exception as e:
             print("Failed to get camera exposure: " + str(e))
             return None
@@ -133,6 +136,8 @@ class Dialog:
 
         tk.Button(dlg, text="Appliquer", command=self.monitor).pack()
 
+        tk.Label(dlg, text="temps d'exposition").pack(pady=5)
+
         self.eExp = tk.Entry(dlg)
         self.initExpo()
         self.eExp.pack()
@@ -146,6 +151,7 @@ class Dialog:
         camera.setExposure(float(self.eExp.get()))
 
     def initExpo(self):
+        from Tkinter import END
         self.eExp.delete(0,END)
         exp = camera.getExposure()
         if exp:
