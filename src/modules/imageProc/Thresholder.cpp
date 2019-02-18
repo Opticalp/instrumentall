@@ -31,20 +31,20 @@
 #include "Thresholder.h"
 
 cv::Mat Thresholder::doThreshold(cv::Mat* pImg, cv::Mat* pMask,
-		double thresVal)
+		double thresVal, size_t& cnt, size_t& totCnt)
 {
 	if (pMask == NULL)
 	{
 	    switch (pImg->type())
 	    {
 	    case CV_8U:
-			return thresNoMask<unsigned char>(pImg, thresVal);
+			return thresNoMask<unsigned char>(pImg, thresVal, cnt, totCnt);
 	    case CV_16U:
-	    	return thresNoMask<unsigned short>(pImg, thresVal);
+	    	return thresNoMask<unsigned short>(pImg, thresVal, cnt, totCnt);
 	    case CV_32F:
-			return thresNoMask<float>(pImg, thresVal);
+			return thresNoMask<float>(pImg, thresVal, cnt, totCnt);
 	    case CV_64F:
-			return thresNoMask<double>(pImg, thresVal);
+			return thresNoMask<double>(pImg, thresVal, cnt, totCnt);
 	    default:
 	        throw Poco::DataFormatException("thresholdNoMask",
 	                "Input image pixel format has to be 8- or 16-bit integer, 32- or 64-bit float");
@@ -65,24 +65,24 @@ cv::Mat Thresholder::doThreshold(cv::Mat* pImg, cv::Mat* pMask,
     {
     case CV_8U:
         if (onValue == -1)
-            return thresWMaskVal<unsigned char>(pImg, pMask, thresVal);
+            return thresWMaskVal<unsigned char>(pImg, pMask, thresVal, cnt, totCnt);
         else
-        	return thresWMask<unsigned char>(pImg, pMask, thresVal);
+        	return thresWMask<unsigned char>(pImg, pMask, thresVal, cnt, totCnt);
     case CV_16U:
         if (onValue == -1)
-            return thresWMaskVal<unsigned short>(pImg, pMask, thresVal);
+            return thresWMaskVal<unsigned short>(pImg, pMask, thresVal, cnt, totCnt);
         else
-        	return thresWMask<unsigned short>(pImg, pMask, thresVal);
+        	return thresWMask<unsigned short>(pImg, pMask, thresVal, cnt, totCnt);
     case CV_32F:
 		if (onValue == -1)
-			return thresWMaskVal<float>(pImg, pMask, thresVal);
+			return thresWMaskVal<float>(pImg, pMask, thresVal, cnt, totCnt);
 		else
-			return thresWMask<float>(pImg, pMask, thresVal);
+			return thresWMask<float>(pImg, pMask, thresVal, cnt, totCnt);
     case CV_64F:
         if (onValue == -1)
-            return thresWMaskVal<double>(pImg, pMask, thresVal);
+            return thresWMaskVal<double>(pImg, pMask, thresVal, cnt, totCnt);
         else
-        	return thresWMask<double>(pImg, pMask, thresVal);
+        	return thresWMask<double>(pImg, pMask, thresVal, cnt, totCnt);
     default:
         throw Poco::DataFormatException("thresholdWithMask",
                 "Input image pixel format has to be 8- or 16-bit integer, 32- or 64-bit float");

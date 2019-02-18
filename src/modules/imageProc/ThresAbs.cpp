@@ -69,6 +69,8 @@ ThresAbs::ThresAbs(ModuleFactory* parent, std::string customName):
 
     addOutPort("binImage", "8-bit binary thresholded image. See \"onValue\" parameter description. ",
             DataItem::typeCvMat, imageOutPort);
+    addOutPort("count", "count of thresholded pixels", DataItem::typeInt64, cntOutPort);
+    addOutPort("totalCount", "total count of analyzed pixels", DataItem::typeInt64, totCntOutPort);
 
     notifyCreation();
     refCount++;
@@ -193,20 +195,55 @@ void ThresAbs::process(int startCond)
 
     cv::Mat workingImg;
 
-	workingImg = doThreshold(imgData, maskData, threshold);
+    size_t cnt, totCnt;
+	workingImg = doThreshold(imgData, maskData, threshold, cnt, totCnt);
 
     releaseInPort(imageInPort);
     if (withMask)
         releaseInPort(maskInPort);
 
-    reserveOutPort(imageOutPort);
-    processingTerminated();
+    reserveLockOut(); // recursive outMutex locked once
 
-    getDataToWrite<cv::Mat>(imageOutPort, imgData);
+    std::set<size_t> somePorts;
+    somePorts.insert(imageOutPort);
+    somePorts.insert(cntOutPort);
+    somePorts.insert(totCntOutPort);
 
-    *imgData = workingImg;
+    float* pFltData;
+    Poco::Int64* pIntData;
 
-    notifyOutPortReady(imageOutPort, outAttr);
+    try
+    {
+          while (somePorts.size())
+      {
+          switch (reserveOutPortOneOf(somePorts)) // outMutex locked twice
+          {
+          case imageOutPort:
+              getDataToWrite<cv::Mat>(imageOutPort, imgData);
+              *imgData = workingImg;
+              notifyOutPortReady(imageOutPort, outAttr);
+              break;
+          case cntOutPort:
+              getDataToWrite<Poco::Int64>(cntOutPort, pIntData);
+              *pIntData = static_cast<Poco::Int64>(cnt);
+              notifyOutPortReady(cntOutPort, outAttr);
+              break;
+          case totCntOutPort:
+              getDataToWrite<Poco::Int64>(totCntOutPort, pIntData);
+              *pIntData = static_cast<Poco::Int64>(totCnt);
+              notifyOutPortReady(totCntOutPort, outAttr);
+              break;
+          default:
+              poco_bugcheck_msg("impossible reserved port");
+          }
+        }
+    }
+    catch (...) // prevent deadlock if canceling during reserveOutPortOneOf
+    {
+           unlockOut();
+           throw;
+    }
+    unlockOut(); // outMutex released twice. OK. unlocked.
 }
 
 #endif /* HAVE_OPENCV */

@@ -94,6 +94,8 @@ private:
     enum outPorts
     {
         imageOutPort,
+        cntOutPort,
+        totCntOutPort,
         outPortCnt
     };
 };
