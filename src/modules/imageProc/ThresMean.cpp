@@ -74,6 +74,8 @@ ThresMean::ThresMean(ModuleFactory* parent, std::string customName):
             DataItem::typeCvMat, imageOutPort);
     addOutPort("mean", "Mean value of the image", DataItem::typeFloat, meanPort);
     addOutPort("stdDev", "Standard deviation of the image", DataItem::typeFloat, stdDevPort);
+    addOutPort("count", "count of thresholded pixels", DataItem::typeInt64, cntOutPort);
+    addOutPort("totalCount", "total count of analyzed pixels", DataItem::typeInt64, totCntOutPort);
 
     notifyCreation();
     refCount++;
@@ -198,7 +200,9 @@ void ThresMean::process(int startCond)
 
     cv::Mat workingImg;
 
-	workingImg = doThreshold(imgData, maskData, thres);
+    size_t cnt, totCnt;
+
+	workingImg = doThreshold(imgData, maskData, thres, cnt, totCnt);
 
     releaseInPort(imageInPort);
     if (withMask)
@@ -210,8 +214,11 @@ void ThresMean::process(int startCond)
      somePorts.insert(imageOutPort);
      somePorts.insert(meanPort);
      somePorts.insert(stdDevPort);
+     somePorts.insert(cntOutPort);
+     somePorts.insert(totCntOutPort);
 
      float* pFltData;
+     Poco::Int64* pIntData;
 
      try
      {
@@ -234,6 +241,16 @@ void ThresMean::process(int startCond)
   	    	   *imgData = workingImg;
   	    	   notifyOutPortReady(imageOutPort, outAttr);
   	           break;
+  	       case cntOutPort:
+               getDataToWrite<Poco::Int64>(cntOutPort, pIntData);
+               *pIntData = static_cast<Poco::Int64>(cnt);
+               notifyOutPortReady(cntOutPort, outAttr);
+               break;
+  	       case totCntOutPort:
+               getDataToWrite<Poco::Int64>(totCntOutPort, pIntData);
+               *pIntData = static_cast<Poco::Int64>(totCnt);
+               notifyOutPortReady(totCntOutPort, outAttr);
+               break;
 		   default:
 			   poco_bugcheck_msg("impossible reserved port");
 		   }
