@@ -286,7 +286,7 @@ void ImageReticle::setFloatParameterValue(size_t paramIndex, double value)
 
 std::string ImageReticle::getStrParameterValue(size_t paramIndex)
 {
-	poco_assert(paramIndex = paramAlter);
+	poco_assert(paramIndex == paramAlter);
 	if (alter)
 		return "yes";
 	else
@@ -297,7 +297,7 @@ std::string ImageReticle::getStrParameterValue(size_t paramIndex)
 
 void ImageReticle::setStrParameterValue(size_t paramIndex, std::string value)
 {
-	poco_assert(paramIndex = paramAlter);
+	poco_assert(paramIndex == paramAlter);
 
 	if (Poco::icompare(value, "yes") == 0)
 		alter = true;
