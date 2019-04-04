@@ -51,13 +51,15 @@ BorderCut::BorderCut(ModuleFactory* parent, std::string customName):
     // parameters
     setParameterCount(paramCnt);
     addParameter(paramMinEdgeLength, "minEdgeLength",
-            "Minimum length of the border edge (pixels)",
+            "Minimum length of the border edge (pixels). "
+            "I.e. the threshold has to be overpassed this count of times "
+            "before the edge being considered as an edge. ",
             ParamItem::typeInteger, "4");
     addParameter(paramPadding, "padding",
-            "Distance between the image content and the border (pixels)",
+            "Reserved distance between the image content and the border (pixels)",
             ParamItem::typeInteger, "15");
     addParameter(paramThreshold, "threshold",
-            "Derivative threshold value. ",
+            "Derivative (adjacent diff) threshold value. ",
             ParamItem::typeFloat, "4");
 
     setParametersDefaultValue();
@@ -242,9 +244,6 @@ int BorderCut::hasEdge(cv::Mat inVec)
         }
         else
         {
-            if (start < minEdgeLen)
-                return 0;
-                
             ++fail;
         }            
     }
