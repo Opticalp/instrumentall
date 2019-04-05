@@ -54,6 +54,7 @@ SerialComImpl::~SerialComImpl()
 void SerialComImpl::open(std::string port)
 {
     std::wstring ws_portName;
+	port = "\\\\.\\" + port;
     ws_portName.assign(port.begin(), port.end());
 
     fileHandle = CreateFileW(
