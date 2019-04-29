@@ -221,6 +221,12 @@ int BorderCut::hasEdge(cv::Mat inVec)
     cv::Mat tmp1, diff;
     diff = inVec(cv::Range::all(),cv::Range(1,inVec.cols)) - inVec(cv::Range::all(),cv::Range(0,inVec.cols-1));
     
+
+    double minTmp,maxTmp;
+    cv::minMaxLoc(diff,&minTmp, &maxTmp);
+    poco_information(logger(), "Max diff is " + Poco::NumberFormatter::format(maxTmp));
+
+
     // scan
     int fail(0);
     for (int start = 0; start < diff.cols; start++)
