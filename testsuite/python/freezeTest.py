@@ -47,9 +47,8 @@ def myMain(baseDir):
         waitAll()
     except RuntimeError:
         print("ok, waitAll raised exception on watchdog timeout")
-        return
-    
-    raise RuntimeError("watchdog timeout should have happen during waitAll")
+    else: 
+        raise RuntimeError("watchdog timeout should have happen during waitAll")
     
     print("End of script freezeTest.py")
     
