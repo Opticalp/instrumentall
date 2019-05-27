@@ -229,7 +229,7 @@ void GvExportFactories::exportFactoriesEdges(std::ostream& out)
             continue;
 
         ModuleFactoryBranch* tmp = reinterpret_cast<ModuleFactoryBranch*>(**it);
-        out << "    " << tmp->parent()->name() << ":" << tmp->getSelector();
+        out << "    " << tmp->parent()->name() << ":\"" << tmp->getSelector() << "\"";
         out << " -> " << tmp->name() << ":w;" << std::endl;
     }
 }
