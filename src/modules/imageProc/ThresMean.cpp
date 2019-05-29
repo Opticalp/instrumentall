@@ -36,7 +36,11 @@ size_t ThresMean::refCount = 0;
 ThresMean::ThresMean(ModuleFactory* parent, std::string customName):
 	Module(parent, customName)
 {
-	setInternalName("ThresMean" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("ThresMean" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("ThresMean");
+
 	setCustomName(customName);
     setLogger("module." + name());
 
