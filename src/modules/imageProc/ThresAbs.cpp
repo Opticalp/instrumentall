@@ -213,7 +213,6 @@ void ThresAbs::process(int startCond)
     somePorts.insert(cntOutPort);
     somePorts.insert(totCntOutPort);
 
-    float* pFltData;
     Poco::Int64* pIntData;
 
     try
