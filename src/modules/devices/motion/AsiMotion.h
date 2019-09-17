@@ -73,7 +73,7 @@ private:
      * 
      * - send command
      */
-    void defineParameters();
+    void addMoreParameters();
 
     double getFloatParameterValue(size_t paramIndex);
     void setFloatParameterValue(size_t paramIndex, double value);

@@ -110,7 +110,7 @@ private:
 	 * - simu mode
 	 * - send command
 	 */
-	void defineParameters();
+	void addMoreParameters();
 
     Poco::Int64 getIntParameterValue(size_t paramIndex);
 	void setIntParameterValue(size_t paramIndex, Poco::Int64 value);

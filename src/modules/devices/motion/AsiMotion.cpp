@@ -234,7 +234,7 @@ void AsiMotion::whereXYZ(double& posX, double& posY, double& posZ)
     posZ = parseSimpleAnswer(answer)/10;
 }
 
-void AsiMotion::defineParameters()
+void AsiMotion::addMoreParameters()
 {
 	poco_information(logger(), "define device-specific parameters");
 

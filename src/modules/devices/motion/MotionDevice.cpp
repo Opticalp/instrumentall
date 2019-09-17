@@ -105,7 +105,7 @@ void MotionDevice::construct(std::string internalName, std::string customName)
 		addParameter(ind, axisName(ind) + "Pos", "Get or set " + axisName(ind) + " position (mm, degrees)", ParamItem::typeFloat);
 	}
 
-    defineParameters();
+    addMoreParameters();
 
     setParametersDefaultValue();
 

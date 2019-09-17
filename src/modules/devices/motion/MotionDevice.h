@@ -87,7 +87,7 @@ protected:
      *
      * Resize the parameter set from paramCompatCnt to new size
      */
-    virtual void defineParameters() { }
+    virtual void addMoreParameters() { }
 
     bool useExtendedParams; ///< flag used to know if the extended parameters are used... or just the compat param
 

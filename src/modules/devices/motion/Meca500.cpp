@@ -94,7 +94,7 @@ std::string Meca500::sendQueryCheckResp(std::string query,
 	return resp;
 }
 
-void Meca500::defineParameters()
+void Meca500::addMoreParameters()
 {
 	poco_information(logger(), "define device-specific parameters");
 
