@@ -162,6 +162,8 @@ def testThres(thresholdName, thresValue):
     print("unbind threshold input")
     unbind(thres.inPort("image"))
     unbind(thres.inPort("mask"))
+	
+	print("End of script thresholdTest.py")
     
 # main body    
 import sys
