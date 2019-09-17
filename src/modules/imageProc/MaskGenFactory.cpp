@@ -30,6 +30,7 @@
 
 #include "modules/GenericLeafFactory.h"
 #include "BoxMask.h"
+#include "MinMaxImg.h"
 #include "ThresholdFactory.h"
 
 std::vector<std::string> MaskGenFactory::selectValueList()
@@ -39,6 +40,7 @@ std::vector<std::string> MaskGenFactory::selectValueList()
 #ifdef HAVE_OPENCV
 	list.push_back("boxMask");
 	list.push_back("threshold");
+    list.push_back("minMax");
 #endif
     return list;
 }
@@ -50,6 +52,12 @@ ModuleFactoryBranch* MaskGenFactory::newChildFactory(std::string selector)
 	{
 		return new GenericLeafFactory<BoxMask>("BoxMaskFactory",
 			"Build a generator for box (rectangle, ellipse) masks",
+			this, selector);
+	}
+	if (selector.compare("minMax") == 0)
+	{
+		return new GenericLeafFactory<MinMaxImg>("MinMaxImgFactory",
+			"Build a generator to combine (binary) images (min == AND; max == OR)",
 			this, selector);
 	}
 	else if (selector.compare("threshold") == 0)

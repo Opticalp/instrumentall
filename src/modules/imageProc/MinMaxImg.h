@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/imageProc/ImgStats.h
- * @date    Feb. 2017
- * @author	PhRG - opticalp.fr
+ * @file	src/modules/imageProc/MinMaxImg.h
+ * @date    Feb. 2019
+ * @author	PhRG / Opticalp.fr
  */
 
 /*
- Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2019 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,61 +26,75 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_IMAGEPROC_IMGSTATS_H_
-#define SRC_MODULES_IMAGEPROC_IMGSTATS_H_
+#ifndef SRC_MODULES_IMAGEPROC_MINMAXIMG_H_
+#define SRC_MODULES_IMAGEPROC_MINMAXIMG_H_
 
 #ifdef HAVE_OPENCV
 
 #include "core/Module.h"
 
 /**
- * Retrieve simple stats of an image
- * 
- * Width, height, mean value, min, max
- * 
- * @par ver 2.2.1
- * With mask
- */
-class ImgStats: public Module
+* Combine two input images using element-wise min or max
+* 
+* Those operations correspond to binary AND and OR if applied to binary images
+*/
+class MinMaxImg: public Module
 {
 public:
-    ImgStats(ModuleFactory* parent, std::string customName);
+	MinMaxImg(ModuleFactory* parent, std::string customName);
 
-    std::string description()
-    {
-        return "Retrieve source image simple statistics: "
-                "height, width, mean, min, max. ";
-    }
+	std::string description()
+	{
+		return "Combine two images using elt-wise max or min. ";
+	}
 
 private:
-    /**
-     * Main logic
-     */
-    void process(int startCond);
-
     static size_t refCount; ///< reference counter to generate a unique internal name
+
+	/**
+	* Main logic
+	*/
+	void process(int startCond);
+
 
     /// Indexes of the input ports
     enum inPorts
     {
-		maskPort,
-		imagePort,
+        imgAInPort,
+        imgBInPort,
         inPortCnt
     };
 
     /// Indexes of the output ports
     enum outPorts
     {
-        heightPort,
-        widthPort,
-        meanPort,
-        sigmaPort,
-        minPort,
-        maxPort,
+        imageOutPort,
         outPortCnt
     };
 
-};
+    enum params
+	{
+		paramCombType,
+		paramCnt
+	};
 
+//	Poco::Int64 getIntParameterValue(size_t paramIndex);
+//	void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
+//
+//	double getFloatParameterValue(size_t paramIndex);
+//	void setFloatParameterValue(size_t paramIndex, double value);
+
+	std::string getStrParameterValue(size_t paramIndex);
+	void setStrParameterValue(size_t paramIndex, std::string value);
+
+	/// enum used for imginType parameter values
+	enum ImgInTypeValue
+	{
+	    imgInTypeMin,
+	    imgInTypeMax,
+	    imginTypeCnt
+	};
+    ImgInTypeValue imgInType;
+};
 #endif /* HAVE_OPENCV */
-#endif /* SRC_MODULES_IMAGEPROC_IMGSTATS_H_ */
+#endif /* SRC_MODULES_IMAGEPROC_MINMAXIMG_H_ */

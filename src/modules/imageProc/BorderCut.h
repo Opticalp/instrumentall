@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/imageProc/ThresAbs.h
- * @date	Jan. 2017
+ * @file	src/modules/imageProc/BorderCut.h
+ * @date    Feb. 2019
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2019 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,31 +26,29 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_IMAGEPROC_THRESABS_H_
-#define SRC_MODULES_IMAGEPROC_THRESABS_H_
+#ifndef SRC_MODULES_IMAGEPROC_BORDERCUT_H_
+#define SRC_MODULES_IMAGEPROC_BORDERCUT_H_
 
 #ifdef HAVE_OPENCV
+
 #include "core/Module.h"
 
-#include "Thresholder.h"
-
-#include "Poco/NumberFormatter.h"
-
 /**
- * Absolute threshold with or without mask
- *
- * @notice The onValue parameter behavior is not the same with or without mask.
+ * Detect the borders and cut the image
+ * 
+ * Use the image sum on cols or rows
+ * Retrieve the next item diff
+ * as soon as the diff is smaller than the threshold, starting from 
+ * the border, we assume that we are outside the image. 
  */
-class ThresAbs: public Module, private Thresholder
+class BorderCut: public Module
 {
 public:
-    ThresAbs(ModuleFactory* parent, std::string customName);
+    BorderCut(ModuleFactory* parent, std::string customName);
 
     std::string description()
     {
-        return "Image thresholding module. "
-                "Absolute threshold value. "
-                "Works on 8-bits or 16-bits grayscale images. ";
+        return "Detect the borders and crop the image to remove borders";
     }
 
 private:
@@ -58,6 +56,26 @@ private:
      * Main logic
      */
     void process(int startCond);
+    
+    /**
+     * Check if a border is present
+     * 
+     * @param inVec vector to be analyzed
+     * @return 0 if no edge is detected. Positive value if an border 
+     *         is detected in the crescent direction of the indexes.
+     *         The absolute value gives the distance to the outer image edge. 
+     */
+    int hasEdge(cv::Mat inVec);
+
+    static size_t refCount; ///< reference counter to generate a unique internal name
+
+    enum params
+    {
+        paramThreshold,
+        paramPadding,
+        paramMinEdgeLength,
+        paramCnt
+    };
 
     Poco::Int64 getIntParameterValue(size_t paramIndex);
     void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
@@ -65,28 +83,13 @@ private:
     double getFloatParameterValue(size_t paramIndex);
     void setFloatParameterValue(size_t paramIndex, double value);
 
-    std::string getStrParameterValue(size_t paramIndex);
-    void setStrParameterValue(size_t paramIndex, std::string value);
-
-    Poco::Logger& logger() { return Module::logger(); }
-
-    static size_t refCount; ///< reference counter to generate a unique internal name
-
-    enum params
-    {
-        paramThresholdValue,
-        paramLowHigh,
-        paramOnValue,
-        paramCnt
-    };
-
-    double threshold;
+    Poco::Int64 minEdgeLen, padding;
+    double thres;
 
     /// Indexes of the input ports
     enum inPorts
     {
         imageInPort,
-		maskInPort,
         inPortCnt
     };
 
@@ -94,11 +97,11 @@ private:
     enum outPorts
     {
         imageOutPort,
-        cntOutPort,
-        totCntOutPort,
+        // TODO: add output(s) to indicate which border(s) was(were) cut
         outPortCnt
     };
+
 };
 
 #endif /* HAVE_OPENCV */
-#endif /* SRC_MODULES_IMAGEPROC_THRESABS_H_ */
+#endif /* SRC_MODULES_IMAGEPROC_BORDERCUT_H_ */

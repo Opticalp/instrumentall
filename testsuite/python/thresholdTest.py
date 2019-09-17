@@ -113,6 +113,10 @@ def testThres(thresholdName, thresValue):
 
     print("Run...")
     runModule(cam)
+    waitAll()
+    print(str(thres.outPort("count").getDataValue()*100/thres.outPort("totalCount").getDataValue()) +
+          "% pixels where thresholded")
+          
     time.sleep(1) # wait 1s in order to show the image
 
     print("Change thresholding to low")
@@ -120,6 +124,9 @@ def testThres(thresholdName, thresValue):
 
     print("Re-run...")
     runModule(cam)
+    waitAll()
+    print(str(thres.outPort("count").getDataValue()*100/thres.outPort("totalCount").getDataValue()) +
+          "% pixels where thresholded")
     time.sleep(1) # wait 1s in order to show the image
 
     print("Retrieve the mask fake cam module")
@@ -136,6 +143,9 @@ def testThres(thresholdName, thresValue):
     print("Run...")
     runModule(cam)
     runModule(camMask)
+    waitAll()
+    print(str(thres.outPort("count").getDataValue()*100/thres.outPort("totalCount").getDataValue()) +
+          "% pixels where thresholded")
     time.sleep(1) # wait 1s in order to show the image
 
     print("change threshold parameters")
@@ -144,6 +154,9 @@ def testThres(thresholdName, thresValue):
     print("Re-run...")
     runModule(cam)
     runModule(camMask)
+    waitAll()
+    print(str(thres.outPort("count").getDataValue()*100/thres.outPort("totalCount").getDataValue()) +
+          "% pixels where thresholded")
     time.sleep(1) # wait 1s in order to show the image
 
     print("unbind threshold input")

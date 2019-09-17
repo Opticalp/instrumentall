@@ -34,6 +34,8 @@ def myMain(baseDir):
     print("Basic Python scripting test. ")
     import instruTools
     instruTools.generalInfo()
+
+    print("End of script generalInfo.py")
     
 # main body    
 import sys

@@ -55,35 +55,34 @@ def myMain(baseDir):
     task.wait()
     
     print("Look for ASI Motion device")
-    
-    asiFac = Factory("DeviceFactory").select("motionStage").select("ASI")
+
+    try:
+        print("Trying to open the port: COM5")
+        asiFac = Factory("DeviceFactory").select("motion").select("COM5").select("ASI")
+        asi.setParameterValue("serialPort", "COM5")
+    except RuntimeError as e:
+        print(str(e))
+        print("Exiting...")
+        return 
 
     if asiFac.countRemain()==0:
-        print("no ASI Motion device available, exiting. ")
+        print("no ASI Motion device available on port COM5, exiting. ")
         return
     
     print("Creating the ASI Motion device module. ")
     asi = asiFac.create("asi")
 
     print("Bind the ports")
-    bind(X.outPorts()[0], asi.inPort("X"))
-    bind(Y.outPorts()[0], asi.inPort("Y"))
+    bind(X.outPorts()[0], asi.inPort("xAxis"))
+    bind(Y.outPorts()[0], asi.inPort("yAxis"))
     
     print('Loggers creation using the constructor: DataLogger("DataPocoLogger")')
     loggerX = DataLogger("DataPocoLogger") 
     loggerY = DataLogger("DataPocoLogger")
     
     print("Register the data loggers")
-    asi.outPort("X").register(loggerX)
-    asi.outPort("Y").register(loggerY)
-
-    try:
-        print("Trying to open the port: COM5")
-        asi.setParameterValue("serialPort", "COM5")
-    except RuntimeError as e:
-        print(str(e))
-        print("Exiting...")
-        return 
+    asi.outPort("xAxis").register(loggerX)
+    asi.outPort("yAxis").register(loggerY)
 
     print("update current position")
     runModule(asi)

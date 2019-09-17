@@ -44,29 +44,39 @@
 class Thresholder
 {
 public:
-    cv::Mat doThreshold(cv::Mat* pImg, cv::Mat* pMask, double thresVal);
+    /**
+     * Forward the threshold computing to the specialized functions
+     *
+     * @param pImg img to threshold
+     * @param pMask mask. Can be void. Threshold is done for non-null values
+     * @param thresVal threshold value
+     * @param[out] thresCnt count of thresholded pixels
+     * @param[out] totalCnt total count of pixels where the thresholding was tested
+     */
+    cv::Mat doThreshold(cv::Mat* pImg, cv::Mat* pMask, double thresVal, size_t& thresCnt, size_t& totalCnt);
 
     Poco::Int64 onValue;
     bool high;
 
 private:
     template <typename T>
-    cv::Mat thresWMask(cv::Mat* pImg, cv::Mat* pMask, double thresVal);
+    cv::Mat thresWMask(cv::Mat* pImg, cv::Mat* pMask, double thresVal, size_t& thresCnt, size_t& totalCnt);
     template <typename T>
-    cv::Mat thresWMaskVal(cv::Mat* pImg, cv::Mat* pMask, double thresVal);
+    cv::Mat thresWMaskVal(cv::Mat* pImg, cv::Mat* pMask, double thresVal, size_t& thresCnt, size_t& totalCnt);
     template <typename T>
-    cv::Mat thresNoMask(cv::Mat* pImg, double thresVal);
+    cv::Mat thresNoMask(cv::Mat* pImg, double thresVal, size_t& thresCnt, size_t& totalCnt);
 
     virtual Poco::Logger& logger() = 0;
 };
 
 template<typename T>
 inline cv::Mat Thresholder::thresWMask(cv::Mat* pImg, cv::Mat* pMask,
-		double thresVal)
+		double thresVal, size_t& thresCnt, size_t& totalCnt)
 {
     cv::Mat out(pImg->rows, pImg->cols, CV_8U, cv::Scalar(0,0,0,0));
 
-    size_t count=0;
+    thresCnt = 0;
+    totalCnt = 0;
 
     int cols = pImg->cols, rows = pImg->rows;
     if(pImg->isContinuous() && pMask->isContinuous() && out.isContinuous())
@@ -87,10 +97,14 @@ inline cv::Mat Thresholder::thresWMask(cv::Mat* pImg, cv::Mat* pMask,
             const unsigned char* maI = pMask->ptr<unsigned char>(i);
             unsigned char* outI = out.ptr<unsigned char>(i);
             for(int j = 0; j < cols; j++)
-                if (maI[j] && inI[j] >= thresValue)
+                if (maI[j])
                 {
-                    outI[j] = onVal;
-                    count++;
+                    totalCnt++;
+                    if (inI[j] >= thresValue)
+                    {
+                        outI[j] = onVal;
+                        thresCnt++;
+                    }
                 }
         }
     }
@@ -102,16 +116,20 @@ inline cv::Mat Thresholder::thresWMask(cv::Mat* pImg, cv::Mat* pMask,
             const unsigned char* maI = pMask->ptr<unsigned char>(i);
             unsigned char* outI = out.ptr<unsigned char>(i);
             for(int j = 0; j < cols; j++)
-                if (maI[j] && inI[j] <= thresValue)
+                if (maI[j])
                 {
-                    outI[j] = onVal;
-                    count++;
+                    totalCnt++;
+                    if (inI[j] <= thresValue)
+                    {
+                        outI[j] = onVal;
+                        thresCnt++;
+                    }
                 }
         }
     }
 
     poco_information(logger(),
-            Poco::NumberFormatter::format(count)
+            Poco::NumberFormatter::format(thresCnt)
             + " pixels are thresholded. ");
 
     return out;
@@ -119,13 +137,14 @@ inline cv::Mat Thresholder::thresWMask(cv::Mat* pImg, cv::Mat* pMask,
 
 template<typename T>
 inline cv::Mat Thresholder::thresWMaskVal(cv::Mat* pImg, cv::Mat* pMask,
-		double thresVal)
+		double thresVal, size_t& thresCnt, size_t& totalCnt)
 {
     poco_information(logger(), "onValue is -1, using mask values");
 
     cv::Mat out(pImg->rows, pImg->cols, CV_8U, cv::Scalar(0,0,0,0));
 
-    size_t count=0;
+    thresCnt = 0;
+    totalCnt = 0;
 
     int cols = pImg->cols, rows = pImg->rows;
     if(pImg->isContinuous() && pMask->isContinuous() && out.isContinuous())
@@ -146,10 +165,14 @@ inline cv::Mat Thresholder::thresWMaskVal(cv::Mat* pImg, cv::Mat* pMask,
             const unsigned char* maI = pMask->ptr<unsigned char>(i);
             unsigned char* outI = out.ptr<unsigned char>(i);
             for(int j = 0; j < cols; j++)
-                if (maI[j] && inI[j] >= thresValue)
+                if (maI[j])
                 {
-                    outI[j] = maI[j];
-                    count++;
+                    totalCnt++;
+                    if (inI[j] >= thresValue)
+                    {
+                        outI[j] = maI[j];
+                        thresCnt++;
+                    }
                 }
         }
     }
@@ -161,27 +184,31 @@ inline cv::Mat Thresholder::thresWMaskVal(cv::Mat* pImg, cv::Mat* pMask,
             const unsigned char* maI = pMask->ptr<unsigned char>(i);
             unsigned char* outI = out.ptr<unsigned char>(i);
             for(int j = 0; j < cols; j++)
-                if (maI[j] && inI[j] <= thresValue)
+                if (maI[j])
                 {
-                    outI[j] = maI[j];
-                    count++;
+                    totalCnt++;
+                    if (inI[j] <= thresValue)
+                    {
+                        outI[j] = maI[j];
+                        thresCnt++;
+                    }
                 }
         }
     }
 
     poco_information(logger(),
-            Poco::NumberFormatter::format(count)
+            Poco::NumberFormatter::format(thresCnt)
             + " pixels are thresholded. ");
 
     return out;
 }
 
 template<typename T>
-inline cv::Mat Thresholder::thresNoMask(cv::Mat* pImg, double thresVal)
+inline cv::Mat Thresholder::thresNoMask(cv::Mat* pImg, double thresVal, size_t& thresCnt, size_t& totalCnt)
 {
     cv::Mat out(pImg->rows, pImg->cols, CV_8U, cv::Scalar(0,0,0,0));
 
-    size_t count=0;
+    thresCnt = 0;
 
     int cols = pImg->cols, rows = pImg->rows;
     if(pImg->isContinuous() && out.isContinuous())
@@ -205,7 +232,7 @@ inline cv::Mat Thresholder::thresNoMask(cv::Mat* pImg, double thresVal)
 				if (inI[j] >= thresValue)
 				{
 					outI[j] = onVal;
-					count++;
+					thresCnt++;
 				}
 		}
 	}
@@ -217,17 +244,19 @@ inline cv::Mat Thresholder::thresNoMask(cv::Mat* pImg, double thresVal)
 			unsigned char* outI = out.ptr<unsigned char>(i);
 
 			for(int j = 0; j < cols; j++)
-				if (inI[j] <= thresValue)
-				{
-					outI[j] = onVal;
-					count++;
-				}
+                if (inI[j] <= thresValue)
+                {
+                    outI[j] = onVal;
+                    thresCnt++;
+                }
 		}
 	}
 
     poco_information(logger(),
-            Poco::NumberFormatter::format(count)
+            Poco::NumberFormatter::format(thresCnt)
             + " pixels are thresholded. ");
+
+    totalCnt = pImg->rows * pImg->cols;
 
     return out;
 }

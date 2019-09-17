@@ -71,7 +71,7 @@ public:
      */
     bool isOpen();
 
-	/**
+    /**
      * read data from the com port
      *
      * @param buffer allocated char buffer that will be filled

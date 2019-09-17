@@ -53,6 +53,7 @@ ImgStats::ImgStats(ModuleFactory* parent, std::string customName):
     setOutPortCount(outPortCnt);
 
     addInPort("image", "Image to be analyzed. ", DataItem::typeCvMat, imagePort);
+	addInPort("mask", "mask defining where to analyze mean, min, max, std dev", DataItem::typeCvMat, maskPort);
 
     addOutPort("height", "height of the image", DataItem::typeInt64, heightPort);
     addOutPort("width", "width of the image", DataItem::typeInt64, widthPort);
@@ -69,23 +70,43 @@ ImgStats::ImgStats(ModuleFactory* parent, std::string customName):
 
 void ImgStats::process(int startCond)
 {
-    if (startCond != allDataStartState)
-    {
-        poco_information(logger(), name() + ": no input data. Exiting. ");
-        return;
-    }
+	bool withMask;
+	switch (startCond)
+	{
+	case allDataStartState:
+		withMask = true;
+		break;
+	case allPluggedDataStartState:
+		withMask = false;
+		break;
+	default:
+		poco_information(logger(), name() + ": no input data. Exiting. ");
+		return;
+	}
 
-    DataAttributeIn attr;
-    cv::Mat* pData;
+
+	DataAttributeIn attrIn, attrMask;
+	cv::Mat* imgData;
+	cv::Mat* maskData = NULL;
 
     readLockInPort(imagePort);
-    readInPortData<cv::Mat>(imagePort, pData);
-    readInPortDataAttribute(imagePort, &attr);
+    readInPortData<cv::Mat>(imagePort, imgData);
+    readInPortDataAttribute(imagePort, &attrIn);
 
-    DataAttributeOut outAttr = attr;
+	if (withMask)
+	{
+		readLockInPort(maskPort);
+		readInPortData<cv::Mat>(maskPort, maskData);
+		readInPortDataAttribute(maskPort, &attrMask);
+	}
+	
+	DataAttributeOut outAttr = attrIn;
 
-    cv::Mat workingImg;
-    pData->copyTo(workingImg);
+	if (withMask)
+		outAttr += attrMask;
+	
+	cv::Mat workingImg;
+    imgData->copyTo(workingImg);
 
     releaseInPort(imagePort);
 
@@ -95,7 +116,12 @@ void ImgStats::process(int startCond)
     height = workingImg.rows;
     width = workingImg.cols;
 
-    cv::minMaxLoc(workingImg,&min,&max);
+	if (withMask)
+		cv::minMaxLoc(workingImg, &min, &max,
+			0, 0, // min, max loc
+			*maskData);
+	else
+		cv::minMaxLoc(workingImg, &min, &max);
 
     cv::Mat meanMat, stdDev;
     cv::meanStdDev(workingImg, meanMat, stdDev);
@@ -128,32 +154,32 @@ void ImgStats::process(int startCond)
             case heightPort:
                 getDataToWrite<Poco::Int64>(heightPort, pIntData);
                 *pIntData = height;
-                notifyOutPortReady(heightPort, attr); // outMutex released once here
+                notifyOutPortReady(heightPort, outAttr); // outMutex released once here
                 break;
             case widthPort:
                 getDataToWrite<Poco::Int64>(widthPort, pIntData);
                 *pIntData = width;
-                notifyOutPortReady(widthPort, attr); // outMutex released once here
+                notifyOutPortReady(widthPort, outAttr); // outMutex released once here
                 break;
             case meanPort:
                 getDataToWrite<double>(meanPort, pDblData);
                 *pDblData = mean;
-                notifyOutPortReady(meanPort, attr); // outMutex released once here
+                notifyOutPortReady(meanPort, outAttr); // outMutex released once here
                 break;
             case sigmaPort:
                 getDataToWrite<double>(sigmaPort, pDblData);
                 *pDblData = sigma;
-                notifyOutPortReady(sigmaPort, attr); // outMutex released once here
+                notifyOutPortReady(sigmaPort, outAttr); // outMutex released once here
                 break;
             case minPort:
                 getDataToWrite<double>(minPort, pDblData);
                 *pDblData = min;
-                notifyOutPortReady(minPort, attr); // outMutex released once here
+                notifyOutPortReady(minPort, outAttr); // outMutex released once here
                 break;
             case maxPort:
                 getDataToWrite<double>(maxPort, pDblData);
                 *pDblData = max;
-                notifyOutPortReady(maxPort, attr); // outMutex released once here
+                notifyOutPortReady(maxPort, outAttr); // outMutex released once here
                 break;
             default:
                 poco_bugcheck_msg("impossible port case in reserveOutPortoneOf()");

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-## @file   testsuite/python/freezeTest.py
-## @date   feb. 2017
+## @file   testsuite/python/imgDiffTest.py
+## @date   jan. 2019
 ## @author PhRG - opticalp.fr
 ##
-## Test the watchdog with a frozen module
+## Test the img scharr filter data proxy
 
 #
-# Copyright (c) 2016 Ph. Renaud-Goud / Opticalp
+# Copyright (c) 2019 Ph. Renaud-Goud / Opticalp
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,30 +27,52 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
 def myMain(baseDir):
     """Main function. Run the tests. """
+
+    from os.path import join
+    import time
     
-    print("Test the watchdog. ")
+    print "Test the features of the imgDiff proxy. "
 
     from instru import * 
     
-    fac = Factory("DemoRootFactory")
-    print("Using DemoRootFactory. ")
+    fac = Factory("DeviceFactory")
+    print "Retrieved factory: " + fac.name
     
-    print("Create module from freezer factory")
-    freezer = fac.select("branch").select("freezer").create("freezer")
-
-    runModule(freezer)
-
+    print "Create module from CameraFromFilesFactory"
     try:
-        waitAll()
-    except RuntimeError:
-        print("ok, waitAll raised exception on watchdog timeout")
-    else: 
-        raise RuntimeError("watchdog timeout should have happen during waitAll")
-    
-    print("End of script freezeTest.py")
+        cam = fac.select("camera").select("fromFiles").create("fakeCam")
+    except RuntimeError as e:
+        print "Runtime error: {0}".format(e.message)
+        print "OpenCV is probably not present. Exiting. "
+        exit(0)
+        
+    print "module " + cam.name + " created (" + cam.internalName + ") "
+
+    imgDir = join(baseDir,"resources")
+    print "Set image file directory to " + imgDir
+    cam.setParameterValue("directory", imgDir)
+    print "Set file to be read: rectangles.png"
+    cam.setParameterValue("files", "rectangles.png")
+
+    print "Force grayscale images. "
+    cam.setParameterValue("forceGrayscale", "ON")
+
+    scharr = DataProxy("ImageScharr")
+    print(" - Name: " + scharr.name)
+    print(" - Description: " + scharr.description)
+
+    logger = DataLogger("ShowImageLogger")
+
+    bind(cam.outPort("image"),DataTarget(logger),scharr)
+
+    print "Show image with scharr filtering"
+    runModule(cam)
+    waitAll()
+    time.sleep(1) # wait 1s in order to show the image
+
+    print "End of script imgDiffTest.py"
     
 # main body    
 import sys

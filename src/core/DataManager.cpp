@@ -47,6 +47,7 @@
 #include "dataProxies/Delayer.h"
 #ifdef HAVE_OPENCV
 #    include "dataProxies/ImageReticle.h"
+#    include "dataProxies/ImageScharr.h"
 #endif
 
 #include "Poco/Exception.h"
@@ -95,6 +96,8 @@ DataManager::DataManager():
 #ifdef HAVE_OPENCV
     proxyFactory.registerClass<ImageReticle>("ImageReticle");
     proxyClasses.insert(classPair("ImageReticle", ImageReticle::classDescription()));
+    proxyFactory.registerClass<ImageScharr>("ImageScharr");
+    proxyClasses.insert(classPair("ImageScharr", ImageScharr::classDescription()));
 #endif
 }
 

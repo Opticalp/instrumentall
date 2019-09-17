@@ -36,7 +36,11 @@ size_t ThresPop::refCount = 0;
 ThresPop::ThresPop(ModuleFactory* parent, std::string customName):
 	Module(parent, customName)
 {
-	setInternalName("ThresPop" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("ThresPop" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("ThresPop");
+
     setCustomName(customName);
     setLogger("module." + name());
 
@@ -73,6 +77,8 @@ ThresPop::ThresPop(ModuleFactory* parent, std::string customName):
     addOutPort("binImage", "8-bit binary thresholded image. See \"onValue\" parameter description. ",
             DataItem::typeCvMat, imageOutPort);
     addOutPort("median", "Median value of the image", DataItem::typeFloat, medianPort);
+    addOutPort("count", "count of thresholded pixels", DataItem::typeInt64, cntOutPort);
+    addOutPort("totalCount", "total count of analyzed pixels", DataItem::typeInt64, totCntOutPort);
 
     notifyCreation();
     refCount++;
@@ -200,7 +206,8 @@ void ThresPop::process(int startCond)
 
     cv::Mat workingImg;
 
-	workingImg = doThreshold(imgData, maskData, thres);
+    size_t cnt, totCnt;
+	workingImg = doThreshold(imgData, maskData, thres, cnt, totCnt);
 
     releaseInPort(imageInPort);
     if (withMask)
@@ -211,8 +218,11 @@ void ThresPop::process(int startCond)
      std::set<size_t> somePorts;
      somePorts.insert(imageOutPort);
      somePorts.insert(medianPort);
+     somePorts.insert(cntOutPort);
+     somePorts.insert(totCntOutPort);
 
      float* pFltData;
+     Poco::Int64* pIntData;
 
      try
      {
@@ -230,6 +240,16 @@ void ThresPop::process(int startCond)
   	    	   *imgData = workingImg;
   	    	   notifyOutPortReady(imageOutPort, outAttr);
   	           break;
+           case cntOutPort:
+               getDataToWrite<Poco::Int64>(cntOutPort, pIntData);
+               *pIntData = static_cast<Poco::Int64>(cnt);
+               notifyOutPortReady(cntOutPort, outAttr);
+               break;
+           case totCntOutPort:
+               getDataToWrite<Poco::Int64>(totCntOutPort, pIntData);
+               *pIntData = static_cast<Poco::Int64>(totCnt);
+               notifyOutPortReady(totCntOutPort, outAttr);
+               break;
 		   default:
 			   poco_bugcheck_msg("impossible reserved port");
 		   }

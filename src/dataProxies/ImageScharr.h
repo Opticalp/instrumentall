@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/imageProc/ImgStats.h
- * @date    Feb. 2017
+ * @file	src/dataProxies/ImageScharr.h
+ * @date	Jan 2019
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2017 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2019 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,61 +26,55 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_IMAGEPROC_IMGSTATS_H_
-#define SRC_MODULES_IMAGEPROC_IMGSTATS_H_
+#ifndef SRC_DATAPROXIES_IMAGESCHARR_H_
+#define SRC_DATAPROXIES_IMAGESCHARR_H_
 
 #ifdef HAVE_OPENCV
 
-#include "core/Module.h"
+#include "core/DataProxy.h"
 
 /**
- * Retrieve simple stats of an image
- * 
- * Width, height, mean value, min, max
- * 
- * @par ver 2.2.1
- * With mask
+ * ImageScharr
+ *
+ * Apply simple scharr operator to an image
  */
-class ImgStats: public Module
+class ImageScharr: public DataProxy
 {
 public:
-    ImgStats(ModuleFactory* parent, std::string customName);
+	ImageScharr();
+	virtual ~ImageScharr() { }
 
-    std::string description()
-    {
-        return "Retrieve source image simple statistics: "
-                "height, width, mean, min, max. ";
-    }
+    std::string description() { return classDescription(); }
+
+    static std::string classDescription()
+        { return "Apply a Scharr operator to the input image image. "; }
+
+    std::set<int> supportedInputDataType();
+    std::set<int> supportedOutputDataType();
 
 private:
-    /**
+	static size_t refCount;
+
+	/**
      * Main logic
      */
-    void process(int startCond);
+    void convert();
 
-    static size_t refCount; ///< reference counter to generate a unique internal name
-
-    /// Indexes of the input ports
-    enum inPorts
+    enum params
     {
-		maskPort,
-		imagePort,
-        inPortCnt
+		paramAlter,
+        paramCnt
     };
 
-    /// Indexes of the output ports
-    enum outPorts
-    {
-        heightPort,
-        widthPort,
-        meanPort,
-        sigmaPort,
-        minPort,
-        maxPort,
-        outPortCnt
-    };
+    bool alter;
 
+//    Poco::Int64 getIntParameterValue(size_t paramIndex);
+//    void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
+//    double getFloatParameterValue(size_t paramIndex);
+//    void setFloatParameterValue(size_t paramIndex, double value);
+
+    std::string getStrParameterValue(size_t paramIndex);
+    void setStrParameterValue(size_t paramIndex, std::string value);
 };
-
 #endif /* HAVE_OPENCV */
-#endif /* SRC_MODULES_IMAGEPROC_IMGSTATS_H_ */
+#endif /* SRC_DATAPROXIES_IMAGESCHARR_H_ */

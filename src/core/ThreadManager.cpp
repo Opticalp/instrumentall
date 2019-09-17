@@ -490,7 +490,7 @@ void ThreadManager::defineOptions(Poco::Util::OptionSet& options)
     options.addOption(
         Option(
                 "watchdog", "w",
-                "specify the watchdog timeout: TIMEOUT, "
+                "specify the watchdog timeout (ms): TIMEOUT, "
                 "time after which the application is considered as frozen "
                 "if the tasks have not evolved. " )
             .required(false)

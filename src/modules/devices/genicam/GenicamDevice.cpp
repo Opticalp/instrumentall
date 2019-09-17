@@ -85,7 +85,7 @@ GenicamDevice::GenicamDevice(GenTLLib* genTL,
     addTrigPort("trig", "Launch the image generation", trigPort);
 
     addOutPort("acqReady", "acquisition ready trigger", DataItem::typeInt32, acqReadyOutPort);
-    addOutPort("image", "image from file", DataItem::typeCvMat, imgOutPort);
+    addOutPort("image", "image delivered by the camera", DataItem::typeCvMat, imgOutPort);
 
     retrieveDataStream();
 
