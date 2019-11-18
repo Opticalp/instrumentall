@@ -51,13 +51,15 @@ BorderCut::BorderCut(ModuleFactory* parent, std::string customName):
     // parameters
     setParameterCount(paramCnt);
     addParameter(paramMinEdgeLength, "minEdgeLength",
-            "Minimum length of the border edge (pixels)",
+            "Minimum length of the border edge (pixels). "
+            "I.e. the threshold has to be overpassed this count of times "
+            "before the edge being considered as an edge. ",
             ParamItem::typeInteger, "4");
     addParameter(paramPadding, "padding",
-            "Distance between the image content and the border (pixels)",
+            "Reserved distance between the image content and the border (pixels)",
             ParamItem::typeInteger, "15");
     addParameter(paramThreshold, "threshold",
-            "Derivative threshold value. ",
+            "Derivative (adjacent diff) threshold value. ",
             ParamItem::typeFloat, "4");
 
     setParametersDefaultValue();
@@ -219,6 +221,12 @@ int BorderCut::hasEdge(cv::Mat inVec)
     cv::Mat tmp1, diff;
     diff = inVec(cv::Range::all(),cv::Range(1,inVec.cols)) - inVec(cv::Range::all(),cv::Range(0,inVec.cols-1));
     
+
+    double minTmp,maxTmp;
+    cv::minMaxLoc(diff,&minTmp, &maxTmp);
+    poco_information(logger(), "Max diff is " + Poco::NumberFormatter::format(maxTmp));
+
+
     // scan
     int fail(0);
     for (int start = 0; start < diff.cols; start++)
@@ -242,9 +250,6 @@ int BorderCut::hasEdge(cv::Mat inVec)
         }
         else
         {
-            if (start < minEdgeLen)
-                return 0;
-                
             ++fail;
         }            
     }

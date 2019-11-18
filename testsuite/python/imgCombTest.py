@@ -4,7 +4,7 @@
 ## @date   feb. 2019
 ## @author PhRG - opticalp.fr
 ##
-## Test the fake camera module
+## Test the mask combiner (min/max)
 
 #
 # Copyright (c) 2019 Ph. Renaud-Goud / Opticalp
@@ -33,7 +33,7 @@ def myMain(baseDir):
     from os.path import join
     import time
 
-    print("Test the basic features of the cameraFromFiles module. ")
+    print("Test the basic features of the MinMaxImg module. ")
     
     from instru import *
     

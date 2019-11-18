@@ -36,7 +36,11 @@ size_t ThresAbs::refCount = 0;
 ThresAbs::ThresAbs(ModuleFactory* parent, std::string customName):
 	Module(parent, customName)
 {
-    setInternalName("ThresAbs" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("ThresAbs" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("ThresAbs");
+
     setCustomName(customName);
     setLogger("module." + name());
 
@@ -209,7 +213,6 @@ void ThresAbs::process(int startCond)
     somePorts.insert(cntOutPort);
     somePorts.insert(totCntOutPort);
 
-    float* pFltData;
     Poco::Int64* pIntData;
 
     try

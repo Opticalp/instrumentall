@@ -47,9 +47,8 @@ def myMain(baseDir):
         waitAll()
     except RuntimeError:
         print("ok, waitAll raised exception")
-        return
-    
-    raise RuntimeError("an error should have been raised")
+    else:
+        raise RuntimeError("an error should have been raised")
     
     print("End of script failTest.py")
     

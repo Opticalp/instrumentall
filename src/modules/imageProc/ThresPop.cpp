@@ -36,7 +36,11 @@ size_t ThresPop::refCount = 0;
 ThresPop::ThresPop(ModuleFactory* parent, std::string customName):
 	Module(parent, customName)
 {
-	setInternalName("ThresPop" + Poco::NumberFormatter::format(refCount));
+    if (refCount)
+        setInternalName("ThresPop" + Poco::NumberFormatter::format(refCount));
+    else
+        setInternalName("ThresPop");
+
     setCustomName(customName);
     setLogger("module." + name());
 

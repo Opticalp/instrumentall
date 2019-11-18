@@ -88,7 +88,7 @@ def myMain(baseDir):
     waitAll()
     print("mod3 return value is: " + str(mod3.outPorts()[0].getDataValue()))
 
-    print("End of script modDataSeqTest.py")
+    print("End of script cancelationTest.py")
     
 # main body    
 import sys
