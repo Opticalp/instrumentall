@@ -44,6 +44,17 @@ void SerialCom::checkOpen()
                 "Invalid serial com port file handle");
 }
 
+void SerialCom::noDelimiter()
+{
+	hasDelimiter = false;
+}
+
+void SerialCom::setDelimiter(char delim)
+{
+	delimiter = delim; 
+	hasDelimiter = true;
+}
+
 std::string SerialCom::read(size_t maxCharCnt)
 {
 	checkOpen();
@@ -86,7 +97,8 @@ void SerialCom::write(std::string command)
 {
 	checkOpen();
 
-    command += delimiter;
+	if (hasDelimiter)
+		command += delimiter;
 
     if (command.size() <= mBufSize)
     {

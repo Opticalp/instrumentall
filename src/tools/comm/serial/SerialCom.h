@@ -53,7 +53,7 @@
 class SerialCom: private SerialComImpl
 {
 public:
-    SerialCom(): delimiter('\r') { }
+    SerialCom(): delimiter('\r'), hasDelimiter(true){ }
     virtual ~SerialCom() { }
 
     /**
@@ -93,8 +93,12 @@ public:
      *
      * to be appended at the end of the commands
      */
-    void setDelimiter(char delim)
-    { delimiter = delim; }
+	void setDelimiter(char delim);
+
+	/**
+	 * Do not use the delimiter
+	 */
+	void noDelimiter();
 
     /**
      * Read the response
@@ -130,6 +134,7 @@ public:
         { SerialComImpl::listComPorts(portList); }
 
 private:
+	bool hasDelimiter;
     char delimiter;
 };
 
