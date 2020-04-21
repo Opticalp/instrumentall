@@ -27,8 +27,10 @@
  */
 
 #include "SerialComDeviceFactory.h"
+
 //#include "modules/GenericLeafFactory.h"
 #include "AsiMotionFactory.h"
+#include "VariopticLensFactory.h"
 
 
 SerialComDeviceFactory::SerialComDeviceFactory(ModuleFactory* parent, std::string selector):
@@ -44,16 +46,24 @@ std::vector<std::string> SerialComDeviceFactory::selectValueList()
     list.push_back("ASI");
     list.push_back("AsiTiger");
 
+	list.push_back("Varioptic");
+
     return list;
 }
 
+#include "Poco/String.h"
+
 ModuleFactoryBranch* SerialComDeviceFactory::newChildFactory(std::string selector)
 {
-    if (selector.compare("ASI") == 0 || selector.compare("AsiTiger") == 0)
+    if (selector.compare("ASI") == 0 || selector.compare("asitiger") == 0)
     {
         return new AsiMotionFactory(this, selector);
     }
-    else
+	if (Poco::toLower(selector).compare("varioptic") == 0)
+	{
+		return new VariopticLensFactory(this, "Varioptic");
+	}
+	else
     {
         poco_bugcheck_msg("Create: unknown device");
         throw Poco::BugcheckException();
