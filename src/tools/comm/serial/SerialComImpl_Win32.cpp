@@ -53,6 +53,7 @@ SerialComImpl::~SerialComImpl()
 
 void SerialComImpl::open(std::string port)
 {
+	std::string simplePort(port);
     std::wstring ws_portName;
 	port = "\\\\.\\" + port;
     ws_portName.assign(port.begin(), port.end());
@@ -104,7 +105,7 @@ void SerialComImpl::open(std::string port)
     }
 
 	// if success
-	portName = port;
+	portName = simplePort;
 }
 
 bool SerialComImpl::isOpen()
