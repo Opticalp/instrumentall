@@ -133,3 +133,13 @@ std::string SerialCom::niceString(std::string msg)
 {
     return decoratedCommandKeep(msg);
 }
+
+std::string SerialCom::renderHex(std::string bytes)
+{
+	return decoratedHexCommand(bytes);
+}
+
+std::string SerialCom::byteVect(std::string hexStr)
+{
+	return rawByteFromString(hexStr);
+}

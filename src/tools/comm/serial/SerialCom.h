@@ -113,6 +113,20 @@ public:
      */
     static std::string niceString(std::string msg);
 
+	/**
+	 * Translate '\01' into '01' etc
+	 *
+	 * To let hex strings to be readable
+	 */
+	static std::string renderHex(std::string bytes);
+
+	/**
+	 * Translate hex readable string into byte vector
+	 *
+	 * @see renderHex
+	 */
+	static std::string byteVect(std::string hexStr);
+
     /**
      * Write a command
      *

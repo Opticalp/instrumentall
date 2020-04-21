@@ -104,3 +104,40 @@ std::string decoratedCommandKeep(std::string command, size_t length)
 	else
 		throw std::out_of_range("string overflow");
 }
+
+#include "Poco/NumberFormatter.h"
+
+std::string decoratedHexCommand(std::string command)
+{
+	std::string msg;
+
+	for (std::string::iterator it = command.begin(), ite = command.end();
+		it != ite; it++)
+		msg += Poco::NumberFormatter::formatHex(*it,2);
+
+	return msg;
+}
+
+#include "Poco/NumberParser.h"
+
+std::string rawByteFromString(std::string hexStr)
+{
+	std::string bytes;
+
+	// evtl remove prefix
+	if (hexStr.substr(0, 2) == "0x")
+		hexStr = hexStr.substr(2);
+
+	for (std::string::iterator it = hexStr.begin(), ite = hexStr.end();
+		(it != ite); it = it + 2)
+	{
+		if (it + 1 == ite)
+			throw Poco::SyntaxException("rawByteFromString", 
+				"input string needs even character count");
+
+		char tmp = static_cast<char>(Poco::NumberParser::parseHex(std::string(it, it + 2)));
+		bytes += tmp;
+	}
+
+	return bytes;
+}

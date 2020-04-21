@@ -66,4 +66,16 @@ std::string decoratedCommandKeep(std::string command);
 */
 std::string decoratedCommandKeep(std::string command, size_t length);
 
+/**
+ * Replace '\01' by explicit "01" etc
+ */
+std::string decoratedHexCommand(std::string command);
+
+/**
+ * Replace "01" by '\01' etc
+ *
+ * remove "0x" prefix if present
+ */
+std::string rawByteFromString(std::string hexStr);
+
 #endif /* SRC_TOOLS_DECORATED_H_ */
