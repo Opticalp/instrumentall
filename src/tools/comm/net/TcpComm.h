@@ -76,7 +76,12 @@ public:
 	 *
 	 * to be appended at the end of the commands
 	 */
-	void setDelimiter(char delim) { delimiter = delim; }
+	void setDelimiter(char delim);
+
+	/**
+	 * Do not use the delimiter
+	 */
+	void noDelimiter();
 
 	/**
 	 * Read the response
@@ -120,6 +125,7 @@ public:
     void setLogger(std::string loggerName);
 
 private:
+	bool hasDelimiter;
 	char delimiter;
 
 	Poco::Net::SocketAddress sa;

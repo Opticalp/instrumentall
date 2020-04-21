@@ -43,6 +43,7 @@ using namespace Poco::Net;
 
 TcpComm::TcpComm(Poco::Net::IPAddress remoteAddress, int remotePort) :
 	delimiter('\r'), 
+	hasDelimiter(true),
 	sa(remoteAddress, remotePort), 
 	opened(false),
 	_pLogger(&Poco::Logger::get("comm.tcp." + sa.toString()))
@@ -58,6 +59,17 @@ TcpComm::~TcpComm()
 	catch (...)
 	{
 	}
+}
+
+void TcpComm::noDelimiter()
+{
+	hasDelimiter = false;
+}
+
+void TcpComm::setDelimiter(char delim)
+{
+	delimiter = delim;
+	hasDelimiter = true;
 }
 
 void TcpComm::open()
@@ -137,7 +149,7 @@ std::string TcpComm::read(size_t maxCharCnt)
 			for (std::string::iterator it = response.begin(),
 				ite = response.end(); it != ite; it++)
 			{
-				if (*it == delimiter)
+				if (hasDelimiter && (*it == delimiter))
 					*it = '\n';
 			}
 
@@ -170,14 +182,28 @@ void TcpComm::write(std::string command)
 {
 	checkOpen();
 
-	int length = command.size();
+	size_t cmdSize = command.size();
+
+	if (hasDelimiter)
+	{
+		command += delimiter;
+		cmdSize++;
+	}
+
 	try
 	{
-		tcpSocket.sendBytes((command + delimiter).c_str(), length + 1);
+		int ret = tcpSocket.sendBytes(command.c_str(), cmdSize);
+		if (ret != cmdSize)
+			throw Poco::IOException(
+				std::string("TcpComm " + shortName()),
+				"unable to write the full data (" 
+				+ Poco::NumberFormatter::format(cmdSize) +
+				" bytes) to the port. Returned: "
+				+ Poco::NumberFormatter::format(ret));
 
 		poco_information(logger(),
-			Poco::NumberFormatter::format(length) + " bytes sent: \n" +
-			decoratedCommandKeep((command + delimiter), length + 1));
+			Poco::NumberFormatter::format(cmdSize) + " bytes sent: \n" +
+			decoratedCommandKeep(command, cmdSize));
 	}
 	catch (Poco::Exception& e)
 	{
@@ -187,25 +213,7 @@ void TcpComm::write(std::string command)
 
 std::string TcpComm::sendQuery(std::string query, size_t maxCharCnt)
 {
-	checkOpen();
-
-	int length;
-
-	length = query.size();
-	try
-	{
-
-		tcpSocket.sendBytes((query + delimiter).c_str(), length + 1);
-
-		poco_information(logger(),
-			Poco::NumberFormatter::format(length) + " bytes sent: \n" +
-			decoratedCommandKeep((query + delimiter), length + 1));
-	}
-	catch (Poco::Exception& e)
-	{
-		poco_error(logger(), query + " [## SEND ERROR ##]: " + e.displayText());
-	}
-
+	write(query);
 	return read(maxCharCnt);
 }
 
