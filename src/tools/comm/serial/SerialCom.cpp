@@ -97,12 +97,17 @@ void SerialCom::write(std::string command)
 {
 	checkOpen();
 
+	size_t cmdSize = command.size();
+
 	if (hasDelimiter)
+	{
 		command += delimiter;
+		cmdSize++;
+	}
 
     if (command.size() <= mBufSize)
     {
-        if (SerialComImpl::write(command.c_str(), command.size()) != command.size())
+        if (SerialComImpl::write(command.c_str(), cmdSize) != cmdSize)
             throw Poco::IOException(
                     std::string("SerialCom ") + portName,
                     "unable to write the full data to the port");
