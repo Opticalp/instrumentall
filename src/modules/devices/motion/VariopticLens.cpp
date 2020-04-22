@@ -32,6 +32,19 @@
 #include "Poco/NumberParser.h"
 #include "Poco/String.h" // trim in place
 
+#define REG_FOCUS_LSB  0x00
+#define REG_FOCUS_MSB  0x01
+#define REG_CONTROL    0x02
+#define     CTRL_EEPROM     0x01
+#define REG_MODE       0x03
+#define     MODE_STAND_BY   0x01
+#define     MODE_ANALOG     0x02
+#define REG_SW_VERSION 0x05
+#define REG_FAULT      0x0A
+#define     FAULT_D_OVERL   0x01
+#define     FAULT_D_NORES   0x02
+#define     FAULT_D_OVERT   0x04
+
 VariopticLens::VariopticLens(ModuleFactory* parent, std::string customName, SerialCom& commObj):
     serial(commObj),
    	MotionDevice(parent, customName,
@@ -53,7 +66,39 @@ VariopticLens::~VariopticLens()
 
 void VariopticLens::info(SerialCom &commObj, Poco::Logger& tmpLog)
 {
-    poco_information(tmpLog,"done.");
+	commObj.write(readRegisterCommand(REG_MODE));
+	int ret = parseRead(readCommBuffer(commObj, tmpLog));
+
+	if (ret & MODE_STAND_BY)
+		poco_information(tmpLog, "Stand-by mode");
+	
+	if (ret & MODE_ANALOG)
+		poco_information(tmpLog, "Analog mode");
+	else
+		poco_information(tmpLog, "Register control mode");
+
+	commObj.write(readRegisterCommand(REG_FAULT));
+	ret = parseRead(readCommBuffer(commObj, tmpLog));
+	
+	if (ret)
+	{
+		if (ret & FAULT_D_OVERL)
+			poco_information(tmpLog, "Driver is overloaded");
+		if (ret & FAULT_D_NORES)
+			poco_information(tmpLog, "Driver is not responding to I2C req");
+		if (ret & FAULT_D_OVERT)
+			poco_information(tmpLog, "Driver is in thermal shutdown");
+	}
+	else
+		poco_information(tmpLog, "Driver fault register not raised");
+
+	commObj.write(readRegisterCommand(REG_SW_VERSION));
+	ret = parseRead(readCommBuffer(commObj, tmpLog));
+
+	poco_information(tmpLog, "Driver software version: " + 
+		Poco::NumberFormatter::format(ret));
+
+	poco_information(tmpLog,"done.");
 }
 
 std::string VariopticLens::readCommBuffer(SerialCom &commObj, Poco::Logger& tmpLog)
@@ -101,7 +146,9 @@ void VariopticLens::setStrParameterValue(size_t paramIndex, std::string value)
 	if (paramIndex != paramQuery)
 		poco_bugcheck_msg("invalid parameter index");
 
-	serial.write(serial.byteVect(value));
+	std::string bytes(serial.byteVect(value));
+	poco_information(logger(), "[OU]:" + serial.renderHex(bytes));
+	serial.write(bytes);
 }
 
 void VariopticLens::singleMotion(int axis, std::vector<double> positions)
@@ -113,3 +160,103 @@ double VariopticLens::getPosition(int axis)
 {
 	return 1.0;
 }
+
+#define STX  '\x02'
+#define WRI  '\x37'
+#define READ '\x38'
+#define ACK  '\x06'
+#define NACK '\x15'
+
+std::string VariopticLens::readRegisterCommand(int reg)
+{
+	std::string cmd;
+	cmd += STX;
+	cmd += READ;
+	cmd += static_cast<char>(reg); 
+	cmd += '\x01'; // number of registers to be read
+	cmd += stringSum(cmd);   // CRC
+	
+	return cmd;
+}
+
+std::string VariopticLens::writeRegisterCommand(int reg, int value)
+{
+	std::string cmd;
+	cmd += STX;
+	cmd += WRI;
+	cmd += static_cast<char>(reg);
+	cmd += '\x01'; // number of registers to be read
+	cmd += static_cast<char>(value);
+	cmd += stringSum(cmd);   // CRC
+
+	return cmd;
+}
+
+std::string VariopticLens::writeRegisterCommand(int regStart, std::vector<int> values)
+{
+	std::string cmd;
+	cmd += STX;
+	cmd += WRI;
+	cmd += static_cast<char>(regStart);
+	cmd += static_cast<char>(values.size());
+
+	for (std::vector<int>::iterator it = values.begin(), ite = values.end(); 
+		it != ite; it++)
+		cmd += static_cast<char>(*it);
+	
+	cmd += stringSum(cmd);   // CRC
+
+	return cmd;
+}
+
+void VariopticLens::checkWriteAck(std::string response)
+{
+	std::string ackStr;
+	ackStr += STX;
+	ackStr += WRI;
+	ackStr += ACK;
+	ackStr += stringSum(ackStr);
+
+	if (response == ackStr)
+		return;
+	
+	ackStr[2] = NACK;
+	ackStr.resize(3);
+	ackStr += stringSum(ackStr);
+
+	if (response == ackStr)
+		throw Poco::IOException("VariopticLens::checkWriteAck", "Write not acknowledged");
+
+	throw Poco::IOException("VariopticLens::checkWriteAck", "unreckognized response");
+}
+
+int VariopticLens::parseRead(std::string response)
+{
+	if (response.size() != 4)
+		throw Poco::NotImplementedException("VariopticLens::parseRead", 
+			"Not able to read more than 1 reg at a time");
+
+	if (*(response.end()-1) != stringSum(response.substr(0, response.size()-1)))
+		throw Poco::IOException("VariopticLens::parseRead",
+		"CRC check failed");
+
+	std::string comp;
+	comp += STX;
+	comp += READ;
+	if (comp.compare(response.substr(0,2)))
+		throw Poco::IOException("VariopticLens::parseRead",
+			"response is not a READ command response");
+	
+	return response[3];
+}
+
+char VariopticLens::stringSum(std::string cmd)
+{
+	char accu = '\0';
+	for (std::string::iterator it = cmd.begin(), ite = cmd.end();
+		it != ite; it++)
+		accu += *it;
+
+	return accu;
+}
+

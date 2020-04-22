@@ -86,9 +86,47 @@ private:
     SerialCom &serial; ///< serial communication object
 
     /**
-     * Read data until "\r\n" is reached
+     * Read data in the comm queue
      */
     std::string readCommBuffer() { return readCommBuffer(serial, logger()); }
+
+	/**
+	 * Generate the byte vector to read the given register address
+	 */
+	static std::string readRegisterCommand(int reg);
+
+	/**
+	 * Generate the byte vector to write the given value at the given register address
+	 */
+	static std::string writeRegisterCommand(int reg, int value);
+
+	/**
+	 * Generate the byte vector to write the given values starting at the given register address
+	 */
+	static std::string writeRegisterCommand(int regStart, std::vector<int> values);
+
+	/**
+	 * Check acknoledgement if the writing operation was successful
+	 *
+	 * @param[in] response response string to analyze
+	 * @throw IOexception
+	 */
+	static void checkWriteAck(std::string response);
+
+	/**
+	 * Parse the response to get the register value
+	 *
+	 * @param[in] response response string to analyze
+	 * @throw IOexception
+	 */
+	static int parseRead(std::string response);
+
+	/**
+	 * Calculate CRC
+	 *
+	 * sum of all characters
+	 */
+	static char stringSum(std::string cmd);
 };
 
 #endif /* SRC_VARIOPTICLENS_H_ */
