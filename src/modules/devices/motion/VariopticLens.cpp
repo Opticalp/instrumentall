@@ -55,8 +55,6 @@ VariopticLens::VariopticLens(ModuleFactory* parent, std::string customName, Seri
     // TODO: purge input
 
 	construct("VariopticLens_" + serial.deviceName(), customName);
-
-	poco_information(logger(), "construction done. ");
 }
 
 VariopticLens::~VariopticLens()
@@ -118,8 +116,6 @@ void VariopticLens::addMoreParameters()
 		"direct query to the lens controler. \n"
 		"Convert readable hex string to hex vector", 
 		ParamItem::typeString);
-
-	// TODO: evtl add LUT file? 
 }
 
 std::string VariopticLens::getStrParameterValue(size_t paramIndex)
@@ -153,12 +149,35 @@ void VariopticLens::setStrParameterValue(size_t paramIndex, std::string value)
 
 void VariopticLens::singleMotion(int axis, std::vector<double> positions)
 {
-    
+	if (axis != zAxis)
+		poco_bugcheck_msg("impossible axis");
+
+	int value = static_cast<int>((positions.at(0) - 24) * 1000);
+
+	if (value < 0)
+		throw Poco::RangeException("zAxis", "Value can not be less than 24.0(V)");
+
+	if (value > 0xB3B0)
+		throw Poco::RangeException("zAxis", "Value can not exceed 70.0(V)");
+
+	serial.write(writeRegisterCommand(REG_FOCUS_LSB, value & 0xFF));
+	checkWriteAck(readCommBuffer(serial, logger()));
+
+	serial.write(writeRegisterCommand(REG_FOCUS_MSB, (value >> 8) & 0xFF));
+	checkWriteAck(readCommBuffer(serial, logger()));
 }
 
 double VariopticLens::getPosition(int axis)
 {
-	return 1.0;
+	serial.write(readRegisterCommand(REG_FOCUS_MSB));
+	int ret = parseRead(readCommBuffer(serial, logger()));
+	ret = ret << 8;
+	
+	serial.write(readRegisterCommand(REG_FOCUS_LSB));
+	ret += parseRead(readCommBuffer(serial, logger()));
+	   
+	// conversion: see USB-M drivboard user guide
+	return 0.001 * ret + 24.0;
 }
 
 #define STX  '\x02'

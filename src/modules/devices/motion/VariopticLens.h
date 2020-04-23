@@ -53,7 +53,7 @@ public:
 
     std::string description()
     {
-        return "Control a varioptic liquid lens, like a z positioner";
+        return "Control a varioptic liquid lens, like a z positioner, ";
     }
 
     static void info(SerialCom &commObj, Poco::Logger& tmpLog);
@@ -65,7 +65,6 @@ private:
     enum supplParameters
     {
         paramQuery=1, // direct query
-					  // TODO: evtl add LUT file? 
         totalParamCnt
     };
 
