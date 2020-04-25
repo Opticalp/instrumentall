@@ -209,8 +209,7 @@ void MotionDevice::allMotionSync(std::vector<double> positions)
 	if (positions.size() != axisIndexCnt)
 		poco_bugcheck_msg("incorrect number of axis in position command");
 
-	for (int ind = 0; ind < axisIndexCnt; ind++)
-		singleMotion(axisMasks[ind], positions[ind]);
+	singleMotion(~0, positions);
 }
 
 void MotionDevice::allMotionSeq(std::vector< std::vector<double> > positionsSeq)

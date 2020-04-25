@@ -104,14 +104,6 @@ protected:
 	/// The derivated class should call this function at the end of this overloaded method
 	virtual double getFloatParameterValue(size_t paramIndex);
 
-	/** 
-	 * Convenience function
-	 *
-	 * This function is not virtual, and hence, should not be derived. 
-	 */
-	void singleMotion(int axis, double position)
-	   { singleMotion(axis, std::vector<double>(axisIndexCnt, position)); }
-
 	/**
 	 * Go to the given position 
 	 *
