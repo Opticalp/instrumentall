@@ -56,21 +56,29 @@ def myMain(baseDir):
     
     print("Look for ASI Motion device")
 
-    try:
-        print("Trying to open the port: COM5")
-        asiFac = Factory("DeviceFactory").select("motion").select("COM5").select("ASI")
-        asi.setParameterValue("serialPort", "COM5")
-    except RuntimeError as e:
-        print(str(e))
-        print("Exiting...")
-        return 
+    asiFac = Factory("DeviceFactory").select("motion")
 
+    ports = asiFac.selectValueList()
+    for port in ports:
+        if "COM" in port:
+            if asiFac.select(port).select("ASI").countRemain() > 0:
+                asiFac = asiFac.select(port).select("ASI")
+                print("ASI motion controler (MS-2000) detected on port " + port)
+                break
+            elif asiFac.select(port).select("AsiTiger").countRemain() > 0:
+                asiFac = asiFac.select(port).select("AsiTiger")
+                print("ASI motion controler (Tiger) detected on port " + port)
+                break
+    
     if asiFac.countRemain()==0:
-        print("no ASI Motion device available on port COM5, exiting. ")
+        print("no ASI Motion device available, exiting. ")
         return
     
     print("Creating the ASI Motion device module. ")
     asi = asiFac.create("asi")
+
+    asi.setParameterValue("xAxisPos", 0)
+    asi.setParameterValue("yAxisPos", 0)
 
     print("Bind the ports")
     bind(X.outPorts()[0], asi.inPort("xAxis"))
@@ -95,6 +103,9 @@ def myMain(baseDir):
     print("Wait for them to finish")
     waitAll()
     
+    asi.setParameterValue("xAxisPos", 0)
+    asi.setParameterValue("yAxisPos", 0)
+
     print("End of script asiMotionTest.py")
     
 # main body    
