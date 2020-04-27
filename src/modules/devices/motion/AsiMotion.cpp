@@ -49,7 +49,11 @@ AsiMotion::~AsiMotion()
     // the serial port closing is directly done by the SerialCom object destruction
 }
 
-void AsiMotion::info(SerialCom &commObj, Poco::Logger& tmpLog)
+#include "Poco/String.h"
+#include "Poco/StringTokenizer.h"
+#include "Poco/RegularExpression.h"
+
+int AsiMotion::info(SerialCom &commObj, Poco::Logger& tmpLog)
 {
     std::string query;
     std::vector<std::string> answer;
@@ -57,24 +61,63 @@ void AsiMotion::info(SerialCom &commObj, Poco::Logger& tmpLog)
     poco_information(tmpLog, "Querying ASI motion build info (BU X)...");
     query = "BU X";
     commObj.write(query);
-    readUntilCRLF(commObj, tmpLog);
+    std::string resp = readUntilCRLF(commObj, tmpLog);
 
-    poco_information(tmpLog, "Querying ASI motion X axis info (INFO X)...");
-    query = "INFO X";
-    commObj.write(query);
-    readUntilCRLF(commObj, tmpLog);
+	// find line containing "Motor Axes: "
+	Poco::StringTokenizer tok(resp, "\r");
+	Poco::RegularExpression regex("^[Mm]otor [Aa]xes: .*");
+	std::string motorAxes;
+	for (Poco::StringTokenizer::Iterator it = tok.begin(), ite = tok.end(); it != ite; it++)
+		if (regex.match(*it))
+		{
+			motorAxes = it->substr(12);
+			break;
+		}
 
-    poco_information(tmpLog, "Querying ASI motion Y axis info (INFO Y)...");
-    query = "INFO Y";
-    commObj.write(query);
-    readUntilCRLF(commObj, tmpLog);
+	poco_information(tmpLog, "Axes: " + motorAxes);
 
-    poco_information(tmpLog, "Querying ASI motion Z axis info (INFO Z)...");
-    query = "INFO Z";
-    commObj.write(query);
-    readUntilCRLF(commObj, tmpLog);
+	tok = Poco::StringTokenizer(motorAxes, " ", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+	poco_information(tmpLog, "axes count: " + Poco::NumberFormatter::format(tok.count()));
+
+	int axes = 0;
+	std::string lower;
+	for (Poco::StringTokenizer::Iterator it = tok.begin(), ite = tok.end(); it != ite; it++)
+	{
+		lower = Poco::toLower(*it);
+		if (lower.compare("x") == 0)
+			axes |= xAxis;
+		else if (lower.compare("y") == 0)
+			axes |= yAxis;
+		else if (lower.compare("z") == 0)
+			axes |= zAxis;
+	}
+
+	if (axes & xAxis)
+	{
+		poco_information(tmpLog, "Querying ASI motion X axis info (INFO X)...");
+		query = "INFO X";
+		commObj.write(query);
+		readUntilCRLF(commObj, tmpLog);
+	}
+
+	if (axes & yAxis)
+	{
+		poco_information(tmpLog, "Querying ASI motion Y axis info (INFO Y)...");
+		query = "INFO Y";
+		commObj.write(query);
+		readUntilCRLF(commObj, tmpLog);
+	}
+
+	if (axes & zAxis)
+	{
+		poco_information(tmpLog, "Querying ASI motion Z axis info (INFO Z)...");
+		query = "INFO Z";
+		commObj.write(query);
+		readUntilCRLF(commObj, tmpLog);
+	}
 
     poco_information(tmpLog,"done.");
+	return axes;
 }
 
 #define COUNT_LIMIT 256

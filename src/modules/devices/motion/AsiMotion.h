@@ -56,11 +56,11 @@ public:
         return "Control a XY ASI Motion positioning stage (MS 2000)";
     }
 
-    static void info(SerialCom &commObj, Poco::Logger& tmpLog);
+    static int info(SerialCom &commObj, Poco::Logger& tmpLog);
     static std::string readUntilCRLF(SerialCom &commObj, Poco::Logger& tmpLog);
 
 private:
-    void info() { info(serial, logger()); }
+    int info() { return info(serial, logger()); }
 
     enum supplParameters
     {
