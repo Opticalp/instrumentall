@@ -281,20 +281,20 @@ size_t SerialComImpl::write(const char* buffer, size_t bufSize)
 
 void SerialComImpl::listComPorts(std::vector<std::string>& portList)
 {
-	TCHAR lpTargetPath[4096]; // buffer to store the path of the COMPORTS
+	WCHAR lpTargetPath[4096]; // buffer to store the path of the COMPORTS
 
 	for(size_t ind = 1; ind <= 32; ind++)
     {
         std::string port = "COM" + Poco::NumberFormatter::format(ind);
 
-        //std::wstring ws_portName;
-        //ws_portName.assign(port.begin(), port.end());
+        std::wstring ws_portName;
+        ws_portName.assign(port.begin(), port.end());
 
         DWORD dwSize = sizeof(COMMCONFIG);
         LPCOMMCONFIG lpCC = (LPCOMMCONFIG) new char[dwSize];
-        if (GetDefaultCommConfig(port.c_str(), lpCC, &dwSize))
+        if (GetDefaultCommConfigW(ws_portName.c_str(), lpCC, &dwSize))
             portList.push_back(port);
-		else if (QueryDosDevice(port.c_str(), (LPSTR)lpTargetPath, 4096))
+		else if (QueryDosDeviceW(ws_portName.c_str(), lpTargetPath, 4096))
 			portList.push_back(port);
 
     }
