@@ -237,16 +237,16 @@ void SerialComImpl::setPortSettings(int speed, char parity, int wordSize,
     // allowed to pass between
     // the arrival of two bytes on
     // the read line (in ms)
-    cmt.ReadIntervalTimeout = (1000/speed+1);
+    cmt.ReadIntervalTimeout = (1000/speed+1)*4;
     // total time needed for a read operation
     // (num bytes to read) * (timeoutMultiplier)
     // in ms
-    cmt.ReadTotalTimeoutMultiplier = (1000/speed+1)*4;
+    cmt.ReadTotalTimeoutMultiplier = (1000/speed+1)*8;
     // This value is added to
     // the previous one to generate
     // the timeout value
     // for a single read operation (in ms)
-    cmt.ReadTotalTimeoutConstant = 500;
+    cmt.ReadTotalTimeoutConstant = 200;
     // the next two values are the same
     // as their read counterparts, only
     // applying to write operations

@@ -77,7 +77,7 @@ void AsiMotion::info(SerialCom &commObj, Poco::Logger& tmpLog)
     poco_information(tmpLog,"done.");
 }
 
-#define COUNT_LIMIT 300
+#define COUNT_LIMIT 256
 #define COUNT_ZERO_LIMIT 5
 
 std::string AsiMotion::readUntilCRLF(SerialCom &commObj, Poco::Logger& tmpLog)
