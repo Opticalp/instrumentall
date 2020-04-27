@@ -32,10 +32,10 @@
 #include "Poco/NumberParser.h"
 #include "Poco/String.h" // trim in place
 
-AsiMotion::AsiMotion(ModuleFactory* parent, std::string customName, SerialCom& commObj):
+AsiMotion::AsiMotion(ModuleFactory* parent, std::string customName, int axes, SerialCom& commObj):
     serial(commObj),
    	MotionDevice(parent, customName,
-			xAxis | yAxis | zAxis)
+			axes)
 {
     setLogger("module.AsiMotion.startup");
 
@@ -242,48 +242,13 @@ void AsiMotion::waitMoveStop()
     throw Poco::TimeoutException("waitMoveStop");
 }
 
-void AsiMotion::whereXYZ(double& posX, double& posY, double& posZ)
-{
-    poco_information(logger(), "Retrieve XYZ position");
-
-    serial.checkOpen();
-
-    waitMoveStop();
-
-	std::string query, answer;
-
-    poco_information(logger(), "Query X position (WHERE X)");
-    query = "WHERE X";
-    serial.write(query);
-
-    answer = readUntilCRLF();
-    poco_information(logger(), serial.niceString(answer));
-    posX = parseSimpleAnswer(answer)/10;
-
-    poco_information(logger(), "Query Y position (WHERE Y)");
-    query = "WHERE Y";
-    serial.write(query);
-
-    answer = readUntilCRLF();
-    poco_information(logger(), serial.niceString(answer));
-    posY = parseSimpleAnswer(answer)/10;
-
-    poco_information(logger(), "Query Z position (WHERE Z)");
-    query = "WHERE Z";
-    serial.write(query);
-
-    answer = readUntilCRLF();
-    poco_information(logger(), serial.niceString(answer));
-    posZ = parseSimpleAnswer(answer)/10;
-}
-
 void AsiMotion::addMoreParameters()
 {
 	poco_information(logger(), "define device-specific parameters");
 
-	setParameterCount(totalParamCnt);
+	setParameterCount(axisIndexCnt + supplParamCnt);
 
-	addParameter(paramQuery, "query", "direct query to the robot", ParamItem::typeString);
+	addParameter(axisIndexCnt + paramQuery, "query", "direct query to the robot", ParamItem::typeString);
 }
 
 double AsiMotion::getFloatParameterValue(size_t paramIndex)
@@ -312,28 +277,20 @@ void AsiMotion::setFloatParameterValue(size_t paramIndex, double value)
 
 std::string AsiMotion::getStrParameterValue(size_t paramIndex)
 {
-	switch (paramIndex)
-	{
-	case paramQuery:
-        try
-        {
-            return readUntilCRLF();
-        }
-        catch (Poco::TimeoutException&)
-        {
-            return "";
-        }
-	default:
-		poco_bugcheck_msg("invalid parameter index");
-		throw Poco::BugcheckException();
-	}
+	poco_assert(paramIndex == paramQuery + axisIndexCnt);
+	try
+    {
+        return readUntilCRLF();
+    }
+    catch (Poco::TimeoutException&)
+    {
+        return "";
+    }
 }
 
 void AsiMotion::setStrParameterValue(size_t paramIndex, std::string value)
 {
-	if (paramIndex != paramQuery)
-		poco_bugcheck_msg("invalid parameter index");
-
+	poco_assert(paramIndex == paramQuery + axisIndexCnt);
 	serial.write(parseMultipleQueries(value));
 }
 

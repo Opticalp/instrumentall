@@ -56,6 +56,8 @@ private:
     Module* newChildModule(std::string customName);
     
     SerialCom serial; ///< serial communication object
+
+	int axes; ///< axes detected during last countRemain() call
     
     bool tiger;
 };

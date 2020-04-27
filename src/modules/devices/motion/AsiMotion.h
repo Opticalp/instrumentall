@@ -42,7 +42,7 @@
 class AsiMotion: public MotionDevice
 {
 public:
-    AsiMotion(ModuleFactory* parent, std::string customName, SerialCom& commObj);
+    AsiMotion(ModuleFactory* parent, std::string customName, int axes, SerialCom& commObj);
 
     /**
      * Destructor
@@ -53,7 +53,7 @@ public:
 
     std::string description()
     {
-        return "Control a XY ASI Motion positioning stage (MS 2000)";
+        return "Control an ASI Motion positioning stage (MS 2000, Tiger)";
     }
 
     static int info(SerialCom &commObj, Poco::Logger& tmpLog);
@@ -64,8 +64,8 @@ private:
 
     enum supplParameters
     {
-        paramQuery=3, // direct query
-        totalParamCnt
+        paramQuery, // direct query
+        supplParamCnt
     };
 
     /**
@@ -75,9 +75,17 @@ private:
      */
     void addMoreParameters();
 
+	/**
+	 * Reference implementation given as example
+	 */
+	///{
     double getFloatParameterValue(size_t paramIndex);
     void setFloatParameterValue(size_t paramIndex, double value);
+	///}
 
+	/**
+	 * Query parameter management
+	 */
     std::string getStrParameterValue(size_t paramIndex);
     void setStrParameterValue(size_t paramIndex, std::string value);
 
@@ -101,9 +109,6 @@ private:
     int parseErrorAnswer(const std::string& answer);
 
     void waitMoveStop();
-
-    void goXYZ(double posX, double posY, double posZ);
-    void whereXYZ(double& posX, double& posY, double& posZ);
 };
 
 #endif /* SRC_ASIMOTION_H_ */

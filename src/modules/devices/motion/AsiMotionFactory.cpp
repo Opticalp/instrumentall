@@ -32,7 +32,8 @@
 
 AsiMotionFactory::AsiMotionFactory(ModuleFactory* parent, std::string selector):
     ModuleFactoryBranch(parent, selector),
-    tiger(false)
+    tiger(false),
+	axes(0)
 {
     setLogger(name());
 
@@ -82,7 +83,7 @@ size_t AsiMotionFactory::countRemain()
 
     try
     {
-        AsiMotion::info(serial, logger());
+        axes = AsiMotion::info(serial, logger());
     }
     catch (Poco::Exception& e)
     {
@@ -108,5 +109,5 @@ size_t AsiMotionFactory::countRemain()
 
 Module* AsiMotionFactory::newChildModule(std::string customName)
 {
-    return new AsiMotion(this, customName, serial);
+    return new AsiMotion(this, customName, axes, serial);
 }
