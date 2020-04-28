@@ -139,8 +139,7 @@ std::string VariopticLens::getStrParameterValue(size_t paramIndex)
 
 void VariopticLens::setStrParameterValue(size_t paramIndex, std::string value)
 {
-	if (paramIndex != paramQuery)
-		poco_bugcheck_msg("invalid parameter index");
+	poco_assert(paramIndex == paramQuery);
 
 	std::string bytes(serial.byteVect(value));
 	poco_information(logger(), "[OU]:" + serial.renderHex(bytes));
@@ -149,10 +148,9 @@ void VariopticLens::setStrParameterValue(size_t paramIndex, std::string value)
 
 void VariopticLens::singleMotion(int axis, std::vector<double> positions)
 {
-	if (axis != zAxis)
-		poco_bugcheck_msg("impossible axis");
+	poco_assert(axis == zAxis);
 
-	int value = static_cast<int>((positions.at(0) - 24) * 1000);
+	int value = static_cast<int>((positions.at(zIndex) - 24) * 1000);
 
 	if (value < 0)
 		throw Poco::RangeException("zAxis", "Value can not be less than 24.0(V)");
