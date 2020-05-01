@@ -41,15 +41,15 @@ def myMain(baseDir):
     X = fac.select("dblFloat").create("X")
     print("module " + X.name + " created (" + X.internalName + ") ")
     
-    print("Set output value to 314")
-    X.setParameterValue("value", 314)
+    print("Set output value to 3.14 (mm)")
+    X.setParameterValue("value", 3.14)
     
     print("Create a second module from floatDataGen factory")
     Y = fac.select("dblFloat").create("Y")
     print("module " + Y.name + " created (" + Y.internalName + ") ")
     
-    print("Set output value to 62.2")
-    Y.setParameterValue("value", 62.2)
+    print("Set output value to 0.622 (mm)")
+    Y.setParameterValue("value", 0.622)
 
     task = runModule(Y)
     task.wait()
