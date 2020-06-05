@@ -138,15 +138,12 @@ def myMain(baseDir):
     bind(cam.outPort("image"), thres.inPort("image"))
     bind(mask.outPort("mask"), thres.inPort("mask"))
 
-    imLogger = DataLogger("ShowImageLogger") 
-    imLogger.setName("imgShow2")
-    
     print("Set threshold parameters")
     thres.setParameterValue("thresholdValue", 0.95)
     thres.setParameterValue("onValue",128)
     thres.setParameterValue("lowHigh","high")
 
-    bind(thres.outPort("binImage"), DataTarget(imLogger))
+    bind(thres.outPort("binImage"), DataTarget(proxy))
     bind(thres.outPort("binImage"), cOfM.inPort("mask"))
     
     exportWorkflow("imgCenterOfMass2.gv")
