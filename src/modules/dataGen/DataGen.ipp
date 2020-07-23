@@ -104,7 +104,7 @@ inline cv::Mat DataGen::fillOutCvMat(Poco::Int64 seed)
     cv::putText(M, "InstrumentAll -- test pattern --",
             cv::Point(30, 60),
             cv::FONT_HERSHEY_PLAIN, 2.0,
-            CV_RGB(seed, seed, seed), 2, CV_AA);
+            CV_RGB(seed, seed, seed), 2, cv::LINE_AA);
 
 //    // create a window for display.
 //     cv::namedWindow( "test it", CV_WINDOW_AUTOSIZE );

@@ -153,7 +153,7 @@ void BorderCut::process(int startCond)
     cv::Mat tmp1, tmp2;
     int borderLeft, borderRight, borderTop, borderBottom;
 
-    cv::reduce(*pData,tmp1,0,CV_REDUCE_AVG,CV_32F); // result is a row
+    cv::reduce(*pData,tmp1,0,cv::REDUCE_AVG,CV_32F); // result is a row
     
     borderLeft = hasEdge(tmp1);
 	if (borderLeft)
@@ -169,7 +169,7 @@ void BorderCut::process(int startCond)
 
 	xRight = pData->cols - borderRight - 1;
 
-    cv::reduce(*pData,tmp1,1,CV_REDUCE_AVG,CV_32F); // result is a column
+    cv::reduce(*pData,tmp1,1,cv::REDUCE_AVG,CV_32F); // result is a column
     tmp1 = tmp1.t();
 
     borderTop = hasEdge(tmp1);

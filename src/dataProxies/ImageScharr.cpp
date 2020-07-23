@@ -102,9 +102,9 @@ void ImageScharr::convert()
     cv::Mat mag;
 
     // Gradient X
-    cv::Sobel( workingImg, gradX, CV_32F, 1, 0, CV_SCHARR);
+    cv::Sobel( workingImg, gradX, CV_32F, 1, 0, cv::FILTER_SCHARR);
     // Gradient Y
-    cv::Sobel( workingImg, gradY, CV_32F, 0, 1, CV_SCHARR);
+    cv::Sobel( workingImg, gradY, CV_32F, 0, 1, cv::FILTER_SCHARR);
 
     poco_information(logger(), "Scharr done; time is (to) + "
         + Poco::NumberFormatter::format(now.elapsed()/1000));

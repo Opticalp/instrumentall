@@ -125,7 +125,7 @@ void ImagePanel::setImage(cv::Mat& imgIn)
         {
             tmpImg = imgIn;
         }
-        cv::cvtColor(tmpImg,image,CV_GRAY2RGB);
+        cv::cvtColor(tmpImg,image,cv::COLOR_GRAY2RGB);
             break;
     case 3:
         image = imgIn;
@@ -150,7 +150,7 @@ void ImagePanel::setImage(cv::Mat& imgIn)
         tmpImg = image.clone();
     }
 
-    cv::cvtColor(tmpImg,_cvImage,CV_BGR2RGB);
+    cv::cvtColor(tmpImg,_cvImage,cv::COLOR_BGR2RGB);
 
     _isNewImage = true;
 
