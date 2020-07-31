@@ -30,6 +30,7 @@
 
 #include "DataSource.h"
 #include "DataTarget.h"
+#include "DataProxy.h"
 
 #include "Dispatcher.h"
 
@@ -71,6 +72,14 @@ void Breaker::breakSourceToTarget(DataTarget* target)
 	{
 	    return;
 	}
+
+    DataProxy* proxy = dynamic_cast<DataProxy*>(source);
+    if (proxy)
+    {
+        breakSourceToTarget(static_cast<DataTarget*>(proxy));
+        return;
+    }
+
 
 	target->incUser();
 	source->incUser();
