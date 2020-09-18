@@ -100,6 +100,12 @@ public:
 	 */
 	void noDelimiter();
 
+	/**
+	 * Get the current delimiter as std::string
+	 * 
+	 */
+	std::string getDelimiter();
+
     /**
      * Read the response
      *

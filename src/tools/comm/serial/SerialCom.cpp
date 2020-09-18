@@ -55,6 +55,14 @@ void SerialCom::setDelimiter(char delim)
 	hasDelimiter = true;
 }
 
+std::string SerialCom::getDelimiter()
+{
+	if (!hasDelimiter)
+		return std::string();
+	else
+		return std::string(1, delimiter);
+}
+
 std::string SerialCom::read(size_t maxCharCnt)
 {
 	checkOpen();
