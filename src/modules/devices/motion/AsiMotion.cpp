@@ -76,12 +76,12 @@ int AsiMotion::info(SerialCom &commObj, Poco::Logger& tmpLog)
 
 	poco_information(tmpLog, "Axes: " + motorAxes);
 
-	tok = Poco::StringTokenizer(motorAxes, " ", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-	poco_information(tmpLog, "axes count: " + Poco::NumberFormatter::format(tok.count()));
+	Poco::StringTokenizer tok2(motorAxes, " ", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+	poco_information(tmpLog, "axes count: " + Poco::NumberFormatter::format(tok2.count()));
 
 	int axes = 0;
 	std::string lower;
-	for (Poco::StringTokenizer::Iterator it = tok.begin(), ite = tok.end(); it != ite; it++)
+	for (Poco::StringTokenizer::Iterator it = tok2.begin(), ite = tok2.end(); it != ite; it++)
 	{
 		lower = Poco::toLower(*it);
 		if (lower.compare("x") == 0)
