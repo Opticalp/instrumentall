@@ -46,21 +46,17 @@ void SerialCom::checkOpen()
 
 void SerialCom::noDelimiter()
 {
-	hasDelimiter = false;
+	delimiter.clear();
 }
 
 void SerialCom::setDelimiter(char delim)
 {
-	delimiter = delim; 
-	hasDelimiter = true;
+	delimiter = std::string(1,delim); 
 }
 
 std::string SerialCom::getDelimiter()
 {
-	if (!hasDelimiter)
-		return std::string();
-	else
-		return std::string(1, delimiter);
+	return delimiter;
 }
 
 std::string SerialCom::read(size_t maxCharCnt)
@@ -105,13 +101,8 @@ void SerialCom::write(std::string command)
 {
 	checkOpen();
 
+	command.append(delimiter);
 	size_t cmdSize = command.size();
-
-	if (hasDelimiter)
-	{
-		command += delimiter;
-		cmdSize++;
-	}
 
     if (command.size() <= mBufSize)
     {
