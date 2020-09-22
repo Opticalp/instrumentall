@@ -230,8 +230,9 @@ void SerialComImpl::setPortSettings(int speed, char parity, int wordSize,
                         "IO buffer creation error");
     }
 
-   // configuring timeouts ***Mandatory***
-   COMMTIMEOUTS cmt;
+    // configuring timeouts ***Mandatory***
+    COMMTIMEOUTS cmt;
+    // https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-commtimeouts
 
     // the maximum amount of time
     // allowed to pass between
@@ -241,7 +242,7 @@ void SerialComImpl::setPortSettings(int speed, char parity, int wordSize,
     // total time needed for a read operation
     // (num bytes to read) * (timeoutMultiplier)
     // in ms
-    cmt.ReadTotalTimeoutMultiplier = (1000/speed+1)*8;
+    cmt.ReadTotalTimeoutMultiplier = (1000*(parity+wordSize+stopBits))/speed + 1;
     // This value is added to
     // the previous one to generate
     // the timeout value
@@ -251,7 +252,7 @@ void SerialComImpl::setPortSettings(int speed, char parity, int wordSize,
     // as their read counterparts, only
     // applying to write operations
     cmt.WriteTotalTimeoutConstant = 500;
-    cmt.WriteTotalTimeoutMultiplier = (1000/speed+1)*4;
+    cmt.WriteTotalTimeoutMultiplier = (1000 * (parity + wordSize + stopBits) )/speed + 1;
     // set the timeouts of fileHandle to be
     // what is contained in cmt
     // returns boolean success or failure
@@ -274,9 +275,17 @@ size_t SerialComImpl::read(char* buffer, size_t bufSize)
 size_t SerialComImpl::write(const char* buffer, size_t bufSize)
 {
     DWORD write = -1;
-    WriteFile(fileHandle,buffer,static_cast<DWORD>(bufSize),&write, NULL);
+	// https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile
+	if (WriteFile(fileHandle, buffer, static_cast<DWORD>(bufSize), &write, NULL))
+		return write;
+	else
+	{
+		DWORD err = GetLastError();
 
-    return write;
+		throw Poco::IOException("WriteFile", "COM port " + portName + " write error #" + Poco::NumberFormatter::format(err));
+		// https://docs.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror
+		// https://docs.microsoft.com/en-us/windows/win32/debug/retrieving-the-last-error-code
+	}
 }
 
 void SerialComImpl::listComPorts(std::vector<std::string>& portList)
