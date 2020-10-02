@@ -55,7 +55,7 @@ std::vector<std::string> SerialComDeviceFactory::selectValueList()
 
 ModuleFactoryBranch* SerialComDeviceFactory::newChildFactory(std::string selector)
 {
-    if (selector.compare("ASI") == 0 || selector.compare("asitiger") == 0)
+    if (selector.compare("ASI") == 0 || Poco::toLower(selector).compare("asitiger") == 0)
     {
         return new AsiMotionFactory(this, selector);
     }
