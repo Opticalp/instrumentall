@@ -31,7 +31,7 @@
 
 #ifdef HAVE_OPENCV
 
-
+#include "Poco/String.h."
 #include "core/DataLogger.h"
 
 /**
@@ -67,6 +67,7 @@ private:
         paramDigits,
         paramExtension,
         paramNextIndex,
+		paramNormalize,
         paramCnt
     };
 
@@ -75,6 +76,7 @@ private:
     Poco::Path directory; ///< file storage directory
     std::string prefix; ///< file name prefix
     std::string extension; ///< image file extension
+	std::string normalize; ///< image normalization method
 
     Poco::Int64 getIntParameterValue(size_t paramIndex);
     std::string getStrParameterValue(size_t paramIndex);
