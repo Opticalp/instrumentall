@@ -123,8 +123,8 @@ def myMain(baseDir):
     print("min = " + str(stats.outPort("min").getDataValue()))
 
     print("change mixer parameters")
-    params["a"] = -1
-    params["b"] = 2
+    params["a"] = -2
+    params["b"] = 4
     params["offset"] = 0
     params["filePath"] = ""
     mix.setParameterValues(params)
@@ -141,6 +141,37 @@ def myMain(baseDir):
     runModule(cam1)
     runModule(cam2)
     waitAll()
+
+    logger.setParameterValue("normalization", "min")
+    print("run with img save parameter normalization = min")
+    runModule(cam1)
+    runModule(cam2)
+    waitAll()
+
+    logger.setParameterValue("normalization", "minmax")
+    print("run with img save parameter normalization = minmax")
+    runModule(cam1)
+    runModule(cam2)
+    waitAll()
+
+    logger.setParameterValue("normalization", "none")
+    print("run with img save parameter normalization = none")
+    runModule(cam1)
+    runModule(cam2)
+    waitAll()
+
+    print("change mixer parameters")
+    params["a"] = -0.25
+    params["b"] = 0.25
+    params["offset"] = 0.5
+    params["filePath"] = ""
+    mix.setParameterValues(params)
+
+    logger.setParameterValue("normalization", "max")
+    print("run with img save parameter normalization = max")
+    runModule(cam1)
+    runModule(cam2)
+    waitAll()
     print("max = " + str(stats.outPort("max").getDataValue()) + " = = = = = ")
     print("min = " + str(stats.outPort("min").getDataValue()))
 
@@ -149,16 +180,18 @@ def myMain(baseDir):
     runModule(cam1)
     runModule(cam2)
     waitAll()
-    print("max = " + str(stats.outPort("max").getDataValue()) + " = = = = = ")
-    print("min = " + str(stats.outPort("min").getDataValue()))
 
     logger.setParameterValue("normalization", "minmax")
     print("run with img save parameter normalization = minmax")
     runModule(cam1)
     runModule(cam2)
     waitAll()
-    print("max = " + str(stats.outPort("max").getDataValue()) + " = = = = = ")
-    print("min = " + str(stats.outPort("min").getDataValue()))
+
+    logger.setParameterValue("normalization", "none")
+    print("run with img save parameter normalization = none")
+    runModule(cam1)
+    runModule(cam2)
+    waitAll()
 
     print("End of script imgMixerTest.py")
     

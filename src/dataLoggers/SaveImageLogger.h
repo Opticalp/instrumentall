@@ -78,10 +78,10 @@ private:
 
     enum normalization
 	{
-    	normNone,
-		normMin,
-		normMax,
-		normDef = 4, // default value
+    	normNone = 0,
+		normMin = 1,
+		normMax = 1 << 1,
+		normDef = 1 << 2, // default value
 	};
 
 	int normalize; ///< image normalization method

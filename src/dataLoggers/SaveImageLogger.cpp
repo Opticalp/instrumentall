@@ -95,11 +95,15 @@ void SaveImageLogger::log()
     		cv::imwrite(imgPath.toString(), img);
         else
         {
+			double offset = 0, scaleFactor;
 			cv::Mat tmpImg; // temporary image
 
-			if (normalize == normNone)
-				img.convertTo(tmpImg, CV_8U);
+			if (img.type() == CV_16U)
+				scaleFactor = 1./255;
 			else
+				scaleFactor = 255;
+
+			if (normalize != normNone)
 			{
 				int norm;
 				if (normalize == normDef)
@@ -110,10 +114,9 @@ void SaveImageLogger::log()
 				double min,max;
 				cv::minMaxLoc(img,&min,&max);
 
-				double offset = 0, scaleFactor = 1;
-
-				if (norm & normMin == 0)
+				if ((norm & normMin) == 0)
 					min = 0;
+
 				if (norm & normMax)
 				{
 					if (max-min)
@@ -122,17 +125,14 @@ void SaveImageLogger::log()
 						scaleFactor = 255.0 / max;
 				}
 
-				if (scaleFactor)
-					offset = -min / scaleFactor;
-				else
-					offset = 0;
-
-				img.convertTo(
-						tmpImg,      // output image
-						CV_8U,       // depth
-						scaleFactor, // scale factor
-						offset); // offset (after scaling)
+				offset = -min * scaleFactor;
 			}
+
+			img.convertTo(
+					tmpImg,      // output image
+					CV_8U,       // depth
+					scaleFactor, // scale factor
+					offset); // offset (after scaling)
 
 			// save image
 			cv::imwrite(imgPath.toString(), tmpImg);
