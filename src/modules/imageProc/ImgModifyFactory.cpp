@@ -33,6 +33,7 @@
 #include "ImgPrintInfo.h"
 #include "DistToOrigin.h"
 #include "BorderCut.h"
+#include "ImageMixer.h"
 
 std::vector<std::string> ImgModifyFactory::selectValueList()
 {
@@ -43,6 +44,7 @@ std::vector<std::string> ImgModifyFactory::selectValueList()
 	list.push_back("printInfo");
 	list.push_back("distToOrigin");
     list.push_back("borderCut");
+    list.push_back("mixer");
 #endif
 
     return list;
@@ -74,6 +76,12 @@ ModuleFactoryBranch* ImgModifyFactory::newChildFactory(std::string selector)
 	{
 		return new GenericLeafFactory<BorderCut>("BorderCutFactory",
 			"Build module that remove the borders of an image",
+			this, selector);
+	}
+	else if (selector.compare("mixer") == 0)
+	{
+		return new GenericLeafFactory<ImageMixer>("ImageMixerFactory",
+			"Build module that mix 2 images",
 			this, selector);
 	}
     else

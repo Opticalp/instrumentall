@@ -31,7 +31,6 @@
 
 #ifdef HAVE_OPENCV
 
-
 #include "core/DataLogger.h"
 
 /**
@@ -67,6 +66,7 @@ private:
         paramDigits,
         paramExtension,
         paramNextIndex,
+		paramNormalize,
         paramCnt
     };
 
@@ -76,11 +76,21 @@ private:
     std::string prefix; ///< file name prefix
     std::string extension; ///< image file extension
 
-    Poco::Int64 getIntParameterValue(size_t paramIndex);
-    std::string getStrParameterValue(size_t paramIndex);
+    enum normalization
+	{
+    	normNone = 0,
+		normMin = 1,
+		normMax = 1 << 1,
+		normDef = 1 << 2, // default value
+	};
 
+	int normalize; ///< image normalization method
+
+    Poco::Int64 getIntParameterValue(size_t paramIndex);
     void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
+
     void setStrParameterValue(size_t paramIndex, std::string value);
+    std::string getStrParameterValue(size_t paramIndex);
 };
 
 #endif /* HAVE_OPENCV */
