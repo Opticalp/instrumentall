@@ -1,11 +1,11 @@
 /**
- * @file	src/modules/imageProc/BorderCut.h
- * @date    Feb. 2019
+ * @file	src/Modules/imageProc/ImageMixer.h
+ * @date	Oct 2020
  * @author	PhRG - opticalp.fr
  */
 
 /*
- Copyright (c) 2019 Ph. Renaud-Goud / Opticalp
+ Copyright (c) 2020 Ph. Renaud-Goud / Opticalp
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,29 +26,27 @@
  THE SOFTWARE.
  */
 
-#ifndef SRC_MODULES_IMAGEPROC_BORDERCUT_H_
-#define SRC_MODULES_IMAGEPROC_BORDERCUT_H_
+#ifndef SRC_MODULES_IMAGEPROC_IMAGEMIXER_H_
+#define SRC_MODULES_IMAGEPROC_IMAGEMIXER_H_
 
 #ifdef HAVE_OPENCV
 
 #include "core/Module.h"
 
 /**
- * Detect the borders and cut the image
- * 
- * Use the image sum on cols or rows
- * Retrieve the next item diff
- * as soon as the diff is smaller than the threshold, starting from 
- * the border, we assume that we are outside the image. 
+ * Add 2 input images using scale factors
+ *
+ * Use either a file or a second input port as second image
  */
-class BorderCut: public Module
+class ImageMixer: public Module
 {
 public:
-    BorderCut(ModuleFactory* parent, std::string customName);
+    ImageMixer(ModuleFactory* parent, std::string customName);
 
     std::string description()
     {
-        return "Detect the borders and crop the image to remove borders";
+        return "Add 2 input images using scale factors. \n"
+        		"The second image can be an image file. See parameters. " ;
     }
 
 private:
@@ -57,52 +55,45 @@ private:
      */
     void process(int startCond);
     
-    /**
-     * Check if a border is present
-     * 
-     * @param inVec vector to be analyzed
-     * @return 0 if no edge is detected. Positive value if an border 
-     *         is detected in the crescent direction of the indexes.
-     *         The absolute value gives the distance to the outer image edge. 
-     */
-    int hasEdge(cv::Mat inVec);
+    cv::Mat mix(cv::Mat A, cv::Mat B);
 
     static size_t refCount; ///< reference counter to generate a unique internal name
 
     enum params
     {
-        paramThreshold,
-        paramPadding,
-        paramMinEdgeLength,
+        paramA,
+        paramB,
+		paramOffset,
+		paramFilePath,
         paramCnt
     };
-
-    Poco::Int64 getIntParameterValue(size_t paramIndex);
-    void setIntParameterValue(size_t paramIndex, Poco::Int64 value);
+    
+    double a,b,offset;
 
     double getFloatParameterValue(size_t paramIndex);
     void setFloatParameterValue(size_t paramIndex, double value);
 
-    Poco::Int64 minEdgeLen, padding;
-    double thres;
+    std::string getStrParameterValue(size_t paramIndex);
+    void setStrParameterValue(size_t paramIndex, std::string value);
+
+    std::string imagePath;
+    cv::Mat fileImage;
 
     /// Indexes of the input ports
     enum inPorts
     {
-        imageInPort,
+        imageAInPort,
+        imageBInPort,
         inPortCnt
     };
 
     /// Indexes of the output ports
     enum outPorts
     {
-        xFirstPort = 0, xLastPort,
-		yFirstPort, yLastPort,
         imageOutPort,
         outPortCnt
     };
-
 };
 
 #endif /* HAVE_OPENCV */
-#endif /* SRC_MODULES_IMAGEPROC_BORDERCUT_H_ */
+#endif /* SRC_MODULES_IMAGEPROC_IMAGEMIXER_H_ */

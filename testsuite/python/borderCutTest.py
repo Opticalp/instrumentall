@@ -83,6 +83,11 @@ def myMain(baseDir):
     for ind in range(6):
         runModule(cam)
         waitAll()
+        print("crop coords: ")
+        print("x : [" + str(borderCut.outPort("xFirst").getDataValue()) +
+              " >> " + str(borderCut.outPort("xLast").getDataValue()) + "]")
+        print("y : [" + str(borderCut.outPort("yFirst").getDataValue()) +
+              " >> " + str(borderCut.outPort("yLast").getDataValue()) + "]")
         time.sleep(1) # wait 1s in order to show the image
         
     print("End of script borderCutTest.py")

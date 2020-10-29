@@ -33,6 +33,12 @@
 
 #ifdef HAVE_OPENCV
 
+#if CV_VERSION_MAJOR >= 4
+#   define SCHARR  cv::FILTER_SCHARR
+#else // 3.x.x
+#   define SCHARR  CV_SCHARR
+#endif
+
 size_t ImageScharr::refCount = 0;
 
 ImageScharr::ImageScharr(): DataProxy("ImageScharr")
@@ -102,9 +108,9 @@ void ImageScharr::convert()
     cv::Mat mag;
 
     // Gradient X
-    cv::Sobel( workingImg, gradX, CV_32F, 1, 0, CV_SCHARR);
+    cv::Sobel( workingImg, gradX, CV_32F, 1, 0, SCHARR);
     // Gradient Y
-    cv::Sobel( workingImg, gradY, CV_32F, 0, 1, CV_SCHARR);
+    cv::Sobel( workingImg, gradY, CV_32F, 0, 1, SCHARR);
 
     poco_information(logger(), "Scharr done; time is (to) + "
         + Poco::NumberFormatter::format(now.elapsed()/1000));

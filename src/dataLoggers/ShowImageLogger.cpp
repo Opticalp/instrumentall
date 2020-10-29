@@ -84,7 +84,7 @@ void ShowImageLogger::log()
         {
             std::string winName = name() + Poco::NumberFormatter::format(winCount++);
             // create a window for display.
-            cv::namedWindow( winName, CV_WINDOW_AUTOSIZE );
+            cv::namedWindow( winName, cv::WINDOW_AUTOSIZE );
             // Show our image inside it.
             cv::imshow( winName, img );
 

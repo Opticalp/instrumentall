@@ -1,3 +1,6 @@
+# Build worker image (VM template)
+image: Visual Studio 2017
+
 version: 1.0.{build}-{branch}
 
 branches:
@@ -13,31 +16,29 @@ clone_folder: c:\projects\instrumentall
 
 environment:
   matrix:
-  - GENERATOR: Visual Studio 11 2012
-    ARCH: Win64
-  - GENERATOR: Visual Studio 11 2012
-#  - GENERATOR: Visual Studio 12 2013
-#    ARCH: Win64
-#  - GENERATOR: Visual Studio 12 2013
   - GENERATOR: Visual Studio 14 2015
     ARCH: Win64
 #  - GENERATOR: Visual Studio 14 2015 # openCV has no pre-built for x86/vc14
+  - GENERATOR: Visual Studio 15 2017
+    ARCH: Win64
 #  - GENERATOR: MinGW Makefiles  # poco is not compiling with this yet... (1.6.0)
 
 init:
+- call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsDevCmd.bat"
 - env
-- if "%ARCH%"=="Win64" "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
-- if "%GENERATOR%"=="Visual Studio 11 2012" (if "%ARCH%" == "Win64" ( call "%VS110COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64 ) else ( call "%VS110COMNTOOLS%\..\..\VC\vcvarsall.bat" ))
 - if "%GENERATOR%"=="Visual Studio 14 2015" (if "%ARCH%" == "Win64" ( call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64 ) else ( call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" ))
+- if "%GENERATOR%"=="Visual Studio 15 2017" (if "%ARCH%" == "Win64" ( call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat" ) else ( call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat" ))
+- set POCO_VERSION=1.9.4
 - set POCO_INSTALL_PREFIX=%PROGRAMFILES%\Poco
 - set OPENCV_BASE_DIR=%PROGRAMFILES%
 - set OPENCV_DIR=%PROGRAMFILES%\opencv
-- if "%GENERATOR%"=="Visual Studio 14 2015" ( set OPENCV_VERSION=3.1.0) else ( set OPENCV_VERSION=2.4.13)
+- set OPENCV_VERSION=3.4.12
 - set OPENCV_CMAKE=-DOpenCV_DIR="%OPENCV_DIR%\build" 
 - if "%ARCH%"=="Win64" ( set OPENCV_DLL_PATH=build\x64) else ( set OPENCV_DLL_PATH=build\x86)
 - if "%GENERATOR%"=="Visual Studio 11 2012" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc11\bin)
 - if "%GENERATOR%"=="Visual Studio 12 2013" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc12\bin) 
 - if "%GENERATOR%"=="Visual Studio 14 2015" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc14\bin) 
+- if "%GENERATOR%"=="Visual Studio 15 2017" ( set OPENCV_DLL_PATH=%OPENCV_DLL_PATH%\vc15\bin) 
 - if "%GENERATOR%"=="MinGW Makefiles" ( set OPENCV_CMAKE=-Dno-opencv="true")
 - set WXWIN=C:\wxWidgets-3.0.2
 - set wxWidgets_LIB_DIR=%WXWIN%\lib\vc_dll

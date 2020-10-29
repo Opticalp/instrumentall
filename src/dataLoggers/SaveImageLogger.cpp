@@ -32,6 +32,7 @@
 #include "core/DataItem.h"
 
 #include "Poco/NumberFormatter.h"
+#include "Poco/String.h"
 
 #include "opencv2/opencv.hpp"
 
@@ -40,7 +41,7 @@ size_t SaveImageLogger::refCount = 0;
 SaveImageLogger::SaveImageLogger():
         DataLogger("SaveImageLogger"),
         nextIndex(1), extension(".png"),
-        prefix("img_"), digits(2)
+        prefix("img_"), digits(2), normalize(normDef)
 {
     setName(refCount);
 
@@ -55,12 +56,18 @@ SaveImageLogger::SaveImageLogger():
             ParamItem::typeString, ".png");
     addParameter(paramNextIndex, "nextIndex", "Next index to be used to generate the image file name",
             ParamItem::typeInteger, "1");
+	addParameter(paramNormalize, "normalization", "Img normalization method: "
+			"available methods are \"min\", \"max\", \"none\", \"default\". \n"
+			"default is max for float image, none for uchar8 image. ",
+		ParamItem::typeString, "default");
+
 
     setStrParameterValue(paramDirectory, getStrParameterDefaultValue(paramDirectory));
     setStrParameterValue(paramPrefix, getStrParameterDefaultValue(paramPrefix));
     setIntParameterValue(paramDigits, getIntParameterDefaultValue(paramDigits));
     setStrParameterValue(paramExtension, getStrParameterDefaultValue(paramExtension));
     setIntParameterValue(paramNextIndex, getIntParameterDefaultValue(paramNextIndex));
+	setStrParameterValue(paramNormalize, getStrParameterDefaultValue(paramNormalize));
 
     refCount++;
 }
@@ -84,23 +91,51 @@ void SaveImageLogger::log()
             imgPath.append(prefix + extension);
         }
 
-        if (img.type()!=CV_8U && img.type()!=CV_16U)
-        {
-            double min,max;
-            cv::minMaxLoc(img,&min,&max);
-
-            cv::Mat tmpImg; // temporary image
-            img.convertTo(
-                    tmpImg,      // output image
-                    CV_8U,       // depth
-                    255.0/max ); // scale factor
-
-            // save image
-            cv::imwrite(imgPath.toString(), tmpImg);
-        }
+        if (img.type() == CV_8U && (normalize == normDef || normalize == normNone))
+    		cv::imwrite(imgPath.toString(), img);
         else
         {
-            cv::imwrite(imgPath.toString(), img);
+			double offset = 0, scaleFactor;
+			cv::Mat tmpImg; // temporary image
+
+			if (img.type() == CV_16U)
+				scaleFactor = 1./255;
+			else
+				scaleFactor = 255;
+
+			if (normalize != normNone)
+			{
+				int norm;
+				if (normalize == normDef)
+					norm = normMax;
+				else
+					norm = normalize;
+
+				double min,max;
+				cv::minMaxLoc(img,&min,&max);
+
+				if ((norm & normMin) == 0)
+					min = 0;
+
+				if (norm & normMax)
+				{
+					if (max-min)
+						scaleFactor = 255.0 / (max-min);
+					else if (max)
+						scaleFactor = 255.0 / max;
+				}
+
+				offset = -min * scaleFactor;
+			}
+
+			img.convertTo(
+					tmpImg,      // output image
+					CV_8U,       // depth
+					scaleFactor, // scale factor
+					offset); // offset (after scaling)
+
+			// save image
+			cv::imwrite(imgPath.toString(), tmpImg);
         }
 
         // increment parameters
@@ -133,22 +168,6 @@ Poco::Int64 SaveImageLogger::getIntParameterValue(size_t paramIndex)
     }
 }
 
-std::string SaveImageLogger::getStrParameterValue(size_t paramIndex)
-{
-    switch (paramIndex)
-    {
-    case paramDirectory:
-        return directory.toString();
-    case paramPrefix:
-        return prefix;
-    case paramExtension:
-        return extension;
-    default:
-        poco_bugcheck_msg("wrong parameter index");
-        throw Poco::BugcheckException();
-    }
-}
-
 void SaveImageLogger::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
 {
     switch (paramIndex)
@@ -162,6 +181,39 @@ void SaveImageLogger::setIntParameterValue(size_t paramIndex, Poco::Int64 value)
     case paramNextIndex:
         nextIndex = value;
         break;
+    default:
+        poco_bugcheck_msg("wrong parameter index");
+        throw Poco::BugcheckException();
+    }
+}
+
+std::string SaveImageLogger::getStrParameterValue(size_t paramIndex)
+{
+    switch (paramIndex)
+    {
+    case paramDirectory:
+        return directory.toString();
+    case paramPrefix:
+        return prefix;
+    case paramExtension:
+        return extension;
+	case paramNormalize:
+		switch (normalize)
+		{
+		case normNone:
+			return "none";
+		case normDef:
+			return "default";
+		default:
+		{
+			std::string ret;
+			if (normalize & normMin)
+				ret = "min";
+			if (normalize & normMax)
+				ret += "max";
+			return ret;
+		}
+		}
     default:
         poco_bugcheck_msg("wrong parameter index");
         throw Poco::BugcheckException();
@@ -182,6 +234,25 @@ void SaveImageLogger::setStrParameterValue(size_t paramIndex, std::string value)
     case paramExtension:
         extension = value;
         break;
+	case paramNormalize:
+	{
+		int newNorm = 0;
+		if (Poco::toLower(value).find("max") != std::string::npos)
+			newNorm += normMax;
+		if (Poco::toLower(value).find("min") != std::string::npos)
+			newNorm += normMin;
+		if (Poco::toLower(value).find("default") != std::string::npos)
+			newNorm = normDef; // override min or max
+
+		if (newNorm || Poco::toLower(value).find("none") != std::string::npos)
+		{
+			normalize = newNorm;
+			break;
+		}
+
+		throw Poco::InvalidArgumentException("setParameterValue",
+				"normalize has to be \"min\" , \"max\", \"none\" or \"default\". ");
+	}
     default:
         poco_bugcheck_msg("wrong parameter index");
         throw Poco::BugcheckException();

@@ -159,14 +159,14 @@ void CameraFromFiles::process(int startCond)
         poco_information(logger(),
             "Retrieving the image in gray scale format");
         *pMat = cv::imread(fullImagePath.toString().c_str(),
-                CV_LOAD_IMAGE_GRAYSCALE);
+                cv::IMREAD_GRAYSCALE);
     }
     else
     {
         poco_information(logger(),
             "Retrieving the image in original color format");
         *pMat = cv::imread(fullImagePath.toString().c_str(),
-                CV_LOAD_IMAGE_UNCHANGED);
+                cv::IMREAD_UNCHANGED);
     }
 
     if (!pMat->data)
