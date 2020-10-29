@@ -96,8 +96,9 @@ private:
     /// Indexes of the output ports
     enum outPorts
     {
+        xFirstPort = 0, xLastPort,
+		yFirstPort, yLastPort,
         imageOutPort,
-        // TODO: add output(s) to indicate which border(s) was(were) cut
         outPortCnt
     };
 

@@ -38,7 +38,8 @@
 size_t BorderCut::refCount = 0;
 
 BorderCut::BorderCut(ModuleFactory* parent, std::string customName):
-    Module(parent, customName)
+    Module(parent, customName),
+	minEdgeLen(4), padding(15), thres(4)
 {
     if (refCount)
         setInternalName("BorderCut" + Poco::NumberFormatter::format(refCount));
@@ -70,7 +71,16 @@ BorderCut::BorderCut(ModuleFactory* parent, std::string customName):
 
     addInPort("image", "image with potential border", DataItem::typeCvMat, imageInPort);
 
-    addOutPort("image", "cropped image if border(s) was(were) detected", DataItem::typeCvMat, imageOutPort);
+    addOutPort("image", "cropped image if border(s) was(were) detected",
+    		DataItem::typeCvMat, imageOutPort);
+    addOutPort("xFirst", "x coordinate of first included pixel of the cropped image \n"
+    		"in the original image", DataItem::typeInt64, xFirstPort);
+    addOutPort("xLast", "x coordinate of last included pixel of the cropped image \n"
+    		"in the original image", DataItem::typeInt64, xLastPort);
+    addOutPort("yFirst", "y coordinate of first included pixel of the cropped image \n"
+    		"in the original image", DataItem::typeInt64, yFirstPort);
+    addOutPort("yLast", "y coordinate of last included pixel of the cropped image \n"
+    		"in the original image", DataItem::typeInt64, yLastPort);
 
     notifyCreation();
 
@@ -208,7 +218,21 @@ void BorderCut::process(int startCond)
 
     *pData = tmp1;
 
-    notifyOutPortReady(imageOutPort, outAttr);
+    int coords[4];
+    coords[xFirstPort] = xLeft;
+    coords[xLastPort] = xRight;
+    coords[yFirstPort] = yTop;
+    coords[yLastPort] = yBottom;
+    Poco::Int64 *piData;
+
+    for (int ind = 0; ind <= yLastPort; ind++)
+    {
+        reserveOutPort(ind);
+        getDataToWrite<Poco::Int64>(ind, piData);
+        *piData = coords[ind];
+    }
+
+    notifyAllOutPortReady(outAttr);
 }
 
 int BorderCut::hasEdge(cv::Mat inVec)
